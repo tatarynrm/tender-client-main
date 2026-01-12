@@ -26,6 +26,7 @@ interface Dropdowns {
   load_permission_dropdown?: { ids: string; value: string }[];
   manager_dropdown?: { ids: string; value: string }[];
   company_dropdown?: { ids: string; value: string }[];
+
 }
 
 interface TenderFiltersProps<T extends Filters> {
@@ -232,6 +233,15 @@ export const TenderFiltersSheet = <T extends Filters>({
                   value={filters.company} // Змінено з manager_dropdown на manager
                   onChange={(v) => updateField("company", v)} // Змінено на manager
                   options={dropdowns?.company_dropdown} // Опції залишаємо як є (вони з бекенду)
+                  placeholder="Будь-який"
+                />
+                <NativeSelect
+                  isMulti
+                  showSearch
+                  label="Стаус тендеру"
+                  value={filters.status} // Змінено з manager_dropdown на manager
+                  onChange={(v) => updateField("status", v)} // Змінено на manager
+                  options={dropdowns?.tender_status_dropdown} // Опції залишаємо як є (вони з бекенду)
                   placeholder="Будь-який"
                 />
               </div>

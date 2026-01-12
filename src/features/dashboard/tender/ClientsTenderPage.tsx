@@ -21,6 +21,9 @@ import TenderFullInfoModal from "@/features/log/tender/components/TenderFullInfo
 
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
+import Loader from "@/shared/components/Loaders/MainLoader";
+import TenderLoader from "@/shared/components/Loaders/TenderLoader";
+import { is } from "date-fns/locale";
 
 export default function ClientsTenderPage() {
   const router = useRouter();
@@ -40,6 +43,8 @@ export default function ClientsTenderPage() {
       load_type: searchParams.get("load_type") || "",
       tender_type: searchParams.get("tender_type") || "",
       page: Number(searchParams.get("page") || 1),
+      participate: searchParams.get("participate") || "",
+      participate_company: searchParams.get("participate_company") || "",
       limit: Number(searchParams.get("limit") || 10), // <--- додали limit
     }),
     [searchParams]
@@ -96,20 +101,9 @@ export default function ClientsTenderPage() {
     updateUrl({ ...newFilters, page: 1 });
   };
   if (error) return <ErrorState />;
-  if (isLoading) {
-    return (
-      <div className="p-4 mx-auto">
-        {/* Можна додати скелетон фільтрів, якщо треба */}
-        <div className="flex justify-between mb-6">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-24" />
-        </div>
-        <TenderListSkeleton count={6} />
-      </div>
-    );
-  }
+  if (isLoading) return <TenderLoader />;
   return (
-    <div className="p-4  mx-auto">
+    <div className="p-1  mx-auto">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}

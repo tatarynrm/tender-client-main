@@ -112,6 +112,7 @@ export interface ITender {
   tender_route: ITenderRoute[];
   tender_trailer: ITenderTrailer[];
   tender_permission: ITenderPermission[];
+
 }
 export interface ITenderLoad {
   id: number;
@@ -120,31 +121,39 @@ export interface ITenderLoad {
 }
 export interface ITenderRoute {
   id: number;
+  id_parent: number; // ID тендера, до якого належить точка
+  order_num: number; // Порядковий номер у маршруті (важливо для степпера та карти)
 
-  locality?: string;
-  region_name?: string;
-  lat: number | null;
-  lon: number | null;
-
+  // Географія
+  lat: number;
+  lon: number;
   city: string;
+  locality?: string; // Може бути null/undefined, якщо місто велике
   address: string;
+  country: string; // Код країни (UA, PL тощо)
+  ids_country: string; // Часто дублює country або використовується для зв'язку
+  ids_region: number | null;
+  region_name: string | null;
 
-  customs: boolean;
-
+  // Логістичні параметри
+  customs: boolean; // Чи є точка митницею
+  point_name: string; // Назва точки для відображення (Завантаження, Кордон тощо)
+  
+  // Тип точки (Union type для автокомпліту)
   ids_point:
-    | "LOAD_FROM"
-    | "LOAD_TO"
-    | "BORDER"
-    | "CUSTOM_UP"
-    | "CUSTOM_DOWN"
-    | string;
+    | "LOAD_FROM"   // Початкова точка завантаження
+    | "LOAD_TO"     // Кінцева точка розвантаження
+    | "BORDER"      // Перетин кордону
+    | "CUSTOM_UP"   // Замитнення (експорт)
+    | "CUSTOM_DOWN" // Розмитнення (імпорт)
+    | string;       // Для кастомних значень
 
-  point_name: string;
+  // Дати (ISO string)
+  date_point: string | null;  // Бажана дата (від)
+  date_point2: string | null; // Бажана дата (до)
 
-  date_point: string | null;
-  date_point2: string | null;
-
-  ids_country: string;
+  // Додатково
+  notes: string | null;
 }
 export interface ITenderTrailer {
   id: number;
@@ -159,5 +168,11 @@ export interface ITenderPermission {
 export interface IRateCompany {
   author: string;
   price_proposed: number | null;
+  redemption_price: string;
+}
+export interface ITenderRate {
+  author: string;
+  company_name: string;
+  price_proposed: number;
   redemption_price: string;
 }

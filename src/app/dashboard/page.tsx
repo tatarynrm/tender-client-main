@@ -61,7 +61,7 @@ const DashboardPage = () => {
     fetchStats();
   }, []);
 
-  if (loading) return <Loader />;
+  // if (loading) return <Loader />;
 
   return (
     <div className="px-4 py-6 w-full space-y-6">

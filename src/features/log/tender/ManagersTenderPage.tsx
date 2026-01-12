@@ -14,7 +14,7 @@ import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 import { ActiveFilters } from "./components/ActiveFilters";
 import { EmptyTenders } from "./components/EmptyTenders";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
-import {  TenderCardManagers } from "./components/TenderCardManager";
+import { TenderCardManagers } from "./components/TenderCardManager";
 import Loader from "@/shared/components/Loaders/MainLoader";
 import { useTenderListManagers } from "../hooks/useTenderManagersList";
 import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
@@ -39,6 +39,7 @@ export default function ManagersTenderPage() {
       manager: searchParams.get("manager") || "",
       company: searchParams.get("company") || "",
       page: Number(searchParams.get("page") || 1),
+      status: searchParams.get("status") || "",
       limit: Number(searchParams.get("limit") || 10), // <--- додали limit
     }),
     [searchParams]
@@ -98,7 +99,7 @@ export default function ManagersTenderPage() {
   if (error) return <ErrorState />;
   if (isLoading) return <Loader />;
   return (
-    <div className="p-4  mx-auto">
+    <div className="p-1  mx-auto">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}

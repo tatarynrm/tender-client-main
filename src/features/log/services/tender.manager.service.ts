@@ -32,6 +32,6 @@ export const tenderManagerService = {
 
   getOneTender: async (id: number | string): Promise<ITender> => {
     const { data } = await api.get(`/tender/${id}`);
-    return data.content[0];
+    return data.content;
   },
 };

@@ -15,6 +15,7 @@ import { Input } from "@/shared/components/ui/input";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Filter, MapPin, Truck, Settings2, ChevronDown } from "lucide-react";
 import NativeSelect from "@/shared/components/Select/NativeSelect";
+import { cn } from "@/shared/utils";
 
 interface Dropdowns {
   region_dropdown?: { ids: string; short_name: string; region_name: string }[];
@@ -42,11 +43,13 @@ export const TenderFiltersSheet = <T extends Filters>({
 }: TenderFiltersProps<T>) => {
   const [open, setOpen] = useState(false);
 
-  const updateField = (field: keyof T, value: any) => {
-    const finalValue = value === "" ? undefined : value;
-    setFilters((prev) => ({ ...prev, [field]: finalValue }));
-  };
-
+const updateField = (field: keyof T, value: any) => {
+  // Якщо значення порожнє, або дорівнює false (для чекбоксів/булевих кнопок)
+  // ми встановлюємо undefined, щоб параметр зник з URL
+  const finalValue = (value === "" || value === false) ? undefined : value;
+  
+  setFilters((prev) => ({ ...prev, [field]: finalValue }));
+};
   const handleApply = () => {
     apply();
     setOpen(false);
@@ -72,10 +75,10 @@ export const TenderFiltersSheet = <T extends Filters>({
 
       <SheetContent
         side="left"
-        className="w-full sm:max-w-[380px] p-0 flex flex-col h-[100dvh] border-l shadow-2xl"
+        className="w-full sm:max-w-[380px] flex flex-col h-[100dvh] border-l shadow-2xl"
       >
         {/* ФІКСОВАНА ШАПКА: компактніша */}
-        <SheetHeader className="p-4 border-b shrink-0 z-10">
+        <SheetHeader className="p-4 border-b shrink-0 ">
           <SheetTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-50">
             <Settings2 className="h-4 w-4 text-orange-500" />
             Параметри пошуку
@@ -83,8 +86,99 @@ export const TenderFiltersSheet = <T extends Filters>({
         </SheetHeader>
 
         {/* ОСНОВНИЙ КОНТЕНТ: зменшені відступи */}
-        <ScrollArea className="flex-1 w-full overflow-y-auto">
+        <ScrollArea className="flex-1 w-full overflow-y-auto ">
           <div className="p-4 space-y-6">
+            {/* НОВА СЕКЦІЯ: УЧАСТЬ */}
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-indigo-100/50">
+                <Settings2 className="h-3.5 w-3.5 text-indigo-500" />
+                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  Персональні фільтри
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {/* Кнопка: Я беру участь */}
+                <button
+                  onClick={() =>
+                    updateField("participate" as keyof T, !filters.participate)
+                  }
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-left",
+                    filters.participate
+                      ? "bg-indigo-50 border-indigo-200 shadow-sm"
+                      : "bg-white border-zinc-100 hover:border-zinc-200"
+                  )}
+                >
+                  <div className="flex flex-col">
+                    <span
+                      className={cn(
+                        "text-xs font-bold",
+                        filters.participate
+                          ? "text-indigo-700"
+                          : "text-zinc-700"
+                      )}
+                    >
+                      Я беру участь
+                    </span>
+                    <span className="text-[10px] text-zinc-400">
+                      Тендери з моїми ставками
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
+                      filters.participate ? "" : "border-zinc-200"
+                    )}
+                  >
+                    {filters.participate && (
+                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Кнопка: Моя компанія бере участь */}
+                <button
+                  onClick={() =>
+                    updateField(
+                      "participate_company" as keyof T,
+                      !filters.participate_company
+                    )
+                  }
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-left",
+                    filters.participate_company
+                      ? "bg-emerald-50 border-emerald-200 shadow-sm"
+                      : "bg-white border-zinc-100 hover:border-zinc-200"
+                  )}
+                >
+                  <div className="flex flex-col">
+                    <span
+                      className={cn(
+                        "text-xs font-bold",
+                        filters.participate_company
+                          ? "text-emerald-700"
+                          : "text-zinc-700"
+                      )}
+                    >
+                      Моя компанія бере участь
+                    </span>
+                    <span className="text-[10px] text-zinc-400">
+                      Всі ставки вашої компанії
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
+                      filters.participate_company ? "" : "border-zinc-200"
+                    )}
+                  >
+                    {filters.participate_company && (
+                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
+                    )}
+                  </div>
+                </button>
+              </div>
+            </section>
             {/* МАРШРУТ ЗВІДКИ */}
             <section className="space-y-3">
               <div className="flex items-center gap-2 pb-1.5 border-b border-orange-100/50">
@@ -208,6 +302,7 @@ export const TenderFiltersSheet = <T extends Filters>({
                 />
                 <NativeSelect
                   showSearch
+                  isMulti
                   label="Тип тендеру"
                   value={filters.tender_type}
                   onChange={(v) => updateField("tender_type", v)}
