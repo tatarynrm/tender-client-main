@@ -1,41 +1,41 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-
-import { tenderService } from "../services/tender.service";
-import { ITender } from "../types/tender.type";
+// import { useQuery, useQueryClient } from "@tanstack/react-query";
+// import { useEffect } from "react";
 
 
+// import { ITender } from "../types/tender.type";
 
 
-export const useTenders = () => {
-  const queryClient = useQueryClient();
 
 
-  // useEffect(() => {
-  //   if (!socket) return;
+// export const useTenders = () => {
+//   const queryClient = useQueryClient();
 
-  //   const handleNewLoad = () =>
-  //     queryClient.invalidateQueries({ queryKey: ["tenders"] });
 
-  //   socket.on("new_load", handleNewLoad);
-  //   socket.on("saveTender", handleNewLoad);
+//   // useEffect(() => {
+//   //   if (!socket) return;
 
-  //   return () => {
-  //     socket.off("new_load", handleNewLoad);
-  //     socket.off("saveTender", handleNewLoad);
-  //   };
-  // }, [socket, queryClient]);
+//   //   const handleNewLoad = () =>
+//   //     queryClient.invalidateQueries({ queryKey: ["tenders"] });
 
-  const {
-    data: tenders = [],
-    isLoading,
-    error,
-    refetch,
-  } = useQuery<ITender[]>({
-    queryKey: ["tenders"],
-    queryFn: tenderService.getTenders,
-    staleTime: 1000 * 60, // кеш 1 хв
-  });
+//   //   socket.on("new_load", handleNewLoad);
+//   //   socket.on("saveTender", handleNewLoad);
 
-  return { tenders, isLoading, error, refetch };
-};
+//   //   return () => {
+//   //     socket.off("new_load", handleNewLoad);
+//   //     socket.off("saveTender", handleNewLoad);
+//   //   };
+//   // }, [socket, queryClient]);
+
+//   const {
+//     data: tenders = [],
+//     isLoading,
+//     error,
+//     refetch,
+//   } = useQuery<ITender[]>({
+//     queryKey: ["tenders"],
+//     queryFn: tenderManagerService.getTenders,
+//     staleTime: 1000 * 60, // кеш 1 хв
+//   });
+
+//   return { tenders, isLoading, error, refetch };
+// };

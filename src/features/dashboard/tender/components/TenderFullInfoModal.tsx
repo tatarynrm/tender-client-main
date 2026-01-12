@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ITender } from "../../types/tender.type";
-import { tenderService } from "../../services/tender.service";
+
 import { X } from "lucide-react";
+import { ITender } from "@/features/log/types/tender.type";
+import { tenderManagerService } from "@/features/log/services/tender.manager.service";
 
 export default function TenderFullInfoModal({
   tenderId,
@@ -19,7 +20,7 @@ export default function TenderFullInfoModal({
 
     const loadTender = async () => {
       try {
-        const data = await tenderService.getOneTender(tenderId);
+        const data = await tenderManagerService.getOneTender(tenderId);
         setTender(data);
       } catch (err) {
         console.log(err);

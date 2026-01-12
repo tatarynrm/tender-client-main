@@ -1,4 +1,5 @@
 import ClientsTenderPage from "@/features/dashboard/tender/ClientsTenderPage";
+import ManagersTenderPage from "@/features/log/tender/ManagersTenderPage";
 import { Metadata } from "next";
 
 // Визначення метаданих на сервері
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function TenderServerPage() {
-  return <ClientsTenderPage />;
+  return <ManagersTenderPage />;
 }

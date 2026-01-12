@@ -33,7 +33,6 @@ interface TenderFiltersProps<T extends Filters> {
   reset: () => void;
   dropdowns?: Dropdowns;
 }
-
 export const TenderFiltersSheet = <T extends Filters>({
   filters,
   setFilters,
@@ -64,37 +63,37 @@ export const TenderFiltersSheet = <T extends Filters>({
         <Button
           variant="outline"
           size="sm"
-          className="border-orange-400 hover:bg-orange-50 transition-colors"
+          className="h-8 border-orange-400 hover:bg-orange-50 transition-colors text-xs"
         >
-          <Filter className="mr-2 h-4 w-4 text-orange-500" />
+          <Filter className="mr-1.5 h-3.5 w-3.5 text-orange-500" />
           Фільтри
         </Button>
       </SheetTrigger>
 
       <SheetContent
         side="left"
-        className="w-full sm:max-w-[450px] p-0 flex flex-col h-[100dvh] border-l shadow-2xl"
+        className="w-full sm:max-w-[380px] p-0 flex flex-col h-[100dvh] border-l shadow-2xl"
       >
-        {/* ФІКСОВАНА ШАПКА: shrink-0 не дає їй стискатися */}
-        <SheetHeader className="p-5 border-b shrink-0  z-10">
-          <SheetTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
-            <Settings2 className="h-5 w-5 text-orange-500" />
+        {/* ФІКСОВАНА ШАПКА: компактніша */}
+        <SheetHeader className="p-4 border-b shrink-0 z-10">
+          <SheetTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-50">
+            <Settings2 className="h-4 w-4 text-orange-500" />
             Параметри пошуку
           </SheetTitle>
         </SheetHeader>
 
-        {/* ОСНОВНИЙ КОНТЕНТ: flex-1 змушує його зайняти весь вільний простір */}
-        <ScrollArea className="flex-1 w-full h-full overflow-y-auto">
-          <div className="p-6 space-y-10">
+        {/* ОСНОВНИЙ КОНТЕНТ: зменшені відступи */}
+        <ScrollArea className="flex-1 w-full overflow-y-auto">
+          <div className="p-4 space-y-6">
             {/* МАРШРУТ ЗВІДКИ */}
-            <section className="space-y-5">
-              <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
-                <MapPin className="h-4 w-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Маршрут звідки
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-orange-100/50">
+                <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  Звідки
                 </h3>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <NativeSelect
                   isMulti
                   showSearch
@@ -106,7 +105,8 @@ export const TenderFiltersSheet = <T extends Filters>({
                     value: c.country_name,
                   }))}
                 />
-                {(!filters.country_from || filters.country_from === "UA") && (
+                {(!filters.country_from ||
+                  String(filters.country_from).includes("UA")) && (
                   <NativeSelect
                     isMulti
                     showSearch
@@ -120,13 +120,13 @@ export const TenderFiltersSheet = <T extends Filters>({
                   />
                 )}
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight ml-1">
                   Місто відправлення
                 </label>
                 <Input
-                  className="h-10 border-gray-200 focus-visible:ring-orange-500 transition-all rounded-lg"
-                  placeholder="Введіть назву міста..."
+                  className="h-9 text-sm border-zinc-200 focus-visible:ring-orange-500 rounded-xl"
+                  placeholder="Назва міста..."
                   value={filters.city_from ? String(filters.city_from) : ""}
                   onChange={(e) => updateField("city_from", e.target.value)}
                 />
@@ -134,14 +134,14 @@ export const TenderFiltersSheet = <T extends Filters>({
             </section>
 
             {/* МАРШРУТ КУДИ */}
-            <section className="space-y-5">
-              <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
-                <MapPin className="h-4 w-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Маршрут куди
+            <section className="space-y-3">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-orange-100/50">
+                <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  Куди
                 </h3>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <NativeSelect
                   isMulti
                   showSearch
@@ -153,7 +153,8 @@ export const TenderFiltersSheet = <T extends Filters>({
                     value: c.country_name,
                   }))}
                 />
-                {(!filters.country_to || filters.country_to === "UA") && (
+                {(!filters.country_to ||
+                  String(filters.country_to).includes("UA")) && (
                   <NativeSelect
                     isMulti
                     showSearch
@@ -167,13 +168,13 @@ export const TenderFiltersSheet = <T extends Filters>({
                   />
                 )}
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-tight ml-1">
                   Місто отримувач
                 </label>
                 <Input
-                  className="h-10 border-gray-200 focus-visible:ring-orange-500 transition-all rounded-lg"
-                  placeholder="Введіть назву міста..."
+                  className="h-9 text-sm border-zinc-200 focus-visible:ring-orange-500 rounded-xl"
+                  placeholder="Назва міста..."
                   value={filters.city_to ? String(filters.city_to) : ""}
                   onChange={(e) => updateField("city_to", e.target.value)}
                 />
@@ -181,22 +182,22 @@ export const TenderFiltersSheet = <T extends Filters>({
             </section>
 
             {/* ПАРАМЕТРИ ВАНТАЖУ */}
-            <section className="space-y-5 pb-6">
-              <div className="flex items-center gap-2 pb-2 border-b border-blue-100">
-                <Truck className="h-4 w-4 text-blue-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Вантаж та причіп
+            <section className="space-y-3 pb-4">
+              <div className="flex items-center gap-2 pb-1.5 border-b border-blue-100/50">
+                <Truck className="h-3.5 w-3.5 text-blue-500" />
+                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                  Вантаж
                 </h3>
               </div>
               <NativeSelect
                 isMulti
-                label="Тип причепу / кузова"
+                label="Тип причепу"
                 value={filters.trailer_type}
                 onChange={(v) => updateField("trailer_type", v)}
                 options={dropdowns?.trailer_type_dropdown}
                 placeholder="Всі типи"
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <NativeSelect
                   showSearch
                   isMulti
@@ -218,18 +219,18 @@ export const TenderFiltersSheet = <T extends Filters>({
           </div>
         </ScrollArea>
 
-        {/* ФІКСОВАНИЙ ФУТЕР: shrink-0 гарантує, що він не зникне */}
-        <SheetFooter className="p-4 border-t bg-gray-50/80 backdrop-blur-sm shrink-0 mt-auto">
-          <div className="flex items-center gap-3 w-full">
+        {/* ФІКСОВАНИЙ ФУТЕР: компактніші кнопки */}
+        <SheetFooter className="p-3 border-t bg-white shrink-0">
+          <div className="flex items-center gap-2 w-full">
             <Button
               variant="ghost"
-              className="flex-1 text-gray-500 hover:bg-gray-200 hover:text-gray-900 h-11"
+              className="flex-1 text-gray-500 h-9 text-xs"
               onClick={handleReset}
             >
               Очистити
             </Button>
             <Button
-              className="flex-[2] bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 shadow-lg shadow-orange-200 active:scale-[0.98] transition-all"
+              className="flex-[2] bg-orange-500 hover:bg-orange-600 text-white font-bold h-9 text-xs shadow-md active:scale-[0.98] transition-all rounded-xl"
               onClick={handleApply}
             >
               Застосувати

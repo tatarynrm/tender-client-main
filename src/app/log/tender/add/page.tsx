@@ -1,4 +1,5 @@
-import TenderSaveForm from "@/features/log/tenders/components/TenderSaveForm";
+
+import TenderSaveForm from "@/features/log/tender/components/TenderSaveForm";
 import React from "react";
 
 const CargoActivePage = () => {

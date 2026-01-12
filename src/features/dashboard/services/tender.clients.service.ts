@@ -4,7 +4,9 @@ import { ITenderClientFormData } from "../types/dropdown.types";
 import { IApiResponse } from "@/shared/api/api.type";
 
 export const tenderClientsService = {
-  getTenders: async (params?: URLSearchParams): Promise<IApiResponse<ITender[]>> => {
+  getTenders: async (
+    params?: URLSearchParams
+  ): Promise<IApiResponse<ITender[]>> => {
     const query = params?.toString();
     const { data } = await api.get(
       `/tender/client-list${query ? `?${query}` : ""}`

@@ -1,31 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useFilters } from "@/shared/hooks/useFilters";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ITender } from "@/features/log/types/tender.type";
+import { useMemo, useState } from "react";
+import { ITender } from "../types/tender.type";
 
 import { ErrorState } from "@/shared/components/Loaders/ErrorState";
-import { TenderCardClients } from "@/features/dashboard/tender/components/TenderCardClient";
-import { useTenderListClient } from "@/features/dashboard/hooks/useTenderListClient";
 
-import { useTenderClientFormData } from "@/features/dashboard/hooks/useTenderClientFormData";
-import { useFilters } from "@/shared/hooks/useFilters";
-
-import { EmptyTenders } from "@/features/dashboard/tender/components/EmptyTenders";
-import { Pagination } from "@/shared/components/Pagination/Pagination";
-import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
-
-import { Skeleton } from "@/shared/components/ui";
-import { TenderListSkeleton } from "@/features/log/tender/skeletons/TenderCardClientSkeleton";
-import TenderFullInfoModal from "@/features/log/tender/components/TenderFullInfoModal";
-
-import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
+import TenderFullInfoModal from "./components/TenderFullInfoModal";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 
-export default function ClientsTenderPage() {
+import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
+import { ActiveFilters } from "./components/ActiveFilters";
+import { EmptyTenders } from "./components/EmptyTenders";
+import { Pagination } from "@/shared/components/Pagination/Pagination";
+import {  TenderCardManagers } from "./components/TenderCardManager";
+import Loader from "@/shared/components/Loaders/MainLoader";
+import { useTenderListManagers } from "../hooks/useTenderManagersList";
+import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
+
+export default function ManagersTenderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { tenderFilters } = useTenderClientFormData();
+  const { tenderFilters } = useTenderManagersFormData();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
   // 1. Параметри з URL
   const currentParams = useMemo(
@@ -39,6 +36,8 @@ export default function ClientsTenderPage() {
       trailer_type: searchParams.get("trailer_type") || "",
       load_type: searchParams.get("load_type") || "",
       tender_type: searchParams.get("tender_type") || "",
+      manager: searchParams.get("manager") || "",
+      company: searchParams.get("company") || "",
       page: Number(searchParams.get("page") || 1),
       limit: Number(searchParams.get("limit") || 10), // <--- додали limit
     }),
@@ -47,7 +46,7 @@ export default function ClientsTenderPage() {
 
   const { filters, setFilters, reset } = useFilters(currentParams);
   const { tenders, pagination, isLoading, error } =
-    useTenderListClient(currentParams);
+    useTenderListManagers(currentParams);
 
   const updateUrl = (newParams: Record<string, any>) => {
     const params = new URLSearchParams();
@@ -95,19 +94,9 @@ export default function ClientsTenderPage() {
     setFilters(newFilters);
     updateUrl({ ...newFilters, page: 1 });
   };
+
   if (error) return <ErrorState />;
-  if (isLoading) {
-    return (
-      <div className="p-4 mx-auto">
-        {/* Можна додати скелетон фільтрів, якщо треба */}
-        <div className="flex justify-between mb-6">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-24" />
-        </div>
-        <TenderListSkeleton count={6} />
-      </div>
-    );
-  }
+  if (isLoading) return <Loader />;
   return (
     <div className="p-4  mx-auto">
       <TenderFullInfoModal
@@ -154,7 +143,7 @@ export default function ClientsTenderPage() {
 
           <div className="grid gap-4">
             {tenders.map((item) => (
-              <TenderCardClients
+              <TenderCardManagers
                 key={item.id}
                 cargo={item}
                 onOpenDetails={() => setSelectedTender(item)}

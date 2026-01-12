@@ -55,23 +55,25 @@ const links: MenuItem[] = [
       { name: "Архів", href: "/log/cargo/archive", icon: FileArchive },
     ],
   },
-    {
+  {
     name: "Тендери",
     icon: LayoutList,
-    children: [
-      { name: "Активні", href: "/log/tender/active", icon: Shield },
-      // {
-      //   name: "Приймаю участь",
-      //   href: "/log/tender/my",
-      //   icon: ShieldPlus,
-      // },
-      // {
-      //   name: "Майбутні",
-      //   href: "/log/tender/archive",
-      //   icon: FileArchive,
-      // },
-      { name: "Архів", href: "/dashboard/tenders/archive", icon: FileArchive },
-    ],
+    href: "/log/tender",
+
+    // children: [
+    //   // { name: "Активні", href: "/log/tender/active", icon: Shield },
+    //   // {
+    //   //   name: "Приймаю участь",
+    //   //   href: "/log/tender/my",
+    //   //   icon: ShieldPlus,
+    //   // },
+    //   // {
+    //   //   name: "Майбутні",
+    //   //   href: "/log/tender/archive",
+    //   //   icon: FileArchive,
+    //   // },
+    //   // { name: "Архів", href: "/dashboard/tenders/archive", icon: FileArchive },
+    // ],
   },
   // {
   //   name: "Персональні дані",

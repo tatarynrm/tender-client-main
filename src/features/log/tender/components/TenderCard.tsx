@@ -25,6 +25,7 @@ import {
 import { useRouter } from "next/navigation";
 import { ITender } from "../../types/tender.type";
 
+
 export function TenderCardManagers({
   cargo,
   onOpenDetails,
