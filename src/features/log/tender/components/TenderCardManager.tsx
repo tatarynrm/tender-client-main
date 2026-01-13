@@ -11,6 +11,7 @@ import {
   Info,
   ChevronUp,
   ChevronDown,
+  Star,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -42,7 +43,14 @@ export function TenderCardManagers({
     (p) => p.ids_point === "CUSTOM_DOWN"
   );
   const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
+  const getRatingStars = (rating: number | string | null | undefined) => {
+    const r = Number(rating || 0);
+    if (r === 2) return 5;
+    if (r === 1) return 3;
+    return 1;
+  };
 
+  const stars = getRatingStars(cargo.rating);
   return (
     <Card className="w-full border-gray-200 dark:border-slate-700 bg-[#eff4fc] dark:bg-slate-800 hover:shadow-md transition-all rounded-xl overflow-hidden mb-1">
       {/* HEADER - Ідентичний клієнтському */}
@@ -52,10 +60,24 @@ export function TenderCardManagers({
             <span className="text-[14px] uppercase font-black tracking-widest text-zinc-400 leading-none mb-1">
               № {cargo.id}
             </span>
+
             <span className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-none uppercase">
               {cargo.tender_type}
             </span>
           </div>
+          <span className="text-[14px] uppercase font-black tracking-widest text-zinc-400 leading-none mb-1 flex">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  "h-2.5 w-2.5",
+                  i < stars
+                    ? "fill-amber-400 text-amber-400"
+                    : "fill-muted/20 text-muted"
+                )}
+              />
+            ))}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">

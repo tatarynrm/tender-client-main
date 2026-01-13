@@ -76,10 +76,10 @@ export const TenderFiltersSheet = <T extends Filters>({
 
       <SheetContent
         side="left"
-        className="w-full sm:max-w-[600px] p-0 flex flex-col h-[100dvh] border-l shadow-2xl"
+        className="w-full sm:max-w-[600px]  flex flex-col h-[100dvh] border-l shadow-2xl"
       >
         {/* ФІКСОВАНА ШАПКА: shrink-0 не дає їй стискатися */}
-        <SheetHeader className="p-5 border-b shrink-0  z-10">
+        <SheetHeader className="p-5 border-b shrink-0  ">
           <SheetTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
             <Settings2 className="h-5 w-5 text-orange-500" />
             Параметри пошуку

@@ -95,7 +95,6 @@ export interface ITender {
   car_count_closed: number;
   car_count_canceled: number;
 
-
   company_name: string;
 
   cost_start: number;
@@ -104,6 +103,7 @@ export interface ITender {
   valut_name?: string;
 
   tender_type?: string;
+  rating?: number;
 
   usr_phone: any[]; // якщо зʼявиться структура — типізуємо
   rate_company: IRateCompany[];
@@ -112,7 +112,6 @@ export interface ITender {
   tender_route: ITenderRoute[];
   tender_trailer: ITenderTrailer[];
   tender_permission: ITenderPermission[];
-
 }
 export interface ITenderLoad {
   id: number;
@@ -138,18 +137,18 @@ export interface ITenderRoute {
   // Логістичні параметри
   customs: boolean; // Чи є точка митницею
   point_name: string; // Назва точки для відображення (Завантаження, Кордон тощо)
-  
+
   // Тип точки (Union type для автокомпліту)
   ids_point:
-    | "LOAD_FROM"   // Початкова точка завантаження
-    | "LOAD_TO"     // Кінцева точка розвантаження
-    | "BORDER"      // Перетин кордону
-    | "CUSTOM_UP"   // Замитнення (експорт)
+    | "LOAD_FROM" // Початкова точка завантаження
+    | "LOAD_TO" // Кінцева точка розвантаження
+    | "BORDER" // Перетин кордону
+    | "CUSTOM_UP" // Замитнення (експорт)
     | "CUSTOM_DOWN" // Розмитнення (імпорт)
-    | string;       // Для кастомних значень
+    | string; // Для кастомних значень
 
   // Дати (ISO string)
-  date_point: string | null;  // Бажана дата (від)
+  date_point: string | null; // Бажана дата (від)
   date_point2: string | null; // Бажана дата (до)
 
   // Додатково

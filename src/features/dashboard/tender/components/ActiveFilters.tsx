@@ -87,9 +87,9 @@ export const ActiveFilters = ({
   if (groupKeys.length === 0) return null;
 
   return (
-    <div className="space-y-3 mt-2 mb-4">
+    <div className="space-y-3 mt-2 mb-4 ">
       {/* Шапка з кнопкою очищення */}
-      <div className="flex items-center gap-10 border-b pb-1 border-zinc-100">
+      <div className="flex items-center gap-10 border-b pb-1 border-zinc-100 bg-red-500">
         <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
           Активні фільтри
         </span>
@@ -104,7 +104,7 @@ export const ActiveFilters = ({
       </div>
 
       {/* Рендер груп */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 bg-red-500">
         {groupKeys.map((key) => (
           <div key={key} className="flex flex-row items-center gap-2">
             {/* Назва категорії */}
@@ -113,7 +113,7 @@ export const ActiveFilters = ({
             </span>
 
             {/* Список бейджів у рядок */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 bg-black">
               {groupedFilters[key].map((item, index) => (
                 <Badge
                   key={`${key}-${item.id}-${index}`}

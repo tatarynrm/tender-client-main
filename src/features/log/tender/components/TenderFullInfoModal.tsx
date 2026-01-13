@@ -269,7 +269,7 @@ export default function TenderFullInfoModal({
 
             <div className="pt-4 sticky bottom-0 bg-white dark:bg-zinc-950">
               <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-orange-900/20 uppercase text-sm tracking-widest flex items-center justify-center gap-3">
-                Відгукнутися
+                Довідка
                 <ArrowLeft size={18} className="rotate-180" />
               </button>
             </div>
