@@ -40,20 +40,21 @@ const links: MenuItem[] = [
   {
     name: "Екран заявок",
     icon: ScreenShare,
-    children: [
-      {
-        name: "Активні",
-        href: "/log/cargo/active",
-        icon: MonitorCheck,
-      },
-      // {
-      //   name: "Приймав участь",
-      //   href: "/log/cargo/took-part",
-      //   icon: ShieldPlus,
-      // },
-      { name: "Завершені", href: "/log/cargo/archive", icon: FileArchive },
-      { name: "Архів", href: "/log/cargo/archive", icon: FileArchive },
-    ],
+    href: "/log/cargo",
+    // children: [
+    //   {
+    //     name: "Активні",
+    //     href: "/log/cargo/active",
+    //     icon: MonitorCheck,
+    //   },
+    //   // {
+    //   //   name: "Приймав участь",
+    //   //   href: "/log/cargo/took-part",
+    //   //   icon: ShieldPlus,
+    //   // },
+    //   { name: "Завершені", href: "/log/cargo/archive", icon: FileArchive },
+    //   { name: "Архів", href: "/log/cargo/archive", icon: FileArchive },
+    // ],
   },
   {
     name: "Тендери",

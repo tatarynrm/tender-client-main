@@ -7,15 +7,16 @@
 //   Truck,
 //   ClipboardList,
 //   User,
-//   MessageCircle,
-//   ArrowBigDownDash,
-//   Calendar,
 //   Box,
 //   Info,
 //   Layers,
-//   Settings2,
 //   Clock,
 //   CheckCircle2,
+//   ChevronRight,
+//   TrendingDown,
+//   Zap,
+//   MapPin,
+//   ArrowRight,
 // } from "lucide-react";
 
 // import { Card, CardContent } from "@/shared/components/ui/card";
@@ -26,58 +27,6 @@
 // import { ManualPriceDialog } from "./ManualPriceDialog";
 // import { useTenderActions } from "../hooks/useTenderActions";
 // import { TenderTimer } from "./TenderTimer";
-
-// // --- Допоміжні компоненти ---
-
-// const StatusBadge = ({
-//   condition,
-//   icon: Icon,
-//   text,
-//   variant = "neutral",
-// }: any) => {
-//   if (!condition) return null;
-//   const variants: any = {
-//     warning: "bg-amber-100 text-amber-700 animate-pulse",
-//     success: "bg-emerald-100 text-emerald-700",
-//     neutral: "bg-zinc-200/50 text-zinc-600",
-//   };
-//   return (
-//     <span
-//       className={cn(
-//         "flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-black uppercase",
-//         variants[variant]
-//       )}
-//     >
-//       <Icon size={10} /> {text}
-//     </span>
-//   );
-// };
-
-// const SpecBadge = ({ children, icon: Icon, className }: any) => (
-//   <div
-//     className={cn(
-//       "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight border",
-//       className
-//     )}
-//   >
-//     {Icon && <Icon size={12} />}
-//     {children}
-//   </div>
-// );
-// // --- Новий компонент діагональної стрічки ---
-// const Ribbon = ({ text, colorClass }: { text: string; colorClass: string }) => (
-//   <div className="absolute top-0 right-0 overflow-hidden w-32 h-32 pointer-events-none z-10">
-//     <div
-//       className={cn(
-//         "absolute top-6 -right-8 w-[160px] py-1 rotate-45 text-center text-[10px] font-black uppercase tracking-widest shadow-lg border-y border-white/20 text-white",
-//         colorClass
-//       )}
-//     >
-//       {text}
-//     </div>
-//   </div>
-// );
-// // --- Основний компонент ---
 
 // export function TenderCardClients({
 //   cargo,
@@ -106,7 +55,6 @@
 //     const start = cargo.time_start ? new Date(cargo.time_start).getTime() : 0;
 //     const end = cargo.time_end ? new Date(cargo.time_end).getTime() : 0;
 //     const currentTime = now.getTime();
-
 //     return {
 //       isNotStarted: start > currentTime,
 //       isFinished: end > 0 && currentTime > end,
@@ -114,295 +62,307 @@
 //     };
 //   }, [now, cargo.time_start, cargo.time_end]);
 
-//   const route = useMemo(
+//   // Групування точок маршруту для 3 колонок
+//   const routeLayout = useMemo(
 //     () => ({
-//       from: cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM"),
-//       customUp: cargo.tender_route.filter((p) => p.ids_point === "CUSTOM_UP"),
-//       border: cargo.tender_route.filter((p) => p.ids_point === "BORDER"),
-//       customDown: cargo.tender_route.filter(
-//         (p) => p.ids_point === "CUSTOM_DOWN"
+//       load: cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM"),
+//       transit: cargo.tender_route.filter((p) =>
+//         ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point || "")
 //       ),
-//       to: cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO"),
+//       unload: cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO"),
 //     }),
 //     [cargo.tender_route]
 //   );
-
-//   const renderRouteSection = (
-//     points: any[],
-//     label: string,
-//     colorClass: string
-//   ) => {
-//     if (points.length === 0) return null;
-//     return (
-//       <div className="flex flex-col gap-0.5">
-//         <span
-//           className={cn(
-//             "text-[9px] font-bold uppercase tracking-tighter opacity-70",
-//             colorClass
-//           )}
-//         >
-//           {label}
-//         </span>
-//         {points.map((p) => (
-//           <div
-//             key={p.id}
-//             className="flex items-center gap-1.5 text-[13px] font-medium leading-none"
-//           >
-//             <Flag country={p.ids_country ?? "UA"} size={14} />
-//             <span className="truncate">{p.city}</span>
-//             <span className="text-[10px] text-zinc-400">({p.ids_country})</span>
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   };
 
 //   return (
 //     <>
 //       <Card
 //         className={cn(
-//           "w-full border-gray-200 transition-all rounded-xl overflow-hidden mb-4 shadow-sm",
-//           isNotStarted && "bg-slate-50 opacity-60",
-//           isFinished && "bg-zinc-100/80 grayscale-[0.5]",
-//           canBid && "bg-white hover:shadow-md border-emerald-100"
+//           "relative w-full transition-all duration-300 border-none shadow-sm mb-4 overflow-hidden group",
+//           "bg-white dark:bg-zinc-900/50 dark:backdrop-blur-md",
+//           isFinished && "opacity-75 grayscale-[0.2]"
 //         )}
 //       >
-//         {isNotStarted && <Ribbon text="Очікується" colorClass="bg-amber-500" />}
-//         {isFinished && <Ribbon text="Завершено" colorClass="bg-slate-500" />}
-//         {canBid && <Ribbon text="Активні торги" colorClass="bg-emerald-500" />}
-//         {/* HEADER */}
-//         <div className="bg-zinc-50 dark:bg-slate-900/50 px-4 py-2.5 border-b border-gray-100 flex md:justify-between md:flex-row flex-col">
-//           <div className="flex items-center gap-3">
-//             <div className="flex flex-col">
-//               <span className="text-[10px] uppercase font-black tracking-widest text-zinc-400 leading-none mb-1">
-//                 Тендер
-//               </span>
-//               <span className="text-sm font-bold text-orange-600">
-//                 № {cargo.id}
-//               </span>
-//             </div>
-//             <div className="h-6 w-[1px] bg-zinc-200 mx-1" />
-//             <div className="flex items-center gap-2">
-//               <StatusBadge
-//                 condition={true}
-//                 icon={Layers}
-//                 text={cargo.tender_type}
-//               />
-//               <StatusBadge
-//                 condition={isNotStarted}
-//                 icon={Clock}
-//                 text="Очікує"
-//                 variant="warning"
-//               />
-//               <StatusBadge
-//                 condition={isFinished}
-//                 icon={CheckCircle2}
-//                 text="Завершено"
-//                 variant="neutral"
-//               />
-//             </div>
-//           </div>
-
-//           <div className="flex items-center gap-2 pr-20">
-//             {isNotStarted && cargo.time_start && (
-//               <TenderTimer
-//                 targetDate={cargo.time_start}
-//                 label="До початку"
-//                 variant="blue"
-//               />
-//             )}
-//             {canBid && cargo.time_end && (
-//               <TenderTimer
-//                 targetDate={cargo.time_end}
-//                 label="До кінця"
-//                 variant="orange"
-//               />
-//             )}
-//             {/* ВІДОБРАЖЕННЯ ЧАСУ ЗАВЕРШЕННЯ */}
-//             {isFinished && cargo.time_end && (
-//               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-200/50 border border-zinc-300 shadow-sm">
-//                 <Clock size={12} className="text-zinc-500" />
-//                 <div className="flex flex-col leading-none">
-//                   <span className="text-[8px] uppercase font-bold text-zinc-500 tracking-wider">
-//                     Завершився
-//                   </span>
-//                   <span className="text-[11px] font-mono font-bold text-zinc-600">
-//                     {format(new Date(cargo.time_end), "dd.MM HH:mm")}
-//                   </span>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         </div>
+//         {/* Декоративна смужка статусу зверху */}
+//         <div
+//           className={cn(
+//             "h-1 w-full",
+//             canBid
+//               ? "bg-emerald-500"
+//               : isNotStarted
+//               ? "bg-amber-500"
+//               : "bg-zinc-400"
+//           )}
+//         />
 
 //         <CardContent className="p-0">
-//           <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-zinc-100">
-//             {/* 1. МАРШРУТ */}
-//             <div className="lg:col-span-4 p-4 space-y-3">
-//               {renderRouteSection(
-//                 route.from,
-//                 "Завантаження",
-//                 "text-emerald-600"
-//               )}
-//               {renderRouteSection(
-//                 route.customUp,
-//                 "Замитнення",
-//                 "text-blue-500"
-//               )}
-//               {route.border.length > 0 && (
-//                 <div className="bg-zinc-50 p-1.5 rounded border border-dashed border-zinc-200">
-//                   {renderRouteSection(route.border, "Кордон", "text-amber-600")}
-//                 </div>
-//               )}
-//               {renderRouteSection(
-//                 route.customDown,
-//                 "Розмитнення",
-//                 "text-blue-500"
-//               )}
-//               {renderRouteSection(route.to, "Розвантаження", "text-rose-600")}
-//             </div>
-
-//             {/* 2. ІНФО */}
-//             <div className="lg:col-span-5 p-4 flex flex-col justify-between">
-//               <div className="space-y-4">
-//                 <div className="flex items-center gap-4 font-bold text-zinc-900">
-//                   <div className="flex items-center gap-1.5">
-//                     <Truck size={16} className="text-blue-500" />{" "}
-//                     {cargo.car_count_actual || 1} авт.
-//                   </div>
-//                   <div className="flex items-center gap-1.5">
-//                     <ClipboardList size={16} className="text-amber-500" />{" "}
-//                     {cargo.weight}т / {cargo.volume}м³
+//           <div className="grid grid-cols-1 lg:grid-cols-12">
+//             {/* ЛІВА ЧАСТИНА: МАРШРУТ (3 колонки) */}
+//             <div className="lg:col-span-8 p-5 border-r border-zinc-100 dark:border-zinc-800">
+//               <div className="flex items-center justify-between mb-6">
+//                 <div className="flex items-center gap-3">
+//                   <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase">
+//                     № {cargo.id}
+//                   </span>
+//                   <div className="flex items-center gap-1.5 text-zinc-400">
+//                     <Layers size={14} />
+//                     <span className="text-xs font-medium">
+//                       {cargo.tender_type}
+//                     </span>
 //                   </div>
 //                 </div>
-
-//                 <div className="flex flex-col gap-2">
-//                   {/* Типи причепів */}
-//                   {cargo.tender_trailer && cargo.tender_trailer.length > 0 && (
-//                     <div className="flex items-start gap-2">
-//                       <Truck
-//                         size={14}
-//                         className="text-slate-400 mt-0.5 shrink-0"
-//                       />
-//                       <div className="text-[11px] font-bold text-slate-700 leading-tight">
-//                         {cargo.tender_trailer
-//                           .map((t) => t.trailer_type_name)
-//                           .join(", ")}
-//                       </div>
-//                     </div>
+//                 <div className="flex items-center gap-4">
+//                   {canBid && (
+//                     <TenderTimer
+//                       targetDate={cargo.time_end || ""}
+//                       label="До кінця:"
+//                       variant="orange"
+//                     />
 //                   )}
-
-//                   {/* Типи завантажень */}
-//                   {cargo.tender_load && cargo.tender_load.length > 0 && (
-//                     <div className="flex items-start gap-2">
-//                       <Layers
-//                         size={14}
-//                         className="text-blue-500 mt-0.5 shrink-0"
-//                       />
-//                       <div className="text-[11px] font-bold text-blue-700 leading-tight">
-//                         {cargo.tender_load
-//                           .map((l) => l.load_type_name)
-//                           .join(", ")}
-//                       </div>
-//                     </div>
+//                   {isNotStarted && (
+//                     <TenderTimer
+//                       targetDate={cargo.time_start || ""}
+//                       label="Початок через:"
+//                       variant="blue"
+//                     />
 //                   )}
-//                 </div>
-
-//                 <div className="text-[11px] bg-amber-50/50 p-2 rounded-lg border-l-2 border-amber-400">
-//                   <p className="font-bold text-zinc-800 flex items-center gap-1">
-//                     <Box size={12} /> {cargo.cargo}
-//                   </p>
-//                   <p className="italic text-zinc-600 line-clamp-2">
-//                     {cargo.notes || "Без приміток"}
-//                   </p>
 //                 </div>
 //               </div>
-//               <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 mt-4 pt-2 border-t border-zinc-50">
-//                 <User size={12} /> <span>{cargo.author}</span>
+
+//               <div className="grid grid-cols-3 gap-6 relative">
+//                 {/* 1. Завантаження */}
+//                 <div className="space-y-3">
+//                   <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+//                     Звідки
+//                   </span>
+//                   {routeLayout.load.map((p, idx) => (
+//                     <div key={idx} className="flex flex-col">
+//                       <div className="flex items-center gap-2 mb-1">
+//                         <Flag
+//                           country={p.ids_country || "UA"}
+//                           size={16}
+//                           className="rounded-sm shadow-sm"
+//                         />
+//                         <span className="text-base font-black dark:text-zinc-100">
+//                           {p.city}
+//                         </span>
+//                       </div>
+//                       <span className="text-[11px] text-zinc-500 font-medium">
+//                         {/* {p.date_from ? format(new Date(p.date_from), "dd.MM HH:mm") : "Гнучка дата"} */}
+//                       </span>
+//                     </div>
+//                   ))}
+//                 </div>
+
+//                 {/* 2. Митниця / Кордон (Транзит) */}
+//                 <div className="relative flex flex-col items-center">
+//                   <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">
+//                     Оформлення
+//                   </span>
+//                   <div className="w-full flex items-center gap-2 justify-center px-2 py-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700">
+//                     {routeLayout.transit.length > 0 ? (
+//                       routeLayout.transit.map((p, idx) => (
+//                         <div key={idx} className="flex items-center">
+//                           <Flag
+//                             country={p.ids_country || "UA"}
+//                             size={14}
+//                             className="opacity-70"
+//                           />
+//                           {idx < routeLayout.transit.length - 1 && (
+//                             <ArrowRight
+//                               size={10}
+//                               className="mx-1 text-zinc-300"
+//                             />
+//                           )}
+//                         </div>
+//                       ))
+//                     ) : (
+//                       <span className="text-[10px] font-bold text-zinc-400 italic uppercase">
+//                         Прямий рейс
+//                       </span>
+//                     )}
+//                   </div>
+//                   {/* Лінії з'єднання */}
+//                   <div className="absolute top-1/2 left-0 w-4 h-[1px] bg-zinc-100 dark:bg-zinc-800 -translate-x-full" />
+//                   <div className="absolute top-1/2 right-0 w-4 h-[1px] bg-zinc-100 dark:bg-zinc-800 translate-x-full" />
+//                 </div>
+
+//                 {/* 3. Розвантаження */}
+//                 <div className="space-y-3 text-right">
+//                   <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
+//                     Куди
+//                   </span>
+//                   {routeLayout.unload.map((p, idx) => (
+//                     <div key={idx} className="flex flex-col items-end">
+//                       <div className="flex items-center gap-2 mb-1">
+//                         <span className="text-base font-black dark:text-zinc-100">
+//                           {p.city}
+//                         </span>
+//                         <Flag
+//                           country={p.ids_country || "UA"}
+//                           size={16}
+//                           className="rounded-sm shadow-sm"
+//                         />
+//                       </div>
+//                       <span className="text-[11px] text-zinc-500 font-medium text-right">
+//                         {/* {p.date_to ? format(new Date(p.date_to), "dd.MM HH:mm") : "По прибуттю"} */}
+//                       </span>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+
+//               {/* Характеристики вантажу (Нижній ряд) */}
+//               <div className="mt-8 flex items-center gap-6 pt-4 border-t border-zinc-50 dark:border-zinc-800/50">
+//                 <div className="flex items-center gap-2">
+//                   <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+//                     <Truck
+//                       size={16}
+//                       className="text-blue-600 dark:text-blue-400"
+//                     />
+//                   </div>
+//                   <div className="flex flex-col">
+//                     <span className="text-[9px] font-bold text-zinc-400 uppercase">
+//                       Транспорт
+//                     </span>
+//                     <span className="text-xs font-black dark:text-zinc-200">
+//                       20т / Тент
+//                     </span>
+//                   </div>
+//                 </div>
+//                 <div className="flex items-center gap-2">
+//                   <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+//                     <Box
+//                       size={16}
+//                       className="text-amber-600 dark:text-amber-400"
+//                     />
+//                   </div>
+//                   <div className="flex flex-col">
+//                     <span className="text-[9px] font-bold text-zinc-400 uppercase">
+//                       Вантаж
+//                     </span>
+//                     <span className="text-xs font-black dark:text-zinc-200 truncate max-w-[150px]">
+//                       {cargo.cargo || "33 палети"}
+//                     </span>
+//                   </div>
+//                 </div>
+//                 <div className="ml-auto flex items-center gap-2 text-zinc-400 hover:text-zinc-600 transition-colors cursor-help">
+//                   <User size={14} />
+//                   <span className="text-xs font-semibold">{cargo.author}</span>
+//                 </div>
 //               </div>
 //             </div>
 
-//             {/* 3. ЦІНА */}
+//             {/* ПРАВА ЧАСТИНА: ПАНЕЛЬ СТАВОК */}
 //             <div
 //               className={cn(
-//                 "lg:col-span-3 p-4 flex flex-col justify-center gap-3 text-center transition-colors",
-//                 !canBid ? "bg-zinc-100/50" : "bg-emerald-50/30"
+//                 "lg:col-span-4 p-5 flex flex-col justify-between",
+//                 canBid
+//                   ? "bg-zinc-50/50 dark:bg-zinc-900/20"
+//                   : "bg-zinc-100/30 dark:bg-transparent"
 //               )}
 //             >
-//               <div>
-//                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-//                   {isFinished
-//                     ? "Фінальна ціна"
-//                     : isNotStarted
-//                     ? "Стартова ціна"
-//                     : "Поточна ставка"}
-//                 </span>
-//                 <div
-//                   className={cn(
-//                     "text-2xl font-black",
-//                     !canBid ? "text-zinc-500" : "text-zinc-900"
-//                   )}
-//                 >
-//                   {cargo.price_proposed || cargo.price_start}
-//                   <span className="text-sm font-normal ml-1">
-//                     {cargo.valut_name?.toUpperCase()}
-//                   </span>
+//               <div className="space-y-4">
+//                 <div className="flex justify-between items-end">
+//                   <div className="space-y-1">
+//                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+//                       Поточна ціна
+//                     </span>
+//                     <div className="flex items-baseline gap-1.5">
+//                       <span className="text-3xl font-black tracking-tighter dark:text-white">
+//                         {cargo.price_proposed || cargo.price_start}
+//                       </span>
+//                       <span className="text-sm font-bold text-zinc-400">
+//                         {cargo.valut_name}
+//                       </span>
+//                     </div>
+//                   </div>
+//                   <div className="text-right">
+//                     <div className="flex items-center gap-1 text-emerald-500 font-black text-xs">
+//                       <TrendingDown size={14} />
+//                       <span>
+//                         {cargo.price_step || 500} {cargo.valut_name}
+//                       </span>
+//                     </div>
+//                     <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-tight">
+//                       Крок зниження
+//                     </span>
+//                   </div>
 //                 </div>
-//               </div>
 
-//               <div className="space-y-2">
-//                 {cargo.ids_type === "GENERAL" && (
+//                 <div className="grid grid-cols-1 gap-2">
 //                   <Button
 //                     disabled={!canBid}
 //                     onClick={() => setActiveModal("confirm")}
-//                     className="w-full bg-teal-600 hover:bg-teal-700 h-9 text-xs font-bold"
+//                     className={cn(
+//                       "w-full h-14 relative group overflow-hidden transition-all",
+//                       "bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white font-black"
+//                     )}
 //                   >
-//                     {isNotStarted
-//                       ? "Очікує"
-//                       : isFinished
-//                       ? "Завершено"
-//                       : `КРОК ${cargo.price_next}`}
-//                     {canBid && <ArrowBigDownDash className="ml-2 h-4 w-4" />}
+//                     <div className="flex flex-col items-center">
+//                       <span className="text-[10px] uppercase opacity-70 tracking-tighter">
+//                         Зробити ставку
+//                       </span>
+//                       <span className="text-lg tracking-tight">
+//                         {cargo.price_next} {cargo.valut_name}
+//                       </span>
+//                     </div>
+//                     {canBid && (
+//                       <Zap
+//                         size={16}
+//                         className="absolute right-4 opacity-20 group-hover:opacity-100 transition-opacity"
+//                       />
+//                     )}
 //                   </Button>
-//                 )}
-//                 {cargo.ids_type === "PRICE_REQUEST" && (
-//                   <Button
-//                     disabled={!canBid}
-//                     onClick={() => setActiveModal("manual")}
-//                     variant="outline"
-//                     className="w-full border-amber-500 text-amber-600 h-9 text-xs font-bold"
-//                   >
-//                     СВОЯ ЦІНА <MessageCircle className="ml-2 h-4 w-4" />
-//                   </Button>
-//                 )}
-//                 {cargo.ids_type === "REDEMPTION" && !isFinished && (
-//                   <Button
-//                     disabled={!canBid}
-//                     onClick={() => setActiveModal("buyout")}
-//                     className="w-full bg-rose-600 hover:bg-rose-700 h-9 text-xs font-bold"
-//                   >
-//                     ВИКУПИТИ
-//                   </Button>
-//                 )}
-//                 <Button
-//                   variant="ghost"
-//                   onClick={onOpenDetails}
-//                   className="w-full h-8 text-[10px] text-zinc-400 uppercase font-bold"
-//                 >
-//                   Детальніше <Info size={14} className="ml-1" />
-//                 </Button>
+
+//                   <div className="grid grid-cols-2 gap-2">
+//                     <Button
+//                       variant="outline"
+//                       disabled={!canBid}
+//                       onClick={() => setActiveModal("manual")}
+//                       className="border-zinc-200 dark:border-zinc-700 h-10 text-[10px] font-black uppercase tracking-tight"
+//                     >
+//                       Своя ціна
+//                     </Button>
+//                     <Button
+//                       variant="ghost"
+//                       onClick={onOpenDetails}
+//                       className="h-10 text-[10px] font-black uppercase tracking-tight text-zinc-500"
+//                     >
+//                       Деталі <Info size={14} className="ml-1" />
+//                     </Button>
+//                   </div>
+//                 </div>
 //               </div>
+
+//               {cargo.price_redemption && (
+//                 <button
+//                   disabled={!canBid}
+//                   onClick={() => setActiveModal("buyout")}
+//                   className="mt-4 w-full py-2 px-3 rounded-lg border border-orange-200 dark:border-orange-900/50 bg-orange-50/50 dark:bg-orange-900/10 flex items-center justify-between group hover:bg-orange-100 transition-colors"
+//                 >
+//                   <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+//                     <Zap size={14} fill="currentColor" />
+//                     <span className="text-[10px] font-black uppercase tracking-wide">
+//                       Миттєвий викуп
+//                     </span>
+//                   </div>
+//                   <span className="text-xs font-black text-orange-700 dark:text-orange-300">
+//                     {cargo.price_redemption} {cargo.valut_name}
+//                   </span>
+//                 </button>
+//               )}
 //             </div>
 //           </div>
 //         </CardContent>
 //       </Card>
 
-//       {/* MODALS */}
+//       {/* Модальні вікна залишаються без змін */}
 //       <ConfirmDialog
 //         open={activeModal === "confirm"}
 //         onOpenChange={closeModal}
-//         title="Підтвердити зниження?"
-//         description={`Ваша ставка складе ${cargo.price_next} ${cargo.valut_name}`}
+//         title="Підтвердити ставку?"
+//         description={`Ваша пропозиція буде: ${cargo.price_next} ${cargo.valut_name}`}
 //         onConfirm={onConfirmReduction}
 //       />
 //       <ManualPriceDialog
@@ -416,7 +376,7 @@
 //         open={activeModal === "buyout"}
 //         onOpenChange={closeModal}
 //         title="Миттєвий викуп"
-//         description="Прийняти умови тендеру негайно?"
+//         description="Ви впевнені, що хочете забрати рейс негайно за ціною викупу?"
 //         onConfirm={onBuyout}
 //         confirmText="Так, викупити"
 //       />
@@ -430,16 +390,13 @@ import Flag from "react-flagkit";
 import { format } from "date-fns";
 import {
   Truck,
-  ClipboardList,
   User,
-  MessageCircle,
-  ArrowBigDownDash,
   Box,
   Info,
   Layers,
-  Settings2,
-  Clock,
-  CheckCircle2,
+  TrendingDown,
+  Zap,
+  ArrowRight,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -450,51 +407,7 @@ import { ConfirmDialog } from "@/shared/components/confirm-dialog/ConfirmDialog"
 import { ManualPriceDialog } from "./ManualPriceDialog";
 import { useTenderActions } from "../hooks/useTenderActions";
 import { TenderTimer } from "./TenderTimer";
-
-// --- Допоміжні компоненти ---
-
-const StatusBadge = ({
-  condition,
-  icon: Icon,
-  text,
-  variant = "neutral",
-}: any) => {
-  if (!condition) return null;
-  const variants: any = {
-    warning:
-      "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 animate-pulse",
-    success:
-      "bg-emerald-100/80 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    neutral: "bg-zinc-200/50 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  };
-  return (
-    <span
-      className={cn(
-        "flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-tight border border-transparent",
-        variants[variant]
-      )}
-    >
-      <Icon size={10} /> {text}
-    </span>
-  );
-};
-
-const Ribbon = ({ text, colorClass }: { text: string; colorClass: string }) => (
-  <div className="absolute top-0 right-0 overflow-hidden w-32 h-32 pointer-events-none z-20">
-    <div
-      className={cn(
-        // Додано: drop-shadow для об'єму, виразніший градієнт, вища щільність шрифту
-        "absolute top-7 -right-11 w-[160px] py-1 rotate-45 text-center shadow-[0_2px_10px_rgba(0,0,0,0.3)]",
-        "text-[10px] font-black uppercase tracking-[0.1em] text-white",
-        "border-y border-white/30 backdrop-blur-[1px]",
-        "before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/20 before:to-transparent",
-        colorClass
-      )}
-    >
-      {text}
-    </div>
-  </div>
-);
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
 
 export function TenderCardClients({
   cargo,
@@ -503,6 +416,10 @@ export function TenderCardClients({
   cargo: ITender;
   onOpenDetails: () => void;
 }) {
+  // 1. ПІДКЛЮЧЕННЯ ШРИФТІВ
+  const { config } = useFontSize();
+  const { label, main, title, icon } = config;
+
   const {
     activeModal,
     setActiveModal,
@@ -530,298 +447,210 @@ export function TenderCardClients({
     };
   }, [now, cargo.time_start, cargo.time_end]);
 
-  const route = useMemo(
-    () => ({
-      from: cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM"),
-      customUp: cargo.tender_route.filter((p) => p.ids_point === "CUSTOM_UP"),
-      border: cargo.tender_route.filter((p) => p.ids_point === "BORDER"),
-      customDown: cargo.tender_route.filter(
-        (p) => p.ids_point === "CUSTOM_DOWN"
-      ),
-      to: cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO"),
-    }),
-    [cargo.tender_route]
+  // 2. РОЗПОДІЛ ТОЧОК МАРШРУТУ (3 КОЛОНКИ)
+  const fromPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM");
+  const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
+  const transitPoints = cargo.tender_route.filter((p) =>
+    ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point || "")
   );
 
-  const renderRouteSection = (
-    points: any[],
-    label: string,
-    colorClass: string,
-    isLast = false
-  ) => {
-    if (points.length === 0) return null;
-
-    // Визначаємо колір фону для точки степпера на основі кольору тексту
-    const dotColor = colorClass.replace("text-", "bg-");
-
-    return (
-      <div className="relative flex gap-3 group">
-        {/* Лінія степпера між точками */}
-        {!isLast && (
-          <div className="absolute left-[5px] top-[14px] bottom-[-10px] w-[1px] bg-zinc-200 dark:bg-zinc-800" />
-        )}
-
-        {/* Точка (Step Indicator) */}
-        <div className="relative z-10 pt-1">
-          <div
-            className={cn(
-              "w-[11px] h-[11px] rounded-full border-2 border-white dark:border-zinc-900 shadow-sm",
-              dotColor
-            )}
-          />
-        </div>
-
-        <div className="flex flex-col pb-2">
-          <span
-            className={cn(
-              "text-[8px] font-black uppercase tracking-tighter opacity-60 leading-none mb-1",
-              colorClass
-            )}
-          >
-            {label}
-          </span>
-          {points.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-1.5 text-[12px] font-bold leading-none dark:text-zinc-100"
-            >
-              <Flag
-                country={p.ids_country ?? "UA"}
-                size={12}
-                className="rounded-sm shadow-xs"
-              />
-              <span className="truncate max-w-[140px] tracking-tight">
-                {p.city}
-              </span>
-              <span className="text-[9px] text-zinc-400 font-medium">
-                ({p.ids_country})
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  const getPointLabel = (type: string) => {
+    switch (type) {
+      case "CUSTOM_UP": return "Замитнення";
+      case "BORDER": return "Кордон";
+      case "CUSTOM_DOWN": return "Розмитнення";
+      default: return "";
+    }
   };
 
   return (
     <>
       <Card
         className={cn(
-          "w-full transition-all rounded-xl overflow-hidden mb-3 shadow-sm border",
-          "dark:border-zinc-800",
-          isNotStarted && "bg-slate-50 dark:bg-zinc-900/40 opacity-70",
-          isFinished && "bg-zinc-100/80 dark:bg-zinc-900/60 grayscale-[0.4]",
-          canBid &&
-            "bg-white hover:shadow-md border-zinc-200 dark:border-zinc-800"
+          "relative w-full transition-all duration-300 border-zinc-200 dark:border-zinc-800 shadow-sm mb-2 overflow-hidden group",
+          "bg-white dark:bg-zinc-900/50",
+          isFinished && "opacity-75 grayscale-[0.2]"
         )}
       >
-        {isNotStarted && <Ribbon text="Очікується" colorClass="bg-amber-500" />}
-        {isFinished && <Ribbon text="Завершено" colorClass="bg-zinc-500" />}
-        {canBid && <Ribbon text="Активні торги" colorClass="bg-emerald-600" />}
-
-        {/* HEADER */}
-        <div className="bg-zinc-50/80 dark:bg-slate-800 px-3 py-1.5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col">
-              <span className="text-[8px] uppercase font-black tracking-widest text-zinc-400 leading-none">
-                Тендер
-              </span>
-              <span className="text-xs font-black text-orange-600 dark:text-orange-500">
-                № {cargo.id}
-              </span>
-            </div>
-            <div className="h-4 w-[1px] bg-zinc-300 dark:bg-zinc-700 mx-1" />
-            <div className="flex items-center gap-1">
-              <StatusBadge
-                condition={true}
-                icon={Layers}
-                text={cargo.tender_type}
-              />
-              <StatusBadge
-                condition={isNotStarted}
-                icon={Clock}
-                text="Очікує"
-                variant="warning"
-              />
-              <StatusBadge
-                condition={isFinished}
-                icon={CheckCircle2}
-                text="Done"
-                variant="neutral"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pr-12 lg:pr-16 scale-90">
-            {isNotStarted && cargo.time_start && (
-              <TenderTimer
-                targetDate={cargo.time_start}
-                label="До початку"
-                variant="blue"
-              />
-            )}
-            {canBid && cargo.time_end && (
-              <TenderTimer
-                targetDate={cargo.time_end}
-                label="До кінця"
-                variant="orange"
-              />
-            )}
-            {isFinished && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-200/50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
-                <Clock size={10} className="text-zinc-500" />
-                <span className="text-[10px] font-black text-zinc-600 dark:text-zinc-400">
-                  {format(new Date(cargo.time_end ?? ""), "dd.MM HH:mm")}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        <div
+          className={cn(
+            "h-1 w-full",
+            canBid ? "bg-emerald-500" : isNotStarted ? "bg-amber-500" : "bg-zinc-400"
+          )}
+        />
 
         <CardContent className="p-0">
-          <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-100 dark:divide-zinc-800">
-            {/* 1. МАРШРУТ ЗІ СТЕППЕРОМ */}
-            <div className="lg:col-span-4 p-3 pr-1">
-              <div className="flex flex-col">
-                {renderRouteSection(
-                  route.from,
-                  "Завантаження",
-                  "text-emerald-600"
-                )}
-
-                {renderRouteSection(
-                  route.customUp,
-                  "Замитнення",
-                  "text-blue-500"
-                )}
-
-                {route.border.length > 0 && (
-                  <div className="my-1 ml-6 mr-2 bg-zinc-50 dark:bg-zinc-800/40 p-1.5 rounded-md border border-dashed border-zinc-200 dark:border-zinc-700 relative">
-                    {/* Маленька стрілочка для вказівки на блок кордону */}
-                    <div className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-3 h-[1px] bg-zinc-200 dark:bg-zinc-700" />
-                    {renderRouteSection(
-                      route.border,
-                      "Кордон",
-                      "text-amber-600",
-                      true
-                    )}
-                  </div>
-                )}
-
-                {renderRouteSection(
-                  route.customDown,
-                  "Розмитнення",
-                  "text-blue-500"
-                )}
-
-                {renderRouteSection(
-                  route.to,
-                  "Розвантаження",
-                  "text-rose-600",
-                  true
-                )}
-              </div>
-            </div>
-
-            {/* 2. ІНФО */}
-            <div className="lg:col-span-5 p-3 flex flex-col justify-between bg-zinc-50/30 dark:bg-transparent">
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 font-black text-zinc-900 dark:text-zinc-100 text-[11px] uppercase tracking-tighter">
-                  <div className="flex items-center gap-1 bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded shadow-sm">
-                    <Truck size={12} className="text-blue-500" />{" "}
-                    {cargo.car_count_actual || 1} авт.
-                  </div>
-                  <div className="flex items-center gap-1 bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded shadow-sm">
-                    <ClipboardList size={12} className="text-amber-500" />{" "}
-                    {cargo.weight}т / {cargo.volume}м³
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  {cargo.tender_trailer?.length > 0 && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 leading-tight">
-                      <Settings2 size={12} className="shrink-0 opacity-70" />
-                      <span className="truncate">
-                        {cargo.tender_trailer
-                          .map((t) => t.trailer_type_name)
-                          .join(", ")}
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-[11px] bg-amber-50/50 dark:bg-amber-900/10 p-2 rounded border-l-2 border-amber-400">
-                    <p className="font-black text-zinc-800 dark:text-zinc-200 flex items-center gap-1 leading-none mb-1">
-                      <Box size={10} /> {cargo.cargo}
-                    </p>
-                    <p className="text-[10px] italic text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-tight">
-                      {cargo.notes || "Без приміток"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-zinc-400 font-bold mt-2">
-                <User size={10} />{" "}
-                <span className="truncate">{cargo.author}</span>
-              </div>
-            </div>
-
-            {/* 3. ЦІНА */}
-            <div
-              className={cn(
-                "lg:col-span-3 p-3 flex flex-col justify-center gap-2 text-center",
-                !canBid
-                  ? "bg-zinc-100/50 dark:bg-zinc-800/30"
-                  : "bg-emerald-50/30 dark:bg-emerald-900/10"
-              )}
-            >
-              <div>
-                <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">
-                  {isFinished ? "Фінал" : isNotStarted ? "Старт" : "Поточна"}
-                </span>
-                <div
-                  className={cn(
-                    "text-xl font-black tracking-tighter leading-none",
-                    !canBid
-                      ? "text-zinc-500"
-                      : "text-zinc-900 dark:text-zinc-100"
-                  )}
-                >
-                  {cargo.price_proposed || cargo.price_start}
-                  <span className="text-[10px] font-medium ml-0.5 uppercase opacity-60">
-                    {cargo.valut_name}
+          <div className="grid grid-cols-1 lg:grid-cols-12">
+            
+            {/* ЛІВА ЧАСТИНА: МАРШРУТ (3 колонки) */}
+            <div className="lg:col-span-8 p-4 border-r border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className={cn("bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded font-black tracking-widest uppercase", label)}>
+                    № {cargo.id}
                   </span>
+                  <div className="flex items-center gap-1.5 text-zinc-400">
+                    <Layers size={icon} />
+                    <span className={cn("font-bold uppercase", label)}>
+                      {cargo.tender_type}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {canBid && cargo.time_end && (
+                    <TenderTimer targetDate={cargo.time_end} label="До кінця:" variant="orange" />
+                  )}
+                  {isNotStarted && cargo.time_start && (
+                    <TenderTimer targetDate={cargo.time_start} label="Початок:" variant="blue" />
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-1">
-                {cargo.ids_type === "GENERAL" && (
-                  <Button
-                    disabled={!canBid}
-                    onClick={() => setActiveModal("confirm")}
-                    className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 h-8 text-[10px] font-black uppercase tracking-tight shadow-sm"
-                  >
-                    КРОК {cargo.price_next}{" "}
-                    {canBid && <ArrowBigDownDash className="ml-1 h-3 w-3" />}
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  onClick={onOpenDetails}
-                  className="w-full h-7 text-[9px] text-zinc-400 dark:text-zinc-500 uppercase font-black hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  Деталі <Info size={12} className="ml-1 opacity-70" />
-                </Button>
+              {/* МАРШРУТ У 3 КОЛОНКИ */}
+              <div className="grid grid-cols-3 gap-4">
+                {/* 1. Завантаження */}
+                <div className="space-y-1.5">
+                  <span className={cn("font-black text-emerald-600 uppercase tracking-tighter block", label)}>
+                    Відправлення
+                  </span>
+                  {fromPoints.map((p, idx) => (
+                    <div key={idx} className={cn("flex items-center gap-2 font-bold text-zinc-800 dark:text-zinc-100", main)}>
+                      <Flag country={p.ids_country || "UA"} size={icon} className="shrink-0" />
+                      <span className="truncate">{p.city}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 2. Транзит (Замитнення/Кордон/Розмитнення) */}
+                <div className="space-y-2 border-x border-dashed border-zinc-200 dark:border-zinc-800 px-3">
+                  <span className={cn("font-black text-amber-500 uppercase tracking-tighter block", label)}>
+                    Транзит / Мито
+                  </span>
+                  {transitPoints.length > 0 ? (
+                    transitPoints.map((p, idx) => (
+                      <div key={idx} className="flex flex-col leading-none">
+                        <div className={cn("flex items-center gap-1 font-bold text-zinc-500 dark:text-zinc-400", label)}>
+                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span className="uppercase text-[10px]">{getPointLabel(p.ids_point || "")}</span>
+                        </div>
+                        <span className={cn("pl-2.5 truncate font-bold text-zinc-700 dark:text-zinc-300", label)}>
+                           {p.city}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={cn("text-zinc-300 italic py-1 uppercase font-bold", label)}>Прямий рейс</div>
+                  )}
+                </div>
+
+                {/* 3. Розвантаження */}
+                <div className="space-y-1.5 text-right">
+                  <span className={cn("font-black text-rose-600 uppercase tracking-tighter block", label)}>
+                    Прибуття
+                  </span>
+                  {toPoints.map((p, idx) => (
+                    <div key={idx} className={cn("flex items-center gap-2 justify-end font-bold text-zinc-800 dark:text-zinc-100", main)}>
+                      <span className="truncate">{p.city}</span>
+                      <Flag country={p.ids_country || "UA"} size={icon} className="shrink-0" />
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* ХАРАКТЕРИСТИКИ */}
+              <div className="mt-6 flex items-center gap-6 pt-3 border-t border-zinc-50 dark:border-zinc-800/50">
+                <div className="flex items-center gap-2">
+                  <Truck size={icon + 2} className="text-blue-500" />
+                  <div className="flex flex-col">
+                    <span className={cn("font-bold text-zinc-400 uppercase leading-none", label)}>Транспорт</span>
+                    <span className={cn("font-black dark:text-zinc-200 uppercase", label)}>
+                      {cargo.weight}т / {cargo.volume}м³ / {cargo.tender_trailer?.[0]?.trailer_type_name || "Тент"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Box size={icon + 2} className="text-amber-500" />
+                  <div className="flex flex-col">
+                    <span className={cn("font-bold text-zinc-400 uppercase leading-none", label)}>Вантаж</span>
+                    <span className={cn("font-black dark:text-zinc-200 uppercase truncate max-w-[120px]", label)}>
+                      {cargo.cargo || "Товар"}
+                    </span>
+                  </div>
+                </div>
+                <div className="ml-auto flex items-center gap-1.5 text-zinc-400">
+                  <User size={icon} />
+                  <span className={cn("font-bold uppercase", label)}>{cargo.author}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ПРАВА ЧАСТИНА: ПАНЕЛЬ СТАВОК */}
+            <div className={cn("lg:col-span-4 p-4 flex flex-col justify-center gap-4", canBid ? "bg-zinc-50/50 dark:bg-zinc-900/20" : "bg-zinc-100/30")}>
+              <div className="flex justify-between items-end">
+                <div className="space-y-0.5">
+                  <span className={cn("font-black text-zinc-400 uppercase tracking-tighter block", label)}>Поточна ціна</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className={cn("font-black tracking-tighter dark:text-white", title)}>
+                      {cargo.price_proposed || cargo.price_start}
+                    </span>
+                    <span className={cn("font-bold text-zinc-400", label)}>{cargo.valut_name}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={cn("flex items-center gap-1 text-emerald-500 font-black", label)}>
+                    <TrendingDown size={icon} />
+                    <span>-{cargo.price_step || 500}</span>
+                  </div>
+                  <span className={cn("text-zinc-400 font-bold uppercase", label)}>Крок</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  disabled={!canBid}
+                  onClick={() => setActiveModal("confirm")}
+                  className={cn("w-full h-12 flex flex-col bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white font-black")}
+                >
+                  <span className={cn("uppercase opacity-70 leading-none mb-0.5", label)}>Зробити ставку</span>
+                  <span className={main}>{cargo.price_next} {cargo.valut_name}</span>
+                </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" disabled={!canBid} onClick={() => setActiveModal("manual")} className={cn("h-9 font-black uppercase border-zinc-300", label)}>
+                    Своя ціна
+                  </Button>
+                  <Button variant="ghost" onClick={onOpenDetails} className={cn("h-9 font-black uppercase text-zinc-500", label)}>
+                    Деталі <Info size={icon} className="ml-1" />
+                  </Button>
+                </div>
+              </div>
+
+              {cargo.price_redemption && (
+                <button
+                  disabled={!canBid}
+                  onClick={() => setActiveModal("buyout")}
+                  className="w-full py-2 px-3 rounded-lg border border-orange-200 dark:border-orange-900/50 bg-orange-50 dark:bg-orange-900/10 flex items-center justify-between group hover:bg-orange-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                    <Zap size={icon} fill="currentColor" />
+                    <span className={cn("font-black uppercase", label)}>Викуп</span>
+                  </div>
+                  <span className={cn("font-black text-orange-700 dark:text-orange-300", main)}>
+                    {cargo.price_redemption} {cargo.valut_name}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* MODALS (залишені без змін для функціоналу) */}
+      {/* MODALS */}
       <ConfirmDialog
         open={activeModal === "confirm"}
         onOpenChange={closeModal}
-        title="Підтвердити зниження?"
-        description={`Ваша ставка складе ${cargo.price_next} ${cargo.valut_name}`}
+        title="Підтвердити ставку?"
+        description={`Ваша пропозиція: ${cargo.price_next} ${cargo.valut_name}`}
         onConfirm={onConfirmReduction}
       />
       <ManualPriceDialog
@@ -835,7 +664,7 @@ export function TenderCardClients({
         open={activeModal === "buyout"}
         onOpenChange={closeModal}
         title="Миттєвий викуп"
-        description="Прийняти умови тендеру негайно?"
+        description="Ви впевнені, що хочете забрати рейс негайно?"
         onConfirm={onBuyout}
         confirmText="Так, викупити"
       />

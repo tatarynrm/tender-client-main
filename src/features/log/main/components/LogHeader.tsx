@@ -6,6 +6,7 @@ import { IUserProfile } from "@/shared/types/user.types";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMenu";
+import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 
 export default function LogHeader({
   onMenuClick,
@@ -58,6 +59,7 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
+
         <div className="hidden md:block">
           <span className="text-teal-400 text-xs font-bold ">
             {profile?.company_name_full}({profile?.surname}{" "}
@@ -67,6 +69,7 @@ export default function LogHeader({
       </div>
 
       <div className="flex items-center gap-4">
+        <GlobalSettings />
         <DynamicHeaderMenu profile={profile} />
         <ToggleTheme />
       </div>

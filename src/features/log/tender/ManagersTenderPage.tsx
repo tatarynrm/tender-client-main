@@ -1,21 +1,25 @@
 "use client";
 
-import { useFilters } from "@/shared/hooks/useFilters";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronUp, Settings2 } from "lucide-react"; // Імпортуємо іконки
+
+import { useFilters } from "@/shared/hooks/useFilters";
+import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl"; // Імпортуємо наш хук
 import { ITender } from "../types/tender.type";
 
 import { ErrorState } from "@/shared/components/Loaders/ErrorState";
+import { Button } from "@/shared/components/ui/button";
+import Loader from "@/shared/components/Loaders/MainLoader";
 
 import TenderFullInfoModal from "./components/TenderFullInfoModal";
 import { TenderFiltersSheet } from "./components/TenderFilters";
-
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 import { ActiveFilters } from "./components/ActiveFilters";
 import { EmptyTenders } from "./components/EmptyTenders";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { TenderCardManagers } from "./components/TenderCardManager";
-import Loader from "@/shared/components/Loaders/MainLoader";
+
 import { useTenderListManagers } from "../hooks/useTenderManagersList";
 import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
 
@@ -24,7 +28,10 @@ export default function ManagersTenderPage() {
   const searchParams = useSearchParams();
   const { tenderFilters } = useTenderManagersFormData();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
-  // 1. Параметри з URL
+
+  // 1. Керування видимістю інструментів (унікальний ключ "tender_list")
+  const { isVisible, toggle } = useVisibilityControl("tender_list");
+
   const currentParams = useMemo(
     () => ({
       country_from: searchParams.get("country_from") || "",
@@ -40,7 +47,7 @@ export default function ManagersTenderPage() {
       company: searchParams.get("company") || "",
       page: Number(searchParams.get("page") || 1),
       status: searchParams.get("status") || "",
-      limit: Number(searchParams.get("limit") || 10), // <--- додали limit
+      limit: Number(searchParams.get("limit") || 10),
     }),
     [searchParams]
   );
@@ -51,32 +58,27 @@ export default function ManagersTenderPage() {
 
   const updateUrl = (newParams: Record<string, any>) => {
     const params = new URLSearchParams();
-
     Object.entries(newParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
-        // Якщо value - масив, робимо "UA,PL", якщо рядок - лишаємо як є
         const stringValue = Array.isArray(value)
           ? value.join(",")
           : String(value);
-
         params.set(key, stringValue);
       }
     });
-
     router.push(`?${params.toString()}`, { scroll: false });
   };
+
   const handleReset = () => {
     reset();
     router.push(window.location.pathname, { scroll: false });
   };
+
   const handleRemoveFilter = (key: string, valueToRemove: string) => {
     let newValue: string | undefined;
-
     if (valueToRemove === "all") {
-      // Якщо видаляємо всю групу — просто ставимо undefined
       newValue = undefined;
     } else {
-      // Стандартна логіка видалення одного елемента
       const currentValue = String(
         currentParams[key as keyof typeof currentParams] || ""
       );
@@ -86,62 +88,65 @@ export default function ManagersTenderPage() {
           .filter((v) => v !== valueToRemove)
           .join(",") || undefined;
     }
-
-    const newFilters = {
-      ...filters,
-      [key]: newValue,
-    };
-
+    const newFilters = { ...filters, [key]: newValue };
     setFilters(newFilters);
     updateUrl({ ...newFilters, page: 1 });
   };
 
   if (error) return <ErrorState />;
   if (isLoading) return <Loader />;
+
   return (
-    <div className="p-1  mx-auto">
+    <div className="p-0 mx-auto space-y-1">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}
       />
 
-      <div className="flex flex-col mb-6">
-        <div className="flex justify-between items-center">
-          <TenderFiltersSheet
-            filters={filters}
-            setFilters={setFilters}
-            apply={() => updateUrl({ ...filters, page: 1 })}
-            reset={handleReset}
-            dropdowns={tenderFilters}
-          />
-          <ItemsPerPage
-            options={[10, 20, 50, 100]}
-            defaultValue={currentParams.limit}
-            onChange={(newLimit) => {
-              updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-            }}
-          />
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={toggle}
+        className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
+      >
+        {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
+        {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
+      </Button>
+
+      {/* БЛОК ІНСТРУМЕНТІВ (ПРИХОВУЄТЬСЯ) */}
+      {isVisible && (
+        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center  p-2 rounded-lg border border-zinc-100">
+            <TenderFiltersSheet
+              filters={filters}
+              setFilters={setFilters}
+              apply={() => updateUrl({ ...filters, page: 1 })}
+              reset={handleReset}
+              dropdowns={tenderFilters}
+            />
+            <ItemsPerPage
+              options={[10, 20, 50, 100]}
+              defaultValue={currentParams.limit}
+              onChange={(newLimit) => {
+                updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+              }}
+            />
+          </div>
         </div>
-        <ActiveFilters
-          currentParams={currentParams}
-          onRemove={handleRemoveFilter}
-          onClear={handleReset}
-          dropdowns={tenderFilters}
-        />
-      </div>
+      )}
+
+      {/* Активні фільтри виносимо за межі приховування, щоб користувач бачив, що застосовано */}
+      <ActiveFilters
+        currentParams={currentParams}
+        onRemove={handleRemoveFilter}
+        onClear={handleReset}
+        dropdowns={tenderFilters}
+      />
 
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-6">
-          {pagination && pagination.page_count > 1 && (
-            <Pagination
-              page={currentParams.page}
-              pageCount={pagination.page_count}
-              onChange={(p) => updateUrl({ ...currentParams, page: p })}
-            />
-          )}
-
           <div className="grid gap-4">
             {tenders.map((item) => (
               <TenderCardManagers

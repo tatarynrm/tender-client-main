@@ -30,7 +30,7 @@ export const ItemsPerPage = ({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-500 whitespace-nowrap">Показувати по:</span>
+      {/* <span className="text-sm text-gray-500 whitespace-nowrap">Показувати по:</span> */}
       <Select value={currentLimit} onValueChange={handleValueChange}>
         <SelectTrigger className="w-[80px] h-8 border-gray-300">
           <SelectValue placeholder={currentLimit} />

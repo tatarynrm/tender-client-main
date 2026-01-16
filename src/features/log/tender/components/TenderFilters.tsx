@@ -26,7 +26,6 @@ interface Dropdowns {
   load_permission_dropdown?: { ids: string; value: string }[];
   manager_dropdown?: { ids: string; value: string }[];
   company_dropdown?: { ids: string; value: string }[];
-
 }
 
 interface TenderFiltersProps<T extends Filters> {

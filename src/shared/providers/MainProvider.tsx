@@ -8,6 +8,7 @@ import { AuthCheckProvider } from "./AuthCheckProvider";
 import ClientOnlyProvider from "./ClientOnlyProvider";
 import { SocketProvider } from "./SocketProvider";
 import { IUserProfile } from "../types/user.types";
+import { FontSizeProvider } from "./FontSizeProvider";
 
 interface MainProviderProps extends PropsWithChildren {
   profile: IUserProfile | null; // мінімально потрібне поле
@@ -25,7 +26,9 @@ export function MainProvider({ children, profile }: MainProviderProps) {
       >
         <AuthCheckProvider profile={profile ?? undefined}>
           <SocketProvider userId={profile?.id ?? null}>
-            <ClientOnlyProvider>{children}</ClientOnlyProvider>
+            <ClientOnlyProvider>
+              <FontSizeProvider>{children}</FontSizeProvider>
+            </ClientOnlyProvider>
           </SocketProvider>
         </AuthCheckProvider>
         <ToastProvider />

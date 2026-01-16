@@ -27,6 +27,7 @@ import {
 } from "@/shared/components/ui";
 import { CreateOrUpdateUserDialog } from "../forms/CreateOrUpdateUserDialog";
 import { useProfile } from "@/shared/hooks";
+import OnlineStatus from "@/shared/components/UserComponents/OnlineStatus";
 
 const MAX_VISIBLE_PHONES = 1;
 
@@ -41,8 +42,7 @@ export const UsersTable = React.memo(() => {
 
   const [pageSize] = useState(10); // можна зробити динамічним
 
-  const { users,pageCount, isLoading } = useGetUserList(currentPage, pageSize);
-console.log(users,'USER 45 line');
+  const { users, pageCount, isLoading } = useGetUserList(currentPage, pageSize);
 
   const togglePhones = (id: number) => {
     setExpandedPhones((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -54,7 +54,9 @@ console.log(users,'USER 45 line');
       header: "Ім’я",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
+          <OnlineStatus size="sm"  isOnline={row.original.isOnline} />
           <UserIcon className="w-4 h-4 text-gray-500" />
+
           {row.original.name}
         </div>
       ),

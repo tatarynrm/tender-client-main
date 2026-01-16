@@ -43,7 +43,7 @@ const GridColumnSelector: React.FC<GridColumnSelectorProps> = ({
         <button
           key={cols}
           onClick={() => setGridCols(cols)}
-          className={`p-2 rounded-md border transition-all ${
+          className={`p-1 rounded-md border transition-all cursor-pointer ${
             gridCols === cols
               ? "bg-blue-500 text-white border-blue-600"
               : "border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-slate-700"

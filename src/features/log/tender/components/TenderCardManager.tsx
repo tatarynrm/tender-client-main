@@ -20,6 +20,7 @@ import { cn } from "@/shared/utils";
 import { ITender, ITenderRate } from "@/features/log/types/tender.type";
 import { TenderTimer } from "@/features/dashboard/tender/components/TenderTimer";
 import { TenderRatesList } from "./TenderRate";
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
 
 export function TenderCardManagers({
   cargo,
@@ -28,44 +29,62 @@ export function TenderCardManagers({
   cargo: ITender;
   onOpenDetails: () => void;
 }) {
+  const { config } = useFontSize();
+  const { label, main, title, icon } = config;
+
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const displayPrice = cargo.price_proposed || cargo.price_start;
 
-  // Розподіл точок маршруту
+  // Розподіл точок для триколонкового маршруту
   const fromPoints = cargo.tender_route.filter(
     (p) => p.ids_point === "LOAD_FROM"
   );
-  const customUp = cargo.tender_route.filter(
-    (p) => p.ids_point === "CUSTOM_UP"
-  );
-  const border = cargo.tender_route.filter((p) => p.ids_point === "BORDER");
-  const customDown = cargo.tender_route.filter(
-    (p) => p.ids_point === "CUSTOM_DOWN"
-  );
   const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
-  const getRatingStars = (rating: number | string | null | undefined) => {
-    const r = Number(rating || 0);
-    if (r === 2) return 5;
-    if (r === 1) return 3;
-    return 1;
+  const transitPoints = cargo.tender_route.filter((p) =>
+    ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point)
+  );
+
+  // Мапінг технічних назв на українські
+  const getPointLabel = (type: string) => {
+    switch (type) {
+      case "CUSTOM_UP":
+        return "Замитнення";
+      case "BORDER":
+        return "Кордон";
+      case "CUSTOM_DOWN":
+        return "Розмитнення";
+      default:
+        return "";
+    }
   };
 
-  const stars = getRatingStars(cargo.rating);
+  const stars =
+    Number(cargo.rating) === 2 ? 5 : Number(cargo.rating) === 1 ? 3 : 1;
+
   return (
     <Card className="w-full border-gray-200 dark:border-slate-700 bg-[#eff4fc] dark:bg-slate-800 hover:shadow-md transition-all rounded-xl overflow-hidden mb-1">
-      {/* HEADER - Ідентичний клієнтському */}
-      <div className="bg-zinc-50 dark:bg-slate-900/50 px-1 py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="text-[14px] uppercase font-black tracking-widest text-zinc-400 leading-none mb-1">
+      {/* HEADER */}
+      <div className="bg-zinc-50 dark:bg-slate-900/50 px-3 py-1 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center">
+        <div className="flex items-center gap-4">
+          <div className="flex items-baseline gap-2">
+            <span
+              className={cn(
+                "uppercase font-black tracking-widest text-zinc-400",
+                title
+              )}
+            >
               № {cargo.id}
             </span>
-
-            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-none uppercase">
+            <span
+              className={cn(
+                "font-bold text-blue-600 dark:text-blue-400 uppercase",
+                main
+              )}
+            >
               {cargo.tender_type}
             </span>
           </div>
-          <span className="text-[14px] uppercase font-black tracking-widest text-zinc-400 leading-none mb-1 flex">
+          <div className="flex items-center">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
@@ -77,217 +96,227 @@ export function TenderCardManagers({
                 )}
               />
             ))}
-          </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {(() => {
-            const now = new Date();
-            const startTime = cargo.time_start
-              ? new Date(cargo.time_start)
-              : null;
-            const endTime = cargo.time_end ? new Date(cargo.time_end) : null;
-
-            if (startTime && now < startTime) {
-              return (
-                <TenderTimer
-                  targetDate={cargo.time_start!}
-                  label="До початку"
-                  variant="blue"
-                />
-              );
-            }
-            if (endTime && now < endTime) {
-              return (
-                <TenderTimer
-                  targetDate={cargo.time_end!}
-                  label="До кінця"
-                  variant="orange"
-                />
-              );
-            }
-            return null;
-          })()}
-
-          <div className="hidden md:flex items-center gap-2 px-1 py-1 rounded-full bg-white dark:bg-slate-800 border border-zinc-200 dark:border-slate-700 shadow-sm">
-            <Calendar size={12} className="text-emerald-500" />
-            <div className="flex flex-col items-start leading-none">
-              <span className="text-[8px] uppercase font-bold text-emerald-600 tracking-wider">
-                Старт
-              </span>
-              <span className="text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-200">
-                {cargo.time_start
-                  ? format(new Date(cargo.time_start), "dd.MM HH:mm")
-                  : "—"}
-              </span>
-            </div>
+        <div className="flex items-center gap-3">
+          {cargo.time_start && (
+            <TenderTimer
+              targetDate={cargo.time_start}
+              label="Старт"
+              variant="blue"
+            />
+          )}
+          <div className="hidden md:flex items-center gap-2 px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border border-zinc-200 shadow-sm">
+            <Calendar size={icon} className="text-emerald-500" />
+            <span
+              className={cn(
+                "font-mono font-bold text-zinc-700 dark:text-zinc-200",
+                main
+              )}
+            >
+              {cargo.time_start
+                ? format(new Date(cargo.time_start), "dd.MM HH:mm")
+                : "—"}
+            </span>
           </div>
         </div>
       </div>
 
       <CardContent className="p-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-zinc-100 dark:divide-slate-700">
-          {/* 1. ВЕРТИКАЛЬНИЙ МАРШРУТ (СТЕППЕР) */}
-          <div className="lg:col-span-4 p-1">
-            <div className="relative space-y-5">
-              <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-200 dark:bg-slate-700" />
-              {[
-                {
-                  points: fromPoints,
-                  label: "Завантаження",
-                  color: "bg-emerald-500",
-                  text: "text-emerald-600",
-                },
-                {
-                  points: customUp,
-                  label: "Замитнення",
-                  color: "bg-blue-500",
-                  text: "text-blue-500",
-                },
-                {
-                  points: border,
-                  label: "Кордон",
-                  color: "bg-amber-500",
-                  text: "text-amber-500",
-                },
-                {
-                  points: customDown,
-                  label: "Розмитнення",
-                  color: "bg-blue-500",
-                  text: "text-blue-500",
-                },
-                {
-                  points: toPoints,
-                  label: "Розвантаження",
-                  color: "bg-rose-500",
-                  text: "text-rose-600",
-                },
-              ].map(
-                (step, idx) =>
-                  step.points.length > 0 && (
-                    <div key={idx} className="relative flex gap-4 pl-0.5">
+          {/* 1. МАРШРУТ (3 КОЛОНКИ) */}
+          <div className="lg:col-span-6 p-3">
+            <div className="grid grid-cols-3 gap-3">
+              {/* Колонка: ВІД */}
+              <div className="space-y-1 min-w-0">
+                <span
+                  className={cn(
+                    "font-black uppercase text-emerald-600 tracking-tighter block mb-1",
+                    label
+                  )}
+                >
+                  Відправлення
+                </span>
+                {fromPoints.map((p) => (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100 min-w-0",
+                      main
+                    )}
+                  >
+                    <Flag country={p.ids_country ?? "UA"} size={icon} />
+                    <span className="truncate leading-tight">{p.city}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Колонка: ТРАНЗИТ / МИТНИЦЯ */}
+              <div className="space-y-1.5 border-x border-dashed border-slate-200 dark:border-slate-700 px-2 min-w-0">
+                <span
+                  className={cn(
+                    "font-black uppercase text-amber-500 tracking-tighter block mb-1",
+                    label
+                  )}
+                >
+                  Транзит / Мито
+                </span>
+                {transitPoints.length > 0 ? (
+                  transitPoints.map((p) => (
+                    <div key={p.id} className="flex flex-col leading-none">
                       <div
                         className={cn(
-                          "z-10 w-5 h-5 rounded-full border-4 border-white dark:border-slate-800 shadow-sm shrink-0 mt-0.5",
-                          step.color
+                          "flex items-center gap-1 font-bold text-slate-600 dark:text-slate-300",
+                          label
                         )}
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <span
-                          className={cn(
-                            "text-[9px] font-black uppercase tracking-widest leading-none mb-1",
-                            step.text
-                          )}
-                        >
-                          {step.label}
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                        <span className="truncate uppercase">
+                          {getPointLabel(p.ids_point)}
                         </span>
-                        {step.points.map((p) => (
-                          <div
-                            key={p.id}
-                            className="flex items-center gap-1.5 text-sm font-semibold truncate text-slate-800 dark:text-slate-100"
-                          >
-                            <Flag country={p.ids_country ?? "UA"} size={14} />
-                            <span className="truncate">{p.city}</span>
-                            <span className="text-[10px] font-normal opacity-50 uppercase">
-                              ({p.ids_country})
-                            </span>
-                          </div>
-                        ))}
                       </div>
+                      <span
+                        className={cn(
+                          "pl-2.5 truncate text-slate-400 dark:text-slate-500 font-semibold",
+                          label
+                        )}
+                      >
+                        {p.city}
+                      </span>
                     </div>
-                  )
-              )}
+                  ))
+                ) : (
+                  <div className={cn("text-slate-300 italic py-1", label)}>
+                    Прямий рейс
+                  </div>
+                )}
+              </div>
+
+              {/* Колонка: ДО */}
+              <div className="space-y-1 min-w-0">
+                <span
+                  className={cn(
+                    "font-black uppercase text-rose-600 tracking-tighter block mb-1",
+                    label
+                  )}
+                >
+                  Прибуття
+                </span>
+                {toPoints.map((p) => (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-100 min-w-0",
+                      main
+                    )}
+                  >
+                    <Flag country={p.ids_country ?? "UA"} size={icon} />
+                    <span className="truncate leading-tight">{p.city}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* 2. ТЕХНІЧНІ ДАНІ (БЕЙДЖІ ТА ОПИС) */}
-          <div className="lg:col-span-5 p-1 flex flex-col justify-between gap-4">
-            <div className="space-y-4">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
-                  <Truck size={18} className="text-blue-500" />
-                  <span className="text-lg">
+          {/* 2. ТЕХНІЧНІ ДАНІ */}
+          <div className="lg:col-span-3 p-3 flex flex-col justify-between gap-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-black text-slate-900 dark:text-slate-100">
+                  <Truck size={icon + 2} className="text-blue-500" />
+                  <span className={main}>
                     {cargo.car_count_actual || 1}{" "}
-                    <small className="text-[10px] uppercase opacity-50 font-black">
-                      авт.
-                    </small>
+                    <small className="opacity-50">АВТ</small>
                   </span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">
-                    Параметри
-                  </span>
-                  <span className="text-sm font-black text-slate-800 dark:text-slate-200">
-                    {cargo.weight} т / {cargo.volume} м³
-                  </span>
+                <div
+                  className={cn(
+                    "font-black text-slate-800 dark:text-slate-200",
+                    main
+                  )}
+                >
+                  {cargo.weight}т / {cargo.volume}м³
                 </div>
               </div>
 
-              {/* Бейджі як у клієнта */}
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1">
                 {cargo.tender_trailer?.map((t, i) => (
                   <span
                     key={i}
-                    className="px-2 py-1 bg-slate-100 dark:bg-slate-700/50 rounded text-[10px] font-black uppercase border border-slate-200 dark:border-slate-600"
+                    className={cn(
+                      "px-1.5 py-0.5 bg-slate-200/50 dark:bg-slate-700 rounded font-bold uppercase",
+                      label
+                    )}
                   >
                     {t.trailer_type_name}
                   </span>
                 ))}
-                {cargo.tender_load?.map((l, i) => (
-                  <span
-                    key={i}
-                    className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded text-[10px] font-black uppercase border border-blue-100 dark:border-blue-800/50"
-                  >
-                    {l.load_type_name}
-                  </span>
-                ))}
               </div>
 
-              <div className="text-xs bg-amber-50/50 dark:bg-amber-900/10 p-3 rounded-lg border-l-4 border-amber-400">
-                <p className="font-black text-slate-800 dark:text-slate-200 mb-1 uppercase tracking-tighter">
+              <div className="bg-amber-50 dark:bg-amber-900/10 p-2 rounded border-l-2 border-amber-400">
+                <p
+                  className={cn(
+                    "font-black text-slate-800 dark:text-slate-200 uppercase leading-none mb-0.5",
+                    label
+                  )}
+                >
                   {cargo.cargo || "Вантаж"}
                 </p>
-                <p className="italic text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                <p
+                  className={cn(
+                    "italic text-slate-500 text-[11px] line-clamp-1 leading-tight",
+                    label
+                  )}
+                >
                   {cargo.notes || "Без приміток"}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-              <User size={14} className="text-slate-400" />
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">
+            <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-700">
+              <User size={icon} className="text-slate-400" />
+              <span
+                className={cn(
+                  "font-bold text-slate-500 uppercase truncate",
+                  label
+                )}
+              >
                 {cargo.author}
               </span>
             </div>
           </div>
 
-          {/* 3. ЦІНА ТА СТАВКИ (ПРАВА ПАНЕЛЬ) */}
-          <div className="lg:col-span-3 p-5 bg-zinc-50/50 dark:bg-slate-900/20 flex flex-col justify-center gap-4">
+          {/* 3. ЦІНА ТА СТАВКИ */}
+          <div className="lg:col-span-3 p-3 bg-zinc-50/50 dark:bg-slate-900/20 flex flex-col justify-center gap-2">
             <div className="text-center">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                {displayPrice ? "Актуальна ціна" : "Тендер"}
+              <span
+                className={cn(
+                  "font-bold text-slate-400 uppercase tracking-tighter block",
+                  label
+                )}
+              >
+                {displayPrice ? "Ціна" : "Тендер"}
               </span>
               <div
                 className={cn(
-                  "font-black leading-tight",
+                  "font-black leading-none truncate",
                   displayPrice
-                    ? "text-3xl text-slate-900 dark:text-white"
-                    : "text-xl text-blue-600 dark:text-blue-400 uppercase"
+                    ? "text-xl text-slate-900 dark:text-white"
+                    : cn("text-blue-600", main)
                 )}
               >
-                {displayPrice ? (
-                  <>
-                    {displayPrice}
-                    <span className="text-sm font-medium ml-1 text-slate-500 uppercase">
-                      {cargo.valut_name}
-                    </span>
-                  </>
-                ) : (
-                  "Запит ціни"
-                )}
+                {displayPrice
+                  ? `${displayPrice} ${cargo.valut_name}`
+                  : "Запит ціни"}
               </div>
               {cargo.without_vat && displayPrice && (
-                <div className="text-[10px] font-bold text-rose-500 uppercase">
+                <div
+                  className={cn(
+                    "font-bold text-rose-500 uppercase mt-0.5",
+                    label
+                  )}
+                >
                   Без ПДВ
                 </div>
               )}
@@ -296,68 +325,51 @@ export function TenderCardManagers({
             <Button
               variant="outline"
               onClick={onOpenDetails}
-              className="w-full border-zinc-300 text-zinc-600 hover:bg-white dark:border-slate-700 dark:text-zinc-400 font-bold text-[10px] uppercase h-9"
+              className={cn("w-full h-8 font-bold border-zinc-300", label)}
             >
-              Специфікація <Info size={14} className="ml-2" />
+              ДЕТАЛІ <Info size={icon} className="ml-1.5" />
             </Button>
 
-            {/* Компактний блок ставок для менеджера */}
-            <div className="pt-3 border-t border-zinc-200 dark:border-slate-700">
-              {cargo.rate_company && cargo.rate_company.length > 0 ? (
-                <>
-                  <button
-                    onClick={() => setIsRatesOpen(!isRatesOpen)}
-                    className="flex items-center justify-between w-full group p-1 rounded-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Layers
-                        size={14}
-                        className={cn(
-                          "transition-colors",
-                          isRatesOpen ? "text-blue-500" : "text-slate-400"
-                        )}
-                      />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300">
-                        Ставки ({cargo.rate_company.length})
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400">
-                      {isRatesOpen ? (
-                        <ChevronUp size={12} />
-                      ) : (
-                        <ChevronDown size={12} />
-                      )}
-                    </span>
-                  </button>
-
-                  <div
-                    className={cn(
-                      "grid transition-all duration-300 ease-in-out",
-                      isRatesOpen
-                        ? "grid-rows-[1fr] opacity-100 mt-2"
-                        : "grid-rows-[0fr] opacity-0"
-                    )}
-                  >
-                    <div className="overflow-hidden">
-                      <TenderRatesList
-                        rates={cargo.rate_company as unknown as ITenderRate[]}
-                        currency={cargo.valut_name ?? "грн"}
-                      />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                /* Стан, коли ставок немає */
-                <div className="flex items-center gap-2 px-1 py-2 opacity-60">
-                  <Layers size={14} className="text-slate-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Ставки відсутні
-                  </span>
-                </div>
+            <button
+              onClick={() => setIsRatesOpen(!isRatesOpen)}
+              disabled={!cargo.rate_company?.length}
+              className={cn(
+                "flex items-center justify-between w-full p-1.5 rounded border transition-all",
+                isRatesOpen
+                  ? "bg-white border-blue-200"
+                  : "bg-transparent border-transparent hover:bg-white/50",
+                !cargo.rate_company?.length && "opacity-40 cursor-not-allowed"
               )}
-            </div>
+            >
+              <div className="flex items-center gap-2">
+                <Layers
+                  size={icon}
+                  className={isRatesOpen ? "text-blue-500" : "text-slate-400"}
+                />
+                <span
+                  className={cn("font-black uppercase text-slate-500", label)}
+                >
+                  Ставки ({cargo.rate_company?.length || 0})
+                </span>
+              </div>
+              {isRatesOpen ? (
+                <ChevronUp size={icon} />
+              ) : (
+                <ChevronDown size={icon} />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* ПАНЕЛЬ СТАВОК */}
+        {isRatesOpen && (
+          <div className="border-t border-zinc-100 dark:border-slate-700 p-2 bg-white/50 dark:bg-slate-900/50">
+            <TenderRatesList
+              rates={cargo.rate_company as unknown as ITenderRate[]}
+              currency={cargo.valut_name ?? "грн"}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

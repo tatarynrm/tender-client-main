@@ -50,9 +50,7 @@ const routeSchema = z.object({
   country: z.string().optional(),
   city: z.string().optional(),
   order_num: z.number(),
-  ids_region: z.string(),
-  // zam?:
-  // zam_na_mici?:
+  ids_region: z.string().nullable().optional(),
 });
 
 const trailerSchema = z.object({
@@ -99,7 +97,7 @@ export default function LoadForm({
   const [isLoadingSaveCargo, setIsLoadingSaveCargo] = useState(false);
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const router = useRouter();
-  const { refetch } = useLoads();
+
   const { profile } = useAuth();
   const { load: loadSocket } = useSockets();
   const form = useForm<CargoServerFormValues>({
@@ -116,7 +114,6 @@ export default function LoadForm({
           ids_route_type: "LOAD_FROM",
           city: "",
           order_num: 1,
-          ids_region: "",
         },
       ],
       crm_load_route_to: [
@@ -181,8 +178,12 @@ export default function LoadForm({
   useEffect(() => {
     getFormData();
   }, []);
-
+  useEffect(() => {
+    console.log("FORM ERRORS:", errors);
+  }, [errors]);
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
+    console.log(values, "VALUES");
+
     try {
       setIsLoadingSaveCargo(true);
 
@@ -190,7 +191,6 @@ export default function LoadForm({
         ...values,
         ...(defaultValues?.id ? { id: defaultValues.id } : {}), // додаємо id, якщо він є
       };
-      console.log(payload, "payload");
 
       const { data } = await api.post("/crm/load/save", payload);
 
@@ -205,14 +205,14 @@ export default function LoadForm({
           });
           toast.success("Успішне редагування заявки!");
           router.push("/log/cargo/active");
-          refetch();
+     
         } else {
           loadSocket?.emit("send_update", {
             loadId: profile?.id,
             data: { status: "updated" },
           });
           toast.success("Успішне створення заявки!");
-          refetch();
+   
         }
       }
     } catch (err) {
@@ -312,7 +312,7 @@ export default function LoadForm({
                               );
                               setValue(
                                 `crm_load_route_from.${idx}.ids_region`,
-                                location.regionCode
+                                location.regionCode || null
                               );
 
                               // Очищаємо помилку, якщо була
@@ -361,7 +361,6 @@ export default function LoadForm({
                       ids_route_type: "LOAD_FROM",
                       city: "",
                       order_num: fromFields.length + 1, // ✅
-                      ids_region: "",
                     })
                   }
                 >
@@ -417,7 +416,7 @@ export default function LoadForm({
                               );
                               setValue(
                                 `crm_load_route_to.${idx}.ids_region`,
-                                location.regionCode
+                                location.regionCode || null
                               );
 
                               // Очищаємо помилку, якщо була
@@ -465,7 +464,6 @@ export default function LoadForm({
                       ids_route_type: "LOAD_TO",
                       city: "",
                       order_num: toFields.length + 1, // ✅
-                      ids_region: "",
                     })
                   }
                 >

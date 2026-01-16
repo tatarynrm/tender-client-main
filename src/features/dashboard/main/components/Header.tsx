@@ -12,6 +12,7 @@ import { useProfile } from "@/shared/hooks";
 import { IUserProfile } from "@/shared/types/user.types";
 import { motion } from "framer-motion";
 import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMenu";
+import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 export default function Header({
   onMenuClick,
   toggleSidebarState,
@@ -71,6 +72,7 @@ export default function Header({
       </div>
 
       <div className="flex items-center gap-4">
+        <GlobalSettings/>
         <DynamicHeaderMenu profile={profile}/>
         <NotificationMenu />
         <ToggleTheme />

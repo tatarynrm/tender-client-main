@@ -19,6 +19,7 @@ export interface UserFromCompany {
   is_director: boolean;
   is_accountant: boolean;
   usr_phone: Phone[];
+  isOnline: boolean;
 }
 
 // 👇 Підтримка пагінації
@@ -40,7 +41,7 @@ export const useGetUserList = (page?: number, pageSize?: number) => {
 
       return {
         users: data.content as UserFromCompany[],
-        pageCount: data.props.pagination.page_count
+        pageCount: data.props.pagination.page_count,
       };
     },
   });
