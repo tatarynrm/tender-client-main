@@ -4,44 +4,44 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 type FontSizeKey = "xs" | "sm" | "base" | "lg";
 
-// Описуємо інтерфейс для конфігурації одного розміру
 interface FontSizeConfig {
   label: string;
   main: string;
   title: string;
-  icon: number; // Додаємо icon сюди
+  icon: number;
 }
 
 interface FontSizeContextType {
   size: FontSizeKey;
   updateSize: (size: FontSizeKey) => void;
-  config: FontSizeConfig; // Використовуємо інтерфейс тут
+  config: FontSizeConfig;
 }
 
+// Оновлені конфігурації з більшими шрифтами
 const fontConfigs: Record<FontSizeKey, FontSizeConfig> = {
   xs: {
-    label: "text-[7px]",
-    main: "text-[9px]",
-    title: "text-[10px]",
-    icon: 8,
+    label: "text-xs", // 12px
+    main: "text-sm", // 14px
+    title: "text-base", // 16px
+    icon: 14,
   },
   sm: {
-    label: "text-[8px]",
-    main: "text-[10px]",
-    title: "text-[11px]",
-    icon: 10,
+    label: "text-sm", // 14px
+    main: "text-base", // 16px
+    title: "text-lg", // 18px
+    icon: 16,
   },
   base: {
-    label: "text-[9px]",
-    main: "text-[12px]",
-    title: "text-[13px]",
-    icon: 12,
+    label: "text-base", // 16px
+    main: "text-lg", // 18px
+    title: "text-xl", // 20px
+    icon: 20,
   },
   lg: {
-    label: "text-[10px]",
-    main: "text-[14px]",
-    title: "text-[15px]",
-    icon: 14,
+    label: "text-lg", // 18px
+    main: "text-xl", // 20px
+    title: "text-2xl", // 24px
+    icon: 24,
   },
 };
 
@@ -50,10 +50,10 @@ const FontSizeContext = createContext<FontSizeContextType | undefined>(
 );
 
 export function FontSizeProvider({ children }: { children: React.ReactNode }) {
-  const [size, setSize] = useState<FontSizeKey>("sm");
+  // Змінюємо дефолтний розмір на "base" (середній), щоб не було занадто мало
+  const [size, setSize] = useState<FontSizeKey>("base");
   const [isMounted, setIsMounted] = useState(false);
 
-  // Завантажуємо з localStorage при монтуванні
   useEffect(() => {
     setIsMounted(true);
     const saved = localStorage.getItem("app-font-size") as FontSizeKey;
@@ -67,7 +67,6 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("app-font-size", newSize);
   };
 
-  // Уникаємо проблем з гідратацією (необов'язково, але корисно)
   const contextValue = {
     size,
     updateSize,

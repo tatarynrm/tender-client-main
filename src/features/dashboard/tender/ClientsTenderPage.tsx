@@ -95,7 +95,7 @@ export default function ClientsTenderPage() {
   if (isLoading) return <TenderLoader />;
 
   return (
-    <div className="p-4 mx-auto space-y-4">
+    <div className="p-0 mx-auto space-y-2">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}
@@ -116,7 +116,7 @@ export default function ClientsTenderPage() {
       {/* ПРИХОВУВАНИЙ БЛОК ІНСТРУМЕНТІВ */}
       {isVisible && (
         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex justify-between items-center bg-zinc-50/50 p-2 rounded-lg border border-zinc-100 shadow-sm">
+          <div className="flex justify-between items-center    ">
             <TenderFiltersSheet
               filters={filters}
               setFilters={setFilters}
@@ -146,15 +146,7 @@ export default function ClientsTenderPage() {
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
-        <div className="space-y-6">
-          {pagination && pagination.page_count > 1 && (
-            <Pagination
-              page={currentParams.page}
-              pageCount={pagination.page_count}
-              onChange={(p) => updateUrl({ ...currentParams, page: p })}
-            />
-          )}
-
+        <div className="space-y-1">
           <div className="grid gap-4">
             {tenders.map((item) => (
               <TenderCardClients

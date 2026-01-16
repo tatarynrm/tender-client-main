@@ -71,7 +71,7 @@ export function GlobalSettings() {
         <div className="px-2 py-2">
           <div className="p-2 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800">
             <p className="text-[10px] text-zinc-500 italic leading-tight">
-              * Змінює розмір тексту в усіх картках та списках CRM.
+              * Змінює розмір тексту в усіх списках.
             </p>
           </div>
         </div>

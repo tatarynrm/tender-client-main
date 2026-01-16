@@ -21,6 +21,7 @@ import {
   MonitorCheck,
   LayoutList,
   Shield,
+  Globe,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -60,6 +61,26 @@ const links: MenuItem[] = [
     name: "Тендери",
     icon: LayoutList,
     href: "/log/tender",
+
+    // children: [
+    //   // { name: "Активні", href: "/log/tender/active", icon: Shield },
+    //   // {
+    //   //   name: "Приймаю участь",
+    //   //   href: "/log/tender/my",
+    //   //   icon: ShieldPlus,
+    //   // },
+    //   // {
+    //   //   name: "Майбутні",
+    //   //   href: "/log/tender/archive",
+    //   //   icon: FileArchive,
+    //   // },
+    //   // { name: "Архів", href: "/dashboard/tenders/archive", icon: FileArchive },
+    // ],
+  },
+  {
+    name: "Карта",
+    icon: Globe,
+    href: "/log/map",
 
     // children: [
     //   // { name: "Активні", href: "/log/tender/active", icon: Shield },
