@@ -7,9 +7,10 @@ import {
   Polyline,
 } from "react-leaflet";
 import L from "leaflet";
-import { ICargo } from "./CargoCard";
+
 import markerIconPng from "leaflet/dist/images/marker-icon.png";
 import "leaflet/dist/leaflet.css";
+import { LoadApiItem } from "../../types/load.type";
 
 // Кастомна іконка маркера
 const customMarker = L.icon({
@@ -19,7 +20,7 @@ const customMarker = L.icon({
   popupAnchor: [0, -41],
 });
 
-export function CargoMap({ cargo }: { cargo: ICargo }) {
+export function CargoMap({ cargo }: { cargo: LoadApiItem }) {
   const mapRef = useRef<L.Map>(null!); // "!" щоб не було TypeScript помилки
 
   useEffect(() => {

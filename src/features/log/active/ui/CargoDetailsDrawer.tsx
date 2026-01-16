@@ -9,12 +9,13 @@ import {
   DrawerClose,
   DrawerFooter,
 } from "@/shared/components/ui/drawer";
-import { ICargo } from "./CargoCard";
+
 import { CargoMap } from "./CargoMap";
 import { Button } from "@/shared/components/ui";
+import { LoadApiItem } from "../../types/load.type";
 
 interface CargoDetailsDrawerProps {
-  cargo?: ICargo;
+  cargo?: LoadApiItem;
   open: boolean;
   onClose: () => void;
 }
