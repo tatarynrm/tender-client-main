@@ -50,7 +50,7 @@ export default function DashboardContainer() {
   if (!data) return <Loader />;
 
   return (
-    <div className="p-1 lg:p-1 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto">
+    <div className="p-1 lg:p-1 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700  mx-auto">
       {/* Хедер дашборду */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 

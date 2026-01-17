@@ -31,5 +31,5 @@ export default function EditCargoPage() {
   if (loading) return <Loading />;
   if (!data) return <div>Заявку не знайдено</div>;
 
-  return <LoadForm defaultValues={data} isEdit />;
+  return <LoadForm defaultValues={data} />;
 }

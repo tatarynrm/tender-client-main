@@ -149,7 +149,7 @@ export default function TenderSaveForm({
     { label: string; value: string }[]
   >([]);
   const [loadList, setLoadList] = useState<{ label: string; value: string }[]>(
-    []
+    [],
   );
   const [tenderPermission, setTenderPermission] = useState<
     { label: string; value: string }[]
@@ -210,7 +210,7 @@ export default function TenderSaveForm({
     const getTruckList = async () => {
       try {
         const { data } = await api.get(
-          "/tender/form-data/getCreateTenderFormData"
+          "/tender/form-data/getCreateTenderFormData",
         );
         console.log(data, "DATA");
 
@@ -218,37 +218,37 @@ export default function TenderSaveForm({
           data.content.trailer_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setLoadList(
           data.content.load_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setTenderType(
           data.content.tender_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setTenderPermission(
           data.content.load_permission_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setValut(
           data.content.valut_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.ids,
-          }))
+          })),
         );
         setRating(
           data.content.rating_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
       } catch (err) {
         console.error(err);
@@ -266,7 +266,7 @@ export default function TenderSaveForm({
     if (!inputValue) return [];
     try {
       const response = await api.get<any>(
-        `${url}/${encodeURIComponent(inputValue)}`
+        `${url}/${encodeURIComponent(inputValue)}`,
       );
       return response.data.map((company: any) => ({
         value: company.id,
@@ -509,11 +509,11 @@ export default function TenderSaveForm({
                               // оновлюємо country/city в формі
                               setValue(
                                 `tender_route.${idx}.country`,
-                                location.countryCode || ""
+                                location.countryCode || "",
                               );
                               setValue(
                                 `tender_route.${idx}.city`,
-                                location.city || ""
+                                location.city || "",
                               );
 
                               // очищаємо помилки
@@ -560,7 +560,7 @@ export default function TenderSaveForm({
 
                   {/* показуємо тільки якщо тип — завантаження або розвантаження */}
                   {["LOAD_FROM", "LOAD_TO"].includes(
-                    watch(`tender_route.${idx}.ids_point`)
+                    watch(`tender_route.${idx}.ids_point`),
                   ) && (
                     <>
                       <FormField
@@ -627,8 +627,8 @@ export default function TenderSaveForm({
                       options={truckList}
                       value={truckList.filter((t) =>
                         field.value.some(
-                          (v: any) => v.ids_trailer_type === t.value
-                        )
+                          (v: any) => v.ids_trailer_type === t.value,
+                        ),
                       )}
                       onChange={(options: any) =>
                         field.onChange(
@@ -636,7 +636,7 @@ export default function TenderSaveForm({
                             ? options.map((o: any) => ({
                                 ids_trailer_type: o.value,
                               }))
-                            : []
+                            : [],
                         )
                       }
                       placeholder="Оберіть тип транспорту"
@@ -661,8 +661,8 @@ export default function TenderSaveForm({
                       options={loadList}
                       value={loadList.filter((t) =>
                         field.value.some(
-                          (v: any) => v.ids_load_type === t.value
-                        )
+                          (v: any) => v.ids_load_type === t.value,
+                        ),
                       )}
                       onChange={(options: any) =>
                         field.onChange(
@@ -670,7 +670,7 @@ export default function TenderSaveForm({
                             ? options.map((o: any) => ({
                                 ids_load_type: o.value,
                               }))
-                            : []
+                            : [],
                         )
                       }
                       placeholder="Оберіть тип завантаження"
@@ -695,8 +695,8 @@ export default function TenderSaveForm({
                       options={tenderPermission}
                       value={tenderPermission.filter((t) =>
                         (field.value ?? []).some(
-                          (v: any) => v.ids_permission_type === t.value
-                        )
+                          (v: any) => v.ids_permission_type === t.value,
+                        ),
                       )}
                       onChange={(options: any) =>
                         field.onChange(
@@ -704,7 +704,7 @@ export default function TenderSaveForm({
                             ? options.map((o: any) => ({
                                 ids_permission_type: o.value,
                               }))
-                            : []
+                            : [],
                         )
                       }
                       placeholder="Оберіть дозволи"
@@ -774,7 +774,7 @@ export default function TenderSaveForm({
                         value={field.value ?? ""}
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value)
+                            e.target.value === "" ? "" : Number(e.target.value),
                           )
                         }
                       />
@@ -796,7 +796,7 @@ export default function TenderSaveForm({
                         placeholder="22 Тон"
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value)
+                            e.target.value === "" ? "" : Number(e.target.value),
                           )
                         }
                       />
@@ -819,7 +819,7 @@ export default function TenderSaveForm({
                         placeholder="86 Куб"
                         onChange={(e) =>
                           field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value)
+                            e.target.value === "" ? "" : Number(e.target.value),
                           )
                         }
                       />
@@ -847,7 +847,7 @@ export default function TenderSaveForm({
                               field.onChange(
                                 e.target.value === ""
                                   ? ""
-                                  : Number(e.target.value)
+                                  : Number(e.target.value),
                               )
                             }
                           />
@@ -877,7 +877,7 @@ export default function TenderSaveForm({
                                 .map(
                                   (
                                     item: any,
-                                    idx: React.Key | null | undefined
+                                    idx: React.Key | null | undefined,
                                   ) => {
                                     // console.log(item, "ITEM");
 
@@ -889,7 +889,7 @@ export default function TenderSaveForm({
                                         {item.label.toUpperCase()}
                                       </SelectItem>
                                     );
-                                  }
+                                  },
                                 )}
                             </SelectContent>
                           </Select>
@@ -912,7 +912,7 @@ export default function TenderSaveForm({
                               field.onChange(
                                 e.target.value === ""
                                   ? ""
-                                  : Number(e.target.value)
+                                  : Number(e.target.value),
                               )
                             }
                           />
@@ -935,7 +935,7 @@ export default function TenderSaveForm({
                               field.onChange(
                                 e.target.value === ""
                                   ? ""
-                                  : Number(e.target.value)
+                                  : Number(e.target.value),
                               )
                             }
                           />
@@ -947,7 +947,25 @@ export default function TenderSaveForm({
                 </>
               )}
             </div>
-
+            <div className="flex items-center gap-3">
+              <Switch
+                id="is-next-check"
+                checked={isNextTender}
+                onCheckedChange={setIsNextTender}
+                className="data-[state=checked]:bg-orange-500"
+              />
+              <div className="space-y-0.5">
+                <Label
+                  htmlFor="is-next-check"
+                  className="text-sm font-bold uppercase text-zinc-700"
+                >
+                  Створити наступний
+                </Label>
+                <p className="text-[10px] text-zinc-500 uppercase">
+                  Після збереження форма залишиться відкритою
+                </p>
+              </div>
+            </div>
             {/* Submit */}
             <div className="flex justify-end gap-3 pt-4">
               <Button

@@ -44,7 +44,7 @@ export const useLoads = (filters: TenderListFilters) => {
   /** Динамічний queryKey */
   const queryKey = useMemo(
     () => ["loads", params.toString()],
-    [params.toString()]
+    [params.toString()],
   );
 
   /** Основний запит */
@@ -74,14 +74,24 @@ export const useLoads = (filters: TenderListFilters) => {
         return {
           ...old,
           content: old.content.map((l) =>
-            l.id === updatedLoad.id ? updatedLoad : l
+            l.id === updatedLoad.id ? updatedLoad : l,
           ),
         };
       });
 
       queryClient.setQueryData(["load", updatedLoad.id], updatedLoad);
     };
+    load.on("edit_load", (updatedId: number) => {
+      // 1. Оновлюємо дані в кеші React Query (щоб цифри змінились)
+      queryClient.invalidateQueries({ queryKey });
 
+      // 2. Створюємо глобальну подію або використовуємо спільний стан,
+      // щоб картка з цим ID дізналася про оновлення.
+      // Найпростіше — CustomEvent:
+      window.dispatchEvent(
+        new CustomEvent("cargo_shake", { detail: updatedId }),
+      );
+    });
     load.on("new_load", handleNewLoad);
     load.on("update_load", handleUpdateLoad);
 

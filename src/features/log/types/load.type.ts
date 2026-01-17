@@ -11,7 +11,7 @@ export type LoadRouteItem = {
   ids_region: string | null; // "UA-46"
   ids_country: string; // "UA"
   ids_route_type: "LOAD_FROM" | "LOAD_TO";
-  
+  region: string | null;
 };
 
 export type LoadTrailerItem = {
@@ -42,24 +42,23 @@ export type LoadApiItem = {
   messages: number;
   is_collective: boolean;
   is_price_request: boolean;
-
-
+  price: number | null;
+  valut_name: string | null;
+  ids_valut: string | null;
 };
 
-
-
 export interface ValutDropdownItem {
-  ids: string;        // Код валюти (USD, UAH...)
-  idv: string;        // Скорочення
-  cent: string;       // Копійки/центи
-  idnt: string;       // Ідентифікатор
-  idntnum: string;    // ISO номер
-  capacity: number;   // Кількість знаків після коми
+  ids: string; // Код валюти (USD, UAH...)
+  idv: string; // Скорочення
+  cent: string; // Копійки/центи
+  idnt: string; // Ідентифікатор
+  idntnum: string; // ISO номер
+  capacity: number; // Кількість знаків після коми
   valut_name: string; // Повна назва
 }
 
 export interface RegionDropdownItem {
-  ids: string;        // Код регіону (UA-05, ARK...)
+  ids: string; // Код регіону (UA-05, ARK...)
   short_name: string; // Коротка назва
   region_name: string; // Повна назва
 }
@@ -67,14 +66,14 @@ export interface RegionDropdownItem {
 export interface RouteTypeDropdownItem {
   crm: boolean;
   ids: "LOAD_FROM" | "LOAD_TO"; // Тип точки
-  info: string;                 // Повна назва
-  value: string;                // Коротка назва (Зав/Розв)
+  info: string; // Повна назва
+  value: string; // Коротка назва (Зав/Розв)
 }
 
 export interface TrailerTypeDropdownItem {
-  ids: string;        // Код причепа (TENT, REF...)
-  value: string;      // Назва українською
-  order_num: number;  // Порядок сортування
+  ids: string; // Код причепа (TENT, REF...)
+  value: string; // Назва українською
+  order_num: number; // Порядок сортування
 }
 
 // Загальний інтерфейс об'єкта, який повертає useLoadFormData
@@ -85,18 +84,14 @@ export interface LoadFormData {
   trailer_type_dropdown: TrailerTypeDropdownItem[];
 }
 
-
-
-
-
 // features/log/types/load.type.ts (або де у вас лежать типи)
 
 export interface DropdownOption {
   ids: string | number;
-  value: string;           // Для trailer_type_dropdown, company_dropdown
-  country_name?: string;    // Для country_dropdown
-  region_name?: string;     // Для region_dropdown
-  valut_name?: string;      // Для valut_dropdown
+  value: string; // Для trailer_type_dropdown, company_dropdown
+  country_name?: string; // Для country_dropdown
+  region_name?: string; // Для region_dropdown
+  valut_name?: string; // Для valut_dropdown
   short_name?: string;
 }
 

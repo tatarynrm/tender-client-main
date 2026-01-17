@@ -86,7 +86,7 @@ export default function MapPage() {
       {/* Мобільна кнопка меню */}
       <button
         onClick={() => setSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed bottom-6 right-6 z-[2000] p-1 bg-blue-600 text-white rounded-full shadow-2xl active:scale-95 transition-transform"
+        className="lg:hidden fixed bottom-6 right-6 z-[98] p-1 bg-blue-600 text-white rounded-full shadow-2xl active:scale-95 transition-transform"
       >
         {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -94,7 +94,7 @@ export default function MapPage() {
       {/* ЛІВИЙ САЙДБАР */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[1500] w-full sm:w-80 bg-white/95 backdrop-blur-xl border-r border-slate-200 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-[98] w-full sm:w-80 bg-white/95 backdrop-blur-xl border-r border-slate-200 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -259,7 +259,7 @@ export default function MapPage() {
       {/* ПРАВА ЧАСТИНА (КАРТА) */}
       <section className="flex-1 relative flex flex-col h-full">
         {/* Floating Top Bar (Controls) */}
-        <div className="absolute top-4 left-4 right-4 z-[1000] flex justify-between pointer-events-none">
+        <div className="absolute top-4 left-4 right-4 z-[98] flex justify-between pointer-events-none">
           <div className="flex gap-2 pointer-events-auto">
             {!isSidebarOpen && (
               <button
@@ -300,7 +300,7 @@ export default function MapPage() {
 
         {/* Bottom Panel (Mobile Overlay) */}
         {selectedId && (
-          <div className="absolute bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-sm animate-in fade-in slide-in-from-bottom-4">
+          <div className="absolute bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 z-[98] w-[calc(100%-2rem)] max-w-sm animate-in fade-in slide-in-from-bottom-4">
             <div className="bg-white/95 backdrop-blur-xl border border-blue-100 shadow-2xl rounded-3xl p-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest">

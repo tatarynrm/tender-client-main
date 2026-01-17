@@ -85,6 +85,19 @@ export default function DashboardContainer() {
             { name: "Клієнти", value: data.totalClients },
             { name: "Перевізники", value: data.totalCarriers },
             { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Клієнти", value: data.totalClients },
+            { name: "Перевізники", value: data.totalCarriers },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
+            { name: "Співробітники", value: data.totalEmployees },
           ]}
         />
       </div>

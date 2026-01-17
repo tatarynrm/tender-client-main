@@ -25,11 +25,11 @@ export function MainProvider({ children, profile }: MainProviderProps) {
         storageKey="ictender-theme"
       >
         <AuthCheckProvider profile={profile ?? undefined}>
-          <SocketProvider userId={profile?.id ?? null}>
-            <ClientOnlyProvider>
+          <ClientOnlyProvider>
+            <SocketProvider userId={profile?.id ?? null}>
               <FontSizeProvider>{children}</FontSizeProvider>
-            </ClientOnlyProvider>
-          </SocketProvider>
+            </SocketProvider>
+          </ClientOnlyProvider>
         </AuthCheckProvider>
         <ToastProvider />
       </ThemeProvider>

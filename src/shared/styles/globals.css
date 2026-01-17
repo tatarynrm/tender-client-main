@@ -185,3 +185,9 @@
   scrollbar-width: none;
 
 }
+
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-sector:focus {
+  outline: none;
+}

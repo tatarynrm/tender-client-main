@@ -44,7 +44,7 @@ export const useTenderListClient = (filters: TenderListFilters) => {
   // Використовуємо єдиний ключ для React Query
   const queryKey = useMemo(
     () => ["tenders", params.toString()],
-    [params.toString()]
+    [params.toString()],
   );
 
   // Основний запит
@@ -56,14 +56,16 @@ export const useTenderListClient = (filters: TenderListFilters) => {
 
   const tenders = data?.content ?? [];
   const pagination = data?.props?.pagination;
-
+  const handleRefresh = () => {
+    alert(1)
+    // Invalidate оновлює дані з сервера, щоб у клієнта був актуальний список
+    queryClient.invalidateQueries({ queryKey });
+  };
   // Сокети для live-оновлення
   useEffect(() => {
     if (!profile?.id || !tender) return;
 
-    const handleNewLoad = () => {
-      queryClient.invalidateQueries({ queryKey });
-    };
+
 
     const handleNewBid = (updatedTender: ITender) => {
       queryClient.setQueryData<IApiResponse<ITender[]>>(queryKey, (old) => {
@@ -71,21 +73,21 @@ export const useTenderListClient = (filters: TenderListFilters) => {
         return {
           ...old,
           content: old.content.map((t) =>
-            t.id === updatedTender.id ? updatedTender : t
+            t.id === updatedTender.id ? updatedTender : t,
           ),
         };
       });
       queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
     };
 
-    tender.on("new_load", handleNewLoad);
+    tender.on("new_tender", handleRefresh);
     tender.on("new_bid", handleNewBid);
     tender.on("saveTender", (data) => {
       console.log("saveTender", data);
     });
 
     return () => {
-      tender.off("new_load", handleNewLoad);
+      tender.off("new_tender", handleRefresh);
       tender.off("new_bid", handleNewBid);
     };
   }, [profile?.id, queryClient, tender, queryKey]);

@@ -45,7 +45,7 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
   // Використовуємо єдиний ключ для React Query
   const queryKey = useMemo(
     () => ["tenders", params.toString()],
-    [params.toString()]
+    [params.toString()],
   );
 
   // Основний запит
@@ -60,8 +60,8 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
 
   // Сокети для live-оновлення
   useEffect(() => {
-    if (!profile?.id || !tender) return;
-
+    // if (!profile?.id || !tender) return;
+    if (!tender?.connected) return;
     const handleNewLoad = () => {
       queryClient.invalidateQueries({ queryKey });
     };
@@ -72,21 +72,21 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
         return {
           ...old,
           content: old.content.map((t) =>
-            t.id === updatedTender.id ? updatedTender : t
+            t.id === updatedTender.id ? updatedTender : t,
           ),
         };
       });
       queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
     };
 
-    tender.on("new_load", handleNewLoad);
+    tender.on("new_tender", handleNewLoad);
     tender.on("new_bid", handleNewBid);
-    tender.on("saveTender", (data) => {
-      console.log("saveTender", data);
-    });
+    // tender.on("saveTender", (data) => {
+    //   console.log("saveTender", data);
+    // });
 
     return () => {
-      tender.off("new_load", handleNewLoad);
+      tender.off("new_tender", handleNewLoad);
       tender.off("new_bid", handleNewBid);
     };
   }, [profile?.id, queryClient, tender, queryKey]);

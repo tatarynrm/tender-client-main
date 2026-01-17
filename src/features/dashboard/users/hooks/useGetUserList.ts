@@ -30,11 +30,11 @@ export const useGetUserList = (page?: number, pageSize?: number) => {
   const { data, isLoading, refetch, error } = useQuery({
     queryKey: ["company-users", currentPage, currentPageSize],
     queryFn: async () => {
-      const { data } = await api.post("/users/all", {
-        pagination: {
-          page_num: currentPage,
-          page_rows: currentPageSize,
-        },
+      const { data } = await api.get("/users/all", {
+        // pagination: {
+        //   page_num: currentPage,
+        //   page_rows: currentPageSize,
+        // },
       });
 
       console.log(data, "RESPONSE");

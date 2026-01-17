@@ -44,7 +44,11 @@ export const TendersAreaChart = ({
       >
         {label || "Графік"}
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer
+        width="100%"
+        height={300}
+        className="focus:outline-none"
+      >
         <AreaChart data={data}>
           <CartesianGrid
             strokeDasharray="3 3"
@@ -65,8 +69,8 @@ export const TendersAreaChart = ({
             content={<CustomTooltip />}
             cursor={{
               stroke: "#3b82f6",
-              strokeWidth: 2,
-              strokeDasharray: "5",
+              // strokeWidth: 2,
+              // strokeDasharray: "5",
               fill: "transparent", // для BarChart можна додати легкий fill
             }}
           />
@@ -93,6 +97,7 @@ export const DistributionBarChart = ({
   label?: string;
 }) => {
   const { config } = useFontSize();
+  console.log(data, "DATA");
 
   return (
     <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 rounded-[2.5rem] shadow-sm transition-all duration-300">
@@ -120,7 +125,8 @@ export const DistributionBarChart = ({
           />
           <Bar
             dataKey="value"
-            fill="#8b5cf6"
+            // fill="#8b5cf6"
+            fill="#048c7f"
             radius={[12, 12, 12, 12]}
             barSize={32}
           />

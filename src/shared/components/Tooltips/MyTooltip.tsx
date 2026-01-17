@@ -16,8 +16,7 @@ interface CustomTooltipProps {
 export function MyTooltip({ text, important }: CustomTooltipProps) {
   const { profile } = useAuth();
 
-
-  if (profile?.is_manager) return null;
+  // if (profile?.is_manager) return null;
 
   return (
     <Tooltip>
