@@ -34,7 +34,7 @@ export default function TenderFullInfoModal({
     <>
       {/* Тінь фона */}
       <div
-        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-999999 transition-opacity
         ${tenderId ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={onClose}
       />

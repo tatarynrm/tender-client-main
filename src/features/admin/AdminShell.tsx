@@ -47,7 +47,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
       {/* ASIDE (Сайдбар) */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-999999 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна логіка: виїжджає при sidebarOpen */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}

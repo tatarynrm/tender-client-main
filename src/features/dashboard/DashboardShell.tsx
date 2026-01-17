@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Sidebar from "@/features/dashboard/main/components/Sidebar";
-import Header from "@/features/dashboard/main/components/Header";
+import Sidebar from "./main/components/Sidebar";
+import Header from "./main/components/Header";
 
 export default function DashboardShell({
   profile,
@@ -36,7 +36,6 @@ export default function DashboardShell({
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
-      
       {/* Мобільний Overlay */}
       <div
         onClick={() => setSidebarOpen(false)}
@@ -48,15 +47,16 @@ export default function DashboardShell({
       {/* Сайдбар з підтримкою анімації приховування на десктопі */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-999999 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна логіка */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           
           /* Десктопна логіка */
-          ${closeSidebar 
-            ? "md:-translate-x-full md:fixed" 
-            : "md:static md:translate-x-0 md:shadow-none"
+          ${
+            closeSidebar
+              ? "md:-translate-x-full md:fixed"
+              : "md:static md:translate-x-0 md:shadow-none"
           }
         `}
       >

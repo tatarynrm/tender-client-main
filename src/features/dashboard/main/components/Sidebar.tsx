@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -73,21 +74,6 @@ const links: MenuItem[] = [
     name: "Тендери",
     icon: LayoutList,
     href: "/dashboard/tender",
-    // icon: Shield 
-    // children: [
-    //   { name: "Активні", href: "/dashboard/tender/active", icon: Shield },
-    //   {
-    //     name: "Приймаю участь",
-    //     href: "/dashboard/tender/my",
-    //     icon: ShieldPlus,
-    //   },
-    //   {
-    //     name: "Майбутні",
-    //     href: "/dashboard/tender/archive",
-    //     icon: FileArchive,
-    //   },
-    //   { name: "Архів", href: "/dashboard/tender/archive", icon: FileArchive },
-    // ],
   },
   {
     name: "Персональні дані",
@@ -127,13 +113,11 @@ export default function Sidebar({
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
 
-  // Завантажуємо стан меню з localStorage
   useEffect(() => {
     const saved = localStorage.getItem("userSidebarOpenMenus");
     if (saved) setOpenMenus(JSON.parse(saved));
   }, []);
 
-  // Зберігаємо стан меню
   useEffect(() => {
     localStorage.setItem("userSidebarOpenMenus", JSON.stringify(openMenus));
   }, [openMenus]);
@@ -158,11 +142,11 @@ export default function Sidebar({
         return (
           <div
             key={name}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 dark:text-gray-500 opacity-60 cursor-not-allowed relative"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed relative border border-transparent"
             title={info}
           >
             {Icon && <Icon className="w-5 h-5" />}
-            <span>{name}</span>
+            <span className="font-medium">{name}</span>
           </div>
         );
       }
@@ -172,14 +156,22 @@ export default function Sidebar({
           key={name}
           href={href!}
           onClick={onSelect}
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
+          className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${
             active
-              ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-              : "hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
+              ? "bg-blue-50/50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20 shadow-sm"
+              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
           } ${isChild ? "ml-4" : ""}`}
         >
-          {Icon && <Icon className="w-5 h-5" />}
-          <span>{name}</span>
+          {Icon && (
+            <Icon
+              className={`w-5 h-5 transition-colors ${
+                active ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
+              }`}
+            />
+          )}
+          <span className={active ? "font-semibold" : "font-medium"}>
+            {name}
+          </span>
         </Link>
       );
     }
@@ -188,25 +180,33 @@ export default function Sidebar({
       <div key={name}>
         <button
           onClick={() => toggleMenu(name)}
-          className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm transition ${
+          className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${
             active
-              ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-              : "hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200"
+              ? "bg-slate-50/80 dark:bg-white/5 text-blue-600 dark:text-blue-400 border-slate-100 dark:border-white/10"
+              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
           }`}
         >
           <div className="flex items-center gap-3">
-            {Icon && <Icon className="w-5 h-5" />}
-            <span>{name}</span>
+            {Icon && (
+              <Icon
+                className={`w-5 h-5 transition-colors ${
+                  active
+                    ? "text-blue-500"
+                    : "text-slate-400 dark:text-slate-500"
+                }`}
+              />
+            )}
+            <span className="font-semibold">{name}</span>
           </div>
           {openMenus[name] ? (
-            <ChevronDown className="w-4 h-4 opacity-70" />
+            <ChevronDown className="w-4 h-4 opacity-50" />
           ) : (
-            <ChevronRight className="w-4 h-4 opacity-70" />
+            <ChevronRight className="w-4 h-4 opacity-50" />
           )}
         </button>
 
         <div
-          className={`ml-6 mt-1 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${
+          className={`ml-6 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out ${
             openMenus[name]
               ? "max-h-60 opacity-100"
               : "max-h-0 opacity-0 pointer-events-none"
@@ -218,7 +218,6 @@ export default function Sidebar({
     );
   };
 
-  // Footer
   const footerLinks = [...defaultFooterLinks];
   if (profile?.is_ict_admin) {
     footerLinks.push(
@@ -228,19 +227,19 @@ export default function Sidebar({
   }
 
   return (
-    <div className="relative flex flex-col w-64 bg-white dark:bg-slate-800 h-[100dvh] custom-scrollbar">
+    <aside className="relative flex flex-col w-64 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-[100dvh] transition-colors duration-300 shrink-0">
       {/* Меню зі скролом */}
-      <div className="flex-1 min-h-[40vh] overflow-y-auto p-4 space-y-2 scrollbar-thin ">
+      <div className="flex-1 min-h-[40vh] overflow-y-auto p-4 space-y-2 custom-scrollbar relative z-10">
         {links.map((link) => renderLink(link))}
       </div>
 
       {/* Footer завжди внизу */}
-      <div className="border-t border-gray-200 dark:border-slate-700 p-4 space-y-2 flex-shrink-0">
+      <div className="border-t border-slate-200 dark:border-white/10 p-4 space-y-2 flex-shrink-0 bg-slate-50/30 dark:bg-black/10 backdrop-blur-md">
         {footerLinks.map((link) => renderLink(link))}
-        <div className="flex justify-end mt-2">
+        <div className="flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-white/5">
           <LogoutButton />
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -51,7 +51,7 @@ const FontSizeContext = createContext<FontSizeContextType | undefined>(
 
 export function FontSizeProvider({ children }: { children: React.ReactNode }) {
   // Змінюємо дефолтний розмір на "base" (середній), щоб не було занадто мало
-  const [size, setSize] = useState<FontSizeKey>("base");
+  const [size, setSize] = useState<FontSizeKey>("sm");
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {

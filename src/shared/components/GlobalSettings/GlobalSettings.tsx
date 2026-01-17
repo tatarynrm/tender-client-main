@@ -19,7 +19,7 @@ export function GlobalSettings() {
   const { size, updateSize } = useFontSize();
 
   const sizes = [
-    { id: "xs", label: "Надмалий", desc: "7px / 9px" },
+    { id: "xs", label: "Малий", desc: "7px / 9px" },
     { id: "sm", label: "Стандарт", desc: "8px / 10px" },
     { id: "base", label: "Середній", desc: "9px / 12px" },
     { id: "lg", label: "Великий", desc: "10px / 14px" },

@@ -97,7 +97,7 @@ export default function ManagersTenderPage() {
   if (isLoading) return <Loader />;
 
   return (
-    <div className="p-0 mx-auto space-y-1">
+    <div className="p-0 mx-auto space-y-1 pb-20">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}
@@ -116,7 +116,7 @@ export default function ManagersTenderPage() {
       {/* БЛОК ІНСТРУМЕНТІВ (ПРИХОВУЄТЬСЯ) */}
       {isVisible && (
         <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex justify-between items-center  p-2 rounded-lg border border-zinc-100">
+          <div className="flex justify-between items-center  p-2  ">
             <TenderFiltersSheet
               filters={filters}
               setFilters={setFilters}

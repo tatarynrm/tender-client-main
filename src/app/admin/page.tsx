@@ -1,48 +1,86 @@
 "use client";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui";
+  TendersAreaChart,
+  DistributionBarChart,
+} from "@/shared/components/Charts/Charts";
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { cn } from "@/shared/utils";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-
-  Tooltip,
-  ResponsiveContainer,
+  TrendingUp,
+  Users,
+  Building2,
+  LayoutDashboard,
+  UserCheck,
+  Clock,
+  AlertCircle,
+  ShieldCheck,
+} from "lucide-react";
+import {
   PieChart,
   Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
   Legend,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  PieLabelRenderProps,
 } from "recharts";
+import { CustomTooltip } from "@/shared/components/Charts/CustomTooltip";
 
 export default function AdminDashboard() {
-  // 🔹 Дані для різних графіків
+  const { config } = useFontSize();
+  const { title, main, label, icon: iconSize } = config;
+
+  // Дані для карток статистики
+  const stats = [
+    {
+      label: "Очікують підтвердження",
+      value: "12",
+      description: "Нові користувачі",
+      icon: Clock,
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+      borderColor: "border-amber-500/20",
+    },
+    {
+      label: "Нові компанії",
+      value: "8",
+      description: "За останні 24 год",
+      icon: Building2,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+    },
+    {
+      label: "Активні сесії",
+      value: "142",
+      description: "Користувачі online",
+      icon: UserCheck,
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-500/10",
+      borderColor: "border-emerald-500/20",
+    },
+    {
+      label: "Тикети підтримки",
+      value: "3",
+      description: "Потребують уваги",
+      icon: AlertCircle,
+      color: "text-rose-500",
+      bgColor: "bg-rose-500/10",
+      borderColor: "border-rose-500/20",
+    },
+  ];
+
+  // Дані для графіків (твої попередні)
   const usersGrowth = [
-    { month: "Січ", users: 100 },
-    { month: "Лют", users: 230 },
-    { month: "Бер", users: 420 },
-    { month: "Кві", users: 600 },
-    { month: "Тра", users: 720 },
-    { month: "Чер", users: 900 },
+    { month: "Січ", count: 100 },
+    { month: "Лют", count: 230 },
+    { month: "Бер", count: 420 },
+    { month: "Кві", count: 600 },
+    { month: "Тра", count: 720 },
+    { month: "Чер", count: 900 },
   ];
 
-  const companyStats = [
-    { name: "Перевізники", value: 300 },
-    { name: "Експедитори", value: 200 },
-    { name: "Вантажовідправники", value: 150 },
-  ];
-
-  const monthlyRevenue = [
+  const revenueStats = [
     { name: "Січ", value: 12000 },
     { name: "Лют", value: 15000 },
     { name: "Бер", value: 18000 },
@@ -51,136 +89,136 @@ export default function AdminDashboard() {
     { name: "Чер", value: 25000 },
   ];
 
-  const COLORS = ["#0ea5e9", "#22c55e", "#f59e0b"];
-
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-1 pb-10 lg:p-1 lg:pb-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto">
+      {/* Хедер */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-teal-500/10 dark:bg-teal-400/10 rounded-2xl border border-teal-100 dark:border-teal-400/20">
+            <LayoutDashboard
+              className="text-teal-600 dark:text-teal-400"
+              size={iconSize + 6}
+            />
+          </div>
+          <div>
+            <h1
+              className={cn(
+                "font-black tracking-tight text-slate-900 dark:text-white",
+                title
+              )}
+            >
+              Адмін-панель
+            </h1>
+            <p className={cn("text-slate-500 font-medium", label)}>
+              Системний моніторинг та керування запитами
+            </p>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* 📊 Зростання користувачів */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Зростання користувачів</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={usersGrowth}>
-                {/* <CartesianGrid strokeDasharray="3 3" /> */}
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="users"
-                  stroke="#3b82f6"
-                  strokeWidth={3}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-400">
+          <ShieldCheck size={iconSize} />
+          <span className={cn("font-bold", label)}>Система стабільна</span>
+        </div>
+      </div>
 
-        {/* 🍩 Типи компаній */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Типи компаній</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
+      {/* КАРТКИ СТАТИСТИКИ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((item, index) => (
+          <div
+            key={index}
+            className={cn(
+              "relative overflow-hidden p-6 rounded-[2rem] border transition-all duration-300 hover:scale-[1.02]",
+              "bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl shadow-sm",
+              item.borderColor
+            )}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className={cn("p-3 rounded-2xl", item.bgColor, item.color)}>
+                <item.icon size={iconSize + 4} />
+              </div>
+              <div
+                className={cn(
+                  "font-black text-slate-900 dark:text-white",
+                  title
+                )}
+              >
+                {item.value}
+              </div>
+            </div>
+            <div>
+              <p
+                className={cn(
+                  "font-bold text-slate-500 dark:text-slate-400",
+                  label
+                )}
+              >
+                {item.label}
+              </p>
+              <p
+                className={cn(
+                  "text-[10px] uppercase tracking-wider font-black opacity-50 dark:text-slate-500",
+                  label
+                )}
+              >
+                {item.description}
+              </p>
+            </div>
+            {/* Фонова декоративна іконка */}
+            <item.icon
+              className="absolute -bottom-4 -right-4 opacity-[0.03] dark:opacity-[0.05]"
+              size={100}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Графіки (Area та Bar) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        <TendersAreaChart data={usersGrowth} label="Динаміка реєстрацій" />
+        <DistributionBarChart
+          data={revenueStats}
+          label="Фінансова активність ($)"
+        />
+      </div>
+
+      {/* Нижня секція з PieChart */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8">
+          <TendersAreaChart label="Тендерна активність" data={usersGrowth} />
+        </div>
+        <div className="lg:col-span-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 rounded-[2.5rem] shadow-sm">
+          <h3
+            className={cn(
+              "text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-6 font-bold",
+              label
+            )}
+          >
+            Розподіл компаній
+          </h3>
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={companyStats}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(props: PieLabelRenderProps) => {
-                    const { name, percent } = props;
-                    // ✅ перетворюємо percent на число і перевіряємо на null/undefined
-                    const pct = typeof percent === "number" ? percent : 0;
-                    return name ? `${name}: ${(pct * 100).toFixed(0)}%` : null;
-                  }}
+                  data={[
+                    { name: "Перевізники", value: 300 },
+                    { name: "Експедитори", value: 200 },
+                    { name: "Вантажовідправники", value: 150 },
+                  ]}
+                  innerRadius={70}
                   outerRadius={90}
-                  fill="#8884d8"
+                  paddingAngle={8}
                   dataKey="value"
                 >
-                  {companyStats.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  {["#3b82f6", "#8b5cf6", "#f59e0b"].map((color, i) => (
+                    <Cell key={i} fill={color} stroke="none" />
                   ))}
                 </Pie>
-                <Legend />
-                <Tooltip />
+                <Tooltip content={<CustomTooltip />} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* 💸 Прибуток по місяцях */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle>Прибуток по місяцях</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyRevenue}>
-                {/* <CartesianGrid strokeDasharray="3 3" /> */}
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#22c55e" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-
-      {/* 📈 Порівняльний графік компаній і користувачів */}
-      <Card className="shadow-md">
-        <CardHeader>
-          <CardTitle>Порівняння компаній та користувачів</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={[
-                { month: "Січ", users: 200, companies: 50 },
-                { month: "Лют", users: 350, companies: 70 },
-                { month: "Бер", users: 500, companies: 100 },
-                { month: "Кві", users: 600, companies: 120 },
-                { month: "Тра", users: 720, companies: 160 },
-              ]}
-            >
-              <defs>
-                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorCompanies" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="month" />
-              <YAxis />
-              {/* <CartesianGrid strokeDasharray="3 3" /> */}
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="users"
-                stroke="#3b82f6"
-                fillOpacity={1}
-                fill="url(#colorUsers)"
-              />
-              <Area
-                type="monotone"
-                dataKey="companies"
-                stroke="#22c55e"
-                fillOpacity={1}
-                fill="url(#colorCompanies)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 }

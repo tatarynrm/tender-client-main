@@ -50,9 +50,9 @@ export default function LogShell({
       {/* Сайдбар */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-40 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-99999 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
           
-          /* Мобільна поведінка */Q
+          /* Мобільна поведінка */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           
           /* Десктопна поведінка */
