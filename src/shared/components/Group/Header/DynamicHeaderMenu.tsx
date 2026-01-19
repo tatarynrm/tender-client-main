@@ -24,7 +24,7 @@ export default function DynamicHeaderMenu({
     {
       match: "/log",
       items: [
-        { href: "/log/cargo/add", label: "+ Нова заявка" },
+        { href: "/log/load/add", label: "+ Нова заявка" },
         { href: "/log/tender/add", label: "+ Новий тендер" },
         // { href: "/log/cargo/export", label: "Експорт" },
       ],

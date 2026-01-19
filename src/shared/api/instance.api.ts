@@ -23,22 +23,22 @@ api.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
 
-      if (status === 404) {
-        console.log(data, "DATA ----");
+      // if (status === 404) {
+      //   console.log(data, "DATA ----");
 
-        // Викликаємо Sonner
-        toast.error("Помилка 404", {
-          description: `${data.message}`,
-        });
-      }
+      //   // Викликаємо Sonner
+      //   toast.error("Помилка 404", {
+      //     description: `${data.message}`,
+      //   });
+      // }
 
-      // Додатково: обробка помилок валідації NestJS (400 Bad Request)
-      if (status === 400) {
-        const message = Array.isArray(data.message)
-          ? data.message[0]
-          : data.message;
-        toast.error("Помилка даних", { description: message });
-      }
+      // // Додатково: обробка помилок валідації NestJS (400 Bad Request)
+      // if (status === 400) {
+      //   const message = Array.isArray(data.message)
+      //     ? data.message[0]
+      //     : data.message;
+      //   toast.error("Помилка даних", { description: message });
+      // }
 
       // Помилка авторизації
       if (status === 401) {

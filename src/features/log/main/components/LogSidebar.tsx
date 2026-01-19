@@ -33,7 +33,7 @@ const links: MenuItem[] = [
   {
     name: "Екран заявок",
     icon: ScreenShare,
-    href: "/log/cargo",
+    href: "/log/load",
   },
   {
     name: "Тендери",

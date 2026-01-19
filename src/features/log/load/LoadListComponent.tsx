@@ -31,7 +31,7 @@ export default function LoadListComponent() {
 
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
     "loadListColumns",
-    3
+    3,
   );
 
   const currentParams = useMemo(
@@ -57,11 +57,12 @@ export default function LoadListComponent() {
       participate_company: searchParams.get("participate_company") || "",
       limit: Number(searchParams.get("limit") || 10),
     }),
-    [searchParams]
+    [searchParams],
   );
 
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { loads, pagination, isLoading, error } = useLoads(currentParams);
+  const { loads, pagination, saveCargo, isSaving, isLoading, error } =
+    useLoads(currentParams);
   const { loadFilters } = useGetLoadFilters();
 
   const updateUrl = (newParams: Record<string, any>) => {
@@ -148,7 +149,8 @@ export default function LoadListComponent() {
           {loads.map((item: LoadApiItem) => (
             <CargoCard
               key={item.id}
-              cargo={item}
+              load={item}
+              filters={loadFilters}
               regionsData={loadFilters?.region_dropdown}
             />
           ))}

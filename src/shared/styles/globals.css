@@ -191,3 +191,8 @@
 .recharts-sector:focus {
   outline: none;
 }
+
+/* Важливо для модальних вікон в яких є селект */
+[data-radix-popper-content-wrapper] {
+  z-index: 1000 !important;
+}

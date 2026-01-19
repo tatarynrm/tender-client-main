@@ -13,9 +13,9 @@ import {
   Info,
   Boxes,
   CircleDollarSign,
-  BadgeCheckIcon,
   Sparkles,
-  Edit3,
+  ChevronRight,
+  GalleryVerticalEnd,
 } from "lucide-react";
 
 import { Card } from "@/shared/components/ui/card";
@@ -29,10 +29,20 @@ import {
 } from "@/shared/components/ui/dropdown-menu";
 import { cn } from "@/shared/utils";
 
-import { LoadApiItem } from "../../types/load.type";
+import { Dropdowns, LoadApiItem } from "../../types/load.type";
 import { CargoDetailsDrawer } from "./CargoDetailsDrawer";
 import CargoChat from "../../screen/components/CargoChat";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { StatusIndicator } from "../CargoCardUpdateColor";
+import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
+import { AddCarsModal } from "./CargoCarAddModal";
+import { useAddCars } from "../../hooks/useAddLoadCars";
+import { CargoCarRemoveModal } from "./CargoCarRemoveModal";
+import { useRemoveCars } from "../../hooks/useRemoveLoadCars";
+import { set } from "nprogress";
+import { CargoCloseByManagerModal } from "./CargoCloseByManagerModal";
+import { useCloseCargoByManager } from "../../hooks/useCloseByManager";
+import { CargoHistoryModal } from "./CargoHistoryModal";
 
 const transitMap: Record<string, string> = {
   E: "Експорт",
@@ -43,102 +53,114 @@ const transitMap: Record<string, string> = {
 };
 
 interface CargoCardProps {
-  cargo: LoadApiItem;
+  load: LoadApiItem;
+  filters?: Dropdowns;
   regionsData?: any[];
 }
 
-export function CargoCard({ cargo }: CargoCardProps) {
+export function CargoCard({ load, filters }: CargoCardProps) {
   const { config } = useFontSize();
   const router = useRouter();
-  // --- Логіка "Нового" тендера ---
+
   const [isNew, setIsNew] = useState(false);
   const [isJustCreated, setIsJustCreated] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
   const [chatCargo, setChatCargo] = useState<LoadApiItem | null>(null);
   const [isShaking, setIsShaking] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [openAddCars, setOpenAddCars] = useState(false);
+  const [openRemoveCars, setOpenRemoveCars] = useState(false);
+  const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
+  const [openHistory, setOpenHistory] = useState(false);
+  const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
+    useAddCars();
+  const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
+  const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
   useEffect(() => {
-    if (!cargo.created_at) return;
-
+    if (!load.created_at) return;
     const checkStatus = () => {
-      const diff = Date.now() - new Date(cargo.created_at).getTime();
+      const diff = Date.now() - new Date(load.created_at).getTime();
       const minutes = diff / 1000 / 60;
-
-      // Якщо менше 1 хвилини — додаємо спец. анімацію появи
       setIsJustCreated(minutes < 1);
-      // Якщо менше 3 хвилин — показуємо значок NEW
       setIsNew(minutes < 3);
     };
-
     checkStatus();
-    const timer = setInterval(checkStatus, 30000); // перевірка кожні 30 сек
+    const timer = setInterval(checkStatus, 30000);
     return () => clearInterval(timer);
-  }, [cargo.created_at]);
+  }, [load.created_at]);
 
-  // --- Логіка видалення (годину) ---
-  const createdAt = cargo.created_at ? new Date(cargo.created_at) : null;
+  const createdAt = load.created_at ? new Date(load.created_at) : null;
   const canDelete = createdAt
     ? Date.now() - createdAt.getTime() < 60 * 60 * 1000
     : false;
 
   useEffect(() => {
     const handleShake = (event: any) => {
-      if (event.detail === cargo.id) {
-        // Активуємо обидва стани
+      if (event.detail === load.id) {
         setIsShaking(true);
         setShowBadge(true);
-
-        // 1. Зупиняємо ТРЯСКУ рівно через 6 секунд
-        const shakeTimer = setTimeout(() => {
-          setIsShaking(false);
-        }, 6000);
-
-        // 2. Прибираємо НАПИС (badge) через 30 секунд
-        const badgeTimer = setTimeout(() => {
-          setShowBadge(false);
-        }, 30000);
-
+        const shakeTimer = setTimeout(() => setIsShaking(false), 6000);
+        const badgeTimer = setTimeout(() => setShowBadge(false), 30000);
         return () => {
           clearTimeout(shakeTimer);
           clearTimeout(badgeTimer);
         };
       }
     };
-
     window.addEventListener("cargo_shake", handleShake);
     return () => window.removeEventListener("cargo_shake", handleShake);
-  }, [cargo.id]);
+  }, [load.id]);
+  useEffect(() => {
+    const handleShake = (event: any) => {
+      console.log(event, "EVENT DETAIL");
+      console.log(load.id, "LOAD ID EVENT");
+
+      if (event.detail === load.id) {
+        setIsShaking(true);
+        setShowBadge(true);
+        const shakeTimer = setTimeout(() => setIsShaking(false), 6000);
+        const badgeTimer = setTimeout(() => setShowBadge(false), 30000);
+        return () => {
+          clearTimeout(shakeTimer);
+          clearTimeout(badgeTimer);
+        };
+      }
+    };
+    window.addEventListener("cargo_shake_car_count", handleShake);
+    return () =>
+      window.removeEventListener("cargo_shake_car_count", handleShake);
+  }, [load.id]);
+
   return (
     <>
       <Card
-        onDoubleClick={() => setSelectedCargo(cargo)}
+        onDoubleClick={() => setSelectedCargo(load)}
         className={cn(
           "group relative flex flex-col w-full bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/50 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300",
-          // Анімація появи, якщо картка щойно створена
           isJustCreated &&
             "animate-in fade-in zoom-in duration-700 slide-in-from-left-4",
-          // Тряска триватиме 6 секунд, поки активний isShaking
           isShaking &&
             "animate-shake border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
         )}
       >
-        {/* Значок NEW (плаваючий) */}
         {isNew && (
-          <div className="absolute top-10   bg-amber-500 text-white text-[8px] font-black px-8 py-0.5 z-50 shadow-sm animate-pulse">
+          <div className="absolute top-10 bg-amber-500 text-white text-[8px] font-black px-8 py-0.5 z-50 shadow-sm animate-pulse">
             NEW
           </div>
         )}
-        {/* Напис "Відредаговано", який зникне через 30 секунд */}
         {showBadge && (
-          <div className="absolute top-10 right-0    flex items-center gap-1.5 bg-emerald-500 text-white px-2.5 py-1 rounded-bl-xl shadow-lg border-b border-l border-white/20 animate-in fade-in zoom-in duration-300">
+          <div className="absolute top-10 right-0 flex items-center gap-1.5 bg-emerald-500 text-white px-2.5 py-1 rounded-bl-xl shadow-lg border-b border-l border-white/20 animate-in fade-in zoom-in duration-300 z-50">
             <Sparkles size={10} className="animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest">
               Відредаговано
             </span>
           </div>
         )}
-        {/* Header - Compact Glass */}
-        <div className="flex items-center justify-between px-2.5 py-1 bg-zinc-100/50 dark:bg-white/5 border-b border-zinc-200/50 dark:border-white/5">
+
+        <StatusIndicator updatedAt={load.updated_at} />
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-2.5 py-0 bg-zinc-100/50 dark:bg-white/5 border-b border-zinc-200/50 dark:border-white/5">
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded-md">
               <span
@@ -147,7 +169,7 @@ export function CargoCard({ cargo }: CargoCardProps) {
                   config.label,
                 )}
               >
-                #{cargo.id}
+                #{load.id}
               </span>
             </div>
             <span
@@ -156,53 +178,59 @@ export function CargoCard({ cargo }: CargoCardProps) {
                 config.label,
               )}
             >
-              {transitMap[cargo.transit_type as keyof typeof transitMap] ||
-                cargo.transit_type ||
+              {transitMap[load.transit_type as keyof typeof transitMap] ||
+                load.transit_type ||
                 "—"}
             </span>
           </div>
-          {cargo.price ? (
-            <Badge
-              variant="secondary"
-              className="px-2 py-1 font-semibold text-sm rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
-            >
-              <span className="mr-1">{cargo.price}</span>
-              <span>{cargo.valut_name}</span>
-            </Badge>
-          ) : null}
+
           <div className="flex items-center gap-2">
+            {/* Дата/час створення */}
             <div className="flex items-center gap-1 text-zinc-400 bg-white/50 dark:bg-black/20 px-1.5 py-0.5 rounded-md border border-zinc-200/50 dark:border-white/5">
-              <Clock size={10} className="text-blue-500" />
+              <span className="text-[7px] font-black uppercase text-zinc-500/70">
+                Створено:
+              </span>
               <span
                 className={cn(
-                  "text-[10px] font-bold tabular-nums",
-                  config.main,
+                  "text-[8px] font-bold tabular-nums text-zinc-600 dark:text-zinc-400",
+                  config.label,
                 )}
               >
-                {cargo.updated_at
-                  ? format(new Date(cargo.updated_at), "HH:mm")
+                {load.created_at
+                  ? format(new Date(load.created_at), "dd.MM HH:mm")
                   : "—"}
               </span>
             </div>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-5 w-5 hover:bg-blue-500/10 rounded-md"
-                >
+                <Button variant="ghost" size="icon" className="h-5 w-5">
                   <GripVertical size={12} className="text-zinc-400" />
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 align="end"
                 className="rounded-xl backdrop-blur-lg"
               >
                 <DropdownMenuItem
-                  onClick={() => router.push(`/log/cargo/edit/${cargo.id}`)}
+                  onClick={() => router.push(`/log/load/edit/${load.id}`)}
                 >
                   Редагувати
                 </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setOpenAddCars(true)}>
+                  Додати к-сть авто
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenRemoveCars(true)}>
+                  Відняти к-сть авто
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setOpenCloseCargoByManager(true)}
+                >
+                  Закрита нами
+                </DropdownMenuItem>
+
                 {canDelete && (
                   <DropdownMenuItem className="text-red-500">
                     Видалити
@@ -213,32 +241,30 @@ export function CargoCard({ cargo }: CargoCardProps) {
           </div>
         </div>
 
-        {/* Main Content - Compressed */}
-        <div className="p-2 flex gap-3 flex-1 overflow-hidden">
-          <div className="relative flex flex-col gap-1 flex-grow min-w-0">
-            {/* Маршрут тепер без зайвих відступів */}
-            <div className="flex flex-col min-w-0">
+        {/* 3-Part Main Content */}
+        <div className="px-2 flex gap-0 flex-1 overflow-hidden items-stretch">
+          {/* Column 1: Route (Звідки/Куди) */}
+          <div className="flex-[1.4] flex flex-col gap-3 min-w-0 pr-2">
+            <div className="flex flex-col">
               <span
                 className={cn(
-                  "uppercase font-black text-zinc-400 text-[8px] leading-none mb-0.5",
+                  "uppercase font-black text-zinc-400 text-[7px] leading-none mb-1",
                   config.label,
                 )}
               >
                 Звідки
               </span>
-              <div className="flex flex-wrap gap-1">
-                {cargo.crm_load_route_from.map((from, idx) => (
+              <div className="flex flex-wrap gap-x-1 gap-y-2.5 mt-1.5">
+                {load.crm_load_route_from.map((from, idx) => (
                   <div
                     key={idx}
-                    className="relative flex items-center gap-1 bg-white/40 dark:bg-white/5 px-1 py-0.5 rounded border border-zinc-200/50 dark:border-white/5 mt-2" // додав mt-2 для відступу під регіон
+                    className="relative flex items-center gap-1 bg-white dark:bg-white/5 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-white/10"
                   >
-                    {/* Позначка регіону */}
                     {from.region && (
                       <span className="absolute -top-2.5 left-0 text-[7px] uppercase font-bold text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
                         {from.region}
                       </span>
                     )}
-
                     <Flag
                       country={from.country?.toUpperCase() || "UN"}
                       size={10}
@@ -256,28 +282,26 @@ export function CargoCard({ cargo }: CargoCardProps) {
               </div>
             </div>
 
-            <div className="flex flex-col min-w-0">
+            <div className="flex flex-col">
               <span
                 className={cn(
-                  "uppercase font-black text-zinc-400 text-[8px] leading-none mb-0.5",
+                  "uppercase font-black text-zinc-400 text-[7px] leading-none mb-1",
                   config.label,
                 )}
               >
                 Куди
               </span>
-              <div className="flex flex-wrap gap-1">
-                {cargo.crm_load_route_to.map((to, idx) => (
+              <div className="flex flex-wrap gap-x-1 gap-y-2.5 mt-1.5">
+                {load.crm_load_route_to.map((to, idx) => (
                   <div
                     key={idx}
-                    className="relative flex items-center gap-1 bg-white/40 dark:bg-white/5 px-1 py-0.5 rounded border border-zinc-200/50 dark:border-white/5 mt-2"
+                    className="relative flex items-center gap-1 bg-white dark:bg-white/5 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-white/10"
                   >
-                    {/* Регіон абсолютно зверху */}
                     {to.region && (
-                      <span className="absolute -top-2.5 left-0 text-[7px] uppercase font-bold text-zinc-400 dark:text-zinc-500 whitespace-nowrap leading-none opacity-80">
+                      <span className="absolute -top-2.5 left-0 text-[7px] uppercase font-bold text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
                         {to.region}
                       </span>
                     )}
-
                     <Flag
                       country={to.country?.toUpperCase() || "UN"}
                       size={10}
@@ -296,46 +320,88 @@ export function CargoCard({ cargo }: CargoCardProps) {
             </div>
           </div>
 
-          {/* Logistics - Vertical Sidebar Style */}
-          <div className="flex flex-col gap-1.5 min-w-[95px] border-l border-zinc-200/50 dark:border-white/5 pl-2 shrink-0">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1 text-zinc-400 uppercase font-black text-[8px]">
-                <Truck size={10} className="text-blue-500" />
-                <span className={config.label}>Транспорт</span>
-              </div>
-              <span
-                className={cn(
-                  "font-bold text-zinc-700 dark:text-zinc-200 text-[10px] leading-tight",
-                  config.main,
-                )}
-              >
-                {cargo.car_count_add}×
-                {cargo.crm_load_trailer?.[0]?.trailer_type_name?.substring(
-                  0,
-                  5,
-                ) || "Тент"}
-              </span>
+          {/* Column 2: Transport (Транспорт) */}
+          <div className="flex-1 flex flex-col gap-1.5 border-l border-zinc-200/50 dark:border-white/5 px-2 min-w-[100px]">
+            <div className="flex items-center gap-1 text-zinc-400 uppercase font-black text-[7px]">
+              <Truck size={10} className="text-blue-500" />
+              <span className={config.label}>Транспорт</span>
             </div>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col pl-1 border-l border-zinc-200 dark:border-zinc-700 mt-0.5">
+                {load.crm_load_trailer && load.crm_load_trailer.length > 0 ? (
+                  load.crm_load_trailer.map((t, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[9px] font-medium leading-tight text-zinc-500 dark:text-zinc-400 py-0.5"
+                    >
+                      • {t.trailer_type_name?.trim()}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[9px] font-medium text-zinc-400">
+                    • Тент
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Status & Price (Статус/Ціна) */}
+          <div className="flex-1 flex flex-col gap-2 border-l border-zinc-200/50 dark:border-white/5 pl-2 min-w-[90px]">
             <div className="flex flex-col">
-              <div className="flex items-center gap-1 text-zinc-400 uppercase font-black text-[8px]">
+              <div className="flex items-center gap-1 text-zinc-400 uppercase font-black text-[7px] mb-1">
                 <CheckCircle2 size={10} className="text-emerald-500" />
                 <span className={config.label}>Статус</span>
               </div>
-              <span
-                className={cn(
-                  "font-bold text-zinc-700 dark:text-zinc-200 text-[10px] leading-tight",
-                  config.main,
-                )}
+              <div className="flex flex-col leading-none gap-2">
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
+                  {load.car_count_actual} - Потрібно
+                </span>
+                <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
+                  {load.car_count_canceled} - Відмінено
+                </span>
+                <span className="text-[10px] font-bold text-zinc-400">
+                  {load.car_count_closed} - Закрито нами
+                </span>
+              </div>
+              <div
+                className="mt-2 flex items-center gap-1.5 cursor-pointer hover:text-blue-500 transition-colors group"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenHistory(true);
+                }}
               >
-                {cargo.car_count_actual}/{cargo.car_count_closed}
-              </span>
+                <GalleryVerticalEnd
+                  size={12}
+                  className="text-zinc-400 group-hover:text-blue-500"
+                />
+                <span
+                  className={cn(
+                    "text-[7px] font-black uppercase text-zinc-500 tracking-tight group-hover:text-blue-500",
+                    config.label,
+                  )}
+                >
+                  Історія
+                </span>
+              </div>
             </div>
+
+            {load.price && (
+              <div className="mt-auto">
+                <Badge
+                  variant="secondary"
+                  className="w-full justify-center px-1 py-1 font-black text-[10px] rounded-md bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-none shadow-none"
+                >
+                  {load.price} {load.valut_name}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Load Info - Compact Scrollable */}
-        {cargo.load_info && (
-          <div className="px-2 pb-1.5 flex items-start gap-1.5 shrink-0 opacity-80">
+        {/* Load Info */}
+        {load.load_info && (
+          <div className="px-2 pb-1.5 flex items-start gap-1.5 shrink-0 opacity-80 border-t border-transparent">
             <Info size={10} className="mt-0.5 text-blue-500 shrink-0" />
             <p
               className={cn(
@@ -343,16 +409,16 @@ export function CargoCard({ cargo }: CargoCardProps) {
                 config.label,
               )}
             >
-              {cargo.load_info}
+              {load.load_info}
             </p>
           </div>
         )}
 
-        {/* Footer - Ultra Slim */}
+        {/* Footer */}
         <div className="mt-auto px-2 py-1 flex items-center justify-between bg-zinc-100/50 dark:bg-white/5 border-t border-zinc-200/50 dark:border-white/10">
           <div className="flex items-center gap-1.5 min-w-0">
             <div className="h-4 w-4 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[7px] font-black border border-blue-500/20 uppercase">
-              {cargo.author?.substring(0, 2)}
+              {load.author?.substring(0, 2)}
             </div>
             <span
               className={cn(
@@ -360,41 +426,101 @@ export function CargoCard({ cargo }: CargoCardProps) {
                 config.main,
               )}
             >
-              {cargo.company_name || "—"}
+              {load.company_name || "—"}
+            </span>
+          </div>
+          {/* Дата/час оновлення */}
+          <div className="flex items-center gap-1 text-zinc-400 bg-blue-500/1 dark:bg-blue-500/10 px-1.5 py-0.5 rounded-md border border-blue-200/50 dark:border-blue-500/20">
+            <MyTooltip
+              icon={<Clock size={10} className="text-blue-500" />}
+              text="Час оновлення заявки"
+            ></MyTooltip>
+            <span
+              className={cn(
+                "text-[7px] font-bold tabular-nums text-blue-700 dark:text-blue-400",
+                config.label,
+              )}
+            >
+              {load.updated_at
+                ? format(new Date(load.updated_at), "HH:mm")
+                : "—"}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {cargo.is_collective && (
-              <Boxes size={11} className="text-zinc-400" />
-            )}
-            {cargo.is_price_request && (
-              <CircleDollarSign size={11} className="text-amber-500" />
-            )}
+          <Button
+            variant="outline"
+            className={cn(
+              "group relative overflow-hidden",
+              "hidden",
+              "xs:flex",
+              "sm:flex",
+              "flex",
+              "md:hidden",
+              // Адаптивність:
+              // hidden - на дуже маленьких телефонах (можна залишити тільки іконку)
+              // xs:flex - показуємо на звичайних смартфонах
+              // md:h-10 md:px-5 - збільшуємо кнопку для планшетів (iPad)
+              "h-8 px-3 xs:flex items-center",
+              "md:h-9 md:px-4 md:rounded-xl", // Планшетний режим: трохи більша та кругліша
 
+              "bg-white dark:bg-zinc-900",
+              "border-zinc-200 dark:border-zinc-800",
+              "hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
+              "active:scale-95 transition-all duration-300 rounded-lg shadow-sm",
+            )}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-400 group-hover:text-blue-600 transition-colors">
+                Деталі
+              </span>
+              <div className="flex items-center justify-center w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 group-hover:bg-blue-600 transition-colors duration-300">
+                <ChevronRight
+                  size={12}
+                  className="text-zinc-400 group-hover:text-white transition-transform duration-300 group-hover:translate-x-0.5"
+                />
+              </div>
+            </div>
+
+            {/* Легкий ефект світіння знизу при наведенні */}
+            <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Button>
+          <div className="flex items-center gap-1.5">
+            {load.is_collective && (
+              <MyTooltip
+                icon={<Boxes size={18} className="text-zinc-400" />}
+                text="Збірний вантаж!"
+              />
+            )}
+            {load.is_price_request && (
+              <MyTooltip
+                icon={<CircleDollarSign size={18} className="text-amber-500" />}
+                text="Запит ціни!"
+              />
+            )}
             <Button
               size="sm"
               className={cn(
                 "h-5 rounded px-1.5 gap-1 transition-all text-[9px] font-black shadow-none",
-                cargo.messages > 0
+                load.messages > 0
                   ? "bg-blue-600 text-white"
                   : "bg-white/50 dark:bg-zinc-800 text-zinc-500 border border-zinc-200/50 dark:border-white/5",
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                setChatCargo(cargo);
+                setChatCargo(load);
               }}
             >
               <MessageCircle
                 size={10}
-                className={cargo.messages > 0 ? "fill-white/20" : ""}
+                className={load.messages > 0 ? "fill-white/20" : ""}
               />
-              {cargo.messages ?? 0}
+              {load.messages ?? 0}
             </Button>
           </div>
         </div>
       </Card>
 
+      {/* Drawers & Modals */}
       <CargoDetailsDrawer
         cargo={selectedCargo ?? undefined}
         open={!!selectedCargo}
@@ -405,8 +531,34 @@ export function CargoCard({ cargo }: CargoCardProps) {
         open={!!chatCargo}
         onClose={() => setChatCargo(null)}
       />
-
-      {/* Анімація трусіння */}
+      <AddCarsModal
+        loadId={load.id}
+        open={openAddCars}
+        onOpenChange={setOpenAddCars}
+        onSubmit={addCarsMutate}
+        isLoading={isLoadingAddCars}
+      />
+      <CargoCarRemoveModal
+        loadId={load.id}
+        open={openRemoveCars}
+        onOpenChange={setOpenRemoveCars}
+        onSubmit={removeCarsMutate}
+        isLoading={isLoadingRemove}
+      />
+      <CargoCloseByManagerModal
+        dropdowns={filters}
+        loadId={load.id}
+        open={openCloseCargoByManager}
+        onOpenChange={setOpenCloseCargoByManager}
+        onSubmit={closeCargoMutate}
+        isLoading={isLoadingCloseCargo}
+      />
+      <CargoHistoryModal
+        open={openHistory}
+        onOpenChange={setOpenHistory}
+        loadId={load.id}
+      
+      />
       <style jsx global>{`
         @keyframes shake-card-smooth {
           0%,
@@ -427,7 +579,6 @@ export function CargoCard({ cargo }: CargoCardProps) {
           }
         }
         .animate-shake {
-          /* 0.4s — золота середина між швидким і плавним */
           animation: shake-card-smooth 0.4s ease-in-out infinite;
           z-index: 50;
           position: relative;

@@ -34,13 +34,14 @@ import { GoogleLocationInput } from "@/shared/components/google-location-input/G
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import { selectStyles } from "./config/style.config";
+import { useLoads } from "../hooks/useLoads";
 
-// ---------- Schemas (залишаємо без змін) ----------
+// ---------- Schemas ----------
 const routeSchema = z.object({
   id: z.number().optional(),
   lat: z.number().optional(),
   lon: z.number().optional(),
-  address: z.string().min(1, "Обов'язково"),
+  address: z.string().min(1, "Будь ласка, вкажіть адресу (виберіть зі списку)"),
   ids_route_type: z.enum(["LOAD_FROM", "LOAD_TO"]),
   country: z.string().optional(),
   city: z.string().optional(),
@@ -49,7 +50,7 @@ const routeSchema = z.object({
 });
 
 const trailerSchema = z.object({
-  ids_trailer_type: z.string(),
+  ids_trailer_type: z.string().min(1, "Виберіть тип причепу"),
 });
 
 const cargoServerSchema = z.object({
@@ -57,32 +58,34 @@ const cargoServerSchema = z.object({
   ids_valut: z.string().optional(),
   id_client: z.number().optional().nullable(),
   load_info: z.string().optional(),
-  crm_load_route_from: z.array(routeSchema).min(1),
-  crm_load_route_to: z.array(routeSchema).min(1),
-  crm_load_trailer: z.array(trailerSchema).min(1, "Оберіть тип"),
+  crm_load_route_from: z
+    .array(routeSchema)
+    .min(1, "Додайте точку завантаження"),
+  crm_load_route_to: z.array(routeSchema).min(1, "Додайте точку розвантаження"),
+  crm_load_trailer: z.array(trailerSchema).min(1, "Оберіть тип транспорту"),
   is_price_request: z.boolean().optional(),
   is_collective: z.boolean().optional(),
-  car_count_begin: z.number().min(1).max(100),
+  car_count_begin: z.number({ message: "Вкажіть кількість" }).min(1).max(100),
 });
 
 export type CargoServerFormValues = z.infer<typeof cargoServerSchema>;
 
-export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
+interface LoadFormProps {
+  defaultValues?: any;
+}
+
+export default function LoadForm({ defaultValues }: LoadFormProps) {
   const { config } = useFontSize();
   const [valutList, setValutList] = useState<any[]>([]);
   const [truckList, setTruckList] = useState<any[]>([]);
   const [isNextCargo, setIsNextCargo] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Якщо це редагування, початкове значення беремо з defaultValues (якщо воно там є)
-  const [companyLabel, setCompanyLabel] = useState<string>(
-    defaultValues?.company_name || "",
-  );
-  const [currentTheme, setCurrentTheme] = useState("light");
-
+  const [companyLabel, setCompanyLabel] = useState<string>("");
+  const { saveCargo, isSaving } = useLoads({});
   const router = useRouter();
   const { profile } = useAuth();
   const { load: loadSocket } = useSockets();
+console.log(defaultValues,'DEFAULT');
 
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
@@ -110,22 +113,27 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
       crm_load_trailer: [],
       price: null,
       car_count_begin: 1,
+      is_collective: false,
+      is_price_request: false,
       ...defaultValues,
     },
   });
 
-  const { control, handleSubmit, setValue, clearErrors } = form;
+  const { control, handleSubmit, setValue, clearErrors, reset } = form;
+
   const {
     fields: fromFields,
     append: appendFrom,
     remove: removeFrom,
   } = useFieldArray({ control, name: "crm_load_route_from" });
+
   const {
     fields: toFields,
     append: appendTo,
     remove: removeTo,
   } = useFieldArray({ control, name: "crm_load_route_to" });
 
+  // Завантаження довідників
   useEffect(() => {
     api.get("/form-data/getCreateCargoFormData").then(({ data }) => {
       setValutList(
@@ -143,56 +151,37 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
     });
   }, []);
 
-  useEffect(() => {
-    // Визначаємо початкову тему
-    const isDark = document.documentElement.classList.contains("dark");
-    setCurrentTheme(isDark ? "dark" : "light");
-
-    // Слідкуємо за зміною класу dark на html
-    const observer = new MutationObserver(() => {
-      const isDark = document.documentElement.classList.contains("dark");
-      setCurrentTheme(isDark ? "dark" : "light");
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
-  const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
-    try {
-      setIsLoading(true);
-      const { data } = await api.post("/crm/load/save", {
-        ...values,
-        id: defaultValues?.id,
-      });
-      loadSocket?.emit("edit_load", data.content.id);
-      if (data.content) {
-        if (!isNextCargo) form.reset();
-        loadSocket?.emit("send_update", {
-          loadId: profile?.id,
-          data: { status: "updated" },
-        });
-        toast.success("Готово!");
-        if (defaultValues) router.push("/log/cargo");
-      }
-    } catch (err) {
-      toast.error("Помилка збереження");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Встановлення назви компанії при редагуванні
   useEffect(() => {
     if (defaultValues?.company_name) {
       setCompanyLabel(defaultValues.company_name);
     }
-  }, [defaultValues?.company_name]);
+  }, [defaultValues]);
+
+  const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
+    try {
+      await saveCargo({
+        ...values,
+        id: defaultValues?.id,
+      });
+
+      toast.success("Готово!");
+
+      if (defaultValues) {
+        router.push("/log/load");
+      } else if (!isNextCargo) {
+        reset();
+        setCompanyLabel("");
+        router.push("/log/load"); // тепер тут будуть актуальні дані
+      }
+    } catch (err) {
+      toast.error("Помилка збереження");
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto mb-10">
-      <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm ">
+      <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm">
         <h3
           className={`${config.label} text-slate-500 uppercase tracking-widest mb-4 font-bold`}
         >
@@ -202,12 +191,11 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* МАРШРУТ (Двоколонковий) */}
-            {/* МАРШРУТ (Двоколонковий) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* КОЛОНКА: ЗВІДКИ */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {fromFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2 mb-2">
+                  <div key={field.id} className="flex items-end gap-2">
                     <FormField
                       control={control}
                       name={`crm_load_route_from.${idx}.address`}
@@ -221,15 +209,13 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                           <FormControl>
                             <GoogleLocationInput
                               value={formField.value}
-                              placeholder="Введіть адресу завантаження..."
+                              placeholder="Звідки..."
                               onChange={(location) => {
-                                const address = location.street
+                                const addr = location.street
                                   ? `${location.street}${location.house ? `, ${location.house}` : ""}`
                                   : location.city || "";
 
-                                formField.onChange(address);
-
-                                // Заповнюємо додаткові дані
+                                formField.onChange(addr);
                                 setValue(
                                   `crm_load_route_from.${idx}.lat`,
                                   location.lat,
@@ -250,7 +236,6 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                                   `crm_load_route_from.${idx}.ids_region`,
                                   location.regionCode || null,
                                 );
-
                                 clearErrors(
                                   `crm_load_route_from.${idx}.address`,
                                 );
@@ -261,15 +246,15 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                         </FormItem>
                       )}
                     />
-                    {idx > 0 && (
+                    {fromFields.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1"
+                        className="mb-1 text-red-400 hover:text-red-500"
                         onClick={() => removeFrom(idx)}
                       >
-                        <Minus size={14} />
+                        <Minus size={16} />
                       </Button>
                     )}
                   </div>
@@ -277,7 +262,7 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-8 text-xs w-full border-dashed border"
+                  className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
                   onClick={() =>
                     appendFrom({
                       address: "",
@@ -288,14 +273,14 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                     })
                   }
                 >
-                  + Точка завантаження
+                  <Plus size={14} className="mr-1" /> Точка завантаження
                 </Button>
               </div>
 
               {/* КОЛОНКА: КУДИ */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {toFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2 mb-2">
+                  <div key={field.id} className="flex items-end gap-2">
                     <FormField
                       control={control}
                       name={`crm_load_route_to.${idx}.address`}
@@ -309,15 +294,13 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                           <FormControl>
                             <GoogleLocationInput
                               value={formField.value}
-                              placeholder="Введіть адресу розвантаження..."
+                              placeholder="Куди..."
                               onChange={(location) => {
-                                const address = location.street
+                                const addr = location.street
                                   ? `${location.street}${location.house ? `, ${location.house}` : ""}`
                                   : location.city || "";
 
-                                formField.onChange(address);
-
-                                // Заповнюємо додаткові дані
+                                formField.onChange(addr);
                                 setValue(
                                   `crm_load_route_to.${idx}.lat`,
                                   location.lat,
@@ -338,7 +321,6 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                                   `crm_load_route_to.${idx}.ids_region`,
                                   location.regionCode || null,
                                 );
-
                                 clearErrors(`crm_load_route_to.${idx}.address`);
                               }}
                             />
@@ -347,15 +329,15 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                         </FormItem>
                       )}
                     />
-                    {idx > 0 && (
+                    {toFields.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1"
+                        className="mb-1 text-red-400 hover:text-red-500"
                         onClick={() => removeTo(idx)}
                       >
-                        <Minus size={14} />
+                        <Minus size={16} />
                       </Button>
                     )}
                   </div>
@@ -363,7 +345,7 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-8 text-xs w-full border-dashed border"
+                  className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
                   onClick={() =>
                     appendTo({
                       address: "",
@@ -374,12 +356,12 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                     })
                   }
                 >
-                  + Точка розвантаження
+                  <Plus size={14} className="mr-1" /> Точка розвантаження
                 </Button>
               </div>
             </div>
 
-            {/* КОМПАНІЯ ТА ТИП ТРАНСПОРТУ */}
+            {/* КЛІЄНТ ТА ТРАНСПОРТ */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={control}
@@ -390,15 +372,12 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                     <AsyncSelect
                       cacheOptions
                       defaultOptions
-                      placeholder="Оберіть клієнта..."
+                      placeholder="Пошук клієнта..."
                       noOptionsMessage={({ inputValue }) =>
-                        !inputValue
-                          ? "Почніть вводити назву..."
-                          : "Нічого не знайдено"
+                        !inputValue ? "Введіть назву..." : "Не знайдено"
                       }
-                      loadingMessage={() => "Пошук..."}
                       loadOptions={async (v) => {
-                        // Пошук працює як і раніше
+                        if (v.length < 2) return [];
                         const { data } = await api.get(`/company/name/${v}`);
                         return data.map((c: any) => ({
                           value: c.id,
@@ -407,10 +386,9 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                       }}
                       styles={selectStyles(config) as any}
                       onChange={(opt: any) => {
-                        field.onChange(opt?.value); // Записуємо ID у форму
-                        setCompanyLabel(opt?.label || ""); // Записуємо текст у локальний стейт
+                        field.onChange(opt?.value || null);
+                        setCompanyLabel(opt?.label || "");
                       }}
-                      // Критично важлива частина для відображення:
                       value={
                         field.value
                           ? {
@@ -419,6 +397,7 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                             }
                           : null
                       }
+                      isClearable
                     />
                   </FormItem>
                 )}
@@ -433,10 +412,8 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                     </FormLabel>
                     <ReactSelect
                       isMulti
-                      // Додайте ці два пропси:
                       closeMenuOnSelect={false}
                       blurInputOnSelect={false}
-                      noOptionsMessage={() => "Більше немає опцій"}
                       options={truckList}
                       styles={selectStyles(config) as any}
                       placeholder="Оберіть типи..."
@@ -459,47 +436,48 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
               />
             </div>
 
-            {/* ОПИС ТА ЦІНА (Компактно) */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-              <div className="md:col-span-2">
+            {/* ОПИС, КІЛЬКІСТЬ, ЦІНА */}
+            <div className="space-y-3">
+              <FormField
+                control={control}
+                name="load_info"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className={`${config.label} text-xs`}>
+                      Деталі вантажу
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        className={`${config.main} min-h-[45px] h-12 rounded-xl py-2 px-3 text-sm`}
+                        placeholder="Вантаж, вага, об'єм..."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-3">
                 <FormField
                   control={control}
-                  name="load_info"
+                  name="car_count_begin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={config.label}>Інформація</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          className={`${config.main} min-h-[40px] rounded-xl py-1`}
-                          placeholder="Вантаж, вага..."
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={config.label}>Ціна</FormLabel>
+                      <FormLabel className={`${config.label} text-xs`}>
+                        К-сть машин
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="0"
                           className="h-10 rounded-xl"
-                          // Важливо: перетворюємо рядок на число при зміні
+                          // Використовуємо порожній рядок, якщо значення null/undefined
+                          value={field.value ?? ""}
                           onChange={(e) => {
                             const val = e.target.value;
-                            field.onChange(val === "" ? null : Number(val));
+                            // Якщо рядок порожній, записуємо null (це дозволить стерти цифру)
+                            // Якщо ні — перетворюємо на число
+                            field.onChange(val === "" ? "" : Number(val));
                           }}
-                          // Переконуємося, що value завжди рядок для інпуту
-                          value={field.value ?? ""}
-                          // Додатково: прибираємо фокус, щоб випадково не прокрутити значення
-                          onWheel={(e) => (e.target as HTMLInputElement).blur()}
                         />
                       </FormControl>
                       <FormMessage />
@@ -508,16 +486,44 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                 />
                 <FormField
                   control={control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={`${config.label} text-xs`}>
+                        Ставка
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          className="h-10 rounded-xl"
+                          placeholder="0.00"
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value),
+                            )
+                          }
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
                   name="ids_valut"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className={config.label}>Валюта</FormLabel>
+                      <FormLabel className={`${config.label} text-xs`}>
+                        Валюта
+                      </FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue />
+                          <SelectValue placeholder="UAH" />
                         </SelectTrigger>
                         <SelectContent>
                           {valutList.map((v) => (
@@ -534,43 +540,40 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
             </div>
 
             {/* ПЕРЕМИКАЧІ */}
-            <div className="flex gap-4 p-2 bg-slate-50 dark:bg-white/5 rounded-xl justify-between">
-              <div className="flex items-center gap-6">
-                {/* Збірний вантаж */}
+            <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl items-center justify-between border border-slate-100 dark:border-white/5">
+              <div className="flex gap-6">
                 <FormField
-                  control={form.control}
+                  control={control}
                   name="is_collective"
                   render={({ field }) => (
                     <div className="flex items-center gap-2">
                       <Switch
-                        id="is_collective" // Унікальний ID
+                        id="is_coll"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                       <Label
-                        htmlFor="is_collective" // Зв'язок з ID
-                        className={`${config.label} cursor-pointer select-none`}
+                        htmlFor="is_coll"
+                        className={`${config.label} cursor-pointer`}
                       >
                         Збірний
                       </Label>
                     </div>
                   )}
                 />
-
-                {/* Запит ціни */}
                 <FormField
-                  control={form.control}
+                  control={control}
                   name="is_price_request"
                   render={({ field }) => (
                     <div className="flex items-center gap-2">
                       <Switch
-                        id="is_price_request" // Унікальний ID
+                        id="is_req"
                         checked={field.value}
                         onCheckedChange={field.onChange}
                       />
                       <Label
-                        htmlFor="is_price_request" // Зв'язок з ID
-                        className={`${config.label} cursor-pointer select-none`}
+                        htmlFor="is_req"
+                        className={`${config.label} cursor-pointer`}
                       >
                         Запит ціни
                       </Label>
@@ -579,18 +582,16 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
                 />
               </div>
 
-              <div className="flex items-center gap-2 bg-blue-50/50 dark:bg-blue-500/5 px-3 py-1.5 rounded-xl border border-blue-100/50 dark:border-blue-500/10">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-3 bg-blue-50/50 dark:bg-blue-500/10 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-500/20">
+                <div className="flex items-center gap-1">
                   <Label
                     htmlFor="is_next"
-                    className={`${config.label} text-blue-600 dark:text-blue-400 cursor-pointer select-none font-medium`}
+                    className={`${config.label} text-blue-600 dark:text-blue-400 cursor-pointer font-semibold`}
                   >
                     Ще одну
                   </Label>
-                  {/* Додаємо тултіп з вашим текстом */}
-                  <MyTooltip text="Форма не буде очищена після збереження, що дозволить швидко створити схожу заявку" />
+                  <MyTooltip text="Форма не буде очищена після збереження" />
                 </div>
-
                 <Switch
                   id="is_next"
                   checked={isNextCargo}
@@ -599,18 +600,17 @@ export default function LoadForm({ defaultValues }: { defaultValues?: any }) {
               </div>
             </div>
 
-            <div className="flex justify-end">
-              {/* КНОПКА */}
+            <div className="flex justify-end pt-2">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className={`h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white ${config.label} font-bold transition-all shadow-md`}
+                className="h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition-all active:scale-95"
               >
                 {isLoading
                   ? "Збереження..."
                   : defaultValues
-                    ? "Оновити"
-                    : "Опублікувати вантаж"}
+                    ? "Оновити дані"
+                    : "Опублікувати"}
               </Button>
             </div>
           </form>
