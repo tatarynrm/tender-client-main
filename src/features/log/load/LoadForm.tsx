@@ -81,11 +81,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const [isNextCargo, setIsNextCargo] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [companyLabel, setCompanyLabel] = useState<string>("");
-  const { saveCargo, isSaving } = useLoads({});
+  const { saveCargo } = useLoads({});
   const router = useRouter();
-  const { profile } = useAuth();
-  const { load: loadSocket } = useSockets();
-console.log(defaultValues,'DEFAULT');
 
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
@@ -168,7 +165,7 @@ console.log(defaultValues,'DEFAULT');
       toast.success("Готово!");
 
       if (defaultValues) {
-        router.push("/log/load");
+        router.push("/log/load/active");
       } else if (!isNextCargo) {
         reset();
         setCompanyLabel("");
@@ -398,6 +395,7 @@ console.log(defaultValues,'DEFAULT');
                           : null
                       }
                       isClearable
+                    
                     />
                   </FormItem>
                 )}
@@ -417,6 +415,9 @@ console.log(defaultValues,'DEFAULT');
                       options={truckList}
                       styles={selectStyles(config) as any}
                       placeholder="Оберіть типи..."
+                      noOptionsMessage={({ inputValue }) =>
+                        'Не знайдено'
+                      }
                       value={truckList.filter((t) =>
                         field.value?.some(
                           (v: any) => v.ids_trailer_type === t.value,

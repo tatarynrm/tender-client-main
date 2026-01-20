@@ -22,4 +22,5 @@ export interface IUserProfile {
   is_director?: boolean;
   is_blocked?: boolean;
   is_ict_admin?: boolean;
+  avatar_path?:string;
 }

@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMenu";
 import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 import { cn } from "@/shared/utils";
+import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
 
 export default function LogHeader({
   onMenuClick,
@@ -19,9 +21,33 @@ export default function LogHeader({
   closeSidebarState?: boolean;
   profile: IUserProfile;
 }) {
+  // Ці дані будуть надходити з вашого Context, Redux, Zustand або з сервера
+  const currentUser = {
+    name: "Олег Петренко",
+    email: "oleg.p@example.com",
+    avatar: "https://github.com/shadcn.png", // Приклад URL аватара
+  };
+  console.log(profile, "PROFILEEEEEEEEEEEE");
+  console.log(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}${profile?.avatar_path}`,
+    "PROFILEEEEEEEEEEEE",
+  );
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+
+  // 2. Будуємо шлях, тільки якщо є аватар у профілі
+  // Також перевіряємо, щоб не було подвійного слеша //
+  const avatarUrl = profile?.avatar_path
+    ? `${baseUrl.replace(/\/$/, "")}/${profile.avatar_path.replace(/^\//, "")}`
+    : undefined;
+
+  console.log("FINAL AVATAR URL:", avatarUrl);
+  const handleLogout = () => {
+    // Ваша логіка виходу з системи
+    console.log("Користувач вийшов!");
+    // Перенаправлення на сторінку входу
+  };
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
-      
       {/* Ліва частина: Управління та Профіль */}
       <div className="flex items-center gap-6">
         {/* Кнопка мобільного меню */}
@@ -74,7 +100,8 @@ export default function LogHeader({
             )}
           </div>
           <span className="text-xs text-slate-500 font-bold opacity-70">
-            {profile?.surname} {profile?.name?.charAt(0)}.{profile?.last_name?.charAt(0)}.
+            {profile?.surname} {profile?.name?.charAt(0)}.
+            {profile?.last_name?.charAt(0)}.
           </span>
         </div>
       </div>
@@ -92,6 +119,11 @@ export default function LogHeader({
         <div className="relative pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
           <DynamicHeaderMenu profile={profile} />
         </div>
+        <UserAvatarMenu
+          userName={currentUser.name}
+          userEmail={currentUser.email}
+          avatarUrl={avatarUrl}
+        />
       </div>
     </header>
   );

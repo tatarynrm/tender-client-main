@@ -43,8 +43,8 @@ import { set } from "nprogress";
 import { CargoCloseByManagerModal } from "./CargoCloseByManagerModal";
 import { useCloseCargoByManager } from "../../hooks/useCloseByManager";
 import { CargoHistoryModal } from "./CargoHistoryModal";
-import CargoChat from "./LoadChat";
 import LoadChat from "./LoadChat";
+import { useLoads } from "../../hooks/useLoads";
 
 const transitMap: Record<string, string> = {
   E: "Експорт",
@@ -74,10 +74,14 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
+  const [localReadTime, setLocalReadTime] = useState<string | null>(
+    load.comment_read_time || null,
+  );
   const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
     useAddCars();
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
+  const { refreshLoadTime, isRefreshing } = useLoads();
   useEffect(() => {
     if (!load.created_at) return;
     const checkStatus = () => {
@@ -96,53 +100,64 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     ? Date.now() - createdAt.getTime() < 60 * 60 * 1000
     : false;
 
-  useEffect(() => {
-    const handleShake = (event: any) => {
-      if (event.detail === load.id) {
-        setIsShaking(true);
-        setShowBadge(true);
-        const shakeTimer = setTimeout(() => setIsShaking(false), 6000);
-        const badgeTimer = setTimeout(() => setShowBadge(false), 30000);
-        return () => {
-          clearTimeout(shakeTimer);
-          clearTimeout(badgeTimer);
-        };
-      }
-    };
-    window.addEventListener("cargo_shake", handleShake);
-    return () => window.removeEventListener("cargo_shake", handleShake);
-  }, [load.id]);
-  useEffect(() => {
-    const handleShake = (event: any) => {
-      console.log(event, "EVENT DETAIL");
-      console.log(load.id, "LOAD ID EVENT");
+  // Використовуємо useMemo для визначення статусу повідомлень
+  const hasUnreadMessages = React.useMemo(() => {
+    const lastTime = load?.comment_last_time;
+    // Пріоритет локальному стану, якщо він щойно змінився (після закриття чату)
+    const readTime = localReadTime || load?.comment_read_time;
 
+    if (!lastTime || load.comment_count === 0) return false;
+
+    // Якщо ми ніколи не читали (readTime порожній), але є повідомлення — вони не прочитані
+    if (!readTime) return true;
+
+    try {
+      const lastDate = new Date(lastTime).getTime();
+      const readDate = new Date(readTime).getTime();
+
+      // Додаємо невеликий офсет (наприклад, 1 сек), щоб уникнути проблем
+      // з точністю мілісекунд при збереженні в БД
+      return lastDate > readDate + 1000;
+    } catch (e) {
+      return false;
+    }
+  }, [
+    load.comment_last_time,
+    load.comment_count,
+    localReadTime,
+    load.comment_read_time,
+  ]);
+
+  // 2. Очищення Shake ефектів (у вас два однакових useEffect, можна об'єднати)
+  useEffect(() => {
+    const handleEvent = (event: any) => {
       if (event.detail === load.id) {
         setIsShaking(true);
         setShowBadge(true);
-        const shakeTimer = setTimeout(() => setIsShaking(false), 6000);
-        const badgeTimer = setTimeout(() => setShowBadge(false), 30000);
-        return () => {
-          clearTimeout(shakeTimer);
-          clearTimeout(badgeTimer);
-        };
+        setTimeout(() => setIsShaking(false), 6000);
+        setTimeout(() => setShowBadge(false), 30000);
       }
     };
-    window.addEventListener("cargo_shake_car_count", handleShake);
-    return () =>
-      window.removeEventListener("cargo_shake_car_count", handleShake);
+
+    window.addEventListener("cargo_shake", handleEvent);
+    window.addEventListener("cargo_shake_car_count", handleEvent);
+    return () => {
+      window.removeEventListener("cargo_shake", handleEvent);
+      window.removeEventListener("cargo_shake_car_count", handleEvent);
+    };
   }, [load.id]);
-  // Додайте це перед return
-  const hasUnreadMessages =
-    load.comment_last_time &&
-    (!load?.comment_read_time ||
-      new Date(load?.comment_last_time) > new Date(load?.comment_read_time));
-      console.log(hasUnreadMessages,'HAS UNREAD MESSAGES');
-      
+
+  const transitTypeInfo = filters?.transit_dropdown?.find(
+    (item: any) => item.id === load.transit_type,
+  );
   return (
     <>
       <Card
-        onDoubleClick={() => setSelectedCargo(load)}
+        onDoubleClick={() => {
+          if (window.innerWidth > 768) {
+            setSelectedCargo(load);
+          }
+        }}
         className={cn(
           "group relative flex flex-col w-full bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/50 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300",
           isJustCreated &&
@@ -186,9 +201,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 config.label,
               )}
             >
-              {transitMap[load.transit_type as keyof typeof transitMap] ||
-                load.transit_type ||
-                "—"}
+              {/* 2. Відображаємо назву з сервера, або технічний ID, або прочерк */}
+              {transitTypeInfo
+                ? transitTypeInfo.value
+                : load.transit_type || "—"}
             </span>
           </div>
 
@@ -225,6 +241,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                   onClick={() => router.push(`/log/load/edit/${load.id}`)}
                 >
                   Редагувати
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => refreshLoadTime(load.id)}>
+                  Оновити
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => setOpenAddCars(true)}>
@@ -464,20 +483,19 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
           <Button
             variant="outline"
+            onClick={(e) => {
+              e.stopPropagation(); // Щоб не спрацьовували події на Card
+              setSelectedCargo(load);
+            }}
             className={cn(
               "group relative overflow-hidden",
               "hidden",
               "xs:flex",
               "sm:flex",
               "flex",
-              "md:hidden",
-              // Адаптивність:
-              // hidden - на дуже маленьких телефонах (можна залишити тільки іконку)
-              // xs:flex - показуємо на звичайних смартфонах
-              // md:h-10 md:px-5 - збільшуємо кнопку для планшетів (iPad)
+              "md:hidden", // Кнопка видима лише на мобільних та планшетах
               "h-8 px-3 xs:flex items-center",
-              "md:h-9 md:px-4 md:rounded-xl", // Планшетний режим: трохи більша та кругліша
-
+              "md:h-9 md:px-4 md:rounded-xl",
               "bg-white dark:bg-zinc-900",
               "border-zinc-200 dark:border-zinc-800",
               "hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
@@ -495,8 +513,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 />
               </div>
             </div>
-
-            {/* Легкий ефект світіння знизу при наведенні */}
             <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </Button>
           <div className="flex items-center gap-1.5">
@@ -549,11 +565,16 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         open={!!selectedCargo}
         onClose={() => setSelectedCargo(null)}
       />
+      {/* ... всередині JSX ... */}
       {chatCargo && (
         <LoadChat
           cargoId={chatCargo.id}
           open={!!chatCargo}
-          onClose={() => setChatCargo(null)}
+          onClose={() => {
+            setChatCargo(null);
+            // Оновлюємо локальний час прочитання на поточний при закритті чату
+            setLocalReadTime(new Date().toISOString());
+          }}
         />
       )}
       <AddCarsModal
@@ -564,7 +585,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         isLoading={isLoadingAddCars}
       />
       <CargoCarRemoveModal
-        loadId={load.id}
+        load={load}
         open={openRemoveCars}
         onOpenChange={setOpenRemoveCars}
         onSubmit={removeCarsMutate}
@@ -572,7 +593,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
       />
       <CargoCloseByManagerModal
         dropdowns={filters}
-        loadId={load.id}
+        load={load}
         open={openCloseCargoByManager}
         onOpenChange={setOpenCloseCargoByManager}
         onSubmit={closeCargoMutate}

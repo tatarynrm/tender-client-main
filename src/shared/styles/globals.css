@@ -196,3 +196,7 @@
 [data-radix-popper-content-wrapper] {
   z-index: 1000 !important;
 }
+
+/* CSS для приховування скролбару: Щоб скрол був чистим, ви можете додати в глобальний CSS: */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

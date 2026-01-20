@@ -11,28 +11,38 @@ export const useCargoChat = (cargoId: number, isOpen: boolean) => {
   const queryClient = useQueryClient();
   const { load } = useSockets();
   const queryKey = ["cargo-comments", cargoId];
-  
-  // Зберігаємо ID останнього прочитаного повідомлення, щоб не дублювати запити
+  const loadsQueryKey = ["loads"]; // Ключ для списку вантажів
+
   const lastReadIdRef = useRef<number | null>(null);
+
+  // Функція для оновлення стану списку (лічильників та часу прочитання)
+  const invalidateLoadsList = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: loadsQueryKey,
+      exact: false,
+      // Використовуємо refetchType: 'none', щоб не викликати миттєве HTTP-запити для всіх сторінок,
+      // але щоб при наступному рендері списку дані були свіжими.
+      refetchType: "active",
+    });
+  }, [queryClient]);
 
   const markAsRead = useCallback(async () => {
     if (!cargoId || !isOpen) return;
     try {
       await loadService.markAsRead(cargoId);
-      // Важливо: invalidateQueries тільки для списку, щоб оновити лічильник/крапку
-      // Використовуємо refetchType: 'none', щоб не викликати миттєве перевантаження всього списку
-      queryClient.invalidateQueries({ queryKey: ["loads"], exact: false, refetchType: 'none' });
+      // Оновлюємо список вантажів, щоб прибрати "червону крапку" (unread status)
+      invalidateLoadsList();
     } catch (error) {
       console.error("Помилка прочитання:", error);
     }
-  }, [cargoId, isOpen, queryClient]);
+  }, [cargoId, isOpen, invalidateLoadsList]);
 
-  // 1. Отримання коментарів (тільки коли isOpen: true)
+  // 1. Отримання коментарів
   const { data: comments = [], isLoading: isFetching } = useQuery({
     queryKey,
     queryFn: () => loadService.getComments(cargoId),
     enabled: !!cargoId && isOpen,
-    staleTime: 1000 * 30, // 30 секунд дані вважаються свіжими
+    staleTime: 1000 * 30,
   });
 
   // 2. Слідкуємо за новими повідомленнями для markAsRead
@@ -50,9 +60,12 @@ export const useCargoChat = (cargoId: number, isOpen: boolean) => {
   const { mutateAsync: sendComment, isPending: isSending } = useMutation({
     mutationFn: (notes: string) =>
       loadService.saveComment({ id_crm_load: cargoId, notes }),
-    onSuccess: (newComment) => {
-      // Оптимістично додаємо або просто інвалідуємо чат
+    onSuccess: () => {
+      // 1. Оновлюємо сам чат
       queryClient.invalidateQueries({ queryKey });
+      // 2. Оновлюємо список вантажів (бо там змінився comment_count та comment_last_time)
+      invalidateLoadsList();
+      // 3. Одразу помічаємо як прочитане (своє ж повідомлення)
       markAsRead();
     },
     onError: () => {
@@ -66,8 +79,9 @@ export const useCargoChat = (cargoId: number, isOpen: boolean) => {
 
     const handleNewComment = (updatedId: number) => {
       if (Number(updatedId) === cargoId) {
-        // Просто кажемо React Query, що дані застаріли
         queryClient.invalidateQueries({ queryKey });
+        // Коли приходить сокет, список loads теж має дізнатися про нове повідомлення
+        invalidateLoadsList();
         playSound("/sounds/chat-new.mp3");
       }
     };
@@ -76,7 +90,7 @@ export const useCargoChat = (cargoId: number, isOpen: boolean) => {
     return () => {
       load.off("edit_load_comment", handleNewComment);
     };
-  }, [load, cargoId, isOpen, queryClient, queryKey]);
+  }, [load, cargoId, isOpen, queryClient, queryKey, invalidateLoadsList]);
 
   return { comments, isFetching, isSending, sendComment };
 };

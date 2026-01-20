@@ -7,14 +7,17 @@ export const StatusIndicator = ({ updatedAt }: { updatedAt: string | null }) => 
 
   const diffInMinutes = differenceInMinutes(new Date(), new Date(updatedAt));
   
-  let bgColor = "bg-red-500"; // Дефолт (більше 3 годин)
-  
+  let bgColor = "";
+
   if (diffInMinutes < 60) {
-    bgColor = "bg-emerald-500"; // Менше 1 години
-  } else if (diffInMinutes >= 120 && diffInMinutes <= 180) {
-    bgColor = "bg-amber-500"; // Від 2 до 3 годин
-  } else if (diffInMinutes >= 60 && diffInMinutes < 120) {
-    bgColor = "bg-blue-400"; // Проміжок між 1 та 2 годинами (можна змінити на інший колір)
+    // До 1 години — Зелений
+    bgColor = "bg-emerald-500";
+  } else if (diffInMinutes < 180) {
+    // Від 1 до 3 годин (60-179 хв) — Оранжевий
+    bgColor = "bg-orange-300";
+  } else {
+    // Більше 3 годин (180+ хв) — Червоний
+    bgColor = "bg-red-500";
   }
 
   return (

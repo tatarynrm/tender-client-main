@@ -44,50 +44,30 @@ import {
 } from "@/shared/components/ui/popover";
 import { Calendar } from "@/shared/components/ui/calendar";
 import { cn } from "@/shared/utils";
-import { Dropdowns } from "../../types/load.type";
-
-/* ===================== DATA ===================== */
-
-const VALUTS = [
-  { ids: "UAH", valut_name: "Українська гривня", idntnum: "980" },
-  { ids: "USD", valut_name: "Долари США", idntnum: "840" },
-  { ids: "EUR", valut_name: "Євро", idntnum: "978" },
-  { ids: "PLN", valut_name: "Польський Злотий", idntnum: "985" },
-  { ids: "BGN", valut_name: "Болгарський Лев", idntnum: "975" },
-  { ids: "GEL", valut_name: "Грузинський Ларі", idntnum: "981" },
-  { ids: "DKK", valut_name: "Датська крона", idntnum: "208" },
-  { ids: "MKD", valut_name: "Македонський динар", idntnum: "807" },
-  { ids: "MDL", valut_name: "Молдовський лей", idntnum: "498" },
-  { ids: "RON", valut_name: "Румунський Лей", idntnum: "946" },
-  { ids: "RSD", valut_name: "Сербський динар", idntnum: "941" },
-  { ids: "TRY", valut_name: "Турецька Ліра", idntnum: "949" },
-  { ids: "HUF", valut_name: "Угорський Форінт", idntnum: "348" },
-  { ids: "CZK", valut_name: "Чеська Крона", idntnum: "203" },
-  { ids: "SEK", valut_name: "Шведська крона", idntnum: "752" },
-  { ids: "CHF", valut_name: "Швейцарський франк", idntnum: "756" },
-];
-
-const MANAGERS = [
-  { ids: 5, value: "Татарин Роман" },
-  { ids: 6, value: "ТЕСТ ТЕСТ" },
-];
+import { Dropdowns, LoadApiItem } from "../../types/load.type";
 
 /* ===================== SCHEMA ===================== */
 
 const formSchema = z.object({
   id_crm_load: z.number(),
   id_usr_closed: z.string().min(1, "Оберіть менеджера"),
-  car_count: z.number().min(1, "Мінімум 1 машина"),
+  // Використовуємо .coerce або обробляємо undefined для коректної валідації порожнього поля
+  car_count: z.number({ message: "Введіть число" }).min(1, "Мінімум 1 машина"),
   date_close: z.date({ message: "Виберіть дату" }),
   ids_valut: z.string().min(1, "Оберіть валюту"),
-  price: z.number().min(0, "Ціна не може бути від'ємною"),
+  price: z
+    .string()
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+      message: "Введіть коректну ціну",
+    })
+    .optional(),
   notes: z.string().optional(),
 });
 
 export type CloseCargoFormValues = z.infer<typeof formSchema>;
 
 interface CargoCloseModalProps {
-  loadId: number;
+  load: LoadApiItem;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: CloseCargoFormValues) => void;
@@ -96,7 +76,7 @@ interface CargoCloseModalProps {
 }
 
 export function CargoCloseByManagerModal({
-  loadId,
+  load,
   open,
   onOpenChange,
   onSubmit,
@@ -108,12 +88,12 @@ export function CargoCloseByManagerModal({
   const form = useForm<CloseCargoFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id_crm_load: loadId,
+      id_crm_load: load.id,
       id_usr_closed: "",
       car_count: 1,
       date_close: new Date(),
       ids_valut: "UAH",
-      price: 0,
+      price: "",
       notes: "",
     },
   });
@@ -121,26 +101,34 @@ export function CargoCloseByManagerModal({
   useEffect(() => {
     if (open) {
       form.reset({
-        id_crm_load: loadId,
+        id_crm_load: load.id,
         id_usr_closed: "",
         car_count: 1,
         date_close: new Date(),
         ids_valut: "UAH",
-        price: 0,
+        price: "",
         notes: "",
       });
     }
-  }, [loadId, open, form]);
+  }, [load.id, open, form]);
+
+  // Слідкуємо за значенням
+  const watchedCarCount = form.watch("car_count");
+  const totalRequired = load.car_count_actual || 1;
+
+  // Перевірки (якщо watchedCarCount порожній, вважаємо його за 0)
+  const currentCount = watchedCarCount || 0;
+  const isOverLimit = currentCount > totalRequired;
+  const isLastCar = currentCount === 1;
 
   const handleSubmit = async (data: CloseCargoFormValues) => {
     try {
       const payload = {
         ...data,
-        id_usr_closed: Number(data.id_usr_closed), // Конвертуємо в number для API
+        id_usr_closed: Number(data.id_usr_closed),
         date_close: format(data.date_close, "yyyy-MM-dd"),
+        price: data.price === "" ? 0 : Number(data.price),
       };
-      console.log(payload, "PAYLOAD");
-
       await onSubmit(payload as any);
       onOpenChange(false);
     } catch (error) {
@@ -157,7 +145,7 @@ export function CargoCloseByManagerModal({
               <CheckCircle2 size={18} className="text-white" />
             </div>
             Закриття заявки{" "}
-            <span className="text-emerald-600 font-mono">#{loadId}</span>
+            <span className="text-emerald-600 font-mono">#{load.id}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -182,7 +170,6 @@ export function CargoCloseByManagerModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="z-[110]">
-                      {/* Безпечний рендер якщо dropdowns або manager_dropdown порожні */}
                       {dropdowns?.manager_dropdown?.map((m) => (
                         <SelectItem
                           key={m.ids.toString()}
@@ -206,15 +193,59 @@ export function CargoCloseByManagerModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase text-zinc-400">
-                      К-сть авто
+                      К-сть авто (Потрібно: {totalRequired})
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                        // Міняємо на text + inputMode, щоб на мобілці була цифрова клавіатура
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Введіть к-сть"
+                        // Якщо значення 0 або undefined, показуємо порожній рядок для стирання
+                        value={field.value === 0 ? "" : (field.value ?? "")}
+                        className={cn(
+                          "font-bold",
+                          isOverLimit &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+
+                          // 1. Дозволяємо порожнє поле для стирання
+                          if (val === "") {
+                            field.onChange(""); // Важливо передати порожній рядок
+                            return;
+                          }
+
+                          // 2. Дозволяємо вводити тільки цифри
+                          const cleanValue = val.replace(/[^0-9]/g, "");
+
+                          // 3. Передаємо число в форму
+                          if (cleanValue !== "") {
+                            field.onChange(Number(cleanValue));
+                          } else {
+                            field.onChange("");
+                          }
+                        }}
+                        // При виході з поля, якщо воно порожнє, ставимо 1 (необов'язково)
+                        onBlur={(e) => {
+                          if (!e.target.value) field.onChange(1);
+                        }}
                       />
                     </FormControl>
+
+                    {isLastCar && !isOverLimit && (
+                      <p className="text-[11px] text-amber-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1">
+                        ⚠️ Якщо ви закриєте 1 авто, заявка перейде в архів!
+                      </p>
+                    )}
+
+                    {isOverLimit && (
+                      <p className="text-[11px] text-red-500 font-bold mt-1">
+                        ❌ Не більше ніж {totalRequired}!
+                      </p>
+                    )}
                     <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
@@ -280,17 +311,20 @@ export function CargoCloseByManagerModal({
                     <FormControl>
                       <div className="relative">
                         <Input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           className="pl-8 font-bold"
+                          // placeholder="0"
                           {...field}
                           onChange={(e) =>
-                            field.onChange(e.target.valueAsNumber)
+                            field.onChange(
+                              e.target.value.replace(/[^0-9]/g, ""),
+                            )
                           }
                         />
                         <Banknote className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
                       </div>
                     </FormControl>
-                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
@@ -311,8 +345,7 @@ export function CargoCloseByManagerModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="z-[110]">
-                        {/* Перевірка на undefined через optional chaining та конвертація ids в string */}
-                        {dropdowns?.valut_dropdown?.map((v) => (
+                        {dropdowns?.valut_dropdown?.slice(0, 4).map((v) => (
                           <SelectItem
                             key={v.ids.toString()}
                             value={v.ids.toString()}
@@ -348,11 +381,20 @@ export function CargoCloseByManagerModal({
             <DialogFooter className="pt-4">
               <Button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 h-11 text-base font-bold transition-all"
+                disabled={isLoading || isOverLimit || !watchedCarCount}
+                className={cn(
+                  "w-full h-11 text-base font-bold transition-all",
+                  isOverLimit
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-emerald-600 hover:bg-emerald-700",
+                )}
               >
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
-                {isLoading ? "Обробка..." : "Підтвердити та закрити"}
+                {isOverLimit
+                  ? "Перевищено ліміт"
+                  : isLoading
+                    ? "Обробка..."
+                    : "Підтвердити та закрити"}
               </Button>
             </DialogFooter>
           </form>

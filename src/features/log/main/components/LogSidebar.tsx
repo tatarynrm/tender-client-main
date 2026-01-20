@@ -13,6 +13,9 @@ import {
   ScreenShare,
   Globe,
   FileStack,
+  ShieldCheck,
+  Archive,
+  FileCode2Icon,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -27,13 +30,16 @@ type MenuItem = {
   status?: "inactive";
   info?: string;
 };
-
+<ShieldCheck />;
 const links: MenuItem[] = [
   { name: "Головна", href: "/log", icon: Home },
   {
     name: "Екран заявок",
     icon: ScreenShare,
-    href: "/log/load",
+    children: [
+      { name: "Активні", icon: ShieldCheck, href: "/log/load/active" },
+      { name: "Архів", icon: Archive, href: "/log/load/archive" },
+    ],
   },
   {
     name: "Тендери",
@@ -44,6 +50,11 @@ const links: MenuItem[] = [
     name: "Карта",
     icon: Globe,
     href: "/log/map",
+  },
+  {
+    name: "Документи",
+    icon: FileCode2Icon,
+    href: "/log/documents",
   },
 ];
 
@@ -87,7 +98,7 @@ export default function LogSidebar({
 
     const commonClasses = cn(
       "flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 border mb-0.5",
-      isChild && "ml-4"
+      isChild && "ml-4",
     );
 
     if (!children) {
@@ -97,7 +108,7 @@ export default function LogSidebar({
             key={name}
             className={cn(
               commonClasses,
-              "text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed border-transparent"
+              "text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed border-transparent",
             )}
             title={info}
           >
@@ -116,14 +127,14 @@ export default function LogSidebar({
             commonClasses,
             active
               ? "bg-blue-50/50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20 shadow-sm"
-              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
+              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent",
           )}
         >
           {Icon && (
             <Icon
               className={cn(
                 "w-5 h-5 transition-colors",
-                active ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
+                active ? "text-blue-500" : "text-slate-400 dark:text-slate-500",
               )}
             />
           )}
@@ -143,7 +154,7 @@ export default function LogSidebar({
             "w-full justify-between",
             active
               ? "bg-slate-50/80 dark:bg-white/5 text-blue-600 dark:text-blue-400 border-slate-100 dark:border-white/10"
-              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
+              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent",
           )}
         >
           <div className="flex items-center gap-3">
@@ -153,7 +164,7 @@ export default function LogSidebar({
                   "w-5 h-5 transition-colors",
                   active
                     ? "text-blue-500"
-                    : "text-slate-400 dark:text-slate-500"
+                    : "text-slate-400 dark:text-slate-500",
                 )}
               />
             )}
@@ -171,7 +182,7 @@ export default function LogSidebar({
             "ml-6 mt-1 flex flex-col gap-0.5 overflow-hidden transition-all duration-300 ease-in-out ",
             openMenus[name]
               ? "max-h-60 opacity-100"
-              : "max-h-0 opacity-0 pointer-events-none"
+              : "max-h-0 opacity-0 pointer-events-none",
           )}
         >
           {children.map((child) => renderLink(child, true))}
@@ -184,7 +195,7 @@ export default function LogSidebar({
   if (profile?.is_ict_admin) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
-      { name: "Основна платформа", href: "/dashboard", icon: FileStack }
+      { name: "Основна платформа", href: "/dashboard", icon: FileStack },
     );
   }
 

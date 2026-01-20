@@ -31,12 +31,16 @@ import {
 } from "@/shared/components/ui/popover";
 import { Calendar } from "@/shared/components/ui/calendar";
 import { cn } from "@/shared/utils";
+import { Textarea } from "@/shared/components/ui";
 
 /* ===================== SCHEMA ===================== */
 
 const formSchema = z.object({
   id_crm_load: z.number(),
-  car_count: z.number().min(1, "Мінімум 1 машина"),
+  car_count: z
+    .number({ message: "Введіть число" })
+    .min(1, "Мінімум 1 машина")
+    .max(100, "Максимум 100 машин"), // Додаємо обмеження
   to_date: z.date({ message: "Виберіть дату" }),
   notes: z.string().optional(),
 });
@@ -125,19 +129,60 @@ export function AddCarsModal({
             <div className="grid grid-cols-2 gap-4">
               {/* Кількість */}
               <FormField
-                control={form.control} // додав control для стабільності типізації
+                control={form.control}
                 name="car_count"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase text-zinc-400">
-                      Кількість
+                      Кількість (1-100)
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min={1}
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber)} // Використовуємо valueAsNumber
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        // Перевіряємо: якщо значення undefined, null або 0 — показуємо порожній рядок
+                        value={field.value ?? ""}
+                        className={cn(
+                          "font-bold",
+                          form.formState.errors.car_count &&
+                            "border-red-500 focus-visible:ring-red-500",
+                        )}
+                        // При кліку виділяємо весь текст
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const val = e.target.value;
+
+                          // 1. Якщо користувач все стер — передаємо порожній рядок/undefined
+                          if (val === "") {
+                            field.onChange("");
+                            return;
+                          }
+
+                          // 2. Лишаємо тільки цифри
+                          const onlyNums = val.replace(/[^0-9]/g, "");
+
+                          if (onlyNums === "") {
+                            field.onChange("");
+                            return;
+                          }
+
+                          const num = Number(onlyNums);
+
+                          // 3. Обмежуємо максимум 100
+                          if (num > 100) {
+                            field.onChange(100);
+                          } else {
+                            field.onChange(num);
+                          }
+                        }}
+                        // ВАЖЛИВО: видаліть або закоментуйте onBlur, якщо не хочете,
+                        // щоб одиниця поверталася автоматично, коли ви клацаєте в інше місце
+                        onBlur={() => {
+                          if (!field.value) {
+                            // field.onChange(1); // Розкоментуйте, якщо хочете повертати 1 після виходу з порожнього поля
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
@@ -145,7 +190,6 @@ export function AddCarsModal({
                 )}
               />
 
-              {/* Дата */}
               {/* Дата */}
               <FormField
                 name="to_date"
@@ -206,7 +250,7 @@ export function AddCarsModal({
                     Примітки
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="Опційно" {...field} />
+                    <Textarea placeholder="Опційно" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

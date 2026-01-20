@@ -50,4 +50,9 @@ export const loadService = {
     });
     return data;
   },
+refreshLoadTime: async (id: number): Promise<LoadApiItem> => {
+    // Передаємо id в body запиту
+    const { data } = await api.post(`/crm/load/load-update`, { id }); 
+    return data;
+  },
 };

@@ -21,8 +21,12 @@ import { useGetLoadFilters } from "../hooks/useGetLoadFilters";
 import { LoadFiltersSheet } from "./components/LoadFiltersSheet";
 import { LoadActiveFilters } from "./components/LoadActiveFilters";
 import { LoadApiItem } from "../types/load.type";
-
-export default function LoadListComponent() {
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui";
+interface Props {
+  active?: boolean;
+  archive?: boolean;
+}
+export default function LoadListComponent({ active, archive }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -59,15 +63,26 @@ export default function LoadListComponent() {
     }),
     [searchParams],
   );
-
+  const queryFilters = useMemo(
+    () => ({
+      ...currentParams,
+      active,
+      archive,
+    }),
+    [currentParams, active, archive],
+  );
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { loads, pagination, saveCargo, isSaving, isLoading, error } =
-    useLoads(currentParams);
+  const { loads, pagination, saveCargo, isLoading, error } =
+    useLoads(queryFilters);
   const { loadFilters } = useGetLoadFilters();
 
+  // Оновлений updateUrl більше не чіпає системні параметри
   const updateUrl = (newParams: Record<string, any>) => {
     const params = new URLSearchParams();
     Object.entries(newParams).forEach(([key, value]) => {
+      // Ігноруємо системні параметри, щоб вони не потрапили в URL
+      if (key === "active" || key === "archive") return;
+
       if (value !== undefined && value !== null && value !== "") {
         params.set(key, Array.isArray(value) ? value.join(",") : String(value));
       }
@@ -100,16 +115,19 @@ export default function LoadListComponent() {
   return (
     <div className="p-0 space-y-4">
       {/* HEADER ПАНЕЛЬ */}
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={toggle}
-        className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
-      >
-        {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
-        {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
-      </Button>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggle}
+            className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
+          >
+            {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
+            {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
+          </Button>
+        </div>
+      </div>
 
       {/* БЛОК ІНСТРУМЕНТІВ (ПРИХОВУЄТЬСЯ) */}
       {isVisible && (
