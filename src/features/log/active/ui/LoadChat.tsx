@@ -103,7 +103,12 @@ export default function LoadChat({
                 </div>
               </div>
               <div className="flex flex-col min-w-0">
-                <SheetTitle className={cn(config.title, "font-black tracking-tight text-zinc-900 dark:text-zinc-100 truncate text-lg")}>
+                <SheetTitle
+                  className={cn(
+                    config.title,
+                    "font-black tracking-tight text-zinc-900 dark:text-zinc-100 truncate text-lg",
+                  )}
+                >
                   Чат вантажу
                 </SheetTitle>
                 <div className="flex items-center gap-2">
@@ -111,13 +116,15 @@ export default function LoadChat({
                     ID: {cargoId}
                   </span>
                   <Circle className="w-1 h-1 fill-zinc-300 border-none" />
-                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-tighter">В мережі</span>
+                  <span className="text-[10px] text-zinc-400 font-semibold uppercase tracking-tighter">
+                    В мережі
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* КНОПКА ЗАКРИТТЯ */}
-            <button 
+            <button
               onClick={onClose}
               className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all active:scale-90"
             >
@@ -133,7 +140,9 @@ export default function LoadChat({
               <div className="p-4 bg-white dark:bg-zinc-900 rounded-full shadow-sm">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">Синхронізація...</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                Синхронізація...
+              </p>
             </div>
           ) : comments.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
@@ -143,42 +152,62 @@ export default function LoadChat({
           ) : (
             comments.map((msg: any, idx: number) => {
               const mine = isMyComment(msg.id_usr);
-              const isFirstInGroup = idx === 0 || comments[idx - 1].id_usr !== msg.id_usr;
+              const isFirstInGroup =
+                idx === 0 || comments[idx - 1].id_usr !== msg.id_usr;
 
               return (
-                <div 
-                  key={idx} 
+                <div
+                  key={idx}
                   className={cn(
-                    "flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300", 
+                    "flex w-full animate-in fade-in slide-in-from-bottom-2 duration-300",
                     mine ? "justify-end" : "justify-start",
-                    isFirstInGroup ? "mt-6" : "mt-1"
+                    isFirstInGroup ? "mt-6" : "mt-1",
                   )}
                 >
-                  <div className={cn("flex flex-col max-w-[85%]", mine ? "items-end" : "items-start")}>
+                  <div
+                    className={cn(
+                      "flex flex-col max-w-[85%]",
+                      mine ? "items-end" : "items-start",
+                    )}
+                  >
                     {isFirstInGroup && (
-                      <div className={cn("flex items-center gap-1.5 mb-1.5 px-2", mine ? "flex-row-reverse" : "flex-row")}>
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 mb-1.5 px-2",
+                          mine ? "flex-row-reverse" : "flex-row",
+                        )}
+                      >
                         <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-tight">
                           {mine ? "Ви" : msg.manager || "Менеджер"}
                         </span>
-                        {mine && <ShieldCheck className="w-3 h-3 text-blue-500" />}
+                        {mine && (
+                          <ShieldCheck className="w-3 h-3 text-blue-500" />
+                        )}
                       </div>
                     )}
-                    
-                    <div className={cn(
-                      "relative px-4 py-3 shadow-sm group transition-all duration-200",
-                      mine 
-                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-[20px] rounded-tr-none" 
-                        : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-100 rounded-[20px] rounded-tl-none",
-                    )}>
+
+                    <div
+                      className={cn(
+                        "relative px-4 py-3 shadow-sm group transition-all duration-200",
+                        mine
+                          ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-[20px] rounded-tr-none"
+                          : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-100 rounded-[20px] rounded-tl-none",
+                      )}
+                    >
                       <p className="text-[13.5px] leading-relaxed whitespace-pre-wrap break-words font-medium">
                         {msg.notes}
                       </p>
-                      
-                      <div className={cn(
-                        "text-[9px] mt-2 font-bold opacity-0 group-hover:opacity-60 transition-opacity flex items-center gap-1",
-                        mine ? "justify-end text-blue-50" : "justify-start text-zinc-500"
-                      )}>
-                        {msg.operation_time && format(new Date(msg.operation_time), "HH:mm")}
+
+                      <div
+                        className={cn(
+                          "text-[9px] mt-2 font-bold opacity-0 group-hover:opacity-60 transition-opacity flex items-center gap-1",
+                          mine
+                            ? "justify-end text-blue-50"
+                            : "justify-start text-zinc-500",
+                        )}
+                      >
+                        {msg.operation_time &&
+                          format(new Date(msg.operation_time), "HH:mm")}
                       </div>
                     </div>
                   </div>
@@ -217,9 +246,9 @@ export default function LoadChat({
                   onClick={handleSend}
                   className={cn(
                     "p-2.5 rounded-full transition-all duration-200 flex items-center justify-center",
-                    input.trim() 
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95" 
-                      : "text-zinc-400 opacity-50"
+                    input.trim()
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95"
+                      : "text-zinc-400 opacity-50",
                   )}
                 >
                   {isSending ? (
@@ -232,9 +261,9 @@ export default function LoadChat({
             </div>
           </div>
           <div className="flex justify-center mt-3">
-             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest opacity-30">
-                Shift + Enter для нового рядка
-             </span>
+            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest opacity-30">
+              Shift + Enter для нового рядка
+            </span>
           </div>
         </div>
       </SheetContent>

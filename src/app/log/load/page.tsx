@@ -16,6 +16,9 @@ export const metadata: Metadata = {
 };
 
 const CrmLoadPage = () => {
+// Розкоментуйте рядок нижче для тесту
+  throw new Error("Тестова помилка чату");
+
   return <LoadListComponent />;
 };
 

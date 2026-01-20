@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../shared/styles/globals.css";
 import { MainProvider } from "@/shared/providers";
@@ -15,6 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Окремий експорт для налаштувань в'юпорту
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Це вимкне зум при кліку на інпут
+  // Також можна додати тему для панелі браузера
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+  ],
+};
 export const metadata: Metadata = {
   title: {
     absolute: "ІСТендер платформа",
@@ -35,6 +47,7 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-touch-icon.png" }],
   },
+
 };
 // test
 
