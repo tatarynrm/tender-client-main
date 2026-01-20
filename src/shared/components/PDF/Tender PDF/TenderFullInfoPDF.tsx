@@ -176,8 +176,8 @@ export const TenderFullInfoPDF = ({
                 {idx === 0
                   ? "ПОЧАТОК: "
                   : idx === tender.tender_route.length - 1
-                  ? "КІНЕЦЬ: "
-                  : "ТОЧКА: "}
+                    ? "КІНЕЦЬ: "
+                    : "ТОЧКА: "}
                 {r.city}, {r.ids_country} ({r.point_name})
               </Text>
               <Text style={styles.routeAddress}>{r.address}</Text>

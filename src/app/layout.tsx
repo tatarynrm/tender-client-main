@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
 };
 // test
-const getAAA = 1;
+
 export default async function RootLayout({
   children,
 }: Readonly<{

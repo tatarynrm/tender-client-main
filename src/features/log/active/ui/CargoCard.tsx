@@ -31,7 +31,7 @@ import { cn } from "@/shared/utils";
 
 import { Dropdowns, LoadApiItem } from "../../types/load.type";
 import { CargoDetailsDrawer } from "./CargoDetailsDrawer";
-import CargoChat from "../../screen/components/CargoChat";
+
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import { StatusIndicator } from "../CargoCardUpdateColor";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
@@ -43,6 +43,8 @@ import { set } from "nprogress";
 import { CargoCloseByManagerModal } from "./CargoCloseByManagerModal";
 import { useCloseCargoByManager } from "../../hooks/useCloseByManager";
 import { CargoHistoryModal } from "./CargoHistoryModal";
+import CargoChat from "./LoadChat";
+import LoadChat from "./LoadChat";
 
 const transitMap: Record<string, string> = {
   E: "Експорт",
@@ -130,7 +132,13 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     return () =>
       window.removeEventListener("cargo_shake_car_count", handleShake);
   }, [load.id]);
-
+  // Додайте це перед return
+  const hasUnreadMessages =
+    load.comment_last_time &&
+    (!load?.comment_read_time ||
+      new Date(load?.comment_last_time) > new Date(load?.comment_read_time));
+      console.log(hasUnreadMessages,'HAS UNREAD MESSAGES');
+      
   return (
     <>
       <Card
@@ -386,7 +394,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               </div>
             </div>
 
-            {load.price && (
+            {load.price ? (
               <div className="mt-auto">
                 <Badge
                   variant="secondary"
@@ -395,6 +403,13 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                   {load.price} {load.valut_name}
                 </Badge>
               </div>
+            ) : (
+              <Badge
+                variant="secondary"
+                className="w-full justify-center px-1 py-1 font-black text-[10px] rounded-md bg-red-100 text-red-700 dark:bg-blue-500/20 dark:text-blue-300 border-none shadow-none"
+              >
+                Ціна не вказана
+              </Badge>
             )}
           </div>
         </div>
@@ -500,8 +515,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <Button
               size="sm"
               className={cn(
-                "h-5 rounded px-1.5 gap-1 transition-all text-[9px] font-black shadow-none",
-                load.messages > 0
+                "h-5 rounded px-1.5 gap-1 transition-all text-[9px] font-black shadow-none relative", // Додали relative
+                load.comment_count > 0
                   ? "bg-blue-600 text-white"
                   : "bg-white/50 dark:bg-zinc-800 text-zinc-500 border border-zinc-200/50 dark:border-white/5",
               )}
@@ -510,11 +525,19 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 setChatCargo(load);
               }}
             >
+              {/* Пульсуючий індикатор */}
+              {hasUnreadMessages && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-zinc-900"></span>
+                </span>
+              )}
+
               <MessageCircle
                 size={10}
-                className={load.messages > 0 ? "fill-white/20" : ""}
+                className={load.comment_count > 0 ? "fill-white/20" : ""}
               />
-              {load.messages ?? 0}
+              {load.comment_count ?? 0}
             </Button>
           </div>
         </div>
@@ -526,11 +549,13 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         open={!!selectedCargo}
         onClose={() => setSelectedCargo(null)}
       />
-      <CargoChat
-        cargoId={chatCargo?.id ?? 0}
-        open={!!chatCargo}
-        onClose={() => setChatCargo(null)}
-      />
+      {chatCargo && (
+        <LoadChat
+          cargoId={chatCargo.id}
+          open={!!chatCargo}
+          onClose={() => setChatCargo(null)}
+        />
+      )}
       <AddCarsModal
         loadId={load.id}
         open={openAddCars}
@@ -557,7 +582,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         open={openHistory}
         onOpenChange={setOpenHistory}
         loadId={load.id}
-      
       />
       <style jsx global>{`
         @keyframes shake-card-smooth {

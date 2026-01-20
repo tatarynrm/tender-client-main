@@ -45,6 +45,10 @@ export type LoadApiItem = {
   price: number | null;
   valut_name: string | null;
   ids_valut: string | null;
+  comment_count:number;
+  comment_last_time:string | null;
+  comment_read_time:string | null;
+
 };
 
 export interface ValutDropdownItem {

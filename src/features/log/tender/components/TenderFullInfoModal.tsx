@@ -95,12 +95,12 @@ export default function TenderFullInfoModal({
         pixelRatio: 1.5,
         filter: (node) =>
           !["leaflet-control-container"].some((cls) =>
-            node?.classList?.contains(cls)
+            node?.classList?.contains(cls),
           ),
       });
 
       const blob = await pdf(
-        <TenderFullInfoPDF tender={tender} mapImage={mapImageData} />
+        <TenderFullInfoPDF tender={tender} mapImage={mapImageData} />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -124,7 +124,7 @@ export default function TenderFullInfoModal({
     <div
       className={cn(
         "fixed inset-0 z-[100] bg-white dark:bg-zinc-950 flex flex-col transition-opacity duration-300",
-        tenderId ? "opacity-100 visible" : "opacity-0 invisible"
+        tenderId ? "opacity-100 visible" : "opacity-0 invisible",
       )}
     >
       {/* HEADER */}
@@ -202,7 +202,7 @@ export default function TenderFullInfoModal({
                         "mt-1.5 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-950 z-10 shrink-0",
                         r.ids_point === "LOAD_FROM"
                           ? "bg-emerald-500"
-                          : "bg-rose-500"
+                          : "bg-rose-500",
                       )}
                     />
                     <div>
