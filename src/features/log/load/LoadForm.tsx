@@ -169,7 +169,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       } else if (!isNextCargo) {
         reset();
         setCompanyLabel("");
-        router.push("/log/load"); // тепер тут будуть актуальні дані
+        router.push("/log/load/active"); // тепер тут будуть актуальні дані
       }
     } catch (err) {
       toast.error("Помилка збереження");
