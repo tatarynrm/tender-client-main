@@ -13,7 +13,7 @@ export const SocketProvider = ({
   userId,
 }: {
   children: ReactNode;
-  userId: string | null;
+  userId: number;
 }) => {
   const socketsRef = useRef<Sockets>({
     chat: null,
