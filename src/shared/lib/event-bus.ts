@@ -7,6 +7,7 @@ export type AppEventType =
   | "notification_received"
   | "update_comment"
   | "update_load_date"
+  | "load_add_car"
   | "user_balance_updated";
 
 export const eventBus = {

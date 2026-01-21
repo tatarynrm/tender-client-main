@@ -148,9 +148,9 @@ export const useCargoChat = (cargoId: number, isOpen: boolean) => {
       }
     };
 
-    socket.on("edit_load_comment", onCommentUpdate);
+    socket.on("new_load_comment", onCommentUpdate);
     return () => {
-      socket.off("edit_load_comment", onCommentUpdate);
+      socket.off("new_load_comment", onCommentUpdate);
     };
   }, [socket, cargoId, isOpen, queryClient, chatQueryKey]);
   return { comments, isFetching, isSending, sendComment };

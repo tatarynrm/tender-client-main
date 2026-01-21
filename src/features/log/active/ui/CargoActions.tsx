@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
 } from "@/shared/components/ui/dropdown-menu";
 import { LoadApiItem } from "../../types/load.type";
+import { Separator } from "@/shared/components/ui/separator";
 
 interface CargoActionsProps {
   load: LoadApiItem;
@@ -73,22 +74,21 @@ export function CargoActions({
             >
               Редагувати
             </DropdownMenuItem>
-
+            <Separator />
             <DropdownMenuItem onClick={() => onRefresh(load.id)}>
               Оновити
             </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={onAddCars}>
-              Додати к-сть авто
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={onRemoveCars}>
-              Відняти к-сть авто
-            </DropdownMenuItem>
-
-            <DropdownMenuItem onClick={onCloseCargo}>
+           <DropdownMenuItem onClick={onCloseCargo}>
               Закрита нами
             </DropdownMenuItem>
+                  <Separator />
+            <DropdownMenuItem onClick={onAddCars}>Додати авто</DropdownMenuItem>
+
+            <DropdownMenuItem onClick={onRemoveCars}>
+              Відмінити авто
+            </DropdownMenuItem>
+
+ 
 
             {canDelete && (
               <DropdownMenuItem className="text-red-500">

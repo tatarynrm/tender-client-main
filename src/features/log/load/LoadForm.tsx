@@ -86,6 +86,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const searchParams = useSearchParams();
   const copyId = searchParams.get("copyId");
   const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
+  console.log(copyData,'copydata');
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
     defaultValues: {
@@ -117,6 +118,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       ...defaultValues,
     },
   });
+
 
   const { control, handleSubmit, setValue, clearErrors, reset, watch } = form;
 

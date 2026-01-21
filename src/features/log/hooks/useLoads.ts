@@ -198,8 +198,12 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     if (!profile?.id || !socket) return;
 
     const onNewLoad = (data: LoadApiItem) => {
+      const isMine = data.id_usr === profile?.id;
+
+      if (!isMine) {
+        playSound("/sounds/load/new-load-sound.mp3");
+      }
       updateLocalCache(data);
-      playSound("/sounds/load/new-load-sound.mp3");
     };
 
     const onUpdateLoad = (data: LoadApiItem) => {
@@ -211,34 +215,41 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       eventBus.emit("update_load_date", data.id);
     };
     // Всередині useEffect для сокетів у useLoads
-    const onUpdateComment = (data: LoadApiItem) => {
-      // Оновлюємо дані вантажу (counts, last_comment_time)
+    const onUpdateComment = (data: LoadApiItem & { sender_id?: number }) => {
+      console.log(data, "DATA");
+      const isMine = data.sender_id === profile?.id;
+
+      if (!isMine) {
+        playSound("/sounds/load/new-chat-message.mp3");
+      }
 
       updateItemOnly(data);
-
-      // Оновлюємо список повідомлень, якщо чат відкритий
-      // queryClient.invalidateQueries({ queryKey: ["cargo-comments", data.id] });
-
-      // ЛОГІКА ПРОЧИТАННЯ:
-      // Ми нічого не робимо з comment_read_time тут.
-      // - У вас в кеші вже лежить "майбутня дата", яку ми записали в onMutate.
-      // - У колег лежить стара дата, тому у них з'явиться червона крапка.
     };
-
+    const onUpdateCommentCount = (data: LoadApiItem) => {
+      updateItemOnly(data);
+    };
+    const onUpdateLoadAddCar = (data: LoadApiItem) => {
+      console.log(data, "ADD CAR");
+      updateLocalCache(data);
+      eventBus.emit("load_add_car", data.id);
+    };
     socket.on("new_load", onNewLoad);
     socket.on("update_load", onUpdateLoad);
-    socket.on("edit_load_comment", onUpdateComment);
-    socket.on("update_chat_count_load", onUpdateComment);
+    socket.on("new_load_comment", onUpdateComment);
+    socket.on("update_chat_count_load", onUpdateCommentCount);
     socket.on("edit_load", onUpdateLoad);
     socket.on("update_load_date", onUpdateLoadDate);
+    socket.on("load_add_car", onUpdateLoadAddCar);
 
     return () => {
       socket.off("new_load", onNewLoad);
       socket.off("update_load", onUpdateLoad);
-      socket.off("edit_load_comment", onUpdateComment); // ВАЖЛИВО: Додайте відписку
+      socket.off("new_load_comment", onUpdateComment); // ВАЖЛИВО: Додайте відписку
       socket.off("edit_load", onUpdateLoad);
       socket.off("edit_load_date", onUpdateLoadDate);
       socket.off("update_load_date", onUpdateLoad);
+      socket.off("update_chat_count_load", onUpdateCommentCount);
+      socket.off("load_add_car", onUpdateLoadAddCar);
     };
   }, [profile?.id, socket, updateLocalCache, updateItemOnly]);
 

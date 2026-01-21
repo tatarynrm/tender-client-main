@@ -73,8 +73,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [isJustCreated, setIsJustCreated] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
   const [chatCargo, setChatCargo] = useState<LoadApiItem | null>(null);
-  // const [isShaking, setIsShaking] = useState(false);
-  // const [showBadge, setShowBadge] = useState(false);
   const [openAddCars, setOpenAddCars] = useState(false);
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
@@ -87,6 +85,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
   const { refreshLoadTime, isRefreshing } = useLoads();
+  // Новий стан для контролю 10-секундного вікна
+  const [forceHideBadge, setForceHideBadge] = useState(false);
   // Слухаємо тряску та оновлення для конкретного ID
   const {
     isActive: isShaking,
@@ -97,6 +97,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     "cargo_shake_car_count",
     "update_comment",
     "update_load_date", // Додайте це сюди
+    "load_add_car", // Додайте це сюди
   ]);
   useEffect(() => {
     if (!load.created_at) return;
@@ -163,6 +164,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
       case "update_load_date":
         // Наприклад, сине сяйво для оновлення дати
         return "animate-shake border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-[1.02]";
+      case "load_add_car":
+        // Наприклад, сине сяйво для оновлення дати
+        return "animate-shake border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-[1.02]";
       case "cargo_shake":
       case "cargo_shake_car_count":
         return "animate-shake border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
@@ -179,6 +183,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     },
     update_comment: { label: "Новий коментар", color: "bg-amber-500" },
     update_load_date: { label: "Час оновлено", color: "bg-blue-600" },
+    load_add_car: { label: "Додано авто", color: "bg-blue-600" },
   };
 
   // Більш надійний вибір бейджа
@@ -208,7 +213,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         )}
       >
         {isNew && (
-          <div className="absolute top-10 bg-amber-500 text-white text-[8px] font-black px-8 py-0.5 z-50 shadow-sm animate-pulse">
+          <div className="absolute top-6 bg-amber-500 text-white text-[8px] font-black px-8 py-0.5 z-50 shadow-sm animate-pulse">
             NEW
           </div>
         )}
@@ -396,7 +401,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <div className="flex flex-col">
               <div className="flex items-center gap-1 text-zinc-400 uppercase font-black text-[7px] mb-1">
                 <CheckCircle2 size={10} className="text-emerald-500" />
-                <span className={config.label}>Статус</span>
+                <span className={config.label}>К-сть авто</span>
               </div>
               <div className="flex flex-col leading-none gap-2">
                 <span className="text-[10px] font-bold text-zinc-700 dark:text-zinc-200">
@@ -475,7 +480,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <span
               className={cn(
                 "font-bold text-xl text-zinc-500 text-[9px] truncate uppercase tracking-tighter",
-            config.label
+                config.label,
               )}
             >
               {load.company_name || "—"}
@@ -618,6 +623,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         onOpenChange={setOpenRemoveCars}
         onSubmit={removeCarsMutate}
         isLoading={isLoadingRemove}
+        dropdowns={filters}
       />
       <CargoCloseByManagerModal
         dropdowns={filters}

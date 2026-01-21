@@ -27,7 +27,7 @@ export const loadService = {
   /** Отримання одного вантажу */
   getOneLoad: async (id: number | string): Promise<LoadApiItem> => {
     const { data } = await api.get(`/crm/load/one/${id}`);
-    return data.content[0];
+    return data.content;
   },
 
   /** Отримати коментарі по ID */
