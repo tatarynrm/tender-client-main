@@ -27,6 +27,8 @@ const labelMap: Record<string, string> = {
   transit: "Транзит",
   is_price_request: "Запит ціни",
   is_collective: "Збірний вантаж",
+  my:'Мої',
+  participate:'Я приймаю участь',
 };
 
 export const LoadActiveFilters = ({
@@ -36,8 +38,10 @@ export const LoadActiveFilters = ({
   dropdowns,
 }: ActiveFiltersProps) => {
   const getDisplayValue = (key: string, value: string) => {
+   if (value === "true") return "Так";
+    if (value === "false") return "Ні"; // Або можна ігнорувати
+    
     if (!dropdowns) return value;
-    if (value === "true") return "Так";
     switch (key) {
       case "country_from":
       case "country_to":
@@ -48,7 +52,7 @@ export const LoadActiveFilters = ({
       case "region_from":
       case "region_to":
         const region = dropdowns.region_dropdown?.find(
-          (r: any) => r.ids === value
+          (r: any) => r.ids === value,
         );
         return region ? region.short_name : value;
       case "trailer_type":
@@ -69,19 +73,19 @@ export const LoadActiveFilters = ({
       case "company":
         return (
           dropdowns.company_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
       case "manager":
         return (
           dropdowns.manager_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
       case "transit":
         return (
           dropdowns.transit_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
 
@@ -90,11 +94,22 @@ export const LoadActiveFilters = ({
     }
   };
 
-  const groupedFilters = Object.entries(currentParams).reduce(
+const groupedFilters = Object.entries(currentParams).reduce(
     (acc, [key, value]) => {
-      if (!value || key === "page" || key === "limit") return acc;
+      // Ігноруємо системні параметри та порожні значення
+      if (value === undefined || value === null || value === "" || key === "page" || key === "limit") {
+        return acc;
+      }
 
-      const values = String(value).split(",").filter(Boolean);
+      // 2. СПЕЦІАЛЬНА ПЕРЕВІРКА ДЛЯ БУЛЕВИХ ФІЛЬТРІВ
+      // Якщо це фільтр типу "is_collective" і він false - ми його не показуємо в активних
+      if ((key === "is_collective" || key === "is_price_request") && String(value) === "false") {
+        return acc;
+      }
+
+      // Перетворюємо в масив (для мультиселектів)
+      const values = String(value).split(",").filter(v => v !== "");
+      
       const items = values.map((val) => ({
         id: val,
         display: getDisplayValue(key, val),

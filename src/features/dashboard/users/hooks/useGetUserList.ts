@@ -37,7 +37,7 @@ export const useGetUserList = (page?: number, pageSize?: number) => {
         // },
       });
 
-      console.log(data, "RESPONSE");
+
 
       return {
         users: data.content as UserFromCompany[],

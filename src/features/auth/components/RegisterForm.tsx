@@ -58,8 +58,7 @@ const RegisterForm = () => {
       try {
         const { data } = await api.get("/auth/registerFormData");
 
-        console.log(data, "DATA REGISTER PRE DATA");
-        console.log(data.status, "DATA STATUS");
+ 
         setPreRegisterData(data.content);
       } catch (error) {
         console.log(error);

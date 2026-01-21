@@ -22,6 +22,7 @@ import { LoadFiltersSheet } from "./components/LoadFiltersSheet";
 import { LoadActiveFilters } from "./components/LoadActiveFilters";
 import { LoadApiItem } from "../types/load.type";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui";
+import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 interface Props {
   active?: boolean;
   archive?: boolean;
@@ -29,7 +30,17 @@ interface Props {
 export default function LoadListComponent({ active, archive }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
 
+  const handleRemoveFilter = (key: string, valueToRemove: string) => {
+    // Просто викликаємо хук
+    removeFilter(key, valueToRemove, currentParams);
+  };
+
+  const handleReset = () => {
+    reset(); // скидання внутрішнього стану useFilters
+    resetFilters(); // чистка URL
+  };
   // Керування видимістю інструментів
   const { isVisible, toggle } = useVisibilityControl("load_list");
 
@@ -56,9 +67,9 @@ export default function LoadListComponent({ active, archive }: Props) {
       status: searchParams.get("status") || "",
       page: Number(searchParams.get("page") || 1),
       is_price_request: searchParams.get("is_price_request") || "",
-      is_collective: searchParams.get("iscollective") || "",
+      is_collective: searchParams.get("is_collective") || "",
       participate: searchParams.get("participate") || "",
-      participate_company: searchParams.get("participate_company") || "",
+      my: searchParams.get("my") || "",
       limit: Number(searchParams.get("limit") || 10),
     }),
     [searchParams],
@@ -75,39 +86,6 @@ export default function LoadListComponent({ active, archive }: Props) {
   const { loads, pagination, saveCargo, isLoading, error } =
     useLoads(queryFilters);
   const { loadFilters } = useGetLoadFilters();
-
-  // Оновлений updateUrl більше не чіпає системні параметри
-  const updateUrl = (newParams: Record<string, any>) => {
-    const params = new URLSearchParams();
-    Object.entries(newParams).forEach(([key, value]) => {
-      // Ігноруємо системні параметри, щоб вони не потрапили в URL
-      if (key === "active" || key === "archive") return;
-
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, Array.isArray(value) ? value.join(",") : String(value));
-      }
-    });
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
-
-  const handleReset = () => {
-    reset();
-    router.push(window.location.pathname, { scroll: false });
-  };
-
-  const handleRemoveFilter = (key: string, valueToRemove: string) => {
-    let newValue =
-      valueToRemove === "all"
-        ? undefined
-        : String(currentParams[key as keyof typeof currentParams] || "")
-            .split(",")
-            .filter((v) => v !== valueToRemove)
-            .join(",") || undefined;
-
-    const newFilters = { ...filters, [key]: newValue };
-    setFilters(newFilters);
-    updateUrl({ ...newFilters, page: 1 });
-  };
 
   if (isLoading) return <Loader />;
   if (error) return <ErrorState />;

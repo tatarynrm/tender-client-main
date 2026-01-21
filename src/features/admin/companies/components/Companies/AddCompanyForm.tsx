@@ -70,12 +70,10 @@ export function AddCompanyForm({
   const [preRegisterData, setPreRegisterData] = useState<any>({});
   const handleSubmit = async (values: FormValues) => {
     onSubmit(values);
-    console.log(values, "VALUES");
+ 
     // const data = await api.post("/company/create", values);
 
     const data = createCompany({ values });
-
-    console.log(data, "VALUES FROM CREATE");
 
     form.reset();
   };

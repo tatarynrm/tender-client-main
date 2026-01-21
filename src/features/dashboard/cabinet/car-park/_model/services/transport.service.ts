@@ -23,7 +23,7 @@ export const getTransport = async (
   const {data} = await api.get<TransportListResponse>("/transport/list", {
     params: { type },
   });
-  console.log(data.data.list, "DATA");
+
 
   return data.data.list
 };

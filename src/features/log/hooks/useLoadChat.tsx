@@ -6,91 +6,152 @@ import { loadService } from "../services/load.service";
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { toast } from "sonner";
 import { playSound } from "@/shared/helpers/play-sound";
+import { LoadApiItem } from "../types/load.type";
+import { IApiResponse } from "@/shared/api/api.type";
 
 export const useCargoChat = (cargoId: number, isOpen: boolean) => {
   const queryClient = useQueryClient();
-  const { load } = useSockets();
-  const queryKey = ["cargo-comments", cargoId];
-  const loadsQueryKey = ["loads"]; // Ключ для списку вантажів
+  const { load: socket } = useSockets();
+  const chatQueryKey = ["cargo-comments", cargoId];
 
-  const lastReadIdRef = useRef<number | null>(null);
+  const justSentRef = useRef<boolean>(false);
 
-  // Функція для оновлення стану списку (лічильників та часу прочитання)
-  const invalidateLoadsList = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: loadsQueryKey,
-      exact: false,
-      // Використовуємо refetchType: 'none', щоб не викликати миттєве HTTP-запити для всіх сторінок,
-      // але щоб при наступному рендері списку дані були свіжими.
-      refetchType: "active",
-    });
-  }, [queryClient]);
+  const updateCache = useCallback(
+    (newData: Partial<LoadApiItem>) => {
+      const futureTime = new Date(Date.now() + 10000).toISOString();
 
+      // 1. Створюємо ДАНІ для оновлення
+      const optimisticData = {
+        ...newData,
+        comment_read_time: futureTime,
+      };
+
+      // 2. Знаходимо всі запити ["loads", ...]
+      const cacheKeys = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["loads"] });
+
+      cacheKeys.forEach((query) => {
+        queryClient.setQueryData(query.queryKey, (old: any) => {
+          if (!old?.content) return old;
+
+          // ВАЖЛИВО: Створюємо НОВИЙ масив content та НОВИЙ об'єкт i
+          const newContent = old.content.map((i: any) => {
+            if (i.id === cargoId) {
+              // Повертаємо новий об'єкт, щоб React Card побачив зміну посилання
+              return { ...i, ...optimisticData };
+            }
+            return i;
+          });
+
+          // Повертаємо новий об'єкт відповіді
+          return {
+            ...old,
+            content: newContent,
+          };
+        });
+      });
+
+      // 3. Оновлюємо індивідуальний об'єкт (useLoadById)
+      queryClient.setQueryData(["load", cargoId], (old: any) =>
+        old ? { ...old, ...optimisticData } : old,
+      );
+
+      // 4. ПРИМУСОВИЙ сигнал React-у: "Дані змінено, перемалюй підписників"
+      queryClient.invalidateQueries({
+        queryKey: ["loads"],
+        exact: false,
+        refetchType: "none",
+      });
+    },
+    [queryClient, cargoId],
+  );
   const markAsRead = useCallback(async () => {
     if (!cargoId || !isOpen) return;
     try {
       await loadService.markAsRead(cargoId);
-      // Оновлюємо список вантажів, щоб прибрати "червону крапку" (unread status)
-      invalidateLoadsList();
-    } catch (error) {
-      console.error("Помилка прочитання:", error);
+      updateCache({});
+    } catch (e) {
+      console.error("Mark read error:", e);
     }
-  }, [cargoId, isOpen, invalidateLoadsList]);
+  }, [cargoId, isOpen, updateCache]);
 
-  // 1. Отримання коментарів
+  useEffect(() => {
+    // if (isOpen && cargoId) {
+    //   markAsRead();
+    // }
+    if (isOpen) {
+      markAsRead();
+    }
+  }, [isOpen, cargoId, markAsRead]);
+
   const { data: comments = [], isLoading: isFetching } = useQuery({
-    queryKey,
+    queryKey: chatQueryKey,
     queryFn: () => loadService.getComments(cargoId),
     enabled: !!cargoId && isOpen,
-    staleTime: 1000 * 30,
   });
 
-  // 2. Слідкуємо за новими повідомленнями для markAsRead
-  useEffect(() => {
-    if (isOpen && comments.length > 0) {
-      const latestMsgId = comments[comments.length - 1].id;
-      if (latestMsgId !== lastReadIdRef.current) {
-        markAsRead();
-        lastReadIdRef.current = latestMsgId;
-      }
-    }
-  }, [comments, isOpen, markAsRead]);
-
-  // 3. Мутація для відправки
   const { mutateAsync: sendComment, isPending: isSending } = useMutation({
     mutationFn: (notes: string) =>
       loadService.saveComment({ id_crm_load: cargoId, notes }),
-    onSuccess: () => {
-      // 1. Оновлюємо сам чат
-      queryClient.invalidateQueries({ queryKey });
-      // 2. Оновлюємо список вантажів (бо там змінився comment_count та comment_last_time)
-      invalidateLoadsList();
-      // 3. Одразу помічаємо як прочитане (своє ж повідомлення)
-      markAsRead();
+    onMutate: () => {
+      justSentRef.current = true;
+      updateCache({});
     },
-    onError: () => {
-      toast.error("Не вдалося відправити коментар ❌");
+    onSuccess: (responseData) => {
+      if (responseData) updateCache(responseData);
+      queryClient.invalidateQueries({ queryKey: chatQueryKey });
+      // markAsRead();
+
+      setTimeout(() => {
+        justSentRef.current = false;
+      }, 2000);
     },
   });
 
-  // 4. Сокети
   useEffect(() => {
-    if (!load || !cargoId || !isOpen) return;
+    if (!socket || !cargoId || !isOpen) return;
 
-    const handleNewComment = (updatedId: number) => {
-      if (Number(updatedId) === cargoId) {
-        queryClient.invalidateQueries({ queryKey });
-        // Коли приходить сокет, список loads теж має дізнатися про нове повідомлення
-        invalidateLoadsList();
-        playSound("/sounds/chat-new.mp3");
+    const onCommentUpdate = (data: any) => {
+      const incomingId = typeof data === "object" ? data.id : data;
+
+      if (Number(incomingId) === cargoId) {
+        // 1. Якщо ми самі щойно відправили повідомлення — ігноруємо
+        if (justSentRef.current) return;
+
+        queryClient.invalidateQueries({ queryKey: chatQueryKey });
+
+        // 2. Оновлюємо кеш списку вантажів
+        if (typeof data === "object") {
+          queryClient.setQueriesData<IApiResponse<LoadApiItem[]>>(
+            { queryKey: ["loads"], exact: false },
+            (old) => {
+              if (!old?.content) return old;
+              return {
+                ...old,
+                content: old.content.map((i) =>
+                  i.id === cargoId ? { ...i, ...data } : i,
+                ),
+              };
+            },
+          );
+        }
+
+        // 3. ПЕРЕВІРКА ЗВУКУ:
+        // Граємо звук тільки якщо ЧАТ ЗАКРИТИЙ (isOpen === false)
+        // Але оскільки цей хук викликається ТІЛЬКИ коли чат відкритий,
+        // то звук тут взагалі не потрібен, бо користувач і так бачить нове повідомлення.
+        // Звук для нових повідомлень має бути в загальному хуку useLoads.
+
+        // Якщо ви все ж хочете звук тут, але не хочете щоб він "пікав" при відкритті:
+        // playSound("/sounds/chat-new.mp3"); // <--- ВИДАЛІТЬ АБО ЗАКОМЕНТУЙТЕ ЦЕ ТУТ
       }
     };
 
-    load.on("edit_load_comment", handleNewComment);
+    socket.on("edit_load_comment", onCommentUpdate);
     return () => {
-      load.off("edit_load_comment", handleNewComment);
+      socket.off("edit_load_comment", onCommentUpdate);
     };
-  }, [load, cargoId, isOpen, queryClient, queryKey, invalidateLoadsList]);
-
+  }, [socket, cargoId, isOpen, queryClient, chatQueryKey]);
   return { comments, isFetching, isSending, sendComment };
 };

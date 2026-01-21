@@ -13,7 +13,17 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Filter, MapPin, Truck, Settings2 } from "lucide-react";
+import {
+  Filter,
+  MapPin,
+  Truck,
+  Settings2,
+  PackageSearch,
+  UserCircle2,
+  CircleDollarSign,
+  Handshake,
+  Check,
+} from "lucide-react";
 import NativeSelect from "@/shared/components/Select/NativeSelect";
 import { cn } from "@/shared/utils";
 import { Dropdowns } from "../../types/load.type";
@@ -81,88 +91,83 @@ export const LoadFiltersSheet = <T extends Filters>({
           <div className="p-4 space-y-6">
             {/* НОВА СЕКЦІЯ: УЧАСТЬ */}
             <section className="space-y-3">
-              <div className="flex items-center gap-2 pb-1.5 border-b border-indigo-100/50">
-                <Settings2 className="h-3.5 w-3.5 text-indigo-500" />
-                <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  Персональні фільтри
+              {/* Компактний заголовок */}
+              <div className="flex items-center gap-2 px-1">
+                <Settings2 className="h-3 w-3 text-zinc-400" />
+                <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  Персональні
                 </h3>
               </div>
+
               <div className="grid grid-cols-2 gap-2">
-                {/* Кнопка: Я беру участь */}
-                <button
-                  onClick={() =>
-                    updateField(
-                      "is_collective" as keyof T,
-                      !filters.is_collective
-                    )
-                  }
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-left",
-                    filters.is_collective
-                      ? "bg-indigo-50 border-indigo-200 shadow-sm"
-                      : "bg-white border-zinc-100 hover:border-zinc-200"
-                  )}
-                >
-                  <div className="flex flex-col">
-                    <span
-                      className={cn(
-                        "text-xs font-bold",
-                        filters.is_collective
-                          ? "text-indigo-700"
-                          : "text-zinc-700"
-                      )}
-                    >
-                      Збірний вантаж
-                    </span>
-                  </div>
-                  <div
+                {[
+                  {
+                    id: "is_collective",
+                    label: "Збірний",
+                    icon: PackageSearch,
+                    active: filters.is_collective,
+                  },
+                  {
+                    id: "my",
+                    label: "Мої вантажі",
+                    icon: UserCircle2,
+                    active: filters.my,
+                  },
+                  {
+                    id: "is_price_request",
+                    label: "Запит ціни",
+                    icon: CircleDollarSign,
+                    active: filters.is_price_request,
+                  },
+                  {
+                    id: "participate",
+                    label: "Участь(Коментарі)",
+                    icon: Handshake,
+                    active: filters.participate,
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() =>
+                      updateField(item.id as keyof T, !item.active)
+                    }
                     className={cn(
-                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
-                      filters.is_collective ? "" : "border-zinc-200"
+                      "flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all duration-200",
+                      item.active
+                        ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/20"
+                        : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200",
                     )}
                   >
-                    {filters.is_collective && (
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                    )}
-                  </div>
-                </button>
-                <button
-                  onClick={() =>
-                    updateField(
-                      "is_price_request" as keyof T,
-                      !filters.is_price_request
-                    )
-                  }
-                  className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-left",
-                    filters.is_price_request
-                      ? "bg-indigo-50 border-indigo-200 shadow-sm"
-                      : "bg-white border-zinc-100 hover:border-zinc-200"
-                  )}
-                >
-                  <div className="flex flex-col">
-                    <span
+                    {/* Маленька іконка */}
+                    <div
                       className={cn(
-                        "text-xs font-bold",
-                        filters.is_price_request
-                          ? "text-indigo-700"
-                          : "text-zinc-700"
+                        "shrink-0 transition-colors",
+                        item.active
+                          ? "text-indigo-600 dark:text-indigo-400"
+                          : "text-zinc-400",
                       )}
                     >
-                      Запит ціни
+                      <item.icon size={14} strokeWidth={2.5} />
+                    </div>
+
+                    {/* Текст */}
+                    <span
+                      className={cn(
+                        "text-[11px] font-semibold truncate flex-1 text-left",
+                        item.active
+                          ? "text-indigo-900 dark:text-indigo-100"
+                          : "text-zinc-600 dark:text-zinc-400",
+                      )}
+                    >
+                      {item.label}
                     </span>
-                  </div>
-                  <div
-                    className={cn(
-                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
-                      filters.is_price_request ? "" : "border-zinc-200"
+
+                    {/* Мінімалістичний індикатор */}
+                    {item.active && (
+                      <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
                     )}
-                  >
-                    {filters.is_price_request && (
-                      <div className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-                    )}
-                  </div>
-                </button>
+                  </button>
+                ))}
               </div>
             </section>
             {/* МАРШРУТ ЗВІДКИ */}

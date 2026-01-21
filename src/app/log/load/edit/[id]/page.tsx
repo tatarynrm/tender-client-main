@@ -17,7 +17,7 @@ export default function EditCargoPage() {
       try {
         const { data } = await api.get(`/crm/load/edit/${id}`); // 👈 твій ендпоїнт
 
-        setData(data.content);
+        setData(data.content[0]);
       } catch (err) {
         console.error(err);
       } finally {

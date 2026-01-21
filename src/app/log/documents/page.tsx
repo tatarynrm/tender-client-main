@@ -84,7 +84,7 @@ export default function AddCocktailForm() {
             name="files"
             label="Будь-які файли"
             multiple={true}
-            // accept={{}} // Порожній об'єкт дозволяє вибрати будь-який файл
+            accept={{...ACCEPTED_FILES.documents,...ACCEPTED_FILES.images}} // Порожній об'єкт дозволяє вибрати будь-який файл
           />
         </div>
 

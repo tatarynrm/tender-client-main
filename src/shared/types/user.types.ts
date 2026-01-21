@@ -1,11 +1,11 @@
 export interface IUserProfile {
-  id: string;
+  id: number;
   createdAt: string;
   updatedAt: string;
   email: string;
   provider: string;
   password: string;
-  telegram_id?: number | null
+  telegram_id?: number | null;
 
   isVerified: boolean;
   isTwoFactorEnabled: boolean;
@@ -22,5 +22,6 @@ export interface IUserProfile {
   is_director?: boolean;
   is_blocked?: boolean;
   is_ict_admin?: boolean;
-  avatar_path?:string;
+  is_crm_admin?: boolean;
+  avatar_path?: string;
 }

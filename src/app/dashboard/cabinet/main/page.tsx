@@ -39,7 +39,7 @@ const CabinetPage = () => {
     const fetchData = async () => {
       try {
         const { data } = await api.post("/ict-drivers-cabinet/main");
-        console.log(data);
+    
 
         setData(data[0]);
       } catch (err) {

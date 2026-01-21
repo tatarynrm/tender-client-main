@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { useCargoChat } from "../../hooks/useLoadChat";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { cn } from "@/shared/utils";
+import { usePathname } from "next/navigation";
 
 export default function LoadChat({
   cargoId,
@@ -36,7 +37,8 @@ export default function LoadChat({
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
+  const pathname = usePathname();
+  const isArchive = pathname?.includes("archive");
   const { comments, isFetching, isSending, sendComment } = useCargoChat(
     cargoId,
     open,
@@ -51,7 +53,7 @@ export default function LoadChat({
   );
 
   const handleSend = async () => {
-    if (!input.trim() || isSending) return;
+    if (!input.trim() || isSending || isArchive) return; // Додано isArchive
     const text = input.trim();
     setInput("");
 
@@ -219,15 +221,21 @@ export default function LoadChat({
         </div>
 
         {/* --- INPUT AREA --- */}
-        <div className="shrink-0 p-4 pb-[env(safe-area-inset-bottom,1.5rem)] bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+        <div
+          className={cn(
+            "shrink-0 p-4 ...",
+            isArchive && "opacity-60 grayscale pointer-events-none", // Візуально "заморожуємо" зону
+          )}
+        >
           <div className="relative flex items-end gap-2 group">
             <div className="relative flex-1">
               <Textarea
-                ref={textAreaRef}
-                value={input}
-                onFocus={handleFocus}
+                ref={textAreaRef} // не забудьте про реф, він у вас є в коді
+                value={input} // ПРИВ'ЯЗКА СТАНУ
                 onChange={(e) => {
-                  setInput(e.target.value);
+                  setInput(e.target.value); // ОНОВЛЕННЯ СТАНУ ПРИ ВВОДІ
+
+                  // Автоматичне розширення висоти (якщо потрібно)
                   e.target.style.height = "inherit";
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
@@ -237,32 +245,37 @@ export default function LoadChat({
                     handleSend();
                   }
                 }}
-                placeholder="Ваше повідомлення..."
-                className="min-h-[44px] max-h-[150px] w-full resize-none rounded-[22px] bg-zinc-100/80 dark:bg-zinc-900/80 border-none focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:bg-white dark:focus-visible:bg-zinc-900 pr-12 py-3 px-5 transition-all text-[14px] leading-tight"
+                disabled={isArchive}
+                placeholder={
+                  isArchive
+                    ? "Архівний вантаж (тільки читання)"
+                    : "Ваше повідомлення..."
+                }
+                className="min-h-[50px] max-h-[200px] w-full resize-none pr-12 ..." // додайте ваші стилі
               />
               <div className="absolute right-2 bottom-1.5 flex items-center justify-center">
                 <button
-                  disabled={isSending || !input.trim()}
+                  disabled={isSending || !input.trim() || isArchive} // Блокуємо кнопку
                   onClick={handleSend}
                   className={cn(
-                    "p-2.5 rounded-full transition-all duration-200 flex items-center justify-center",
-                    input.trim()
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95"
-                      : "text-zinc-400 opacity-50",
+                    "p-2.5 ...",
+                    input.trim() && !isArchive
+                      ? "bg-blue-600 text-white"
+                      : "text-zinc-400 opacity-50 bg-zinc-200", // Стиль для заблокованої кнопки
                   )}
                 >
-                  {isSending ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <SendHorizontal size={18} strokeWidth={2.5} />
-                  )}
+                  <SendHorizontal size={18} />
                 </button>
               </div>
             </div>
           </div>
+
+          {/* Підказка знизу */}
           <div className="flex justify-center mt-3">
-            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest opacity-30">
-              Shift + Enter для нового рядка
+            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+              {isArchive
+                ? "Чат заблоковано (архів)"
+                : "Shift + Enter для нового рядка"}
             </span>
           </div>
         </div>

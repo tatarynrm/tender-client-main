@@ -4,7 +4,7 @@ class VerificationService {
 
     public async newVerification(token:string | null) {
         const {data} = await api.post('/auth/email-confirmation',{token})
-        console.log(data,'DATA');
+    
         
         return data
 

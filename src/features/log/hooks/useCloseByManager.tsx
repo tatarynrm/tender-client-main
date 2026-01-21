@@ -11,7 +11,7 @@ export const useCloseCargoByManager = () => {
   const { mutateAsync: closeCargoMutate, isPending: isLoadingCloseCargo } =
     useMutation({
       mutationFn: async (data: CloseCargoFormValues) => {
-        console.log(data, "DATA CLOSE BY MANAGER");
+       
 
         // Шлях до вашого API для закриття вантажу
         const res = await api.post("/crm/load/close-cargo-by-manager", data);

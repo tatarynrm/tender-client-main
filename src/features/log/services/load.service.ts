@@ -26,7 +26,7 @@ export const loadService = {
 
   /** Отримання одного вантажу */
   getOneLoad: async (id: number | string): Promise<LoadApiItem> => {
-    const { data } = await api.get(`/crm/load/${id}`);
+    const { data } = await api.get(`/crm/load/one/${id}`);
     return data.content[0];
   },
 
@@ -50,9 +50,9 @@ export const loadService = {
     });
     return data;
   },
-refreshLoadTime: async (id: number): Promise<LoadApiItem> => {
+  refreshLoadTime: async (id: number): Promise<LoadApiItem> => {
     // Передаємо id в body запиту
-    const { data } = await api.post(`/crm/load/load-update`, { id }); 
+    const { data } = await api.post(`/crm/load/load-update`, { id });
     return data;
   },
 };

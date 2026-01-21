@@ -212,7 +212,7 @@ export default function TenderSaveForm({
         const { data } = await api.get(
           "/tender/form-data/getCreateTenderFormData",
         );
-        console.log(data, "DATA");
+    ;
 
         setTruckList(
           data.content.trailer_type_dropdown.map((t: any) => ({

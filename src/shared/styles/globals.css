@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "leaflet/dist/leaflet.css";
 @plugin 'tailwind-scrollbar';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -200,3 +201,25 @@
 /* CSS для приховування скролбару: Щоб скрол був чистим, ви можете додати в глобальний CSS: */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+
+@layer utilities {
+  @keyframes bounce-subtle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .animate-comment-glow {
+    /* Додаємо анімацію */
+    animation: bounce-subtle 0.5s ease-in-out 3;
+    
+    /* Сяйво та колір бордера */
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
+    
+    /* Додатково, щоб було видно на темній темі */
+    outline: 2px solid rgba(245, 158, 11, 0.3) !important;
+    z-index: 50;
+  }
+}

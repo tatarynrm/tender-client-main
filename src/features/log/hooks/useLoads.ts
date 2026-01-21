@@ -6,7 +6,7 @@ import {
   useQueryClient,
   QueryKey,
 } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useCallback } from "react";
 import api from "@/shared/api/instance.api";
 import { loadService } from "../services/load.service";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
@@ -14,6 +14,7 @@ import { useSockets } from "@/shared/providers/SocketProvider";
 import { playSound } from "@/shared/helpers/play-sound";
 import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
+import { eventBus } from "@/shared/lib/event-bus";
 
 export interface TenderListFilters {
   search?: string;
@@ -25,43 +26,21 @@ export interface TenderListFilters {
   city_from?: string;
   page?: number;
 }
-
-/**
- * Окрема логіка для мутації збереження вантажу
- */
-const useSaveLoadMutation = (queryKey: QueryKey) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (payload: any) => {
-      const { data } = await api.post("/crm/load/save", payload);
-      return data;
-    },
-    onSuccess: (data) => {
-      // Інвалідуємо списки, щоб підтягнути актуальні дані з сервера
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["loads"], exact: false });
-
-      // Оновлюємо кеш конкретного вантажу (для сторінки деталей)
-      if (data?.id) {
-        queryClient.setQueryData(["load", data.id], data);
-      }
-    },
+// Додаємо окремий експорт для useLoadById
+export const useLoadById = (id?: number | string | null) => {
+  return useQuery<LoadApiItem>({
+    queryKey: ["load", id],
+    queryFn: () => loadService.getOneLoad(Number(id)),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
   });
 };
-
 export const useLoads = (filters: TenderListFilters = {}) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { load: socket } = useSockets();
 
-  // Ref для доступу до актуальних фільтрів всередині сокет-обробників
-  const filtersRef = useRef(filters);
-  useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
-
-  // Формування Query Key та параметрів запиту
+  // 1. Формування Query Key та параметрів
   const params = useMemo(() => {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([key, val]) => {
@@ -77,12 +56,118 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     return p;
   }, [filters]);
 
-  const queryKey = useMemo(
-    () => ["loads", params.toString()],
-    [params.toString()],
+  const queryKey = useMemo(() => ["loads", params.toString()], [params]);
+
+  // Ref для доступу до актуальних фільтрів у колбеках сокетів
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // 2. Перевірка відповідності фільтрам
+  const matchesFilters = useCallback(
+    (item: LoadApiItem, f: TenderListFilters) => {
+      // 1. Захист: якщо item порожній - він не підходить
+      if (!item) return false;
+
+      const routeFrom = item.crm_load_route_from || [];
+      const routeTo = item.crm_load_route_to || [];
+
+      if (f.status && item.status !== f.status) return false;
+
+      if (
+        f.country_from &&
+        !routeFrom.some((r) => r.ids_country === f.country_from)
+      )
+        return false;
+
+      if (
+        f.regionId &&
+        !routeFrom.some((r) => Number(r.ids_region) === Number(f.regionId))
+      )
+        return false;
+
+      if (
+        f.city_from &&
+        !routeFrom.some((r) =>
+          r.city?.toLowerCase().includes(f.city_from!.toLowerCase()),
+        )
+      )
+        return false;
+
+      if (f.search) {
+        const s = f.search.toLowerCase();
+        const matchId = item.id?.toString().includes(s);
+        const matchCityTo = routeTo.some((r) =>
+          r.city?.toLowerCase().includes(s),
+        );
+        const matchCityFrom = routeFrom.some((r) =>
+          r.city?.toLowerCase().includes(s),
+        );
+
+        if (!matchId && !matchCityTo && !matchCityFrom) return false;
+      }
+      return true;
+    },
+    [],
   );
 
-  // Основний запит даних списку
+  const updateLocalCache = useCallback(
+    (newItem: LoadApiItem) => {
+      if (!newItem || !newItem.id) return; // Захист від битих даних
+
+      queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
+        if (!old?.content) return old;
+
+        const isMatch = matchesFilters(newItem, filtersRef.current);
+
+        // Створюємо новий масив, видаляючи стару копію елемента
+        const filteredContent = old.content.filter((l) => l.id !== newItem.id);
+
+        // Якщо підходить - додаємо на початок, якщо ні - просто лишаємо відфільтрований список
+        const newContent = isMatch
+          ? [{ ...newItem }, ...filteredContent] // Створюємо новий об'єкт
+          : filteredContent;
+
+        return {
+          ...old,
+          content: newContent.slice(0, 50),
+        };
+      });
+
+      queryClient.setQueryData(["load", newItem.id], { ...newItem });
+    },
+    [queryClient, queryKey, matchesFilters],
+  );
+  // Додайте це всередину хука useLoads
+  const updateItemOnly = useCallback(
+    (newItem: LoadApiItem) => {
+      queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
+        if (!old) return old;
+
+        // Перевіряємо, чи кількість коментарів дійсно змінилася,
+        // щоб не тригерити рендер всього списку дарма
+        const existingItem = old.content.find((i) => i.id === newItem.id);
+        if (
+          existingItem?.comment_count === newItem.comment_count &&
+          existingItem?.comment_last_time === newItem.comment_last_time
+        ) {
+          return old;
+        }
+
+        return {
+          ...old,
+          content: old.content.map((item) =>
+            item.id === newItem.id ? { ...item, ...newItem } : item,
+          ),
+        };
+      });
+
+      queryClient.setQueryData(["load", newItem.id], newItem);
+    },
+    [queryClient, queryKey],
+  );
+  // 4. Запити та мутації
   const { data, isLoading, error, refetch } = useQuery<
     IApiResponse<LoadApiItem[]>
   >({
@@ -91,138 +176,83 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     staleTime: 1000 * 60,
   });
 
-  // Мутація збереження (isSaving)
-  const { mutateAsync: saveCargo, isPending: isSaving } =
-    useSaveLoadMutation(queryKey);
+  const { mutateAsync: saveCargo, isPending: isSaving } = useMutation({
+    mutationFn: (payload: any) =>
+      api.post("/crm/load/save", payload).then((r) => r.data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["loads"], exact: false });
+      if (data?.id) updateLocalCache(data);
+    },
+  });
 
   const { mutateAsync: refreshLoadTime, isPending: isRefreshing } = useMutation(
     {
-      mutationFn: async (id: number) => {
-        // Викликаємо ваш API метод (crm_load_update на бекенді)
-        // Передаємо id, щоб сервер оновив updated_at для цього запису
-        console.log(id);
-
-        const { data } = await api.post("/crm/load/load-update", { id: id });
-        return data;
-      },
-      onSuccess: (updatedItem) => {
-        // Оновлюємо локальний кеш, щоб вантаж одразу стрибнув вгору
-        // (Хоча сокет "edit_load" або "update_load" теж це зробить,
-        // ручне оновлення зробить інтерфейс миттєвим)
-        updateLocalCache(updatedItem);
-
-        // Інвалідуємо список, щоб синхронізуватись з сервером (опціонально)
-        queryClient.invalidateQueries({ queryKey });
-      },
+      mutationFn: (id: number) =>
+        api.post("/crm/load/load-update", { id }).then((r) => r.data),
+      onSuccess: (updatedItem) => updateLocalCache(updatedItem),
     },
   );
-  /**
-   * Перевірка, чи підходить об'єкт під поточні фільтри клієнта
-   */
-  const matchesFilters = (item: LoadApiItem, f: TenderListFilters) => {
-    const routeFrom = item.crm_load_route_from || [];
 
-    if (f.status && item.status !== f.status) return false;
-    if (
-      f.country_from &&
-      !routeFrom.some((r) => r.ids_country === f.country_from)
-    )
-      return false;
-    if (
-      f.city_from &&
-      !routeFrom.some((r) =>
-        r.city?.toLowerCase().includes(f.city_from!.toLowerCase()),
-      )
-    )
-      return false;
-    if (
-      f.regionId &&
-      !routeFrom.some((r) => Number(r.ids_region) === Number(f.regionId))
-    )
-      return false;
-
-    if (f.search) {
-      const s = f.search.toLowerCase();
-      const matchId = item.id.toString().includes(s);
-      const matchCity = item.crm_load_route_to?.some((r) =>
-        r.city?.toLowerCase().includes(s),
-      );
-      if (!matchId && !matchCity) return false;
-    }
-    return true;
-  };
-
-  /**
-   * Розумне оновлення локального кешу (Optimistic Update)
-   */
-  const updateLocalCache = (newItem: LoadApiItem) => {
-    queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
-      if (!old) return old;
-
-      const isMatch = matchesFilters(newItem, filtersRef.current);
-      const exists = old.content.some((l) => l.id === newItem.id);
-
-      let newContent = [...old.content];
-
-      if (exists) {
-        // Оновлюємо або видаляємо, якщо після змін не підходить під фільтри
-        newContent = isMatch
-          ? newContent.map((l) => (l.id === newItem.id ? newItem : l))
-          : newContent.filter((l) => l.id !== newItem.id);
-      } else if (isMatch) {
-        // Додаємо новий вантаж, якщо він підходить
-        newContent = [newItem, ...newContent];
-      }
-
-      return {
-        ...old,
-        content: newContent
-          .sort(
-            (a, b) =>
-              new Date(b.updated_at).getTime() -
-              new Date(a.updated_at).getTime(),
-          )
-          .slice(0, 50),
-      };
-    });
-
-    queryClient.setQueryData(["load", newItem.id], newItem);
-  };
-
-  // Підписка на сокети
+  // 5. Ефект сокетів
   useEffect(() => {
     if (!profile?.id || !socket) return;
 
-    const handlers = {
-      new_load: (data: LoadApiItem) => {
-        updateLocalCache(data);
-        playSound("/sounds/load/new-load-sound.mp3");
-      },
-      update_load: updateLocalCache,
-      edit_load: (data: LoadApiItem) => {
-        updateLocalCache(data);
-        window.dispatchEvent(
-          new CustomEvent("cargo_shake", { detail: data.id }),
-        );
-      },
+    const onNewLoad = (data: LoadApiItem) => {
+      updateLocalCache(data);
+      playSound("/sounds/load/new-load-sound.mp3");
     };
 
-    Object.entries(handlers).forEach(([event, fn]) => socket.on(event, fn));
+    const onUpdateLoad = (data: LoadApiItem) => {
+      updateLocalCache(data);
+      eventBus.emit("cargo_shake", data.id);
+    };
+    const onUpdateLoadDate = (data: LoadApiItem) => {
+      updateLocalCache(data);
+      eventBus.emit("update_load_date", data.id);
+    };
+    // Всередині useEffect для сокетів у useLoads
+    const onUpdateComment = (data: LoadApiItem) => {
+      // Оновлюємо дані вантажу (counts, last_comment_time)
+
+      updateItemOnly(data);
+
+      // Оновлюємо список повідомлень, якщо чат відкритий
+      // queryClient.invalidateQueries({ queryKey: ["cargo-comments", data.id] });
+
+      // ЛОГІКА ПРОЧИТАННЯ:
+      // Ми нічого не робимо з comment_read_time тут.
+      // - У вас в кеші вже лежить "майбутня дата", яку ми записали в onMutate.
+      // - У колег лежить стара дата, тому у них з'явиться червона крапка.
+    };
+
+    socket.on("new_load", onNewLoad);
+    socket.on("update_load", onUpdateLoad);
+    socket.on("edit_load_comment", onUpdateComment);
+    socket.on("update_chat_count_load", onUpdateComment);
+    socket.on("edit_load", onUpdateLoad);
+    socket.on("update_load_date", onUpdateLoadDate);
 
     return () => {
-      Object.entries(handlers).forEach(([event, fn]) => socket.off(event, fn));
+      socket.off("new_load", onNewLoad);
+      socket.off("update_load", onUpdateLoad);
+      socket.off("edit_load_comment", onUpdateComment); // ВАЖЛИВО: Додайте відписку
+      socket.off("edit_load", onUpdateLoad);
+      socket.off("edit_load_date", onUpdateLoadDate);
+      socket.off("update_load_date", onUpdateLoad);
     };
-  }, [profile?.id, socket, queryKey]);
+  }, [profile?.id, socket, updateLocalCache, updateItemOnly]);
 
   return {
     loads: data?.content ?? [],
     pagination: data?.props?.pagination,
     isLoading,
     isSaving,
+    isRefreshing,
     error,
     refetch,
     saveCargo,
     refreshLoadTime,
-    isRefreshing,
+    updateItemOnly, // Експортуємо цей метод
+    queryKey, // Експортуємо ключ, щоб інші хуки могли до нього звертатися
   };
 };

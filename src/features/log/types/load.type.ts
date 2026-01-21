@@ -48,6 +48,7 @@ export type LoadApiItem = {
   comment_count:number;
   comment_last_time:string | null;
   comment_read_time:string | null;
+  id_usr:number;
 
 };
 

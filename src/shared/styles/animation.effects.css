@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "leaflet/dist/leaflet.css";
+
+@plugin 'tailwind-scrollbar';
+
+/* Імпортуємо ваші ефекти після основних плагінів */
+@import './animation.effects.css';
+
+@theme inline {
+  /* Якщо ви хочете додати анімацію в конфіг v4 */
+  --animate-shake: shake-card-smooth 0.4s ease-in-out infinite;
+
+  @keyframes shake-card-smooth {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-2px) rotate(-0.5deg); }
+    40% { transform: translateX(2px) rotate(0.5deg); }
+    60% { transform: translateX(-1.5px) rotate(-0.2deg); }
+    80% { transform: translateX(1.5px) rotate(0.2deg); }
+  }
+}
+
+/* Кастомний варіант для Dark Mode в v4 зазвичай не потрібен, 
+він працює автоматично через клас .dark, але якщо ви хочете його перевизначити: */
+@custom-variant dark (&:is(.dark *));

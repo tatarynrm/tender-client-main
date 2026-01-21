@@ -28,13 +28,13 @@ import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
 import { Minus, Plus } from "lucide-react";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import { selectStyles } from "./config/style.config";
-import { useLoads } from "../hooks/useLoads";
+import { useLoadById, useLoads } from "../hooks/useLoads";
 
 // ---------- Schemas ----------
 const routeSchema = z.object({
@@ -83,7 +83,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const { saveCargo } = useLoads({});
   const router = useRouter();
-
+  const searchParams = useSearchParams();
+  const copyId = searchParams.get("copyId");
+  const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
     defaultValues: {
@@ -116,8 +118,10 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     },
   });
 
-  const { control, handleSubmit, setValue, clearErrors, reset } = form;
+  const { control, handleSubmit, setValue, clearErrors, reset, watch } = form;
 
+  // Спостерігаємо за всіма змінами у формі
+  const formValues = watch();
   const {
     fields: fromFields,
     append: appendFrom,
@@ -154,22 +158,88 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       setCompanyLabel(defaultValues.company_name);
     }
   }, [defaultValues]);
+  const STORAGE_KEY = "load_form_draft";
+  // ЕФЕКТ 1: Завантаження даних при старті
+  useEffect(() => {
+    // Якщо ми редагуємо існуючу заявку (є defaultValues), не підтягуємо чернетку
+    if (defaultValues) return;
 
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        // reset заповнить форму збереженими даними
+        reset(parsedData);
+      } catch (e) {
+        console.error("Помилка парсингу чернетки", e);
+      }
+    }
+  }, [reset, defaultValues]);
+  // ЕФЕКТ 2: Збереження при кожній зміні
+  useEffect(() => {
+    // Не зберігаємо чернетку, якщо ми в режимі редагування
+    if (defaultValues) return;
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formValues));
+    }, 500); // затримка 1 сек, щоб не "спамити" в пам'ять при кожному символі
+
+    return () => clearTimeout(timer);
+  }, [formValues, defaultValues]);
+  useEffect(() => {
+    if (copyData && !defaultValues) {
+      const prepareForCopy = (data: any) => {
+        return {
+          ...data,
+          id: undefined,
+          crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
+            ...r,
+            id: undefined,
+          })),
+          crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
+            ...r,
+            id: undefined,
+          })),
+          crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
+            ...t,
+            id: undefined,
+          })),
+        };
+      };
+
+      const cleanedData = prepareForCopy(copyData);
+      reset(cleanedData);
+
+      // ВИПРАВЛЕННЯ ТУТ:
+      // Використовуємо кастинг до any або опціональний ланцюжок,
+      // щоб обійти сувору перевірку інтерфейсу
+      const clientData =
+        (copyData as any).id_client_info || (copyData as any).client;
+
+      if (clientData?.company_name) {
+        setCompanyLabel(clientData.company_name);
+      } else if ((copyData as any).company_name) {
+        // Іноді процедура повертає назву компанії прямо в корені
+        setCompanyLabel((copyData as any).company_name);
+      }
+
+      toast.info("Дані успішно скопійовано");
+    }
+  }, [copyData, reset, defaultValues]);
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
-      await saveCargo({
-        ...values,
-        id: defaultValues?.id,
-      });
-
+      await saveCargo({ ...values, id: defaultValues?.id });
       toast.success("Готово!");
+
+      // ОЧИЩЕННЯ ПІСЛЯ УСПІХУ
+      localStorage.removeItem(STORAGE_KEY);
 
       if (defaultValues) {
         router.push("/log/load/active");
       } else if (!isNextCargo) {
         reset();
         setCompanyLabel("");
-        router.push("/log/load/active"); // тепер тут будуть актуальні дані
+        router.push("/log/load/active");
       }
     } catch (err) {
       toast.error("Помилка збереження");
@@ -395,7 +465,6 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                           : null
                       }
                       isClearable
-                    
                     />
                   </FormItem>
                 )}
@@ -415,9 +484,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       options={truckList}
                       styles={selectStyles(config) as any}
                       placeholder="Оберіть типи..."
-                      noOptionsMessage={({ inputValue }) =>
-                        'Не знайдено'
-                      }
+                      noOptionsMessage={({ inputValue }) => "Не знайдено"}
                       value={truckList.filter((t) =>
                         field.value?.some(
                           (v: any) => v.ids_trailer_type === t.value,
@@ -609,9 +676,11 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
               >
                 {isLoading
                   ? "Збереження..."
-                  : defaultValues
-                    ? "Оновити дані"
-                    : "Опублікувати"}
+                  : copyId
+                    ? "Створити копію"
+                    : defaultValues
+                      ? "Оновити дані"
+                      : "Опублікувати"}
               </Button>
             </div>
           </form>

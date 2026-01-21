@@ -97,7 +97,7 @@ export const DistributionBarChart = ({
   label?: string;
 }) => {
   const { config } = useFontSize();
-  console.log(data, "DATA");
+  
 
   return (
     <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 rounded-[2.5rem] shadow-sm transition-all duration-300">

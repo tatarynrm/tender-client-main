@@ -91,8 +91,6 @@ export default function CreateCompanyPage() {
       try {
         const { data } = await api.get("/company/form-data/create");
 
-        console.log(data, "DATA REGISTER PRE DATA");
-        console.log(data.status, "DATA STATUS");
         setPreRegisterData(data.content);
       } catch (error) {
         console.log(error);

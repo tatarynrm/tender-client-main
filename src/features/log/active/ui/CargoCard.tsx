@@ -33,7 +33,7 @@ import { Dropdowns, LoadApiItem } from "../../types/load.type";
 import { CargoDetailsDrawer } from "./CargoDetailsDrawer";
 
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
-import { StatusIndicator } from "../CargoCardUpdateColor";
+
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 import { AddCarsModal } from "./CargoCarAddModal";
 import { useAddCars } from "../../hooks/useAddLoadCars";
@@ -45,6 +45,10 @@ import { useCloseCargoByManager } from "../../hooks/useCloseByManager";
 import { CargoHistoryModal } from "./CargoHistoryModal";
 import LoadChat from "./LoadChat";
 import { useLoads } from "../../hooks/useLoads";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { CargoActions } from "./CargoActions";
+import { StatusIndicator } from "./CargoCardUpdateColor";
+import { useEventEffect } from "@/shared/hooks/useEventEffects";
 
 const transitMap: Record<string, string> = {
   E: "Експорт",
@@ -63,13 +67,14 @@ interface CargoCardProps {
 export function CargoCard({ load, filters }: CargoCardProps) {
   const { config } = useFontSize();
   const router = useRouter();
+  const { profile } = useAuth();
 
   const [isNew, setIsNew] = useState(false);
   const [isJustCreated, setIsJustCreated] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
   const [chatCargo, setChatCargo] = useState<LoadApiItem | null>(null);
-  const [isShaking, setIsShaking] = useState(false);
-  const [showBadge, setShowBadge] = useState(false);
+  // const [isShaking, setIsShaking] = useState(false);
+  // const [showBadge, setShowBadge] = useState(false);
   const [openAddCars, setOpenAddCars] = useState(false);
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
@@ -82,6 +87,17 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
   const { refreshLoadTime, isRefreshing } = useLoads();
+  // Слухаємо тряску та оновлення для конкретного ID
+  const {
+    isActive: isShaking,
+    isPending: showBadge,
+    lastEvent,
+  } = useEventEffect(load.id, [
+    "cargo_shake",
+    "cargo_shake_car_count",
+    "update_comment",
+    "update_load_date", // Додайте це сюди
+  ]);
   useEffect(() => {
     if (!load.created_at) return;
     const checkStatus = () => {
@@ -102,54 +118,74 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
   // Використовуємо useMemo для визначення статусу повідомлень
   const hasUnreadMessages = React.useMemo(() => {
+    // 1. Пріоритет сокета: якщо прийшла подія і ми не в чаті
+    if (lastEvent === "update_comment" && showBadge) return true;
+
     const lastTime = load?.comment_last_time;
-    // Пріоритет локальному стану, якщо він щойно змінився (після закриття чату)
     const readTime = localReadTime || load?.comment_read_time;
 
-    if (!lastTime || load.comment_count === 0) return false;
-
-    // Якщо ми ніколи не читали (readTime порожній), але є повідомлення — вони не прочитані
+    // 2. Базові перевірки
+    if (!lastTime || !load?.comment_count || load.comment_count === 0)
+      return false;
     if (!readTime) return true;
 
     try {
       const lastDate = new Date(lastTime).getTime();
       const readDate = new Date(readTime).getTime();
 
-      // Додаємо невеликий офсет (наприклад, 1 сек), щоб уникнути проблем
-      // з точністю мілісекунд при збереженні в БД
+      // 3. ПРАВИЛЬНА ЛОГІКА:
+      // Повертаємо true (показуємо крапку), якщо коментар новіший за прочитання
+      // більше ніж на 1 секунду.
       return lastDate > readDate + 1000;
     } catch (e) {
+      console.error("Error parsing dates", e);
       return false;
     }
   }, [
-    load.comment_last_time,
-    load.comment_count,
+    load?.comment_last_time,
+    load?.comment_read_time,
+    load?.comment_count,
+    lastEvent,
+    showBadge,
     localReadTime,
-    load.comment_read_time,
   ]);
-
-  // 2. Очищення Shake ефектів (у вас два однакових useEffect, можна об'єднати)
-  useEffect(() => {
-    const handleEvent = (event: any) => {
-      if (event.detail === load.id) {
-        setIsShaking(true);
-        setShowBadge(true);
-        setTimeout(() => setIsShaking(false), 6000);
-        setTimeout(() => setShowBadge(false), 30000);
-      }
-    };
-
-    window.addEventListener("cargo_shake", handleEvent);
-    window.addEventListener("cargo_shake_car_count", handleEvent);
-    return () => {
-      window.removeEventListener("cargo_shake", handleEvent);
-      window.removeEventListener("cargo_shake_car_count", handleEvent);
-    };
-  }, [load.id]);
 
   const transitTypeInfo = filters?.transit_dropdown?.find(
     (item: any) => item.id === load.transit_type,
   );
+  // 1. Створюємо допоміжну функцію для вибору класу анімації
+  const getAnimationClass = () => {
+    if (!isShaking) return "";
+
+    switch (lastEvent) {
+      case "update_comment":
+        return "animate-comment-glow shadow-[0_0_20px_rgba(245,158,11,0.4)]";
+      case "update_load_date":
+        // Наприклад, сине сяйво для оновлення дати
+        return "animate-shake border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-[1.02]";
+      case "cargo_shake":
+      case "cargo_shake_car_count":
+        return "animate-shake border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+      default:
+        return "animate-shake";
+    }
+  };
+  // Конфігурація бейджів
+  const badgeConfig: Record<string, { label: string; color: string }> = {
+    cargo_shake: { label: "Відредаговано", color: "bg-emerald-500" },
+    cargo_shake_car_count: {
+      label: "К-сть авто змінена",
+      color: "bg-blue-500",
+    },
+    update_comment: { label: "Новий коментар", color: "bg-amber-500" },
+    update_load_date: { label: "Час оновлено", color: "bg-blue-600" },
+  };
+
+  // Більш надійний вибір бейджа
+  const currentBadge =
+    lastEvent && badgeConfig[lastEvent]
+      ? badgeConfig[lastEvent]
+      : badgeConfig.cargo_shake; // Показувати "Відредаговано" тільки якщо події немає взагалі
   return (
     <>
       <Card
@@ -162,8 +198,13 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           "group relative flex flex-col w-full bg-white/60 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/50 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300",
           isJustCreated &&
             "animate-in fade-in zoom-in duration-700 slide-in-from-left-4",
-          isShaking &&
-            "animate-shake border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
+          // Використовуємо нашу функцію
+          getAnimationClass(),
+          // Додаткове підсвічування кільця, якщо є бейдж
+          showBadge &&
+            (lastEvent === "update_comment"
+              ? "ring-1 ring-amber-400/30"
+              : "ring-1 ring-emerald-400/30"),
         )}
       >
         {isNew && (
@@ -171,11 +212,17 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             NEW
           </div>
         )}
+        {/* // В JSX замінюємо старий блок бейджа: */}
         {showBadge && (
-          <div className="absolute top-10 right-0 flex items-center gap-1.5 bg-emerald-500 text-white px-2.5 py-1 rounded-bl-xl shadow-lg border-b border-l border-white/20 animate-in fade-in zoom-in duration-300 z-50">
+          <div
+            className={cn(
+              "absolute top-6 right-0 flex items-center gap-1.5 text-white px-2.5 py-1 rounded-bl-xl shadow-lg border-b border-l border-white/20 animate-in fade-in zoom-in duration-300 z-50",
+              currentBadge.color, // Динамічний колір
+            )}
+          >
             <Sparkles size={10} className="animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest">
-              Відредаговано
+              {currentBadge.label} {/* Динамічний текст */}
             </span>
           </div>
         )}
@@ -226,45 +273,16 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               </span>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-5 w-5">
-                  <GripVertical size={12} className="text-zinc-400" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                align="end"
-                className="rounded-xl backdrop-blur-lg"
-              >
-                <DropdownMenuItem
-                  onClick={() => router.push(`/log/load/edit/${load.id}`)}
-                >
-                  Редагувати
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => refreshLoadTime(load.id)}>
-                  Оновити
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={() => setOpenAddCars(true)}>
-                  Додати к-сть авто
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setOpenRemoveCars(true)}>
-                  Відняти к-сть авто
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setOpenCloseCargoByManager(true)}
-                >
-                  Закрита нами
-                </DropdownMenuItem>
-
-                {canDelete && (
-                  <DropdownMenuItem className="text-red-500">
-                    Видалити
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Замість всього блоку з DropdownMenu просто викликаємо: */}
+            <CargoActions
+              load={load}
+              profile={profile}
+              canDelete={canDelete}
+              onAddCars={() => setOpenAddCars(true)}
+              onRemoveCars={() => setOpenRemoveCars(true)}
+              onCloseCargo={() => setOpenCloseCargoByManager(true)}
+              onRefresh={refreshLoadTime}
+            />
           </div>
         </div>
 
@@ -456,8 +474,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </div>
             <span
               className={cn(
-                "font-bold text-zinc-500 text-[9px] truncate uppercase tracking-tighter",
-                config.main,
+                "font-bold text-xl text-zinc-500 text-[9px] truncate uppercase tracking-tighter",
+            config.label
               )}
             >
               {load.company_name || "—"}
@@ -531,29 +549,39 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <Button
               size="sm"
               className={cn(
-                "h-5 rounded px-1.5 gap-1 transition-all text-[9px] font-black shadow-none relative", // Додали relative
+                "h-6 rounded-lg px-2 gap-1.5 transition-all duration-300 text-[10px] font-bold relative shadow-sm",
                 load.comment_count > 0
-                  ? "bg-blue-600 text-white"
-                  : "bg-white/50 dark:bg-zinc-800 text-zinc-500 border border-zinc-200/50 dark:border-white/5",
+                  ? "bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/20"
+                  : "bg-teal-50/50 dark:bg-teal-500/5 text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/10",
+
+                // Анімація при отриманні коментаря
+                lastEvent === "update_comment" &&
+                  isShaking &&
+                  "animate-bounce shadow-lg ring-2 ring-teal-400/50",
               )}
               onClick={(e) => {
                 e.stopPropagation();
                 setChatCargo(load);
               }}
             >
-              {/* Пульсуючий індикатор */}
+              {/* Червоний індикатор (Badge) */}
               {hasUnreadMessages && (
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white dark:border-zinc-900"></span>
+                <span className="absolute -top-1 -right-1 flex h-3 w-3 z-[60]">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 border-2 border-white dark:border-zinc-900 shadow-sm"></span>
                 </span>
               )}
 
               <MessageCircle
-                size={10}
-                className={load.comment_count > 0 ? "fill-white/20" : ""}
+                size={12}
+                strokeWidth={2.5}
+                className={cn(
+                  "transition-transform group-hover:scale-110",
+                  load.comment_count > 0 ? "fill-white/20" : "fill-teal-500/10",
+                )}
               />
-              {load.comment_count ?? 0}
+
+              <span className="tabular-nums">{load.comment_count ?? 0}</span>
             </Button>
           </div>
         </div>
@@ -623,10 +651,31 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             transform: translateX(1.5px) rotate(0.2deg);
           }
         }
+
+        /* Нова анімація для коментарів */
+        @keyframes bounce-subtle {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
+        }
+
         .animate-shake {
           animation: shake-card-smooth 0.4s ease-in-out infinite;
           z-index: 50;
           position: relative;
+        }
+
+        /* Клас для коментарів */
+        .animate-comment-glow {
+          animation: bounce-subtle 0.5s ease-in-out infinite; /* infinite, щоб було помітно, поки isActive=true */
+          box-shadow: 0 0 15px rgba(245, 158, 11, 0.2) !important;
+          border-color: #f59e0b !important;
+          position: relative;
+          z-index: 51;
         }
       `}</style>
     </>
