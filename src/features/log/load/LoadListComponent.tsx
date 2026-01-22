@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { ChevronUp, Settings2 } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
@@ -21,14 +21,13 @@ import { useGetLoadFilters } from "../hooks/useGetLoadFilters";
 import { LoadFiltersSheet } from "./components/LoadFiltersSheet";
 import { LoadActiveFilters } from "./components/LoadActiveFilters";
 import { LoadApiItem } from "../types/load.type";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui";
+
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 interface Props {
   active?: boolean;
   archive?: boolean;
 }
 export default function LoadListComponent({ active, archive }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
 
@@ -87,7 +86,7 @@ export default function LoadListComponent({ active, archive }: Props) {
   if (error) return <ErrorState />;
 
   return (
-    <div className="p-0 space-y-4">
+    <div className="space-y-4 ">
       {/* HEADER ПАНЕЛЬ */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">

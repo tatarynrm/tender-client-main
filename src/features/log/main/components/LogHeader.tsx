@@ -40,12 +40,7 @@ export default function LogHeader({
     ? `${baseUrl.replace(/\/$/, "")}/${profile.avatar_path.replace(/^\//, "")}`
     : undefined;
 
-  console.log("FINAL AVATAR URL:", avatarUrl);
-  const handleLogout = () => {
-    // Ваша логіка виходу з системи
-    console.log("Користувач вийшов!");
-    // Перенаправлення на сторінку входу
-  };
+
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
       {/* Ліва частина: Управління та Профіль */}

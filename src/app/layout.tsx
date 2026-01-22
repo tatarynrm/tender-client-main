@@ -56,7 +56,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getProfile();
-
+  
   return (
     <html lang="en" suppressHydrationWarning className="scrollbar-thin">
       <body
@@ -78,7 +78,7 @@ export default async function RootLayout({
           showForHashAnchor={true} // якщо переходиш на хеш-лінк, теж показує
         />
 
-        <MainProvider profile={profile ?? null}>{children}</MainProvider>
+        <MainProvider profile={profile}>{children}</MainProvider>
       </body>
     </html>
   );

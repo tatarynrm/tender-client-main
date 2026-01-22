@@ -31,6 +31,7 @@ export function TenderRatesList({
   const sortedRates = [...rates].sort(
     (a, b) => a.price_proposed - b.price_proposed
   );
+console.log(rates,'RATES');
 
   return (
     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar pb-2">

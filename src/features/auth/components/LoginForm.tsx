@@ -29,17 +29,18 @@ const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
-      code:''
+      code: "",
     },
   });
   const { login, isLoadingLogin } = useLoginMutation(setIsShhowTwoFactor);
   const onSubmit = (values: TypeLoginSchema) => {
     login({ values });
   };
-    // ✅ Отримуємо поточне значення поля
+  // ✅ Отримуємо поточне значення поля
   const codeValue = form.watch("code");
 
-  const isCodeValid = codeValue && codeValue.length === 6 && /^\d+$/.test(codeValue);
+  const isCodeValid =
+    codeValue && codeValue.length === 6 && /^\d+$/.test(codeValue);
 
   return (
     <AuthWrapper
@@ -54,26 +55,26 @@ const LoginForm = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-4"
         >
-        {isShowTwoFactor && (
-          <FormField
-            control={form.control}
-            name="code"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>TWO FACTOR CODE</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={isLoadingLogin}
-                    placeholder="123456"
-                    maxLength={6} // ✅ обмеження
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+          {isShowTwoFactor && (
+            <FormField
+              control={form.control}
+              name="code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>TWO FACTOR CODE</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoadingLogin}
+                      placeholder="123456"
+                      maxLength={6} // ✅ обмеження
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           {!isShowTwoFactor && (
             <>
               <FormField
@@ -123,13 +124,13 @@ const LoginForm = () => {
             </>
           )}
 
-        <Button
-          type="submit"
-          disabled={isShowTwoFactor && !isCodeValid || isLoadingLogin}
-          className="w-full"
-        >
-          {isShowTwoFactor ? 'Підтвердити код' : 'Увійти'}
-        </Button>
+          <Button
+            type="submit"
+            disabled={(isShowTwoFactor && !isCodeValid) || isLoadingLogin}
+            className="w-full"
+          >
+            {isShowTwoFactor ? "Підтвердити код" : "Увійти"}
+          </Button>
         </form>
       </Form>
     </AuthWrapper>

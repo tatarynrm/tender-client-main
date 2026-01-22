@@ -15,7 +15,7 @@ import { playSound } from "@/shared/helpers/play-sound";
 import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
 import { eventBus } from "@/shared/lib/event-bus";
-
+import { SOCKET_EVENTS} from "@romannoris/tender-shared-types";
 export interface TenderListFilters {
   search?: string;
   status?: string;
@@ -35,6 +35,7 @@ export const useLoadById = (id?: number | string | null) => {
     staleTime: 1000 * 60 * 5,
   });
 };
+
 export const useLoads = (filters: TenderListFilters = {}) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
@@ -112,41 +113,41 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     [],
   );
 
-const updateLocalCache = useCallback(
-  (newItem: LoadApiItem) => {
-    if (!newItem || !newItem.id) return;
+  const updateLocalCache = useCallback(
+    (newItem: LoadApiItem) => {
+      if (!newItem || !newItem.id) return;
 
-    queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
-      if (!old?.content) return old;
+      queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
+        if (!old?.content) return old;
 
-      // 1. Перевіряємо відповідність фільтрам
-      const matchesBaseFilters = matchesFilters(newItem, filtersRef.current);
-      
-      // 2. ДОДАТКОВА ПЕРЕВІРКА: якщо машин 0, то об'єкт НЕ підходить для списку
-      // Припускаємо, що поле називається car_count_actual (як ви вказали)
-      const hasCars = Number(newItem.car_count_actual) > 0;
-      
-      const isMatch = matchesBaseFilters && hasCars;
+        // 1. Перевіряємо відповідність фільтрам
+        const matchesBaseFilters = matchesFilters(newItem, filtersRef.current);
 
-      // Створюємо новий масив без цього елемента
-      const filteredContent = old.content.filter((l) => l.id !== newItem.id);
+        // 2. ДОДАТКОВА ПЕРЕВІРКА: якщо машин 0, то об'єкт НЕ підходить для списку
+        // Припускаємо, що поле називається car_count_actual (як ви вказали)
+        const hasCars = Number(newItem.car_count_actual) > 0;
 
-      // Якщо підходить (є машини + фільтри) - додаємо, якщо ні - просто лишаємо відфільтрований
-      const newContent = isMatch
-        ? [{ ...newItem }, ...filteredContent]
-        : filteredContent;
+        const isMatch = matchesBaseFilters && hasCars;
 
-      return {
-        ...old,
-        content: newContent.slice(0, 50),
-      };
-    });
+        // Створюємо новий масив без цього елемента
+        const filteredContent = old.content.filter((l) => l.id !== newItem.id);
 
-    // Окремий кеш для одного вантажу теж можна оновити або видалити
-    queryClient.setQueryData(["load", newItem.id], { ...newItem });
-  },
-  [queryClient, queryKey, matchesFilters],
-);
+        // Якщо підходить (є машини + фільтри) - додаємо, якщо ні - просто лишаємо відфільтрований
+        const newContent = isMatch
+          ? [{ ...newItem }, ...filteredContent]
+          : filteredContent;
+
+        return {
+          ...old,
+          content: newContent.slice(0, 50),
+        };
+      });
+
+      // Окремий кеш для одного вантажу теж можна оновити або видалити
+      queryClient.setQueryData(["load", newItem.id], { ...newItem });
+    },
+    [queryClient, queryKey, matchesFilters],
+  );
   // Додайте це всередину хука useLoads
   const updateItemOnly = useCallback(
     (newItem: LoadApiItem) => {
@@ -241,8 +242,8 @@ const updateLocalCache = useCallback(
       eventBus.emit("load_add_car", data.id);
     };
     const onUpdateLoadRemoveCar = (data: LoadApiItem) => {
-      console.log(data,'DATA REMOVE CAR');
-      
+      console.log(data, "DATA REMOVE CAR");
+
       updateLocalCache(data);
       eventBus.emit("load_remove_car", data.id);
     };

@@ -17,7 +17,7 @@ export default async function LogLayout({
 
   return (
     // <AuthCheckProvider profile={profile}>
-      <LogShell profile={profile}>{children}</LogShell>
+    <LogShell profile={profile}>{children}</LogShell>
     // </AuthCheckProvider>
   );
 }

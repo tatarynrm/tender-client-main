@@ -17,7 +17,9 @@ const nextConfig: NextConfig = {
     ],
   },
   reactStrictMode: false,
-
+  experimental: {
+    externalDir: true, // Дозволяє імпорт файлів поза папкою проекту
+  },
 };
 
 export default nextConfig;

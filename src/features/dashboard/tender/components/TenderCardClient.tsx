@@ -60,11 +60,11 @@ export function TenderCardClients({
   }, [now, cargo.time_start, cargo.time_end]);
 
   const fromPoints = cargo.tender_route.filter(
-    (p) => p.ids_point === "LOAD_FROM"
+    (p) => p.ids_point === "LOAD_FROM",
   );
   const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
   const transitPoints = cargo.tender_route.filter((p) =>
-    ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point || "")
+    ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point || ""),
   );
 
   const getPointLabel = (type: string) => {
@@ -86,7 +86,7 @@ export function TenderCardClients({
         className={cn(
           "relative w-full transition-all duration-300 mb-2 overflow-hidden rounded-lg shadow-sm border-zinc-200/50 dark:border-white/5",
           "bg-white/90 dark:bg-zinc-900/40 backdrop-blur-md",
-          isFinished && "opacity-60 grayscale"
+          isFinished && "opacity-60 grayscale",
         )}
       >
         <CardContent className="p-0">
@@ -98,7 +98,7 @@ export function TenderCardClients({
                   <span
                     className={cn(
                       "text-sky-600 dark:text-sky-400 font-bold tracking-tighter",
-                      label
+                      label,
                     )}
                   >
                     #{cargo.id}
@@ -108,7 +108,7 @@ export function TenderCardClients({
                     <span
                       className={cn(
                         "font-medium uppercase tracking-tight opacity-70",
-                        label
+                        label,
                       )}
                     >
                       {cargo.tender_type}
@@ -140,7 +140,7 @@ export function TenderCardClients({
                   <p
                     className={cn(
                       "text-sky-500 font-bold uppercase text-[8px] mb-1 opacity-80",
-                      label
+                      label,
                     )}
                   >
                     Звідки
@@ -150,7 +150,7 @@ export function TenderCardClients({
                       key={idx}
                       className={cn(
                         "flex items-center gap-1.5 font-bold text-zinc-800 dark:text-zinc-200 leading-none py-0.5",
-                        main
+                        main,
                       )}
                     >
                       <Flag
@@ -168,7 +168,7 @@ export function TenderCardClients({
                   <p
                     className={cn(
                       "text-amber-500 font-bold uppercase text-[8px] mb-1 opacity-80",
-                      label
+                      label,
                     )}
                   >
                     Маршрут
@@ -180,7 +180,7 @@ export function TenderCardClients({
                           <span
                             className={cn(
                               "text-amber-600/80 dark:text-amber-400/80 font-bold text-[7px] uppercase tracking-tighter",
-                              label
+                              label,
                             )}
                           >
                             {getPointLabel(p.ids_point || "")}
@@ -188,7 +188,7 @@ export function TenderCardClients({
                           <span
                             className={cn(
                               "text-zinc-600 dark:text-zinc-400 truncate font-semibold",
-                              label
+                              label,
                             )}
                           >
                             {p.city}
@@ -199,7 +199,7 @@ export function TenderCardClients({
                       <span
                         className={cn(
                           "text-zinc-300 dark:text-zinc-600 text-[9px] font-medium",
-                          label
+                          label,
                         )}
                       >
                         Прямий рейс
@@ -213,7 +213,7 @@ export function TenderCardClients({
                   <p
                     className={cn(
                       "text-emerald-500 font-bold uppercase text-[8px] mb-1 opacity-80",
-                      label
+                      label,
                     )}
                   >
                     Куди
@@ -223,7 +223,7 @@ export function TenderCardClients({
                       key={idx}
                       className={cn(
                         "flex items-center gap-1.5 justify-end font-bold text-zinc-800 dark:text-zinc-200 leading-none py-0.5",
-                        main
+                        main,
                       )}
                     >
                       <span className="truncate">{p.city}</span>
@@ -244,7 +244,7 @@ export function TenderCardClients({
                   <span
                     className={cn(
                       "font-bold text-zinc-700 dark:text-zinc-300",
-                      label
+                      label,
                     )}
                   >
                     {cargo.weight}т / {cargo.volume}м³
@@ -255,7 +255,7 @@ export function TenderCardClients({
                   <span
                     className={cn(
                       "font-bold text-zinc-700 dark:text-zinc-300 truncate max-w-[120px]",
-                      label
+                      label,
                     )}
                   >
                     {cargo.cargo || "Вантаж"}
@@ -277,7 +277,7 @@ export function TenderCardClients({
                   <span
                     className={cn(
                       "font-black tracking-tighter text-zinc-900 dark:text-white leading-none",
-                      main
+                      main,
                     )}
                   >
                     {cargo.price_proposed || cargo.price_start}
@@ -285,7 +285,7 @@ export function TenderCardClients({
                   <span
                     className={cn(
                       "font-bold text-zinc-400 text-[9px] uppercase",
-                      label
+                      label,
                     )}
                   >
                     {cargo.valut_name}
@@ -294,7 +294,7 @@ export function TenderCardClients({
                 <div
                   className={cn(
                     "flex items-center gap-0.5 text-emerald-600 font-bold text-[9px]",
-                    label
+                    label,
                   )}
                 >
                   <TrendingDown size={icon - 5} strokeWidth={3} />
@@ -308,7 +308,7 @@ export function TenderCardClients({
                   onClick={() => setActiveModal("confirm")}
                   className={cn(
                     "w-full h-8 rounded bg-zinc-900 dark:bg-white dark:text-black font-bold border-none transition-all active:scale-95",
-                    label
+                    label,
                   )}
                 >
                   Ставка: {cargo.price_next}
@@ -321,7 +321,7 @@ export function TenderCardClients({
                     onClick={() => setActiveModal("manual")}
                     className={cn(
                       "h-6 text-[9px] font-bold border-zinc-200 dark:border-white/10",
-                      label
+                      label,
                     )}
                   >
                     Своя
@@ -331,7 +331,7 @@ export function TenderCardClients({
                     onClick={onOpenDetails}
                     className={cn(
                       "h-6 text-[9px] font-bold text-zinc-500 hover:text-sky-500",
-                      label
+                      label,
                     )}
                   >
                     Деталі
@@ -348,7 +348,7 @@ export function TenderCardClients({
                     <span
                       className={cn(
                         "font-bold text-[9px] uppercase tracking-tight",
-                        label
+                        label,
                       )}
                     >
                       Викуп: {cargo.price_redemption}
@@ -387,3 +387,5 @@ export function TenderCardClients({
     </>
   );
 }
+
+

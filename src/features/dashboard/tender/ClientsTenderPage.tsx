@@ -47,7 +47,7 @@ export default function ClientsTenderPage() {
       participate_company: searchParams.get("participate_company") || "",
       limit: Number(searchParams.get("limit") || 10),
     }),
-    [searchParams]
+    [searchParams],
   );
 
   const { filters, setFilters, reset } = useFilters(currentParams);
@@ -78,7 +78,7 @@ export default function ClientsTenderPage() {
       newValue = undefined;
     } else {
       const currentValue = String(
-        currentParams[key as keyof typeof currentParams] || ""
+        currentParams[key as keyof typeof currentParams] || "",
       );
       newValue =
         currentValue
@@ -146,7 +146,7 @@ export default function ClientsTenderPage() {
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1 pb-20">
           <div className="grid gap-4">
             {tenders.map((item) => (
               <TenderCardClients
