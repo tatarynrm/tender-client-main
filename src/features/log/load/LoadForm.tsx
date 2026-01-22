@@ -35,6 +35,7 @@ import { useSockets } from "@/shared/providers/SocketProvider";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import { selectStyles } from "./config/style.config";
 import { useLoadById, useLoads } from "../hooks/useLoads";
+import { renderLocationDetails } from "./LocationDetails";
 
 // ---------- Schemas ----------
 const routeSchema = z.object({
@@ -47,6 +48,8 @@ const routeSchema = z.object({
   city: z.string().optional(),
   order_num: z.number(),
   ids_region: z.string().nullable().optional(),
+  street: z.string().optional().nullable(),
+  house: z.string().optional().nullable(),
 });
 
 const trailerSchema = z.object({
@@ -86,7 +89,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const searchParams = useSearchParams();
   const copyId = searchParams.get("copyId");
   const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
-  console.log(copyData,'copydata');
+  console.log(copyData, "copydata");
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
     defaultValues: {
@@ -95,6 +98,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       crm_load_route_from: [
         {
           address: "",
+          street: "",
+          house: "",
+          city: "",
           lat: 0,
           lon: 0,
           ids_route_type: "LOAD_FROM",
@@ -104,6 +110,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       crm_load_route_to: [
         {
           address: "",
+          street: "",
+          house: "",
+          city: "",
           lat: 0,
           lon: 0,
           ids_route_type: "LOAD_TO",
@@ -118,7 +127,6 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       ...defaultValues,
     },
   });
-
 
   const { control, handleSubmit, setValue, clearErrors, reset, watch } = form;
 
@@ -230,23 +238,41 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   }, [copyData, reset, defaultValues]);
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
+      // Зберігаємо дані
       await saveCargo({ ...values, id: defaultValues?.id });
       toast.success("Готово!");
 
-      // ОЧИЩЕННЯ ПІСЛЯ УСПІХУ
+      // 1. Очищаємо чернетку в localStorage у будь-якому випадку після успіху
       localStorage.removeItem(STORAGE_KEY);
 
+      // 2. Якщо ми в режимі РЕДАГУВАННЯ (є defaultValues) — завжди редирект
       if (defaultValues) {
         router.push("/log/load/active");
-      } else if (!isNextCargo) {
+        return;
+      }
+
+      // 3. Якщо це СТВОРЕННЯ (немає defaultValues)
+      if (isNextCargo) {
+        // Якщо обрано "Наступний вантаж":
+        // Просто виводимо повідомлення, форму не скидаємо, нікуди не переходимо.
+        // Користувач може змінити пару полів і натиснути "Зберегти" ще раз.
+        toast.info("Можете створювати наступний вантаж на основі поточного");
+      } else {
+        // Якщо "Наступний вантаж" НЕ обрано:
         reset();
         setCompanyLabel("");
         router.push("/log/load/active");
       }
     } catch (err) {
+      console.error(err);
       toast.error("Помилка збереження");
     }
   };
+  useEffect(() => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.log("❌ Помилки валідації:", form.formState.errors);
+    }
+  }, [form.formState.errors]);
 
   return (
     <div className="max-w-4xl mx-auto mb-10">
@@ -280,11 +306,15 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                               value={formField.value}
                               placeholder="Звідки..."
                               onChange={(location) => {
-                                const addr = location.street
-                                  ? `${location.street}${location.house ? `, ${location.house}` : ""}`
-                                  : location.city || "";
+                                console.log(
+                                  location,
+                                  "LOCATION----------------------1111",
+                                );
 
-                                formField.onChange(addr);
+                                // В інпут записуємо ТІЛЬКИ місто
+                                formField.onChange(location.city || "");
+
+                                // Координати та інші дані
                                 setValue(
                                   `crm_load_route_from.${idx}.lat`,
                                   location.lat,
@@ -305,12 +335,33 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   `crm_load_route_from.${idx}.ids_region`,
                                   location.regionCode || null,
                                 );
+                                setValue(
+                                  `crm_load_route_from.${idx}.street`,
+                                  location.street || null,
+                                );
+                                setValue(
+                                  `crm_load_route_from.${idx}.house`,
+                                  location.house || null,
+                                );
+
+                                // Опційно: якщо серверу все ж потрібна повна адреса текстом у поле address,
+                                // то залиште логіку з вулицею, але в компоненті вище (setQuery) залиште тільки місто.
+                                // Але за вашим запитом — в інпуті має бути місто.
+
                                 clearErrors(
                                   `crm_load_route_from.${idx}.address`,
+                                );
+                                console.log(
+                                  location,
+                                  "LOCATION----------------------",
                                 );
                               }}
                             />
                           </FormControl>
+                          {/* ДОДАЄМО ВИВІД ДАНИХ ПОРУЧ АБО ПІД ІНПУТОМ */}
+                          {renderLocationDetails(
+                            formValues.crm_load_route_from?.[idx],
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -335,6 +386,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   onClick={() =>
                     appendFrom({
                       address: "",
+                      street: "",
+                      house: "",
+                      city: "",
                       lat: 0,
                       lon: 0,
                       ids_route_type: "LOAD_FROM",
@@ -365,11 +419,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                               value={formField.value}
                               placeholder="Куди..."
                               onChange={(location) => {
-                                const addr = location.street
-                                  ? `${location.street}${location.house ? `, ${location.house}` : ""}`
-                                  : location.city || "";
+                                // Записуємо місто в основне поле
+                                formField.onChange(location.city || "");
 
-                                formField.onChange(addr);
                                 setValue(
                                   `crm_load_route_to.${idx}.lat`,
                                   location.lat,
@@ -390,10 +442,24 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   `crm_load_route_to.${idx}.ids_region`,
                                   location.regionCode || null,
                                 );
+                                setValue(
+                                  `crm_load_route_to.${idx}.street`,
+                                  location.street || null,
+                                );
+                                setValue(
+                                  `crm_load_route_to.${idx}.house`,
+                                  location.house || null,
+                                );
+
                                 clearErrors(`crm_load_route_to.${idx}.address`);
                               }}
                             />
                           </FormControl>
+                          {/* ДОДАЄМО ВИВІД ДАНИХ ПОРУЧ АБО ПІД ІНПУТОМ */}
+                          {renderLocationDetails(
+                            formValues.crm_load_route_to?.[idx],
+                          )}
+
                           <FormMessage />
                         </FormItem>
                       )}
@@ -418,6 +484,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   onClick={() =>
                     appendTo({
                       address: "",
+                      street: "",
+                      house: "",
+                      city: "",
                       lat: 0,
                       lon: 0,
                       ids_route_type: "LOAD_TO",

@@ -223,3 +223,13 @@
     z-index: 50;
   }
 }
+
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Додаємо відступ зверху, щоб заголовок не перекривав контент секції */
+section[id] {
+  scroll-margin-top: 80px; 
+}

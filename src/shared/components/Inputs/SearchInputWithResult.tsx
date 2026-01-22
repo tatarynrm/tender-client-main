@@ -75,7 +75,7 @@ export function SearchInput<T extends Company>({
         setLoading(false);
       }
     },
-    [url]
+    [url],
   );
 
   useEffect(() => {

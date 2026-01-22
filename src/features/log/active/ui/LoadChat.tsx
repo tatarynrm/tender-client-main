@@ -181,9 +181,30 @@ export default function LoadChat({
               </p>
             </div>
           ) : comments.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
-              <MessageSquare className="w-12 h-12 mb-4 text-zinc-300" />
-              <p className="text-sm font-medium">Тут поки порожньо</p>
+            <div className="h-full flex flex-col items-center justify-center p-8">
+              <div className="relative group">
+                {/* Декоративне сяйво на фоні */}
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Контейнер іконки з анімацією плавання */}
+                <div className="relative mb-6 transform transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
+                  <div className="flex items-center justify-center w-20 h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm animate-bounce [animation-duration:3s]">
+                    <MessageSquare className="w-10 h-10 text-zinc-300 dark:text-zinc-600 transition-colors duration-300 group-hover:text-blue-500" />
+                  </div>
+
+                  {/* Маленька декоративна "хмаринка" */}
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-4 border-white dark:border-zinc-950 animate-pulse" />
+                </div>
+              </div>
+
+              <div className="space-y-1 text-center">
+                <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100">
+                  Тут поки порожньо
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[180px] leading-relaxed">
+                  Ми чекаємо на ваші перші коментарі
+                </p>
+              </div>
             </div>
           ) : (
             comments.map((msg: any, idx: number) => {

@@ -13,11 +13,11 @@ import { LoadApiItem } from "../../types/load.type";
 import {
   User,
   Building2,
-  MapPin,
   Info,
   Calendar,
   Activity,
-  Truck,
+  X,
+  Map as MapIcon,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 
@@ -33,13 +33,15 @@ export function CargoDetailsDrawer({
   onClose,
 }: CargoDetailsDrawerProps) {
   if (!cargo) return null;
+  console.log(cargo, "CARGO");
 
   return (
     <Drawer open={open} onOpenChange={onClose}>
-      <DrawerContent className="w-full h-[96vh] lg:h-[85vh] flex flex-col bg-white dark:bg-zinc-950 border-none shadow-2xl">
-        <div className="mx-auto w-12 h-1 bg-zinc-300 dark:bg-zinc-800 rounded-full mt-2" />
+      <DrawerContent className="fixed inset-0 lg:inset-x-0 lg:bottom-0 lg:top-auto z-[999] flex h-full lg:h-[85vh] flex-col bg-white dark:bg-zinc-950 border-none shadow-2xl rounded-none lg:rounded-t-[10px]">
+        {/* Handle */}
+        <div className="mx-auto w-12 h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-full mt-3 shrink-0" />
 
-        <DrawerHeader className="px-4 py-2 border-b border-zinc-100 dark:border-zinc-900 flex flex-row items-center justify-between shrink-0">
+        <DrawerHeader className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-900 flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 w-1 h-5 rounded-full" />
             <DrawerTitle className="text-xl font-black tabular-nums">
@@ -49,14 +51,20 @@ export function CargoDetailsDrawer({
               Деталі вантажу
             </span>
           </div>
-          <DrawerClose className="bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-full hover:rotate-90 transition-transform" />
+
+          <DrawerClose className="bg-zinc-100 dark:bg-zinc-900 p-2 rounded-full hover:rotate-90 transition-transform focus:outline-none">
+            <X size={20} className="text-zinc-500" />
+          </DrawerClose>
         </DrawerHeader>
 
-        {/* Головний контейнер без зайвих відступів */}
-        <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
-          {/* ЛІВА ЧАСТИНА: Вся інформація в один екран */}
-          <div className="w-full lg:w-[400px] xl:w-[450px] p-4 space-y-4 overflow-y-auto border-r border-zinc-50 dark:border-zinc-900 shrink-0">
-            {/* Ряд 1: Менеджер та Компанія (в один блок для економії місця) */}
+        {/* ОСНОВНИЙ КОНТЕНТ: 
+            На мобільних (sm) ми дозволяємо всьому контейнеру скролитись (overflow-y-auto).
+            На десктопі (lg) повертаємо flex-row і відключаємо загальний скрол.
+        */}
+        <div className="flex-1 overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row">
+          {/* ЛІВА ЧАСТИНА: Інфо */}
+          <div className="w-full lg:w-[400px] xl:w-[450px] p-4 space-y-4 lg:overflow-y-auto border-r border-zinc-50 dark:border-zinc-900 shrink-0">
+            {/* Менеджер та Компанія */}
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-zinc-50 dark:bg-zinc-900/50 p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <p className="text-[9px] font-black text-zinc-400 uppercase mb-1">
@@ -77,7 +85,7 @@ export function CargoDetailsDrawer({
               </div>
             </div>
 
-            {/* Ряд 2: Маршрут (Компактний таймлайн) */}
+            {/* Маршрут */}
             <div className="bg-white dark:bg-zinc-900/20 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-4 relative">
                 <div className="flex flex-col items-center gap-1 shrink-0">
@@ -106,7 +114,7 @@ export function CargoDetailsDrawer({
               </div>
             </div>
 
-            {/* Ряд 3: Статистика транспорту (Дуже компактна) */}
+            {/* Статистика */}
             <div className="bg-zinc-900 dark:bg-black p-1 rounded-xl shadow-inner">
               <div className="grid grid-cols-4 gap-0.5">
                 {[
@@ -132,8 +140,8 @@ export function CargoDetailsDrawer({
               </div>
             </div>
 
-            {/* Ряд 4: Додаткова інфо та Дати */}
-            <div className="space-y-2">
+            {/* Дати та Інфо */}
+            <div className="space-y-2 pb-2">
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-1.5 text-zinc-400">
                   <Calendar size={12} />
@@ -155,17 +163,28 @@ export function CargoDetailsDrawer({
                 <div className="bg-amber-50/50 dark:bg-amber-900/10 p-3 rounded-xl border border-amber-100/50 dark:border-amber-900/20">
                   <div className="flex gap-2">
                     <Info size={14} className="text-amber-600 shrink-0" />
-                    <p className="text-[11px] leading-snug font-medium text-amber-900/80 dark:text-amber-200/80 line-clamp-3">
+                    <p className="text-[11px] leading-snug font-medium text-amber-900/80 dark:text-amber-200/80">
                       {cargo.load_info}
                     </p>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Розділювач для мобілки перед картою */}
+            <div className="flex lg:hidden items-center gap-2 pt-2 text-zinc-400">
+              <MapIcon size={14} />
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                Карта маршруту
+              </span>
+            </div>
           </div>
 
-          {/* ПРАВА ЧАСТИНА: Карта (на весь залишок місця) */}
-          <div className="flex-1 h-[300px] lg:h-auto bg-zinc-100 dark:bg-zinc-900 relative">
+          {/* ПРАВА ЧАСТИНА: Карта 
+              На мобілці: займає багато місця (наприклад, 500px), щоб її було зручно гортати.
+              На десктопі: займає весь залишок (h-auto).
+          */}
+          <div className="w-full lg:flex-1 h-[450px] md:h-[600px] lg:h-auto bg-zinc-100 dark:bg-zinc-900 relative">
             <CargoMap cargo={cargo} />
           </div>
         </div>
