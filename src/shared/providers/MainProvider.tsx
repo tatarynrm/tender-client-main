@@ -24,7 +24,7 @@ export function MainProvider({ children, profile }: MainProviderProps) {
         enableSystem
         storageKey="ictender-theme"
       >
-        <AuthCheckProvider profile={profile ?? undefined}>
+        <AuthCheckProvider profile={profile}>
           <ClientOnlyProvider>
             <SocketProvider userId={profile?.id ?? null}>
               <FontSizeProvider>{children}</FontSizeProvider>

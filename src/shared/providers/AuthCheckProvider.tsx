@@ -9,25 +9,28 @@ import {
 } from "react";
 import { IUserProfile } from "../types/user.types";
 
+// AuthContext.tsx
 interface AuthContextType {
-  profile?: IUserProfile | null;
-  setProfile: React.Dispatch<React.SetStateAction<IUserProfile | undefined>>;
+  profile: IUserProfile | null; // Прибираємо опціональність для стабільності
+  setProfile: (profile: IUserProfile | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  setProfile: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthCheckProvider = ({
-  profile: initialProfile,
+  profile: serverProfile,
   children,
 }: {
-  profile?: IUserProfile;
+  profile: IUserProfile | null;
   children: ReactNode;
 }) => {
-  const [profile, setProfile] = useState<IUserProfile | undefined>(
-    initialProfile
-  );
+  // Ініціалізуємо стан даними з сервера
+  const [profile, setProfile] = useState<IUserProfile | null>(serverProfile);
+
+  // Синхронізація (якщо проп міняється при навігації)
+  useEffect(() => {
+    setProfile(serverProfile);
+  }, [serverProfile]);
 
   return (
     <AuthContext.Provider value={{ profile, setProfile }}>
@@ -36,4 +39,8 @@ export const AuthCheckProvider = ({
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthCheckProvider");
+  return context;
+};

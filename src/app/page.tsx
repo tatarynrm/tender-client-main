@@ -151,7 +151,7 @@ export default async function HomePage() {
         <div className="absolute top-[40%] -right-[5%] w-[30%] h-[30%] rounded-full bg-teal-500/10 blur-[120px] animate-bounce-slow" />
       </div>
 
-      <MainHeader profile={profile!} />
+      <MainHeader profile={profile ?? undefined} />
 
       {/* HERO SECTION - Робимо акцент на масштабі */}
       <HeroSection profile={profile ?? undefined} />

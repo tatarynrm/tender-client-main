@@ -47,7 +47,6 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-touch-icon.png" }],
   },
-
 };
 // test
 
@@ -57,7 +56,6 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getProfile();
-  console.log(profile, "profile");
 
   return (
     <html lang="en" suppressHydrationWarning className="scrollbar-thin">
@@ -80,7 +78,7 @@ export default async function RootLayout({
           showForHashAnchor={true} // якщо переходиш на хеш-лінк, теж показує
         />
 
-        <MainProvider profile={profile!!}>{children}</MainProvider>
+        <MainProvider profile={profile ?? null}>{children}</MainProvider>
       </body>
     </html>
   );
