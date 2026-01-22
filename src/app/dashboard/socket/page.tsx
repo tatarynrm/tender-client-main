@@ -18,7 +18,7 @@ export default function SocketTestDebug() {
   const triggerSend = async () => {
     if (selectedUsers.length === 0) return alert("Оберіть юзерів!");
 
-    await fetch("http://localhost:7000/test-socket/send", {
+    await fetch(`${process.env.SERVER_URL}/test-socket/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
