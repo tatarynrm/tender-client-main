@@ -17,7 +17,7 @@ export default async function AdminLayout({
   if (profile.is_blocked) redirect("/blocked");
 
   // 👷‍♂️ Працівник ICT → редірект у log
-  if (profile.is_ict && !profile.is_ict_admin) redirect("/log");
+  if (profile.is_ict && !profile.is_admin) redirect("/log");
 
   // 👤 Клієнт → редірект у dashboard
   if (!profile.is_ict && !profile.is_ict_admin) redirect("/dashboard");

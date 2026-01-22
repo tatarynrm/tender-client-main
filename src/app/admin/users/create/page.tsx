@@ -116,7 +116,7 @@ export default function CreateUserPage() {
         // verified: true, // Можливо, ти хочеш, щоб користувач був верифікований
         id_company: data.id_company,
       };
-      const res = await api.post("/users/admin/create-user", userData);
+      const res = await api.post("/admin/user/create", userData);
       console.log(res.data, "res");
       if (res.data.status === "ok") {
         form.reset();

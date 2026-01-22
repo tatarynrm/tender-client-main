@@ -192,7 +192,7 @@ export default function LogSidebar({
   };
 
   const footerLinks = [...defaultFooterLinks];
-  if (profile?.is_ict_admin) {
+  if (profile?.is_admin) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
       { name: "Основна платформа", href: "/dashboard", icon: FileStack },

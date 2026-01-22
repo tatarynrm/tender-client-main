@@ -112,33 +112,41 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     [],
   );
 
-  const updateLocalCache = useCallback(
-    (newItem: LoadApiItem) => {
-      if (!newItem || !newItem.id) return; // Захист від битих даних
+const updateLocalCache = useCallback(
+  (newItem: LoadApiItem) => {
+    if (!newItem || !newItem.id) return;
 
-      queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
-        if (!old?.content) return old;
+    queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
+      if (!old?.content) return old;
 
-        const isMatch = matchesFilters(newItem, filtersRef.current);
+      // 1. Перевіряємо відповідність фільтрам
+      const matchesBaseFilters = matchesFilters(newItem, filtersRef.current);
+      
+      // 2. ДОДАТКОВА ПЕРЕВІРКА: якщо машин 0, то об'єкт НЕ підходить для списку
+      // Припускаємо, що поле називається car_count_actual (як ви вказали)
+      const hasCars = Number(newItem.car_count_actual) > 0;
+      
+      const isMatch = matchesBaseFilters && hasCars;
 
-        // Створюємо новий масив, видаляючи стару копію елемента
-        const filteredContent = old.content.filter((l) => l.id !== newItem.id);
+      // Створюємо новий масив без цього елемента
+      const filteredContent = old.content.filter((l) => l.id !== newItem.id);
 
-        // Якщо підходить - додаємо на початок, якщо ні - просто лишаємо відфільтрований список
-        const newContent = isMatch
-          ? [{ ...newItem }, ...filteredContent] // Створюємо новий об'єкт
-          : filteredContent;
+      // Якщо підходить (є машини + фільтри) - додаємо, якщо ні - просто лишаємо відфільтрований
+      const newContent = isMatch
+        ? [{ ...newItem }, ...filteredContent]
+        : filteredContent;
 
-        return {
-          ...old,
-          content: newContent.slice(0, 50),
-        };
-      });
+      return {
+        ...old,
+        content: newContent.slice(0, 50),
+      };
+    });
 
-      queryClient.setQueryData(["load", newItem.id], { ...newItem });
-    },
-    [queryClient, queryKey, matchesFilters],
-  );
+    // Окремий кеш для одного вантажу теж можна оновити або видалити
+    queryClient.setQueryData(["load", newItem.id], { ...newItem });
+  },
+  [queryClient, queryKey, matchesFilters],
+);
   // Додайте це всередину хука useLoads
   const updateItemOnly = useCallback(
     (newItem: LoadApiItem) => {
@@ -216,7 +224,6 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     };
     // Всередині useEffect для сокетів у useLoads
     const onUpdateComment = (data: LoadApiItem & { sender_id?: number }) => {
-      console.log(data, "DATA");
       const isMine = data.sender_id === profile?.id;
 
       if (!isMine) {
@@ -233,6 +240,12 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       updateLocalCache(data);
       eventBus.emit("load_add_car", data.id);
     };
+    const onUpdateLoadRemoveCar = (data: LoadApiItem) => {
+      console.log(data,'DATA REMOVE CAR');
+      
+      updateLocalCache(data);
+      eventBus.emit("load_remove_car", data.id);
+    };
     socket.on("new_load", onNewLoad);
     socket.on("update_load", onUpdateLoad);
     socket.on("new_load_comment", onUpdateComment);
@@ -240,16 +253,17 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     socket.on("edit_load", onUpdateLoad);
     socket.on("update_load_date", onUpdateLoadDate);
     socket.on("load_add_car", onUpdateLoadAddCar);
+    socket.on("load_remove_car", onUpdateLoadRemoveCar);
 
     return () => {
       socket.off("new_load", onNewLoad);
       socket.off("update_load", onUpdateLoad);
-      socket.off("new_load_comment", onUpdateComment); // ВАЖЛИВО: Додайте відписку
-      socket.off("edit_load", onUpdateLoad);
-      socket.off("edit_load_date", onUpdateLoadDate);
-      socket.off("update_load_date", onUpdateLoad);
+      socket.off("new_load_comment", onUpdateComment);
       socket.off("update_chat_count_load", onUpdateCommentCount);
+      socket.off("edit_load", onUpdateLoad);
+      socket.off("update_load_date", onUpdateLoadDate); // ✅ виправлено
       socket.off("load_add_car", onUpdateLoadAddCar);
+      socket.off("load_remove_car", onUpdateLoadRemoveCar);
     };
   }, [profile?.id, socket, updateLocalCache, updateItemOnly]);
 

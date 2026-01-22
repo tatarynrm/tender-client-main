@@ -17,7 +17,15 @@ import {
   Circle,
   X, // Додано іконку закриття
 } from "lucide-react";
-import { format } from "date-fns";
+import {
+  format,
+  isToday,
+  isYesterday,
+  isWithinInterval,
+  subDays,
+  startOfDay,
+} from "date-fns";
+import { uk } from "date-fns/locale"; // якщо потрібна українська мова
 import { useCargoChat } from "../../hooks/useLoadChat";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { cn } from "@/shared/utils";
@@ -43,7 +51,33 @@ export default function LoadChat({
     cargoId,
     open,
   );
+  const formatChatMessage = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
 
+    // Сьогодні: 14:20
+    if (isToday(date)) {
+      return format(date, "HH:mm");
+    }
+
+    // Вчора: Вчора, 14:20
+    if (isYesterday(date)) {
+      return `Вчора, ${format(date, "HH:mm")}`;
+    }
+
+    // Останні 7 днів: Четвер, 14:20
+    const lastWeek = isWithinInterval(date, {
+      start: startOfDay(subDays(now, 7)),
+      end: now,
+    });
+
+    if (lastWeek) {
+      return format(date, "EEEE, HH:mm", { locale: uk }); // "четвер, 14:20"
+    }
+
+    // Більше тижня тому: 14.01.2024, 14:20
+    return format(date, "dd.MM.yyyy, HH:mm");
+  };
   const isMyComment = useCallback(
     (messageUserId: number | string) => {
       if (!profile?.id) return false;
@@ -202,14 +236,16 @@ export default function LoadChat({
 
                       <div
                         className={cn(
-                          "text-[9px] mt-2 font-bold opacity-0 group-hover:opacity-60 transition-opacity flex items-center gap-1",
+                          "text-[9px] mt-2 font-bold  transition-opacity flex items-center gap-1",
                           mine
                             ? "justify-end text-blue-50"
                             : "justify-start text-zinc-500",
                         )}
                       >
-                        {msg.operation_time &&
-                          format(new Date(msg.operation_time), "HH:mm")}
+                        <span>
+                          {msg.operation_time &&
+                            formatChatMessage(msg.operation_time)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -230,6 +266,7 @@ export default function LoadChat({
           <div className="relative flex items-end gap-2 group">
             <div className="relative flex-1">
               <Textarea
+                autoFocus
                 ref={textAreaRef} // не забудьте про реф, він у вас є в коді
                 value={input} // ПРИВ'ЯЗКА СТАНУ
                 onChange={(e) => {

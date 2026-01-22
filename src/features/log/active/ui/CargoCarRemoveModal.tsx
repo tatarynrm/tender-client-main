@@ -5,7 +5,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarDays, Loader2, Minus, AlertTriangle } from "lucide-react";
+import {
+  CalendarDays,
+  Loader2,
+  Minus,
+  AlertTriangle,
+  Banknote,
+} from "lucide-react";
 import { uk } from "react-day-picker/locale";
 
 import { Button } from "@/shared/components/ui/button";
@@ -98,6 +104,7 @@ export function CargoCarRemoveModal({
     },
   });
 
+  const { isValid } = form.formState;
   const watchedCarCount = form.watch("car_count");
   const isArchiving = Number(watchedCarCount) === carCountActual;
 
@@ -217,8 +224,11 @@ export function CargoCarRemoveModal({
                           selected={field.value}
                           onSelect={(date) => {
                             field.onChange(date);
-                            setIsCalendarOpen(false);
+                            setIsCalendarOpen(false); // Тепер це спрацює, бо Popover слухає стан
                           }}
+                          disabled={(date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0))
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -229,17 +239,29 @@ export function CargoCarRemoveModal({
               />
             </div>
 
-            {/* DROPDOWNS */}
-            <NativeSelect
-              label="Причина скасування"
-              value={form.watch("ids_cancel_type")}
-              onChange={(v) =>
-                form.setValue("ids_cancel_type", v as string, {
-                  shouldValidate: true,
-                })
-              }
-              options={dropdowns?.load_cancel_type_dropdown}
-              placeholder="Оберіть причину..."
+            {/* ПРИЧИНА (Обов'язкова) */}
+            <FormField
+              control={form.control}
+              name="ids_cancel_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <NativeSelect
+                      label="Причина скасування *"
+                      value={field.value} // Використовуємо значення з field
+                      onChange={(v) => {
+                        field.onChange(v); // Оновлюємо значення у формі
+                        form.trigger("ids_cancel_type"); // Одразу перевіряємо валідність
+                      }}
+                      options={dropdowns?.load_cancel_type_dropdown}
+                      placeholder="Оберіть причину..."
+                      // Якщо ваш NativeSelect підтримує передачу помилки, можна додати:
+                      // error={!!form.formState.errors.ids_cancel_type}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
+                </FormItem>
+              )}
             />
 
             <FormField
@@ -248,24 +270,25 @@ export function CargoCarRemoveModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase text-zinc-400">
-                    Ціна закриття
+                    Ціна (ставка)
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      value={field.value ?? ""}
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/[^0-9]/g, "");
-                        field.onChange(raw === "" ? null : Number(raw));
-                      }}
-                      className="h-10 font-bold text-lg"
-                    />
+                    <div className="relative">
+                      <Input
+                        inputMode="numeric"
+                        value={field.value ?? ""}
+                        className="pl-8 font-bold"
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, "");
+                          field.onChange(raw === "" ? null : Number(raw));
+                        }}
+                      />
+                      <Banknote className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
+                    </div>
                   </FormControl>
-                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
-
             {/* ARCHIVE WARNING */}
             {isArchiving && (
               <div className="flex gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
@@ -296,9 +319,11 @@ export function CargoCarRemoveModal({
             <DialogFooter>
               <Button
                 type="submit"
+                // Кнопка заблокована, якщо форма невалідна (немає причини або к-сті)
                 disabled={isLoading}
                 className={cn(
-                  "w-full h-11 font-bold uppercase",
+                  "w-full h-11 font-bold uppercase transition-all",
+
                   isArchiving
                     ? "bg-amber-600 hover:bg-amber-700"
                     : "bg-red-600 hover:bg-red-700",

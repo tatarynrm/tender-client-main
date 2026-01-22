@@ -207,7 +207,7 @@ export default function AdminSidebar({
     { name: "Налаштування", href: "/admin/settings", icon: Settings },
   ];
 
-  if (profile?.is_ict_admin) {
+  if (profile?.is_admin) {
     footerLinks.push(
       { name: "Основна платформа", href: "/dashboard", icon: BarChart },
       { name: "CRM система", href: "/log", icon: FileStack }

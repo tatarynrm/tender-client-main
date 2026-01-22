@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   // --- 🔒 Перевірки доступу ---
   if (!profile) return redirect("/auth/login");
   if (profile.is_blocked) return redirect("/blocked");
-  if (profile.is_ict && !profile.is_ict_admin) return redirect("/log");
+  if (profile.is_ict && !profile.is_admin) return redirect("/log");
 
   // 👤 Клієнт → допускаємо
   return (

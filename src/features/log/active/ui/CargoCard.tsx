@@ -98,6 +98,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     "update_comment",
     "update_load_date", // Додайте це сюди
     "load_add_car", // Додайте це сюди
+    "load_remove_car", // Додайте це сюди
   ]);
   useEffect(() => {
     if (!load.created_at) return;
@@ -167,6 +168,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
       case "load_add_car":
         // Наприклад, сине сяйво для оновлення дати
         return "animate-shake border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-[1.02]";
+      case "load_remove_car":
+        // Наприклад, сине сяйво для оновлення дати
+        return "animate-shake border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-[1.02]";
       case "cargo_shake":
       case "cargo_shake_car_count":
         return "animate-shake border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
@@ -184,7 +188,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     update_comment: { label: "Новий коментар", color: "bg-amber-500" },
     update_load_date: { label: "Час оновлено", color: "bg-blue-600" },
     load_add_car: { label: "Додано авто", color: "bg-blue-600" },
+    load_remove_car: { label: "Відмінено авто", color: "bg-red-600" },
   };
+  console.log(load.author, "АВТОР");
 
   // Більш надійний вибір бейджа
   const currentBadge =
