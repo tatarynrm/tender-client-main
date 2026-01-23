@@ -1,4 +1,3 @@
-// @/shared/components/Charts/Charts.tsx
 "use client";
 
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
@@ -14,12 +13,13 @@ import {
   CartesianGrid,
 } from "recharts";
 import { CustomTooltip } from "./CustomTooltip";
+import { cn } from "@/shared/utils";
 
 const ChartDefs = () => (
   <svg style={{ height: 0, width: 0, position: "absolute" }}>
     <defs>
       <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.2} />
         <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
       </linearGradient>
     </defs>
@@ -36,55 +36,39 @@ export const TendersAreaChart = ({
   const { config } = useFontSize();
 
   return (
-    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 rounded-[2.5rem] shadow-sm transition-all duration-300">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-4 rounded-xl shadow-sm">
       <ChartDefs />
-      {/* Динамічний клас для заголовка */}
-      <h3
-        className={`${config.label} text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-6 font-bold`}
-      >
-        {label || "Графік"}
+      <h3 className={cn(config.label, "text-[10px] text-slate-400 uppercase tracking-wider mb-4 font-bold")}>
+        {label || "Динаміка тендерів"}
       </h3>
-      <ResponsiveContainer
-        width="100%"
-        height={300}
-        className="focus:outline-none"
-      >
-        <AreaChart data={data}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            vertical={false}
-            stroke="currentColor"
-            className="text-slate-200 dark:text-slate-800"
-          />
-          <XAxis
-            dataKey="month"
-            axisLine={false}
-            tickLine={false}
-            dy={10}
-            // Передаємо динамічний розмір шрифту в пікселях
-            tick={{ fill: "#94a3b8", fontSize: config.icon * 0.75 }}
-          />
-          <YAxis hide />
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{
-              stroke: "#3b82f6",
-              // strokeWidth: 2,
-              // strokeDasharray: "5",
-              fill: "transparent", // для BarChart можна додати легкий fill
-            }}
-          />
-
-          <Area
-            type="monotone"
-            dataKey="count"
-            stroke="#3b82f6"
-            strokeWidth={4}
-            fill="url(#areaGradient)"
-            animationDuration={1500}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <div className="h-[180px] w-full"> {/* Зменшено висоту з 300 до 180 */}
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="currentColor"
+              className="text-slate-100 dark:text-slate-800/50"
+            />
+            <XAxis
+              dataKey="month"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#94a3b8", fontSize: 10 }}
+            />
+            <YAxis hide />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#3b82f6", strokeWidth: 1 }} />
+            <Area
+              type="monotone"
+              dataKey="count"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              fill="url(#areaGradient)"
+              animationDuration={1000}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };
@@ -97,41 +81,31 @@ export const DistributionBarChart = ({
   label?: string;
 }) => {
   const { config } = useFontSize();
-  
 
   return (
-    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 rounded-[2.5rem] shadow-sm transition-all duration-300">
-      <h3
-        className={`${config.label} text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-6 font-bold`}
-      >
-        {label || "Графік"}
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-4 rounded-xl shadow-sm">
+      <h3 className={cn(config.label, "text-[10px] text-slate-400 uppercase tracking-wider mb-4 font-bold")}>
+        {label || "Розподіл перевезень"}
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <XAxis
-            dataKey="name"
-            axisLine={false}
-            tickLine={false}
-            dy={10}
-            // Передаємо динамічний розмір шрифту
-            tick={{ fill: "#94a3b8", fontSize: config.icon * 0.75 }}
-          />
-
-          <Tooltip
-            content={<CustomTooltip />}
-            cursor={{
-              fill: "transparent", // для BarChart можна додати легкий fill
-            }}
-          />
-          <Bar
-            dataKey="value"
-            // fill="#8b5cf6"
-            fill="#048c7f"
-            radius={[12, 12, 12, 12]}
-            barSize={32}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="h-[180px] w-full"> {/* Зменшено висоту */}
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#94a3b8", fontSize: 10 }}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+            <Bar
+              dataKey="value"
+              fill="#048c7f"
+              radius={[4, 4, 4, 4]} // Менший радіус для менших барів
+              barSize={20} // Вужчі стовпчики
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };

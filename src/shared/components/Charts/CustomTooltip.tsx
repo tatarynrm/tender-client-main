@@ -4,7 +4,7 @@ import { useFontSize } from "@/shared/providers/FontSizeProvider";
 
 export const CustomTooltip = ({ active, payload, label }: any) => {
   const { config } = useFontSize();
-console.log(active,payload,label,'DATA FORM CHJART');
+
 
   if (active && payload && payload.length) {
     return (

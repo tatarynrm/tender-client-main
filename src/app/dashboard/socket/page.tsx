@@ -7,7 +7,7 @@ export default function SocketTestDebug() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [receivedMessages, setReceivedMessages] = useState<any[]>([]);
 
-  const users = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+  const users = Array.from({ length: 13 }, (_, i) => (i + 1).toString());
 
   const toggleUser = (id: string) => {
     setSelectedUsers((prev) =>
@@ -18,7 +18,7 @@ export default function SocketTestDebug() {
   const triggerSend = async () => {
     if (selectedUsers.length === 0) return alert("Оберіть юзерів!");
 
-    await fetch(`${process.env.SERVER_URL}/test-socket/send`, {
+    await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/test-socket/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

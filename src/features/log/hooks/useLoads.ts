@@ -15,7 +15,7 @@ import { playSound } from "@/shared/helpers/play-sound";
 import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
 import { eventBus } from "@/shared/lib/event-bus";
-import { SOCKET_EVENTS} from "@romannoris/tender-shared-types";
+import { SOCKET_EVENTS } from "@romannoris/tender-shared-types";
 export interface TenderListFilters {
   search?: string;
   status?: string;
@@ -40,7 +40,6 @@ export const useLoads = (filters: TenderListFilters = {}) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { load: socket } = useSockets();
-
   // 1. Формування Query Key та параметрів
   const params = useMemo(() => {
     const p = new URLSearchParams();
