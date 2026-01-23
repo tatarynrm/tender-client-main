@@ -41,11 +41,7 @@ const links: MenuItem[] = [
       { name: "Архів", icon: Archive, href: "/log/load/archive" },
     ],
   },
-  {
-    name: "Тендери",
-    icon: LayoutList,
-    href: "/log/tender",
-  },
+
   {
     name: "Карта",
     icon: Globe,
@@ -71,7 +67,7 @@ export default function LogSidebar({
 }) {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
-
+  const mainLinks = [...links];
   useEffect(() => {
     const saved = localStorage.getItem("userSidebarOpenMenus");
     if (saved) setOpenMenus(JSON.parse(saved));
@@ -89,7 +85,16 @@ export default function LogSidebar({
     if (href === "/log") return pathname === "/log";
     return pathname === href || pathname.startsWith(href + "/");
   };
-
+  // Додаємо тендери тільки якщо користувач адмін
+  if (profile?.is_admin) {
+    // Вставляємо "Тендери" на 3-тю позицію (індекс 2),
+    // або просто через push() в кінець
+    mainLinks.splice(2, 0, {
+      name: "Тендери",
+      icon: LayoutList,
+      href: "/log/tender",
+    });
+  }
   const renderLink = (link: MenuItem, isChild = false) => {
     const { name, href, icon: Icon, children, status, info } = link;
     const activeParent = children?.some((child) => isActive(child.href));
@@ -202,7 +207,7 @@ export default function LogSidebar({
   return (
     <aside className="relative flex flex-col w-64 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-[100dvh] transition-colors duration-300 shrink-0 z-9999">
       <div className="flex-1 min-h-[40vh] overflow-y-auto p-4 space-y-2 custom-scrollbar relative z-10">
-        {links.map((link) => renderLink(link))}
+        {mainLinks.map((link) => renderLink(link))}
       </div>
 
       <div className="border-t border-slate-200 dark:border-white/10 p-4 space-y-2 flex-shrink-0 bg-slate-50/30 dark:bg-black/10 backdrop-blur-md">
