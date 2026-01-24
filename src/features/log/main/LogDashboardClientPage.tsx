@@ -16,6 +16,7 @@ import { PublishedStatisticCard } from "./components/PublishedStatisticCard";
 import { ClosedStatisticCard } from "./components/ClosedStatisticCard";
 import { HeaderWidgetContainer } from "./widgets/HeaderWidgetContainer";
 import { RefreshButton } from "@/shared/components/RefreshButton/RefreshButton";
+import BarChartCountry from "./components/BarChartCountry";
 
 interface Props {
   allData: DashboardStats;
@@ -40,7 +41,7 @@ export default function LogDashboardClientPage({ allData, myData }: Props) {
   // 1. Функція для ручного оновлення
 
   return (
-    <div className="p-1 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto">
+    <div className="p-1 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto pb-60">
       {/* Верхня панель: Віджети + Компактний перемикач */}
 
       <HeaderWidgetContainer />
@@ -113,9 +114,9 @@ export default function LogDashboardClientPage({ allData, myData }: Props) {
           ]}
         />
       </div>
-
+      {/* <BarChartCountry /> */}
       {/* Статус-бар */}
-      <div
+      {/* <div
         className={cn(
           "p-3 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 flex flex-wrap justify-around gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider",
           label,
@@ -139,7 +140,7 @@ export default function LogDashboardClientPage({ allData, myData }: Props) {
             minute: "2-digit",
           })}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

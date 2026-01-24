@@ -1,125 +1,78 @@
 "use client";
-import React, { useState } from "react";
-import AuthWrapper from "./AuthWrapper";
-import { useForm } from "react-hook-form";
-import { LoginSchema, TypeLoginSchema } from "../schemes";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  Input,
-} from "@/shared/components/ui";
-import { useTheme } from "next-themes";
 
-import { useLoginMutation } from "../hooks";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
-const LoginForm = () => {
-  const { theme } = useTheme();
+import { LoginSchema, TypeLoginSchema } from "../schemes";
+import { useLoginMutation } from "../hooks";
+import { InputText } from "@/shared/components/Inputs/InputText";
+import { Button, Form } from "@/shared/components/ui";
+import AuthWrapper from "./AuthWrapper";
 
-  const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
+const LoginForm = () => {
   const [isShowTwoFactor, setIsShhowTwoFactor] = useState(false);
+
   const form = useForm<TypeLoginSchema>({
     resolver: zodResolver(LoginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      code: "",
-    },
+    mode: "onBlur",
+    defaultValues: { email: "", password: "", code: "" },
   });
+
   const { login, isLoadingLogin } = useLoginMutation(setIsShhowTwoFactor);
+
   const onSubmit = (values: TypeLoginSchema) => {
     login({ values });
   };
-  // ✅ Отримуємо поточне значення поля
-  const codeValue = form.watch("code");
 
-  const isCodeValid =
-    codeValue && codeValue.length === 6 && /^\d+$/.test(codeValue);
+  const codeValue = form.watch("code");
+  const isCodeValid = codeValue?.length === 6 && /^\d+$/.test(codeValue);
 
   return (
     <AuthWrapper
       heading="Увійти"
-      description="Щоб увійти на сайт введіть ваш логін та пароль"
+      description="Введіть ваші дані для доступу до кабінету"
       backButtonLabel="Немає аккаунту? Зареєструватись"
       backButtonHref="/auth/register"
       isShowSocial
     >
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
-          {isShowTwoFactor && (
-            <FormField
-              control={form.control}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          {isShowTwoFactor ? (
+            <InputText
               name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>TWO FACTOR CODE</FormLabel>
-                  <FormControl>
-                    <Input
-                      disabled={isLoadingLogin}
-                      placeholder="123456"
-                      maxLength={6} // ✅ обмеження
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              control={form.control}
+              label="Код підтвердження"
+          
+              disabled={isLoadingLogin}
             />
-          )}
-          {!isShowTwoFactor && (
+          ) : (
             <>
-              <FormField
-                control={form.control}
+              <InputText
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingLogin}
-                        placeholder="Ваша електронна адреса"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
                 control={form.control}
+                label="E-mail"
+                type="email"
+         
+                disabled={isLoadingLogin}
+              />
+
+              <InputText
                 name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Пароль</FormLabel>
-                      <Link
-                        className="ml-auto inline-block text-sm underline"
-                        href={"/auth/reset-password"}
-                      >
-                        Забули пароль ?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingLogin}
-                        placeholder="******"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                control={form.control}
+                label="Пароль"
+                type="password"
+       
+                disabled={isLoadingLogin}
+                rightLabel={
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-[10px] uppercase font-bold text-zinc-400 hover:text-teal-600 transition-colors tracking-widest"
+                  >
+                    Забули пароль?
+                  </Link>
+                }
               />
             </>
           )}
@@ -127,9 +80,9 @@ const LoginForm = () => {
           <Button
             type="submit"
             disabled={(isShowTwoFactor && !isCodeValid) || isLoadingLogin}
-            className="w-full"
+            className="w-full h-11 uppercase tracking-[0.2em] font-bold text-xs shadow-lg shadow-teal-500/10 active:scale-[0.98] transition-all"
           >
-            {isShowTwoFactor ? "Підтвердити код" : "Увійти"}
+            {isLoadingLogin ? "Завантаження..." : isShowTwoFactor ? "Підтвердити" : "Увійти"}
           </Button>
         </form>
       </Form>

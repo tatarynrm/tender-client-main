@@ -49,6 +49,8 @@ export type LoadApiItem = {
   comment_last_time: string | null;
   comment_read_time: string | null;
   id_usr: number;
+  date_load: string | Date;
+  date_unload: string | Date;
 };
 
 export interface ValutDropdownItem {

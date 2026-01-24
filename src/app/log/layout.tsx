@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import LogShell from "@/features/log/LogShell";
 import { AuthCheckProvider } from "@/shared/providers/AuthCheckProvider";
 import { getProfile } from "@/shared/server/getProfile";
+import { ModalProvider } from "@/shared/providers/GlobalModalProvider";
+import { RestTimerTracker } from "@/shared/components/Modals/GlobalModals/Trackers/RestTimerTracker";
 
 export default async function LogLayout({
   children,
@@ -17,7 +19,12 @@ export default async function LogLayout({
 
   return (
     // <AuthCheckProvider profile={profile}>
-    <LogShell profile={profile}>{children}</LogShell>
+    <LogShell profile={profile}>
+      <ModalProvider>
+        <RestTimerTracker />
+        {children}
+      </ModalProvider>
+    </LogShell>
     // </AuthCheckProvider>
   );
 }

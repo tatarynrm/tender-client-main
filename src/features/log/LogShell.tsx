@@ -67,7 +67,7 @@ export default function LogShell({
       </aside>
 
       {/* Основний контент */}
-      <div className="flex flex-col flex-1 min-w-0 h-full">
+      <div className="flex flex-col flex-1 min-w-0 h-full ">
         <LogHeader
           onMenuClick={toggleSidebar}
           toggleSidebarState={toggleSidebarState}

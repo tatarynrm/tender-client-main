@@ -8,36 +8,52 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
-  Input,
-  Textarea,
-  Button,
-  Switch,
-  Label,
-  SelectTrigger,
-  SelectValue,
-  Select,
-  SelectContent,
-  SelectItem,
 } from "@/shared/components/ui";
-import AsyncSelect from "react-select/async";
-import { default as ReactSelect } from "react-select";
+
 import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
-import { Minus, Plus } from "lucide-react";
+import {
+  Boxes,
+  CircleDollarSign,
+  Info,
+  Minus,
+  Plus,
+  Truck,
+  Wallet,
+  X,
+} from "lucide-react";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/shared/providers/AuthCheckProvider";
+
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
-import { useSockets } from "@/shared/providers/SocketProvider";
+
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
-import { selectStyles } from "./config/style.config";
+
 import { useLoadById, useLoads } from "../hooks/useLoads";
 import { renderLocationDetails } from "./LocationDetails";
 
+import { InputFinance } from "@/shared/components/Inputs/InputFinance";
+import { InputNumber } from "@/shared/components/Inputs/InputNumber";
+import { SelectFinance } from "@/shared/components/Select/SelectFinance";
+
+import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
+import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
+
+import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
+import { InputDate } from "@/shared/components/Inputs/InputDate";
+import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
 // ---------- Schemas ----------
+// Функція зберігає "чисту" дату без урахування часового поясу
+const toLocalDateString = (date: Date | null) => {
+  if (!date) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 const routeSchema = z.object({
   id: z.number().optional(),
   lat: z.number().optional(),
@@ -69,6 +85,10 @@ const cargoServerSchema = z.object({
   is_price_request: z.boolean().optional(),
   is_collective: z.boolean().optional(),
   car_count_begin: z.number({ message: "Вкажіть кількість" }).min(1).max(100),
+  date_load: z
+    .string({ message: "Дата завантаження є обов'язковою" })
+    .min(1, "Будь ласка, оберіть дату"),
+  date_unload: z.string().nullable().optional(),
 });
 
 export type CargoServerFormValues = z.infer<typeof cargoServerSchema>;
@@ -89,7 +109,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const searchParams = useSearchParams();
   const copyId = searchParams.get("copyId");
   const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
-  console.log(copyData, "copydata");
+  const [isLoadPopoverOpen, setIsLoadPopoverOpen] = useState(false);
+  const [isUnloadPopoverOpen, setIsUnloadPopoverOpen] = useState(false);
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
     defaultValues: {
@@ -124,6 +145,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       car_count_begin: 1,
       is_collective: false,
       is_price_request: false,
+      date_load: toLocalDateString(new Date()),
+      date_unload: null,
+
       ...defaultValues,
     },
   });
@@ -170,18 +194,15 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   }, [defaultValues]);
   const STORAGE_KEY = "load_form_draft";
   // ЕФЕКТ 1: Завантаження даних при старті
+  // ЕФЕКТ 1: Завантаження даних при старті
   useEffect(() => {
-    // Якщо ми редагуємо існуючу заявку (є defaultValues), не підтягуємо чернетку
     if (defaultValues) return;
-
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
       try {
-        const parsedData = JSON.parse(savedData);
-        // reset заповнить форму збереженими даними
-        reset(parsedData);
+        reset(JSON.parse(savedData)); // Просто завантажуємо як є
       } catch (e) {
-        console.error("Помилка парсингу чернетки", e);
+        console.error(e);
       }
     }
   }, [reset, defaultValues]);
@@ -237,6 +258,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     }
   }, [copyData, reset, defaultValues]);
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
+    console.log(values, "values");
+
     try {
       // Зберігаємо дані
       await saveCargo({ ...values, id: defaultValues?.id });
@@ -285,101 +308,96 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* МАРШРУТ (Двоколонковий) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
+              {/* Дата завантаження */}
+              <InputDate
+                name="date_load"
+                control={control}
+                label="Дата завантаження"
+                required
+              />
+
+              {/* Дата розвантаження */}
+              <InputDate
+                name="date_unload"
+                control={control}
+                label="Дата розвантаження"
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* КОЛОНКА: ЗВІДКИ */}
               <div className="space-y-3">
                 {fromFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2">
+                  <div key={field.id} className="flex items-end gap-2 w-full">
                     <FormField
                       control={control}
                       name={`crm_load_route_from.${idx}.address`}
                       render={({ field: formField }) => (
                         <FormItem className="flex-1">
-                          <FormLabel
-                            className={`${config.label} text-slate-400`}
-                          >
-                            {`Адреса завантаження #${idx + 1}`}
-                          </FormLabel>
+                          {/* FormLabel видалено, назва тепер всередині GoogleLocationInput */}
                           <FormControl>
                             <GoogleLocationInput
+                              label={`Адреса завантаження #${idx + 1}`}
                               value={formField.value}
-                              placeholder="Звідки..."
+                              placeholder=" "
                               onChange={(location) => {
-                                console.log(
-                                  location,
-                                  "LOCATION----------------------1111",
-                                );
-
-                                // В інпут записуємо ТІЛЬКИ місто
+                                // 1. Оновлюємо основне поле (місто)
                                 formField.onChange(location.city || "");
 
-                                // Координати та інші дані
-                                setValue(
-                                  `crm_load_route_from.${idx}.lat`,
-                                  location.lat,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.lon`,
-                                  location.lng,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.country`,
-                                  location.countryCode,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.city`,
-                                  location.city,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.ids_region`,
-                                  location.regionCode || null,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.street`,
-                                  location.street || null,
-                                );
-                                setValue(
-                                  `crm_load_route_from.${idx}.house`,
-                                  location.house || null,
+                                // 2. Створюємо карту відповідності: ключ у формі -> значення з location
+                                const fieldsMap = {
+                                  lat: location.lat,
+                                  lon: location.lng, // тут lng перетворюємо на lon
+                                  country: location.countryCode,
+                                  city: location.city,
+                                  ids_region: location.regionCode || null,
+                                  street: location.street || null,
+                                  house: location.house || null,
+                                };
+
+                                // 3. Оновлюємо всі поля за один прохід
+                                Object.entries(fieldsMap).forEach(
+                                  ([key, value]) => {
+                                    setValue(
+                                      `crm_load_route_from.${idx}.${key}` as any,
+                                      value,
+                                    );
+                                  },
                                 );
 
-                                // Опційно: якщо серверу все ж потрібна повна адреса текстом у поле address,
-                                // то залиште логіку з вулицею, але в компоненті вище (setQuery) залиште тільки місто.
-                                // Але за вашим запитом — в інпуті має бути місто.
-
+                                // 4. Очищаємо помилку
                                 clearErrors(
                                   `crm_load_route_from.${idx}.address`,
-                                );
-                                console.log(
-                                  location,
-                                  "LOCATION----------------------",
                                 );
                               }}
                             />
                           </FormControl>
-                          {/* ДОДАЄМО ВИВІД ДАНИХ ПОРУЧ АБО ПІД ІНПУТОМ */}
+
+                          {/* Вивід деталей (країна, місто тощо) */}
                           {renderLocationDetails(
                             formValues.crm_load_route_from?.[idx],
                           )}
-                          <FormMessage />
+
+                          <FormMessage className="ml-1 text-[10px] uppercase font-bold" />
                         </FormItem>
                       )}
                     />
+
+                    {/* Кнопка видалення (якщо більше однієї точки завантаження) */}
                     {fromFields.length > 1 && (
-                      <Button
+                      <AppButton
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1 text-red-400 hover:text-red-500"
+                        className="mb-1.5 h-10 w-10 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                         onClick={() => removeFrom(idx)}
                       >
                         <Minus size={16} />
-                      </Button>
+                      </AppButton>
                     )}
                   </div>
                 ))}
-                <Button
+                <AppButton
                   type="button"
                   variant="ghost"
                   className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
@@ -397,87 +415,83 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   }
                 >
                   <Plus size={14} className="mr-1" /> Точка завантаження
-                </Button>
+                </AppButton>
               </div>
 
               {/* КОЛОНКА: КУДИ */}
               <div className="space-y-3">
                 {toFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2">
+                  <div key={field.id} className="flex items-end gap-2 w-full">
                     <FormField
                       control={control}
                       name={`crm_load_route_to.${idx}.address`}
                       render={({ field: formField }) => (
                         <FormItem className="flex-1">
-                          <FormLabel
-                            className={`${config.label} text-slate-400`}
-                          >
-                            {`Адреса розвантаження #${idx + 1}`}
-                          </FormLabel>
+                          {/* Старий FormLabel видаляємо, передаємо назву в label пропс нижче */}
                           <FormControl>
                             <GoogleLocationInput
+                              label={`Адреса розвантаження #${idx + 1}`}
                               value={formField.value}
-                              placeholder="Куди..."
+                              placeholder=" "
                               onChange={(location) => {
-                                // Записуємо місто в основне поле
+                                // 1. Оновлюємо основне видиме поле
                                 formField.onChange(location.city || "");
 
-                                setValue(
-                                  `crm_load_route_to.${idx}.lat`,
-                                  location.lat,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.lon`,
-                                  location.lng,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.country`,
-                                  location.countryCode,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.city`,
-                                  location.city,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.ids_region`,
-                                  location.regionCode || null,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.street`,
-                                  location.street || null,
-                                );
-                                setValue(
-                                  `crm_load_route_to.${idx}.house`,
-                                  location.house || null,
+                                // 2. Створюємо об'єкт з даними, де ключі точно збігаються з полями форми
+                                const locationData = {
+                                  lat: location.lat,
+                                  lon: location.lng,
+                                  country: location.countryCode,
+                                  city: location.city,
+                                  ids_region: location.regionCode || null,
+                                  street: location.street || null,
+                                  house: location.house || null,
+                                };
+
+                                // 3. Оновлюємо все однією дією через ітерацію ключі
+                                Object.entries(locationData).forEach(
+                                  ([key, value]) => {
+                                    setValue(
+                                      `crm_load_route_to.${idx}.${key}` as any,
+                                      value,
+                                      {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                      },
+                                    );
+                                  },
                                 );
 
                                 clearErrors(`crm_load_route_to.${idx}.address`);
                               }}
                             />
                           </FormControl>
-                          {/* ДОДАЄМО ВИВІД ДАНИХ ПОРУЧ АБО ПІД ІНПУТОМ */}
+
+                          {/* Деталі локації (місто, країна тощо) під інпутом */}
                           {renderLocationDetails(
                             formValues.crm_load_route_to?.[idx],
                           )}
 
-                          <FormMessage />
+                          <FormMessage className="ml-1 text-[10px] uppercase font-bold" />
                         </FormItem>
                       )}
                     />
+
+                    {/* Кнопка видалення, вирівняна по центру інпуту (не лейблу) */}
                     {toFields.length > 1 && (
-                      <Button
+                      <AppButton
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1 text-red-400 hover:text-red-500"
+                        className="mb-1.5 h-10 w-10 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                         onClick={() => removeTo(idx)}
                       >
                         <Minus size={16} />
-                      </Button>
+                      </AppButton>
                     )}
                   </div>
                 ))}
-                <Button
+                <AppButton
                   type="button"
                   variant="ghost"
                   className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
@@ -495,264 +509,116 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   }
                 >
                   <Plus size={14} className="mr-1" /> Точка розвантаження
-                </Button>
+                </AppButton>
               </div>
             </div>
 
             {/* КЛІЄНТ ТА ТРАНСПОРТ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={control}
+            <div className="grid grid-cols-1  gap-4">
+              <InputAsyncSelectCompany
                 name="id_client"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={config.label}>Клієнт</FormLabel>
-                    <AsyncSelect
-                      cacheOptions
-                      defaultOptions
-                      placeholder="Пошук клієнта..."
-                      noOptionsMessage={({ inputValue }) =>
-                        !inputValue ? "Введіть назву..." : "Не знайдено"
-                      }
-                      loadOptions={async (v) => {
-                        if (v.length < 2) return [];
-                        const { data } = await api.get(`/company/name/${v}`);
-                        return data.map((c: any) => ({
-                          value: c.id,
-                          label: c.company_name,
-                        }));
-                      }}
-                      styles={selectStyles(config) as any}
-                      onChange={(opt: any) => {
-                        field.onChange(opt?.value || null);
-                        setCompanyLabel(opt?.label || "");
-                      }}
-                      value={
-                        field.value
-                          ? {
-                              value: field.value,
-                              label: companyLabel || "Завантаження...",
-                            }
-                          : null
-                      }
-                      isClearable
-                    />
-                  </FormItem>
-                )}
+                control={control}
+                label="Клієнт"
+                displayValue={companyLabel} // Ваш існуючий state
+                setDisplayValue={setCompanyLabel} // Ваш існуючий setState
+                loadOptions={async (v) => {
+                  if (v.length < 2) return [];
+                  const { data } = await api.get(`/company/name/${v}`);
+                  return data.map((c: any) => ({
+                    value: c.id,
+                    label: c.company_name,
+                  }));
+                }}
               />
-              <FormField
+              <InputMultiSelect
                 control={control}
                 name="crm_load_trailer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={config.label}>
-                      Тип транспорту
-                    </FormLabel>
-                    <ReactSelect
-                      isMulti
-                      closeMenuOnSelect={false}
-                      blurInputOnSelect={false}
-                      options={truckList}
-                      styles={selectStyles(config) as any}
-                      placeholder="Оберіть типи..."
-                      noOptionsMessage={({ inputValue }) => "Не знайдено"}
-                      value={truckList.filter((t) =>
-                        field.value?.some(
-                          (v: any) => v.ids_trailer_type === t.value,
-                        ),
-                      )}
-                      onChange={(opts: any) =>
-                        field.onChange(
-                          opts?.map((o: any) => ({
-                            ids_trailer_type: o.value,
-                          })) || [],
-                        )
-                      }
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Тип транспорту"
+                options={truckList}
               />
             </div>
 
             {/* ОПИС, КІЛЬКІСТЬ, ЦІНА */}
             <div className="space-y-3">
-              <FormField
-                control={control}
+              <InputTextarea
                 name="load_info"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={`${config.label} text-xs`}>
-                      Деталі вантажу
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className={`${config.main} min-h-[45px] h-12 rounded-xl py-2 px-3 text-sm`}
-                        placeholder="Вантаж, вага, об'єм..."
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                control={control}
+                label="Деталі вантажу"
+                icon={Info} // Можна змінити на будь-яку іншу
               />
 
               <div className="grid grid-cols-3 gap-3">
-                <FormField
-                  control={control}
+                <InputNumber
                   name="car_count_begin"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={`${config.label} text-xs`}>
-                        К-сть машин
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          className="h-10 rounded-xl"
-                          // Використовуємо порожній рядок, якщо значення null/undefined
-                          value={field.value ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            // Якщо рядок порожній, записуємо null (це дозволить стерти цифру)
-                            // Якщо ні — перетворюємо на число
-                            field.onChange(val === "" ? "" : Number(val));
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
                   control={control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={`${config.label} text-xs`}>
-                        Ставка
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          className="h-10 rounded-xl"
-                          placeholder="0.00"
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? null
-                                : Number(e.target.value),
-                            )
-                          }
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                  label="К-сть машин"
+                  icon={Truck} // Можна змінити на будь-яку іншу
                 />
-                <FormField
+                <InputFinance
+                  name="price"
+                  control={form.control}
+                  label="Бюджет перевезення"
+                  currency="₴"
+                  icon={Wallet}
+                  onChange={(val) => console.log("Чисте число:", val)}
+                />
+                <SelectFinance
                   control={control}
                   name="ids_valut"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className={`${config.label} text-xs`}>
-                        Валюта
-                      </FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger className="h-10 rounded-xl">
-                          <SelectValue placeholder="UAH" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {valutList.map((v) => (
-                            <SelectItem key={v.value} value={v.value}>
-                              {v.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
+                  label="Валюта"
+                  options={valutList.slice(0, 4)} // Ваш масив [{label: 'UAH', value: '1'}]
+                  // icon={Wallet} // Можна змінити іконку за бажанням
                 />
               </div>
             </div>
 
             {/* ПЕРЕМИКАЧІ */}
-            <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-white/5 rounded-2xl items-center justify-between border border-slate-100 dark:border-white/5">
-              <div className="flex gap-6">
-                <FormField
+            <div className="flex flex-wrap gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl items-center justify-between border border-slate-200 dark:border-white/10 shadow-sm">
+              <div className="flex gap-8">
+                <InputSwitch
                   control={control}
                   name="is_collective"
-                  render={({ field }) => (
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        id="is_coll"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label
-                        htmlFor="is_coll"
-                        className={`${config.label} cursor-pointer`}
-                      >
-                        Збірний
-                      </Label>
-                    </div>
-                  )}
+                  label="Збірний вантаж"
+                  icon={Boxes}
                 />
-                <FormField
+
+                <InputSwitch
                   control={control}
                   name="is_price_request"
-                  render={({ field }) => (
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        id="is_req"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label
-                        htmlFor="is_req"
-                        className={`${config.label} cursor-pointer`}
-                      >
-                        Запит ціни
-                      </Label>
-                    </div>
-                  )}
+                  label="Запит ціни"
+                  icon={CircleDollarSign}
                 />
               </div>
 
-              <div className="flex items-center gap-3 bg-blue-50/50 dark:bg-blue-500/10 px-3 py-2 rounded-xl border border-blue-100 dark:border-blue-500/20">
-                <div className="flex items-center gap-1">
-                  <Label
-                    htmlFor="is_next"
-                    className={`${config.label} text-blue-600 dark:text-blue-400 cursor-pointer font-semibold`}
-                  >
-                    Ще одну
-                  </Label>
+              {/* Синій блок "Ще одну" — залишаємо акцентним */}
+              <div className="flex items-center gap-3 bg-blue-50/50 dark:bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-500/20 transition-all hover:bg-blue-50">
+                <div className="flex items-center gap-2">
+                  <InputSwitch
+                    id="is_next"
+                    checked={isNextCargo}
+                    label="Ще одну"
+                    onCheckedChange={setIsNextCargo}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
                   <MyTooltip text="Форма не буде очищена після збереження" />
                 </div>
-                <Switch
-                  id="is_next"
-                  checked={isNextCargo}
-                  onCheckedChange={setIsNextCargo}
-                />
               </div>
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button
+              <AppButton
                 type="submit"
-                disabled={isLoading}
-                className="h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg transition-all active:scale-95"
+                isLoading={isLoading} // Спіннер з'явиться автоматично
+                size="lg" // Використовуємо наш розмір (h-13) або передай className для h-12
+                className="px-10 shadow-lg" // Додаткові стилі, якщо потрібно
               >
-                {isLoading
-                  ? "Збереження..."
-                  : copyId
-                    ? "Створити копію"
-                    : defaultValues
-                      ? "Оновити дані"
-                      : "Опублікувати"}
-              </Button>
+                {/* Логіка тексту залишається такою ж, але без перевірки isLoading, бо компонент сам її обробить */}
+                {copyId
+                  ? "Створити копію"
+                  : defaultValues
+                    ? "Оновити дані"
+                    : "Опублікувати"}
+              </AppButton>
             </div>
           </form>
         </Form>

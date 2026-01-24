@@ -11,7 +11,7 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col">
       <Logo />
-      <div className="p-3 relative z-10 bg-background">
+      <div className="p-3 relative  ">
         <RegisterForm />
       </div>
     </div>

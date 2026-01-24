@@ -22,13 +22,15 @@ import { TenderCardManagers } from "./components/TenderCardManager";
 
 import { useTenderListManagers } from "../hooks/useTenderManagersList";
 import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
+import { useModal } from "@/shared/providers/GlobalModalProvider";
 
 export default function ManagersTenderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tenderFilters } = useTenderManagersFormData();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
-
+const { openModal } = useModal();
   // 1. Керування видимістю інструментів (унікальний ключ "tender_list")
   const { isVisible, toggle } = useVisibilityControl("tender_list");
 
@@ -102,7 +104,7 @@ export default function ManagersTenderPage() {
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}
       />
-
+<AppButton onClick={() => openModal('rest')}>Modal open</AppButton>
       <Button
         variant="ghost"
         size="sm"

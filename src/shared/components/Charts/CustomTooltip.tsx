@@ -5,7 +5,6 @@ import { useFontSize } from "@/shared/providers/FontSizeProvider";
 export const CustomTooltip = ({ active, payload, label }: any) => {
   const { config } = useFontSize();
 
-
   if (active && payload && payload.length) {
     return (
       <div
@@ -43,9 +42,6 @@ export const CustomTooltip = ({ active, payload, label }: any) => {
                   className={`${config.main} font-bold text-slate-900 dark:text-white`}
                 >
                   {entry.value.toLocaleString()}
-                  <span className="ml-1 text-[10px] font-medium text-emerald-500">
-                    +4%
-                  </span>
                 </span>
               </div>
             </div>

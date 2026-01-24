@@ -1,73 +1,60 @@
 "use client";
-import React, { useState } from "react";
-import AuthWrapper from "./AuthWrapper";
+
+import React from "react";
 import { useForm } from "react-hook-form";
-import { ResetPasswordSchema, TypeResetPasswordSchema } from "../schemes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Button,
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  Input,
-} from "@/shared/components/ui";
-import { useTheme } from "next-themes";
+import { Mail } from "lucide-react";
+
+import { ResetPasswordSchema, TypeResetPasswordSchema } from "../schemes";
 import { useResetPasswordMutation } from "../hooks";
+import { InputText } from "@/shared/components/Inputs/InputText";
+import { Button, Form } from "@/shared/components/ui";
+import AuthWrapper from "./AuthWrapper";
 
 const ResetPasswordForm = () => {
-  const { theme } = useTheme();
-
   const form = useForm<TypeResetPasswordSchema>({
     resolver: zodResolver(ResetPasswordSchema),
+    mode: 'onTouched',
     defaultValues: {
       email: "",
     },
   });
 
   const { resetPassword, isLoadingReset } = useResetPasswordMutation();
+
   const onSubmit = (values: TypeResetPasswordSchema) => {
     resetPassword({ values });
   };
+
   return (
     <AuthWrapper
       heading="Скидання паролю"
-      description="Введіть вашу електронну адресу щобю ми могли надіслати вам електронний лист з інструкціями"
-      backButtonLabel="Увійти в аккаунт"
+      description="Введіть e-mail для отримання інструкцій щодо відновлення доступу"
+      backButtonLabel="Повернутися до входу"
       backButtonHref="/auth/login"
     >
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
+          className="space-y-5"
         >
-          <FormField
-            control={form.control}
+          <InputText
             name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>E-mail</FormLabel>
-                <FormControl>
-                  <Input
-                    disabled={isLoadingReset}
-                    placeholder="Ваша електронна адреса"
-                    type="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            control={form.control}
+            label="Електронна адреса"
+            type="email"
+            icon={Mail }
+            disabled={isLoadingReset}
+            className="mt-2"
           />
 
           <Button
+            type="submit"
             loading={isLoadingReset}
             disabled={isLoadingReset}
-            type="submit"
+            className="w-full h-11 uppercase tracking-[0.2em] font-bold text-xs shadow-lg shadow-teal-500/10 transition-all active:scale-[0.98]"
           >
-            Скинути пароль
+            Надіслати інструкції
           </Button>
         </form>
       </Form>

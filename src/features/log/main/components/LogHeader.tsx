@@ -9,6 +9,7 @@ import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSetting
 import { cn } from "@/shared/utils";
 import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 
 export default function LogHeader({
   onMenuClick,
@@ -22,16 +23,8 @@ export default function LogHeader({
   profile: IUserProfile;
 }) {
   // Ці дані будуть надходити з вашого Context, Redux, Zustand або з сервера
-  const currentUser = {
-    name: "Олег Петренко",
-    email: "oleg.p@example.com",
-    avatar: "https://github.com/shadcn.png", // Приклад URL аватара
-  };
-  console.log(profile, "PROFILEEEEEEEEEEEE");
-  console.log(
-    `${process.env.NEXT_PUBLIC_SERVER_URL}${profile?.avatar_path}`,
-    "PROFILEEEEEEEEEEEE",
-  );
+
+
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
   // 2. Будуємо шлях, тільки якщо є аватар у профілі
@@ -40,11 +33,10 @@ export default function LogHeader({
     ? `${baseUrl.replace(/\/$/, "")}/${profile.avatar_path.replace(/^\//, "")}`
     : undefined;
 
-
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
       {/* Ліва частина: Управління та Профіль */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 relative">
         {/* Кнопка мобільного меню */}
         <button
           onClick={onMenuClick}
@@ -54,7 +46,7 @@ export default function LogHeader({
         </button>
 
         {/* Перемикач сайдбару (Десктоп) */}
-        <div className="hidden md:flex items-center">
+        <div className="hidden md:flex items-center relative">
           {closeSidebarState ? (
             <motion.div
               initial={{ rotate: 0, scale: 0.9 }}
@@ -83,22 +75,6 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
-
-        {/* Інформація про користувача */}
-        <div className="hidden lg:flex flex-col border-l border-slate-200 dark:border-white/10 pl-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white truncate max-w-[250px]">
-              {profile?.company_name_full}
-            </span>
-            {profile?.is_ict_admin && (
-              <ShieldCheck size={14} className="text-blue-500" />
-            )}
-          </div>
-          <span className="text-xs text-slate-500 font-bold opacity-70">
-            {profile?.surname} {profile?.name?.charAt(0)}.
-            {profile?.last_name?.charAt(0)}.
-          </span>
-        </div>
       </div>
 
       {/* Права частина: Налаштування та Дії */}
@@ -115,8 +91,8 @@ export default function LogHeader({
           <DynamicHeaderMenu profile={profile} />
         </div>
         <UserAvatarMenu
-          userName={currentUser.name}
-          userEmail={currentUser.email}
+          userName={profile.name}
+          userEmail={profile.email}
           avatarUrl={avatarUrl}
         />
       </div>

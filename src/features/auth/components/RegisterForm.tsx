@@ -1,9 +1,23 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import AuthWrapper from "./AuthWrapper";
 import { useForm } from "react-hook-form";
-import { RegisterSchema, TypeRegisterSchema } from "../schemes";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  User,
+  Phone,
+  Mail,
+  Lock,
+  Building2,
+  Fingerprint,
+  MapPin,
+  Briefcase,
+} from "lucide-react";
+
+import { RegisterSchema, TypeRegisterSchema } from "../schemes";
+import { userRegisterMutation } from "../hooks";
+import api from "@/shared/api/instance.api";
+import { InputText } from "@/shared/components/Inputs/InputText";
 import {
   Button,
   Form,
@@ -12,8 +26,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  Input,
-  PhoneInput,
+  PhoneInput, // Переконайся, що імпорт працює
   Select,
   SelectContent,
   SelectItem,
@@ -21,18 +34,14 @@ import {
   SelectValue,
   Switch,
 } from "@/shared/components/ui";
-import { useTheme } from "next-themes";
-
-import { userRegisterMutation } from "../hooks";
-import api from "@/shared/api/instance.api";
+import AuthWrapper from "./AuthWrapper";
 
 const RegisterForm = () => {
-  const { theme } = useTheme();
-
   const [preRegisterData, setPreRegisterData] = useState<any>({});
 
   const form = useForm<TypeRegisterSchema>({
     resolver: zodResolver(RegisterSchema),
+    mode: "onChange",
     defaultValues: {
       surname: "",
       name: "",
@@ -44,24 +53,33 @@ const RegisterForm = () => {
       company_name: "",
       company_edrpou: "",
       company_vat_payer: false,
+      company_carrier: false,
+      company_expedition: false,
+      company_freighter: false,
     },
   });
 
   const { register, isLoadingRegister } = userRegisterMutation();
 
   const onSubmit = (values: TypeRegisterSchema) => {
-    register({ values });
-    // form.reset();
+    register(
+      { values },
+      {
+        onSuccess: () => {
+          form.reset(); // Очищує всі поля форми до defaultValues
+          // Тут також можна додати toast.success("Реєстрація успішна!");
+        },
+      },
+    );
   };
+
   useEffect(() => {
     const getPreRegisterData = async () => {
       try {
         const { data } = await api.get("/auth/registerFormData");
-
- 
         setPreRegisterData(data.content);
       } catch (error) {
-        console.log(error);
+        console.error("Помилка завантаження даних:", error);
       }
     };
     getPreRegisterData();
@@ -70,340 +88,214 @@ const RegisterForm = () => {
   return (
     <AuthWrapper
       heading="Реєстрація"
-      description="Зареєструйтесь щоб мати можливість увійти на сайт"
-      backButtonLabel="Вже є аккаунт ? Увійти"
+      description="Створіть корпоративний аккаунт для роботи з платформою"
+      backButtonLabel="Вже є аккаунт? Увійти"
       backButtonHref="/auth/login"
       isShowSocial
       isFullSize
     >
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-2 flex flex-col"
-          onChange={() => console.log(form.getValues())}
-        >
-          <div className="flex flex-col justify-between md:flex-row gap-3">
-            {/* User Section */}
-            <div className="p-6 bg-white dark:bg-gray-800 shadow-md rounded-2xl space-y-4 w-full">
-              <h2 className="text-lg font-semibold mb-2">Дані користувача</h2>
-              <FormField
-                control={form.control}
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Секція Користувача */}
+            <div className="flex-1 p-5 bg-white dark:bg-slate-900 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-4 shadow-sm">
+              <h2 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-4 flex items-center gap-2">
+                <User size={14} /> Дані користувача
+              </h2>
+
+              <InputText
                 name="surname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Прізвище</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="Прізвище"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
                 control={form.control}
+                label="Прізвище"
+                
+                disabled={isLoadingRegister}
+              />
+              <InputText
                 name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ім'я</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="Ім'я"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
                 control={form.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>По-батькові</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="По-батькові"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="Ім'я"
+                // leftIcon={<User />}
+                disabled={isLoadingRegister}
               />
+              <InputText
+                name="last_name"
+                control={form.control}
+                label="По-батькові"
+                icon={User}
+                disabled={isLoadingRegister}
+              />
+
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Контактний номер телефону</FormLabel>
+                  <FormItem className="flex flex-col space-y-1.5">
+                    <FormLabel className="text-[11px] font-bold uppercase text-zinc-400 ml-1">
+                      Контактний номер
+                    </FormLabel>
                     <FormControl>
                       <PhoneInput
-                        defaultCountry="UA" // встановлює +380 для України
+                        defaultCountry="UA"
                         international
                         disabled={isLoadingRegister}
-                        value={field.value} // передаємо значення з RHF
-                        onChange={field.onChange} // передаємо onChange з RHF
+                        value={field.value}
+                        onChange={field.onChange}
+                        className="flex h-11 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[10px] uppercase font-black tracking-tight" />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="Ваша електронна адреса"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Пароль</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="******"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="passwordRepeat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Повторіть пароль</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="******"
-                        type="password"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            {/* Company Section */}
-            <div className="p-6 bg-white dark:bg-gray-800 shadow-md rounded-2xl space-y-4 w-full">
-              <h2 className="text-lg font-semibold mb-2">Дані компанії</h2>
-              <FormField
+              <InputText
+                name="email"
                 control={form.control}
-                name="company_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Назва компанії</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="Назва компанії"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label="E-mail"
+                type="email"
+                icon={Mail}
+                disabled={isLoadingRegister}
               />
-              <FormField
-                control={form.control}
-                name="company_edrpou"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ЄДРПОУ / ІПН</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="ЄДРПОУ код"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="company_address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Юридична адреса компанії</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoadingRegister}
-                        placeholder="Адреса, вул"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex flex-col xl:flex-row md:gap-4 gap-6">
-                {/* Форма власності компанії */}
-                <FormField
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputText
+                  name="password"
                   control={form.control}
-                  name="company_form"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Форма власності компанії</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="ФОП / ТОВ ..."
-                          disabled={isLoadingRegister}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label="Пароль"
+                  type="password"
+                  icon={Lock}
+                  disabled={isLoadingRegister}
+                  onChange={() => {
+                    // Якщо в полі повтору вже щось написано — перевіряємо його знову
+                    if (form.getValues("passwordRepeat")) {
+                      form.trigger("passwordRepeat");
+                    }
+                  }}
                 />
 
-                {/* Ваша країна */}
+                <InputText
+                  name="passwordRepeat"
+                  control={form.control}
+                  label="Повтор пароля"
+                  type="password"
+                  icon={Lock }
+                  disabled={isLoadingRegister}
+                />
+              </div>
+            </div>
+
+            {/* Секція Компанії */}
+            <div className="flex-1 p-5 bg-white dark:bg-slate-900 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-4 shadow-sm">
+              <h2 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-4 flex items-center gap-2">
+                <Building2 size={14} /> Дані компанії
+              </h2>
+
+              <InputText
+                name="company_name"
+                control={form.control}
+                label="Назва компанії"
+                icon={Building2}
+                disabled={isLoadingRegister}
+              />
+              <InputText
+                name="company_edrpou"
+                control={form.control}
+                label="ЄДРПОУ / ІПН"
+                icon={Fingerprint}
+                disabled={isLoadingRegister}
+              />
+              <InputText
+                name="company_address"
+                control={form.control}
+                label="Юридична адреса"
+                icon={MapPin }
+                disabled={isLoadingRegister}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center items-center justify-center">
+                <InputText
+                  name="company_form"
+                  control={form.control}
+                  label="Форма (ФОП/ТОВ)"
+                  icon={Briefcase }
+                  disabled={isLoadingRegister}
+                />
+
                 <FormField
                   control={form.control}
                   name="ids_country"
                   render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>Країна</FormLabel>
-                      <FormControl>
-                        <Select
-                          disabled={isLoadingRegister}
-                          value={field.value?.toString() || ""}
-                          onValueChange={(val) => field.onChange(val)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Вкажіть країну" />
+                    <FormItem className="flex flex-col space-y-1.5">
+                      <Select
+                        disabled={isLoadingRegister}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-11 border-zinc-200 dark:border-zinc-800 bg-transparent text-[13px]">
+                            <SelectValue placeholder="Оберіть країну" />
                           </SelectTrigger>
-                          <SelectContent>
-                            {preRegisterData?.country_dropdown?.map(
-                              (
-                                item: { country_name: any; ids: any },
-                                idx: React.Key | null | undefined
-                              ) => (
-                                <SelectItem key={idx} value={String(item.ids)}>
-                                  {item.country_name}
-                                </SelectItem>
-                              )
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Платник ПДВ */}
-                <FormField
-                  control={form.control}
-                  name="company_vat_payer"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center mt-4 md:mt-0">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoadingRegister}
-                        />
-                      </FormControl>
-                      <FormLabel className="mr-2">Платник ПДВ?</FormLabel>
+                        </FormControl>
+                        <SelectContent>
+                          {preRegisterData?.country_dropdown?.map(
+                            (item: any) => (
+                              <SelectItem
+                                key={item.ids}
+                                value={String(item.ids)}
+                              >
+                                {item.country_name}
+                              </SelectItem>
+                            ),
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-[10px] uppercase font-black tracking-tight" />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="flex flex-col justify-between md:flex-row">
-                <FormField
-                  control={form.control}
-                  name="company_carrier"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center mt-4 md:mt-0">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoadingRegister}
-                        />
-                      </FormControl>
-                      <FormLabel className="mr-2">Я перевізник</FormLabel>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="company_expedition"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center mt-4 md:mt-0">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoadingRegister}
-                        />
-                      </FormControl>
-                      <FormLabel className="mr-2">Я експедитор</FormLabel>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="company_freighter"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center mt-4 md:mt-0">
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoadingRegister}
-                        />
-                      </FormControl>
-                      <FormLabel className="mr-2">Я замовник</FormLabel>
-                    </FormItem>
-                  )}
-                />
+              {/* Перемикачі */}
+              <div className="space-y-3 pt-2 border-t border-zinc-50 dark:border-zinc-800">
+                {[
+                  { name: "company_vat_payer", label: "Платник ПДВ" },
+                  { name: "company_carrier", label: "Я перевізник" },
+                  { name: "company_expedition", label: "Я експедитор" },
+                  { name: "company_freighter", label: "Я замовник" },
+                ].map((item) => (
+                  <FormField
+                    key={item.name}
+                    control={form.control}
+                    name={item.name as any}
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 p-1 px-2 transition-colors">
+                        <FormLabel className="text-[12px] uppercase font-bold text-zinc-500 cursor-pointer">
+                          {item.label}
+                        </FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isLoadingRegister}
+                            className="scale-75"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Submit button */}
-          <div className="flex justify-center">
-            <Button
-              disabled={isLoadingRegister}
-              type="submit"
-              loading={isLoadingRegister}
-              className="w-full md:w-auto"
-            >
-              Створити аккаунт
-            </Button>
-          </div>
+<Button
+  disabled={isLoadingRegister}
+  loading={isLoadingRegister}
+  type="submit"
+  className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10"
+>
+  Створити аккаунт
+</Button>
         </form>
       </Form>
     </AuthWrapper>

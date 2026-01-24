@@ -8,11 +8,20 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { History, User, Loader2, Info, Banknote } from "lucide-react";
+import {
+  History,
+  User,
+  Loader2,
+  Info,
+  Banknote,
+  Delete,
+  Trash,
+} from "lucide-react";
 import { format } from "date-fns";
 import { uk } from "date-fns/locale";
 import api from "@/shared/api/instance.api";
 import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui";
 
 // Оновлений інтерфейс згідно з вашим JSON
 interface HistoryItem {
@@ -117,9 +126,13 @@ export function CargoHistoryModal({
                         </div>
 
                         <span className="text-[10px] font-medium text-zinc-400 tabular-nums whitespace-nowrap bg-zinc-50 dark:bg-white/5 px-2 py-1 rounded">
-                          {format(new Date(item.operation_time), "dd MMM, HH:mm:ss", {
-                            locale: uk,
-                          })}
+                          {format(
+                            new Date(item.operation_time),
+                            "dd MMM, HH:mm:ss",
+                            {
+                              locale: uk,
+                            },
+                          )}
                         </span>
                       </div>
 
@@ -129,9 +142,14 @@ export function CargoHistoryModal({
                           {/* Інформація */}
                           {item.information && (
                             <div className="flex gap-2">
-                              <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                              <Info
+                                size={14}
+                                className="text-blue-500 shrink-0 mt-0.5"
+                              />
                               <div className="flex flex-col">
-                                <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-tight">Інформація</span>
+                                <span className="text-[10px] text-zinc-400 font-medium uppercase tracking-tight">
+                                  Інформація
+                                </span>
                                 <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-200 leading-snug">
                                   {item.information}
                                 </span>
@@ -140,19 +158,31 @@ export function CargoHistoryModal({
                           )}
 
                           {/* Ціна та К-сть авто (в один рядок) */}
-                          <div className="flex items-center gap-4 pt-2 border-t border-zinc-200/50 dark:border-white/5">
-                            <div className="flex items-center gap-1.5">
-                              <Banknote size={14} className="text-emerald-500" />
-                              <span className="text-[12px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
-                                {item.price}
-                              </span>
-                            </div>
-                            
-                            {item.car_count > 0 && (
-                              <div className="text-[11px] font-medium text-zinc-400 bg-zinc-200/50 dark:bg-white/10 px-2 py-0.5 rounded-md">
-                                Авто: {item.car_count}
+                          <div className="flex items-center justify-between gap-4 pt-2 border-t border-zinc-200/50 dark:border-white/5">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <Banknote
+                                  size={14}
+                                  className="text-emerald-500"
+                                />
+                                <span className="text-[12px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
+                                  {item.price}
+                                </span>
                               </div>
-                            )}
+
+                              {item.car_count > 0 && (
+                                <div className="text-[11px] font-medium text-zinc-400 bg-zinc-200/50 dark:bg-white/10 px-2 py-0.5 rounded-md">
+                                  Авто: {item.car_count}
+                                </div>
+                              )}
+                            </div>
+                            <Button
+                              onClick={() => alert("У розробці")}
+                              className="bg-red-400"
+                              size={"icon"}
+                            >
+                              <Trash />
+                            </Button>
                           </div>
                         </div>
                       </div>

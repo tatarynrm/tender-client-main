@@ -9,6 +9,7 @@ import ClientOnlyProvider from "./ClientOnlyProvider";
 import { SocketProvider } from "./SocketProvider";
 import { IUserProfile } from "../types/user.types";
 import { FontSizeProvider } from "./FontSizeProvider";
+import { GlobalModalContainer } from "../components/Modals/GlobalModals/GlobalModalContainer";
 
 interface MainProviderProps extends PropsWithChildren {
   profile: IUserProfile | null; // мінімально потрібне поле

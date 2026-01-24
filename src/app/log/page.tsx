@@ -21,12 +21,13 @@ const LogDashboardPage = async () => {
 
   const allStats = response?.count_all;
   const myStats = response?.count_my;
-  console.log(response, "response");
 
   if (!allStats || !myStats) {
     return (
       <div className="p-8 text-center text-slate-500">
         Помилка завантаження даних
+
+        
       </div>
     );
   }

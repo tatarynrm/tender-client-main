@@ -21,12 +21,7 @@ import {
 import { Card } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/shared/components/ui/dropdown-menu";
+
 import { cn } from "@/shared/utils";
 
 import { Dropdowns, LoadApiItem } from "../../types/load.type";
@@ -49,14 +44,6 @@ import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { CargoActions } from "./CargoActions";
 import { StatusIndicator } from "./CargoCardUpdateColor";
 import { useEventEffect } from "@/shared/hooks/useEventEffects";
-
-const transitMap: Record<string, string> = {
-  E: "Експорт",
-  I: "Імпорт",
-  R: "Регіон.",
-  T: "Транзит",
-  M: "Міжнар.",
-};
 
 interface CargoCardProps {
   load: LoadApiItem;
@@ -85,8 +72,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
   const { refreshLoadTime, isRefreshing } = useLoads();
-  // Новий стан для контролю 10-секундного вікна
-  const [forceHideBadge, setForceHideBadge] = useState(false);
+
   // Слухаємо тряску та оновлення для конкретного ID
   const {
     isActive: isShaking,
@@ -304,12 +290,24 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <div className="flex flex-col">
               <span
                 className={cn(
+                  " font-black text-blue-500 text-[7px]  mb-1",
+                  config.label,
+                )}
+              >
+                {load?.date_load
+                  ? format(new Date(load.date_load), "dd.MM.yyyy")
+                  : "—"}
+              </span>
+
+              <span
+                className={cn(
                   "uppercase font-black text-zinc-400 text-[7px] leading-none mb-1",
                   config.label,
                 )}
               >
                 Звідки
               </span>
+
               <div className="flex flex-wrap gap-x-1 gap-y-2.5 mt-1.5">
                 {load.crm_load_route_from.map((from, idx) => (
                   <div
@@ -328,7 +326,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                     <span
                       className={cn(
                         "font-bold text-zinc-800 dark:text-zinc-200 text-[10px] ",
-                        config.title,
+                        config.label,
                       )}
                     >
                       {from.city}
@@ -341,12 +339,24 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             <div className="flex flex-col">
               <span
                 className={cn(
-                  "uppercase font-black text-zinc-400 text-[7px] leading-none mb-1",
+                  " font-black text-blue-500 text-[7px]  mb-1",
                   config.label,
                 )}
               >
-                Куди
+                {load?.date_unload
+                  ? format(new Date(load.date_load), "dd.MM.yyyy")
+                  : ""}
               </span>
+              <div className="flex text-center items-center gap-2">
+                <span
+                  className={cn(
+                    "uppercase font-black text-zinc-400 text-[7px] leading-none mb-1",
+                    config.label,
+                  )}
+                >
+                  Куди
+                </span>
+              </div>
               <div className="flex flex-wrap gap-x-1 gap-y-2.5 mt-1.5">
                 {load.crm_load_route_to.map((to, idx) => (
                   <div
@@ -365,7 +375,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                     <span
                       className={cn(
                         "font-bold text-zinc-800 dark:text-zinc-200 text-[10px] ",
-                        config.title,
+                        config.label,
                       )}
                     >
                       {to.city}

@@ -1,8 +1,7 @@
 "use client";
+
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  MapPin,
-  Search,
   ChevronDown,
   Navigation,
   Sun,
@@ -10,8 +9,8 @@ import {
   CloudSun,
   CloudRain,
   CloudLightning,
-  CloudSnow,
   CloudFog,
+  Globe, // Додано для іконок груп
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { CITIES_DB } from "../constants/cities";
@@ -74,7 +73,7 @@ export const WeatherWidget = () => {
       const data = await res.json();
       setWeather({
         temp: `${Math.round(data.current_weather.temperature)}°C`,
-        city: cityName || "Локація", // Гарантуємо, що тут завжди буде string
+        city: cityName || "Локація",
         code: data.current_weather.weathercode,
       });
     } catch (e) {
@@ -107,6 +106,31 @@ export const WeatherWidget = () => {
     };
   }, [search]);
 
+  // Хелпер для рендеру списку міст
+  const renderCityList = (cities: typeof CITIES_DB.ukraine, label: string) => {
+    if (cities.length === 0) return null;
+    return (
+      <div className="mb-2">
+        <div className="px-3 py-1.5 text-[9px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-2 bg-slate-50/50 dark:bg-white/5 mb-1">
+          {label === "Україна" ? "🇺🇦 " : "🇪🇺 "} {label}
+        </div>
+        {cities.map((city) => (
+          <button
+            key={city.name}
+            onClick={() => {
+              fetchWeather(city.lat, city.lon, city.name);
+              setIsOpen(false);
+              setSearch("");
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-700 dark:text-slate-300 rounded-lg transition-colors"
+          >
+            <span>{city.name}</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="relative w-full" ref={menuRef}>
       <button
@@ -117,15 +141,15 @@ export const WeatherWidget = () => {
         )}
       >
         <WeatherIcon code={weather.code} />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-hidden">
           <span className="text-xs font-black">{weather.temp}</span>
-          <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[120px]">
+          <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[100px]">
             {weather.city}
           </span>
           <ChevronDown
             size={10}
             className={cn(
-              "text-slate-400 transition-transform",
+              "text-slate-400 shrink-0 transition-transform",
               isOpen && "rotate-180",
             )}
           />
@@ -133,16 +157,19 @@ export const WeatherWidget = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
           <div className="p-3 border-b border-slate-100 dark:border-white/5">
             <input
               placeholder="Пошук міста..."
-              className="w-full bg-slate-50 dark:bg-slate-800 text-[11px] p-2 rounded-lg outline-none"
+              autoFocus
+              className="w-full bg-slate-50 dark:bg-slate-800 text-[11px] p-2 rounded-lg outline-none border border-transparent focus:border-blue-400/50 transition-all"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="max-h-60 overflow-y-auto p-1 custom-scrollbar">
+
+          <div className="max-h-64 overflow-y-auto p-1 custom-scrollbar">
+            {/* Спеціальна кнопка для локації */}
             <button
               onClick={() => {
                 navigator.geolocation.getCurrentPosition((pos) =>
@@ -150,22 +177,21 @@ export const WeatherWidget = () => {
                 );
                 setIsOpen(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-[10px] text-blue-500 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-[10px] text-blue-500 font-black hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors border-b border-slate-50 dark:border-white/5 mb-1"
             >
-              <Navigation size={12} /> Автоматично
+              <Navigation size={12} fill="currentColor" /> Моя локація
             </button>
-            {filtered.ukraine.map((city) => (
-              <button
-                key={city.name}
-                onClick={() => {
-                  fetchWeather(city.lat, city.lon, city.name);
-                  setIsOpen(false);
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 text-[11px] hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
-              >
-                <span>{city.name}</span>
-              </button>
-            ))}
+
+            {/* Групи міст */}
+            {renderCityList(filtered.ukraine, "Україна")}
+            {renderCityList(filtered.europe, "Європа")}
+
+            {/* Заглушка, якщо нічого не знайдено */}
+            {filtered.ukraine.length === 0 && filtered.europe.length === 0 && (
+              <div className="p-4 text-center text-[10px] text-slate-400 italic">
+                Місто не знайдено
+              </div>
+            )}
           </div>
         </div>
       )}

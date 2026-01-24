@@ -1,54 +1,102 @@
 import z from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input";
+
 export const RegisterSchema = z
   .object({
-    surname: z.string({ message: `Прізвище - обов'язкове поле` }).min(1, {
-      message: "Введіть прізвище",
-    }),
-    name: z.string({ message: `Ім'я - обов'язкове поле` }).min(1, {
-      message: "Введіть ім'я",
-    }),
-    last_name: z.string({ message: `По-батькові - обов'язкове поле` }).min(1, {
-      message: "Введіть по-батькові",
-    }),
-    email: z.string().email({
-      message: "Некоректна пошта",
-    }),
-    password: z.string().min(6, {
-      message: "Мінімум 6 символів",
-    }),
-    passwordRepeat: z.string().min(6, {
-      message: "Пароль підтвердження мінімум 6 символів",
-    }),
-    phone: z
-      .string()
-      .min(1, "Введіть номер телефону")
-      .refine((val) => isValidPhoneNumber(val || ""), {
-        message: "Некоректний номер телефону",
+    // --- Користувач ---
+    surname: z
+      .string({ message: "Прізвище - обов'язкове поле" })
+      .min(1, { message: "Будь ласка, введіть ваше прізвище" })
+      .min(2, { message: "Прізвище має містити мінімум 2 символи" })
+      .max(50, { message: "Прізвище не може бути довшим за 50 символів" }),
+
+    name: z
+      .string({ message: "Ім'я - обов'язкове поле" })
+      .min(1, { message: "Будь ласка, введіть ваше ім'я" })
+      .min(2, { message: "Ім'я має містити мінімум 2 символи" })
+      .max(50, { message: "Ім'я не може бути довшим за 50 символів" }),
+
+    last_name: z
+      .string({ message: "По-батькові - обов'язкове поле" })
+      .min(1, { message: "Будь ласка, введіть ваше по-батькові" })
+      .min(2, { message: "По-батькові має містити мінімум 2 символи" })
+      .max(50, { message: "По-батькові не може бути довшим за 50 символів" }),
+
+    email: z
+      .string({ message: "E-mail - обов'язкове поле" })
+      .min(1, { message: "Пошта не може бути порожньою" })
+      .email({ message: "Некоректний формат (приклад: name@domain.com)" })
+      .max(100, { message: "E-mail занадто довгий" }),
+
+    password: z
+      .string({ message: "Пароль - обов'язкове поле" })
+      .min(1, { message: "Ви не ввели пароль" })
+      .min(6, { message: "Пароль має бути не менше 6 символів" })
+      .max(32, { message: "Пароль не може перевищувати 32 символи" })
+      .regex(/[!@#$%^&*(),.?":{}|<>]/, {
+        message: "Пароль має містити хоча б один спецсимвол (!@#$%^&* тощо)",
       }),
-    // Company
-    company_name: z.string().min(2, "Введіть назву компанії"),
+
+    passwordRepeat: z
+      .string({ message: "Підтвердження пароля - обов'язкове поле" })
+      .min(1, { message: "Будь ласка, повторіть ваш пароль" }),
+
+    phone: z
+      .string({ message: "Номер телефону - обов'язкове поле" })
+      .min(1, { message: "Телефон є обов'язковим для реєстрації" })
+      .refine((val) => isValidPhoneNumber(val || ""), {
+        message:
+          "Невірний формат номера (має бути +380... або відповідний код країни)",
+      }),
+
+    // --- Компанія ---
+    company_name: z
+      .string({ message: "Назва компанії - обов'язкове поле" })
+      .min(1, { message: "Введіть назву вашої організації" })
+      .min(2, { message: "Назва компанії занадто коротка (мін. 2 символи)" })
+      .max(100, {
+        message: "Назва компанії не може бути довшою за 100 символів",
+      }),
+
     company_address: z
-      .string({ message: `Адреса є обов'язковим полем` })
-      .min(2, "Введіть юридичну адресу компанії"),
-    company_form: z.string(),
-    ids_country: z.string({
-      message: "Виберіть країну реєстрації компанії",
-    }),
+      .string({ message: "Адреса є обов'язковим полем" })
+      .min(1, { message: "Юридична адреса не може бути порожньою" })
+      .min(5, {
+        message: "Вкажіть повну адресу (вулиця, номер будинку, місто)",
+      })
+      .max(200, { message: "Адреса занадто довга" }),
+
+    company_form: z
+      .string({ message: "Форма власності - обов'язкове поле" })
+      .min(1, { message: "Вкажіть форму власності (напр. ФОП, ТОВ, ПП)" })
+      .max(30, { message: "Занадто довга назва форми власності" }),
+
+    ids_country: z
+      .string({ message: "Виберіть країну реєстрації компанії" })
+      .min(1, { message: "Необхідно обрати країну зі списку" }),
 
     company_edrpou: z
-      .string()
-      .regex(/^\d+$/, "Код має містити лише цифри")
-      .min(8, "Код ЄДРПОУ має містити мінімум 8 цифр")
-      .max(10, "Код ЄДРПОУ не може перевищувати 10 цифр"),
-    company_vat_payer: z.boolean().optional(), // нове поле для Switch
-    company_expedition: z.boolean().optional(), // нове поле для Switch
-    company_carrier: z.boolean().optional(), // нове поле для Switch
-    company_freighter: z.boolean().optional(), // нове поле для Switch
+      .string({ message: "Код ЄДРПОУ - обов'язкове поле" })
+      .min(1, { message: "Введіть ідентифікаційний код компанії" })
+      .regex(/^\d+$/, { message: "Код має складатися тільки з цифр" })
+      .min(8, { message: "Код має містити мінімум 8 цифр (для юр. осіб)" })
+      .max(10, { message: "Код не може бути довшим за 10 цифр (для ІПН)" }),
+
+    // --- Перемикачі (Booleans) ---
+    company_vat_payer: z.boolean().optional(),
+    company_expedition: z.boolean().optional(),
+    company_carrier: z.boolean().optional(),
+    company_freighter: z.boolean().optional(),
   })
-  .refine((data) => data.password === data.passwordRepeat, {
-    message: "Паролі не співпадають",
-    path: ["passwordRepeat"],
+  .superRefine(({ passwordRepeat, password }, ctx) => {
+    if (passwordRepeat !== password) {
+      ctx.addIssue({
+        code: "custom", // або z.ZodIssueCode.custom
+        message: "Введені паролі не збігаються",
+        path: ["passwordRepeat"], // прив'язуємо помилку до конкретного поля
+        fatal: true, // зупиняє подальші непотрібні перевірки для цього поля
+      });
+    }
   });
 
 export type TypeRegisterSchema = z.infer<typeof RegisterSchema>;

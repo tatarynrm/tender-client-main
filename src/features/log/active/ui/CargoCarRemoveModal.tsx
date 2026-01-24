@@ -144,7 +144,7 @@ export function CargoCarRemoveModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none shadow-2xl">
-        <DialogHeader className="px-6 pt-6 pb-4 bg-zinc-50 border-b">
+        <DialogHeader className="px-6 pt-6 pb-4  border-b">
           <DialogTitle className="text-xl font-black flex items-center gap-2">
             <div className="bg-red-600 p-1.5 rounded-lg">
               <Minus size={18} className="text-white" />
