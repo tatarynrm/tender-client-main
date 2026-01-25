@@ -1,152 +1,175 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
-import { LogOut, User, Settings, LayoutDashboard } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+import { LogOut, User, Settings, LayoutDashboard, X } from "lucide-react";
+
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
 
-interface UserAvatarMenuProps {
-  userName: string;
-  userEmail: string;
-  avatarUrl?: string;
-}
-
-export function UserAvatarMenu({
-  userName,
-  userEmail,
-  avatarUrl,
-}: UserAvatarMenuProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Керуємо станом меню
+export function UserAvatarMenu() {
+  const { profile } = useAuth();
   const { logout } = useProfileLogoutMutation();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  // Закриття меню при кліку зовні
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (detailsRef.current && !detailsRef.current.contains(event.target as Node)) {
+        detailsRef.current.removeAttribute("open");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Керування нативним діалогом
+  useEffect(() => {
+    if (isDialogOpen) {
+      dialogRef.current?.showModal();
+    } else {
+      dialogRef.current?.close();
+    }
+  }, [isDialogOpen]);
+
+  if (!profile) return null;
+
+  const handleLogoutClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    detailsRef.current?.removeAttribute("open");
+    setIsDialogOpen(true);
+  };
 
   const handleConfirmLogout = () => {
     logout();
     setIsDialogOpen(false);
   };
 
+  // Формуємо ініціали з імені
+  const avatarFallback = profile.name ? profile.name.charAt(0).toUpperCase() : "U";
+
   return (
     <>
-      <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <DropdownMenuTrigger asChild>
-          <Avatar className="h-9 w-9 cursor-pointer border border-zinc-200 dark:border-zinc-800 transition-transform duration-200 hover:scale-[1.05] active:scale-95">
-            <AvatarImage src={avatarUrl} alt={`${userName}'s avatar`} />
-            <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-semibold uppercase text-sm">
-              {userName ? userName.charAt(0) : "U"}
-            </AvatarFallback>
-          </Avatar>
-        </DropdownMenuTrigger>
+      <details ref={detailsRef} className="relative list-none group">
+        <summary className="list-none cursor-pointer outline-none">
+          <div className="h-9 w-9 rounded-md border border-zinc-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center bg-white dark:bg-slate-900">
+            {profile.avatar_path ? (
+              <img 
+                src={profile.avatar_path} 
+                alt={profile.name} 
+                className="h-full w-full object-cover" 
+              />
+            ) : (
+              <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
+                {avatarFallback}
+              </span>
+            )}
+          </div>
+        </summary>
 
-        <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl">
-          <DropdownMenuLabel className="px-2 py-1.5 flex flex-col space-y-1">
-            <span className="text-sm font-semibold leading-none">
-              {userName}
-            </span>
-            <span className="text-xs leading-none text-zinc-500">
-              {userEmail}
-            </span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="mx-1 my-2" />
-
-          <DropdownMenuItem
-            asChild
-            className="px-2 py-2 rounded-md cursor-pointer"
-          >
-            <Link
-              href="/profile"
-              className="flex items-center space-x-2 w-full"
-            >
-              <User size={16} className="text-zinc-500" />
-              <span>Мій профіль</span>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            asChild
-            className="px-2 py-2 rounded-md cursor-pointer"
-          >
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-2 w-full"
-            >
-              <LayoutDashboard size={16} className="text-zinc-500" />
-              <span>Панель керування</span>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            asChild
-            className="px-2 py-2 rounded-md cursor-pointer"
-          >
-            <Link
-              href="/settings"
-              className="flex items-center space-x-2 w-full"
-            >
-              <Settings size={16} className="text-zinc-500" />
-              <span>Налаштування</span>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator className="mx-1 my-2" />
-
-          <DropdownMenuItem
-            onSelect={(e) => {
-              e.preventDefault(); // Зупиняємо стандартне закриття Radix, щоб вручну керувати черговістю
-              setIsMenuOpen(false); // Спершу закриваємо меню
-              setTimeout(() => {
-                setIsDialogOpen(true); // Потім відкриваємо діалог (через невеликий таймаут для стабільності фокусу)
-              }, 100);
-            }}
-            className="px-2 py-2 rounded-md cursor-pointer text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-          >
-            <LogOut size={16} className="mr-2" />
-            <span>Вийти</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Модальне підтвердження */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Вихід із системи</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Ви впевнені, що хочете вийти із системи?
+        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 border border-zinc-200 dark:border-white/10 rounded-md shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          {/* Header */}
+          <div className="px-4 py-3 bg-zinc-50/50 dark:bg-white/5 border-b border-zinc-100 dark:border-white/5">
+            <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-900 dark:text-white truncate">
+              {profile.name} {profile.surname}
+            </p>
+            <p className="text-[11px] text-zinc-500 truncate mt-0.5">
+              {profile.email}
             </p>
           </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+
+          {/* Links */}
+          <nav className="p-1.5 flex flex-col gap-0.5">
+            <MenuLink href="/profile" icon={User} label="Мій профіль" />
+            <MenuLink href="/dashboard" icon={LayoutDashboard} label="Панель керування" />
+            
+            {/* Показуємо налаштування лише адмінам, як приклад використання useAuth */}
+            {(profile.is_admin || profile.is_manager) && (
+                <MenuLink href="/settings" icon={Settings} label="Налаштування" />
+            )}
+            
+            <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
+
+            <button
+              onClick={handleLogoutClick}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left group/btn"
+            >
+              <LogOut size={16} strokeWidth={2.5} className="group-hover/btn:translate-x-0.5 transition-transform" />
+              <span className="text-[11px] uppercase tracking-[0.15em] font-bold">Вийти</span>
+            </button>
+          </nav>
+        </div>
+      </details>
+
+      {/* --- CONFIRMATION DIALOG --- */}
+      <dialog
+        ref={dialogRef}
+        onClose={() => setIsDialogOpen(false)}
+        className="fixed inset-0 z-[100] bg-transparent p-0 m-auto backdrop:bg-slate-950/40 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 duration-200"
+      >
+        <div className="w-[calc(100vw-2rem)] max-w-sm bg-white dark:bg-slate-900 border border-zinc-200 dark:border-white/10 rounded-md shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-white/5">
+            <h3 className="text-[12px] uppercase tracking-[0.2em] font-bold text-slate-900 dark:text-white">
+              Підтвердження
+            </h3>
+            <button 
+              onClick={() => setIsDialogOpen(false)}
+              className="text-zinc-400 hover:text-teal-600 transition-colors"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="p-6">
+            <p className="text-[13px] text-zinc-500 dark:text-zinc-400 leading-relaxed uppercase tracking-wide">
+              Бажаєте вийти з облікового запису?
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 px-5 py-4 bg-zinc-50/50 dark:bg-white/5 border-t border-zinc-100 dark:border-white/5">
+            <button
+              onClick={() => setIsDialogOpen(false)}
+              className="px-4 py-2 text-[10px] uppercase tracking-[0.2em] font-bold text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
               Ні
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmLogout}>
-              Так
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </button>
+            <button
+              onClick={handleConfirmLogout}
+              className="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-md text-[10px] uppercase tracking-[0.2em] font-bold transition-all active:scale-95"
+            >
+              Так, вийти
+            </button>
+          </div>
+        </div>
+      </dialog>
+
+      <style jsx>{`
+        details > summary::-webkit-details-marker {
+          display: none;
+        }
+        dialog::backdrop {
+          animation: backdrop-fade 0.2s ease-out;
+        }
+        @keyframes backdrop-fade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </>
+  );
+}
+
+function MenuLink({ href, icon: Icon, label }: { href: string; icon: any; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 px-3 py-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-500 transition-all group"
+    >
+      <Icon size={16} strokeWidth={2.2} className="text-zinc-400 group-hover:text-teal-600 transition-colors" />
+      <span className="text-[11px] uppercase tracking-[0.15em] font-bold">{label}</span>
+    </Link>
   );
 }

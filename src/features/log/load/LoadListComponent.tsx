@@ -86,7 +86,7 @@ export default function LoadListComponent({ active, archive }: Props) {
   if (error) return <ErrorState />;
 
   return (
-    <div className="space-y-4 ">
+    <div className="space-y-4 pb-40">
       {/* HEADER ПАНЕЛЬ */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export default function LoadListComponent({ active, archive }: Props) {
       />
       {/* СПИСОК ТА ПАГІНАЦІЯ (ЗАВЖДИ ВИДИМІ) */}
       <div className="space-y-6">
-        <div className={`grid ${gridClass} gap-6 mb-10`}>
+        <div className={`grid ${gridClass} gap-6 mb-10 `}>
           {loads.map((item: LoadApiItem) => (
             <CargoCard
               key={item.id}

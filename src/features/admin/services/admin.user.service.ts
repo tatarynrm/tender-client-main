@@ -16,5 +16,5 @@ export const adminUserService = {
   updateUser: async (data: any) => {
     const res = await api.post("/admin/user/update", data);
     return res.data;
-  }
+  },
 };

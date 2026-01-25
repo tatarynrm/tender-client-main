@@ -99,7 +99,7 @@ const { openModal } = useModal();
   if (isLoading) return <Loader />;
 
   return (
-    <div className="p-0 mx-auto space-y-1 pb-20">
+    <div className="p-0 mx-auto space-y-1 pb-40">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}

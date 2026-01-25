@@ -3,7 +3,7 @@ import React from "react";
 
 const CargoActivePage = () => {
   return (
-    <div className="mb-20">
+    <div>
       <LoadForm />
     </div>
   );

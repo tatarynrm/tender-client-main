@@ -40,7 +40,7 @@ export const InputDate = <T extends FieldValues>({
     field,
     fieldState: { error },
   } = useController({ name, control });
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(
     field.value ? new Date(field.value) : new Date(),
@@ -51,7 +51,10 @@ export const InputDate = <T extends FieldValues>({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -70,7 +73,8 @@ export const InputDate = <T extends FieldValues>({
       const isSelected = selectedDate && isSameDay(day, selectedDate);
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isToday = isSameDay(day, new Date());
-      const isDisabled = fromDate && day < startOfMonth(fromDate) && !isSameDay(day, fromDate);
+      const isDisabled =
+        fromDate && day < startOfMonth(fromDate) && !isSameDay(day, fromDate);
 
       return (
         <div
@@ -84,9 +88,11 @@ export const InputDate = <T extends FieldValues>({
           className={cn(
             "h-8 w-8 flex items-center justify-center text-[12px] rounded-lg cursor-pointer transition-all relative",
             !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
-            isCurrentMonth && "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5",
+            isCurrentMonth &&
+              "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5",
             isToday && !isSelected && "text-teal-600 font-bold",
-            isSelected && "bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-500/20",
+            isSelected &&
+              "bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-500/20",
             isDisabled && "opacity-20 cursor-not-allowed hover:bg-transparent",
           )}
         >
@@ -100,13 +106,18 @@ export const InputDate = <T extends FieldValues>({
   };
 
   return (
-    <div className={cn("flex flex-col w-full relative", className)} ref={containerRef}>
+    <div
+      className={cn("flex flex-col w-full relative", className)}
+      ref={containerRef}
+    >
       <div className="relative mt-1.5 group">
         {/* ІКОНКА */}
         <div
           className={cn(
             "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
-            isOpen ? "text-teal-600" : "text-zinc-400 group-focus-within:text-teal-600"
+            isOpen
+              ? "text-teal-600"
+              : "text-zinc-400 group-focus-within:text-teal-600",
           )}
         >
           <CalendarIcon size={18} strokeWidth={2.2} />
@@ -118,14 +129,21 @@ export const InputDate = <T extends FieldValues>({
           className={cn(
             inputVariants.base,
             "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
-            isOpen 
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5" 
+            isOpen
+              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
               : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
             error ? "border-red-500 focus:border-red-600" : "",
           )}
         >
-          <span className={cn("text-[13px] font-medium", !field.value && "text-transparent")}>
-            {field.value ? format(new Date(field.value), "dd.MM.yyyy") : "Placeholder"}
+          <span
+            className={cn(
+              "text-[13px] font-medium",
+              !field.value && "text-transparent",
+            )}
+          >
+            {field.value
+              ? format(new Date(field.value), "dd.MM.yyyy")
+              : "Placeholder"}
           </span>
 
           {/* КНОПКА ОЧИСТИТИ */}
@@ -148,11 +166,22 @@ export const InputDate = <T extends FieldValues>({
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
             "left-10 top-[14px] text-zinc-400 text-[12px] font-medium",
-            (field.value || isOpen) && "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
-            error && "text-red-500"
+            (field.value || isOpen) &&
+              "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
+            error && "text-red-500",
           )}
         >
-          {label} {required && "*"}
+          {label}{" "}
+          {required && (
+            <span
+              className={cn(
+                "ml-1 transition-colors",
+                error ? "text-red-500" : "text-teal-600",
+              )}
+            >
+              *
+            </span>
+          )}
         </label>
       </div>
 
@@ -181,7 +210,10 @@ export const InputDate = <T extends FieldValues>({
 
           <div className="grid grid-cols-7 mb-2">
             {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
-              <div key={d} className="text-center text-[10px] font-bold text-zinc-400 uppercase">
+              <div
+                key={d}
+                className="text-center text-[10px] font-bold text-zinc-400 uppercase"
+              >
                 {d}
               </div>
             ))}

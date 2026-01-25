@@ -233,3 +233,47 @@ html {
 section[id] {
   scroll-margin-top: 80px; 
 }
+
+
+
+
+
+
+
+/* Якщо gridClass містить наприклад grid-cols-3, ми перевизначимо це для Masonry */
+.block-masonry {
+  display: block; /* Важливо змінити з grid на block */
+  column-gap: 1.5rem; /* аналог gap-6 */
+}
+
+/* Адаптивність: скільки колонок */
+@media (min-width: 640px) {
+  .block-masonry {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .block-masonry {
+    column-count: 3;
+  }
+}
+
+/* Щоб картку не розривало між колонками */
+.break-inside-avoid {
+  break-inside: avoid-column;
+  display: inline-block; /* допомагає деяким браузерам правильно рахувати висоту */
+  width: 100%;
+}
+
+
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}

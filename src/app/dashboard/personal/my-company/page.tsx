@@ -1,100 +1,80 @@
 "use client";
 
-import * as React from "react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { Switch } from "@/shared/components/ui/switch";
-import GeneralTab from "@/features/dashboard/personal/my-company/tabs/GeneralTab";
-import ContactTab from "@/features/dashboard/personal/my-company/tabs/ContactTab";
-import FinanceTab from "@/features/dashboard/personal/my-company/tabs/FinanceTab";
+import { AppTabs, TabOption } from "@/shared/components/Tabs/AppTabs";
+import { useSearchParams } from "next/navigation";
 
-export default function CompanyPage() {
+
+// Конфігурація табів винесена окремо для чистоти
+const routeTabs: TabOption[] = [
+  { id: "main", label: "Основні" },
+  { id: "finance", label: "Фінанси" },
+  { id: "directions", label: "Напрямки" },
+];
+
+export default function RouteDetailsPage() {
+  const searchParams = useSearchParams();
+  
+  // Отримуємо активний таб з URL (якщо порожньо — дефолт "main")
+  const activeTab = searchParams.get("tab") || "main";
+
   return (
-    <div className="p-6 mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Дані компанії</h1>
+    <div className="w-full space-y-6">
+      {/* Твій новий універсальний компонент */}
+      <AppTabs tabs={routeTabs} queryParam="tab" />
 
-      <Tabs defaultValue="general" className="space-y-4 flex-wrap flex cursor-pointer">
-        <TabsList className="cursor-pointer">
-          <TabsTrigger value="general" className="cursor-pointer">Основні</TabsTrigger>
-          <TabsTrigger value="finance" className="cursor-pointer">Фінанси</TabsTrigger>
+      {/* Контент сторінки */}
+      <div className="min-h-[300px]">
+        {activeTab === "main" && (
+          <TabContentWrapper>
+            <MainSection />
+          </TabContentWrapper>
+        )}
 
-          <TabsTrigger value="routes" className="cursor-pointer">Напрямки</TabsTrigger>
- 
-          <TabsTrigger value="edoc" className="cursor-pointer">Е-Документообіг</TabsTrigger>
-        </TabsList>
+        {activeTab === "finance" && (
+          <TabContentWrapper>
+            <FinanceSection />
+          </TabContentWrapper>
+        )}
 
-        {/* Основні дані */}
-        <TabsContent value="general">
-          <GeneralTab />
-        </TabsContent>
-
-
-
-        {/* Фінанси */}
-        <TabsContent value="finance">
-          <FinanceTab />
-        </TabsContent>
-
-        {/* Рухомий склад */}
-        <TabsContent value="fleet">
-          <div className="space-y-4">
-            <div>
-              <Label>Тип транспорту</Label>
-              <Input placeholder="Тип" />
-            </div>
-            <div>
-              <Label>Кількість</Label>
-              <Input placeholder="Кількість одиниць" />
-            </div>
-            <div>
-              <Label>Вантажопідйомність</Label>
-              <Input placeholder="В кг" />
-            </div>
-            <div>
-              <Label>Об’єм напівпричепа</Label>
-              <Input placeholder="В куб.м" />
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Напрямки слідування */}
-        <TabsContent value="routes">
-          <div>
-            <Label>Перелік країн</Label>
-            <Input placeholder="Україна, Польща, Німеччина ..." />
-          </div>
-        </TabsContent>
-
-        {/* Категорія компанії */}
-        <TabsContent value="category">
-          <div>
-            <Label>Категорія</Label>
-            <Input placeholder="Наприклад: Перевізник" />
-          </div>
-        </TabsContent>
-
-        {/* Електронний документообіг */}
-        <TabsContent value="edoc">
-          <div className="flex items-center gap-2 mt-2">
-            <Switch id="edocUsage" />
-            <Label htmlFor="edocUsage" className="text-sm">
-              Використовує електронний документообіг (Медок)
-            </Label>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <Switch id="vchasnoUsage" />
-            <Label htmlFor="vchasnoUsage" className="text-sm">
-              Використовує електронний документообіг (Вчасно)
-            </Label>
-          </div>
-        </TabsContent>
-      </Tabs>
+        {activeTab === "directions" && (
+          <TabContentWrapper>
+            <DirectionsSection />
+          </TabContentWrapper>
+        )}
+      </div>
     </div>
   );
 }
+
+// Допоміжний компонент для анімації появи контенту
+const TabContentWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out">
+    {children}
+  </div>
+);
+
+// Секції (можна винести в окремі файли)
+const MainSection = () => (
+  <div className="p-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-950/50">
+    <h2 className="text-sm font-bold uppercase tracking-tighter text-zinc-800 dark:text-zinc-200 mb-4">
+      Загальна інформація
+    </h2>
+    {/* Твій контент: інпути, форми тощо */}
+  </div>
+);
+
+const FinanceSection = () => (
+  <div className="p-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-950/50">
+    <h2 className="text-sm font-bold uppercase tracking-tighter text-zinc-800 dark:text-zinc-200 mb-4">
+      Розрахунки та ставки
+    </h2>
+  </div>
+);
+
+const DirectionsSection = () => (
+  <div className="p-6 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-950/50">
+    <h2 className="text-sm font-bold uppercase tracking-tighter text-zinc-800 dark:text-zinc-200 mb-4">
+      Маршрут прямування
+    </h2>
+  </div>
+);

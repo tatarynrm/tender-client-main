@@ -17,6 +17,7 @@ interface Props<T extends FieldValues> {
   label: string;
   options: Option[];
   valueKey?: string; // Ключ об'єкта, наприклад "ids_trailer_type"
+  required?: boolean;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export const InputMultiSelect = <T extends FieldValues>({
   label,
   options,
   valueKey = "ids_trailer_type",
+  required = false,
   className,
 }: Props<T>) => {
   const {
@@ -83,7 +85,10 @@ export const InputMultiSelect = <T extends FieldValues>({
     >
       <div className="relative mt-1.5 group">
         {/* ІКОНКА ТРАНСПОРТУ */}
-        <div className="absolute left-4 top-[14px] text-zinc-400 group-focus-within:text-teal-600 transition-colors z-30 pointer-events-none">
+        <div className={cn(
+          "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
+          open ? "text-teal-600" : "text-zinc-400 group-focus-within:text-teal-600"
+        )}>
           <Truck size={18} strokeWidth={2.2} />
         </div>
 
@@ -111,6 +116,7 @@ export const InputMultiSelect = <T extends FieldValues>({
                 >
                   {option?.label || "Unknown"}
                   <button
+                    type="button"
                     onClick={(e) => removeOption(e, val)}
                     className="ml-1 text-teal-600/50 hover:text-red-500 transition-colors"
                   >
@@ -124,27 +130,21 @@ export const InputMultiSelect = <T extends FieldValues>({
           )}
 
           {/* ПРАВА ЧАСТИНА: ОЧИСТИТИ ТА СТРІЛКА */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {selectedValues.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={clearAll}
-                  className="p-1 flex items-center text-center hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors group/clear"
-                >
-                  <span>Очистити все</span>
-                  <X size={16} strokeWidth={2.5} />
-                </button>
-                <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800" />
-              </>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="p-1.5 text-zinc-400 hover:text-red-500 transition-colors"
+                title="Очистити все"
+              >
+                <X size={16} />
+              </button>
             )}
-
-            <ChevronDown
-              size={16}
-              className={cn(
-                "text-zinc-400 transition-transform duration-200",
-                open && "rotate-180 text-teal-600",
-              )}
+            <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
+            <ChevronDown 
+              size={16} 
+              className={cn("transition-transform duration-200", open && "rotate-180 text-teal-600")} 
             />
           </div>
         </div>
@@ -160,6 +160,9 @@ export const InputMultiSelect = <T extends FieldValues>({
           )}
         >
           {label}
+          {required && (
+            <span className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}>*</span>
+          )}
         </label>
       </div>
 

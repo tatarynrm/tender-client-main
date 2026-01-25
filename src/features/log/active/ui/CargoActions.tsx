@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import {
   GripVertical,
@@ -10,17 +11,9 @@ import {
   MinusCircle,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/shared/components/ui/dropdown-menu";
 import { LoadApiItem } from "../../types/load.type";
-import { Separator } from "@/shared/components/ui/separator";
 import { cn } from "@/shared/utils";
-import { useFontSize } from "@/shared/providers/FontSizeProvider"; // Імпортуємо ваш хук
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
 
 interface CargoActionsProps {
   load: LoadApiItem;
@@ -31,6 +24,7 @@ interface CargoActionsProps {
   onCloseCargo: () => void;
   onRefresh: (id: number) => void;
   onCopy?: (load: LoadApiItem) => void;
+  onDelete?: (id: number) => void;
 }
 
 export function CargoActions({
@@ -41,106 +35,204 @@ export function CargoActions({
   onRemoveCars,
   onCloseCargo,
   onRefresh,
+  onDelete,
 }: CargoActionsProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
   const router = useRouter();
   const pathname = usePathname();
-  const { config } = useFontSize(); // Отримуємо конфігурацію шрифтів та іконок
+  const { config } = useFontSize();
+
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const isArchive = pathname?.includes("archive");
   const hasAccess =
     profile?.is_crm_admin || String(profile?.id) === String(load.id_usr);
 
+  // Розрахунок позиції при відкритті
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      // Позиціонуємо меню під кнопкою, вирівнюємо по правому краю (мінус ширина меню 192px)
+      setCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 192,
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener("mousedown", handleClickOutside);
+      // Закриваємо при скролі, щоб меню не "відірвалося" від кнопки
+      window.addEventListener("scroll", () => setIsOpen(false), { once: true });
+    }
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
   if (!hasAccess) return null;
 
-  // Допоміжна функція для однакових стилів тексту
-  const textClass = cn("font-medium", config.label);
+  const textClass = cn(
+    "font-medium leading-none whitespace-nowrap",
+    config.label,
+    "text-[13px]",
+  );
+  const itemClass =
+    "flex items-center w-full gap-2.5 px-3 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors first:rounded-t-lg last:rounded-b-lg text-zinc-700 dark:text-zinc-300";
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button
-          variant="ghost"
-          size="icon"
-          style={{ width: config.icon + 12, height: config.icon + 12 }} // Динамічний розмір кнопки
-          className="hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-        >
-          <GripVertical size={config.icon - 2} className="text-zinc-500" />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="end"
-        className="w-auto min-w-[200px] rounded-xl backdrop-blur-lg shadow-xl border-zinc-200/50 dark:border-white/10"
-      >
+  const menuContent = (
+    <div
+      ref={menuRef}
+      style={{
+        position: "absolute",
+        top: coords.top + 4,
+        left: coords.left,
+        zIndex: 999999,
+        cursor: "pointer",
+      }}
+      className="cursor-pointer w-48 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in fade-in zoom-in duration-120"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex flex-col py-0.5">
         {isArchive ? (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
+          <button
+            onClick={() => {
               router.push(`/log/load/add?copyId=${load.id}`);
+              setIsOpen(false);
             }}
-            className="gap-3 py-3 cursor-pointer focus:bg-blue-50 dark:focus:bg-blue-500/10"
+            className={cn(itemClass, "text-blue-600 hover:text-blue-700")}
           >
-            <Copy size={config.icon} className="text-blue-500" />
-            <span className={textClass}>Зробити копію</span>
-          </DropdownMenuItem>
+            <Copy size={config.icon - 2} />
+            <span className={textClass}>Копіювати</span>
+          </button>
         ) : (
           <>
-            <DropdownMenuItem
-              onClick={() => router.push(`/log/load/edit/${load.id}`)}
-              className="gap-3 py-3 cursor-pointer"
+            <button
+              onClick={() => {
+                router.push(`/log/load/edit/${load.id}`);
+                setIsOpen(false);
+              }}
+              className={itemClass}
             >
-              <Edit3 size={config.icon} className="text-zinc-500" />
+              <Edit3 size={config.icon - 2} className="opacity-70" />
               <span className={textClass}>Редагувати</span>
-            </DropdownMenuItem>
+            </button>
 
-            <Separator className="my-1 opacity-50" />
-
-            <DropdownMenuItem
-              onClick={() => onRefresh(load.id)}
-              className="gap-3 py-3 cursor-pointer focus:text-emerald-600"
+            <button
+              onClick={() => {
+                router.push(`/log/load/add?copyId=${load.id}`);
+                setIsOpen(false);
+              }}
+              className={cn(itemClass, "text-blue-600 hover:text-blue-700")}
             >
-              <RefreshCcw size={config.icon} className="text-emerald-500" />
+              <Copy size={config.icon - 2} />
+              <span className={textClass}>Копіювати</span>
+            </button>
+
+            <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
+
+            <button
+              onClick={() => {
+                onRefresh(load.id);
+                setIsOpen(false);
+              }}
+              className={cn(itemClass, "hover:text-emerald-600")}
+            >
+              <RefreshCcw size={config.icon - 2} className="text-emerald-500" />
               <span className={textClass}>Оновити час</span>
-            </DropdownMenuItem>
+            </button>
 
-            <DropdownMenuItem
-              onClick={onCloseCargo}
-              className="gap-3 py-3 cursor-pointer"
+            <button
+              onClick={() => {
+                onCloseCargo();
+                setIsOpen(false);
+              }}
+              className={cn(itemClass, "hover:text-blue-600")}
             >
-              <CheckCircle2 size={config.icon} className="text-blue-500" />
-              <span className={textClass}>Закрита нами</span>
-            </DropdownMenuItem>
+              <CheckCircle2 size={config.icon - 2} className="text-blue-500" />
+              <span className={textClass}>Закрити</span>
+            </button>
 
-            <Separator className="my-1 opacity-50" />
+            <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
 
-            <DropdownMenuItem
-              onClick={onAddCars}
-              className="gap-3 py-3 cursor-pointer"
+            <button
+              onClick={() => {
+                onAddCars();
+                setIsOpen(false);
+              }}
+              className={itemClass}
             >
-              <PlusCircle size={config.icon} className="text-zinc-500" />
+              <PlusCircle size={config.icon - 2} className="opacity-70" />
               <span className={textClass}>Додати авто</span>
-            </DropdownMenuItem>
+            </button>
 
-            <DropdownMenuItem
-              onClick={onRemoveCars}
-              className="gap-3 py-3 cursor-pointer"
+            <button
+              onClick={() => {
+                onRemoveCars();
+                setIsOpen(false);
+              }}
+              className={cn(itemClass, "hover:text-orange-600")}
             >
-              <MinusCircle size={config.icon} className="text-orange-500" />
+              <MinusCircle size={config.icon - 2} className="text-orange-500" />
               <span className={textClass}>Відмінити авто</span>
-            </DropdownMenuItem>
+            </button>
 
             {canDelete && (
               <>
-                <Separator className="my-1 opacity-50" />
-                <DropdownMenuItem className="gap-3 py-3 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-500/10">
-                  <Trash2 size={config.icon} />
-                  <span className={cn(textClass, "font-bold")}>Видалити</span>
-                </DropdownMenuItem>
+                <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
+                <button
+                  onClick={() => {
+                    onDelete?.(load.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    itemClass,
+                    "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30",
+                  )}
+                >
+                  <Trash2 size={config.icon - 2} />
+                  <span className={cn(textClass, "font-semibold")}>
+                    Видалити
+                  </span>
+                </button>
               </>
             )}
           </>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="relative inline-block ">
+      <button
+        ref={buttonRef}
+        onClick={toggleMenu}
+        className="cursor-pointer flex items-center justify-center rounded-md hover:bg-zinc-200/70 dark:hover:bg-zinc-800 transition-colors focus:outline-none"
+        style={{ width: config.icon + 8, height: config.icon + 8 }}
+      >
+        <GripVertical
+          size={config.icon - 4}
+          className="text-zinc-400 hover:text-zinc-600 "
+        />
+      </button>
+
+      {/* Портал виносить меню в кінець body, де overflow картки його не дістане */}
+      {isOpen && createPortal(menuContent, document.body)}
+    </div>
   );
 }

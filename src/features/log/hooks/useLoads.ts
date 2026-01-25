@@ -32,7 +32,6 @@ export const useLoadById = (id?: number | string | null) => {
     queryKey: ["load", id],
     queryFn: () => loadService.getOneLoad(Number(id)),
     enabled: !!id,
-    staleTime: 1000 * 60 * 5,
   });
 };
 

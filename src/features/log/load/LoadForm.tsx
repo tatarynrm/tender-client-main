@@ -45,6 +45,7 @@ import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputDate } from "@/shared/components/Inputs/InputDate";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
+import { cn } from "@/shared/utils";
 // ---------- Schemas ----------
 // Функція зберігає "чисту" дату без урахування часового поясу
 const toLocalDateString = (date: Date | null) => {
@@ -73,9 +74,13 @@ const trailerSchema = z.object({
 });
 
 const cargoServerSchema = z.object({
-  price: z.number().nullable().optional(),
+  price: z
+    .number()
+    .max(99999999.99, { message: "Ціна не може перевищувати 999,999.99" })
+    .nullable()
+    .optional(),
   ids_valut: z.string().optional(),
-  id_client: z.number().optional().nullable(),
+  id_client: z.number().nullable().optional(), // Дозволяємо null
   load_info: z.string().optional(),
   crm_load_route_from: z
     .array(routeSchema)
@@ -84,7 +89,10 @@ const cargoServerSchema = z.object({
   crm_load_trailer: z.array(trailerSchema).min(1, "Оберіть тип транспорту"),
   is_price_request: z.boolean().optional(),
   is_collective: z.boolean().optional(),
-  car_count_begin: z.number({ message: "Вкажіть кількість" }).min(1).max(100),
+  car_count_begin: z
+    .number({ message: "Вкажіть кількість" })
+    .min(1, { message: "Мінімальна к-сть 1" })
+    .max(100, { message: "Максимальна к-сть 100" }),
   date_load: z
     .string({ message: "Дата завантаження є обов'язковою" })
     .min(1, "Будь ласка, оберіть дату"),
@@ -98,6 +106,7 @@ interface LoadFormProps {
 }
 
 export default function LoadForm({ defaultValues }: LoadFormProps) {
+  const STORAGE_KEY = "load_from_draft";
   const { config } = useFontSize();
   const [valutList, setValutList] = useState<any[]>([]);
   const [truckList, setTruckList] = useState<any[]>([]);
@@ -109,50 +118,28 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const searchParams = useSearchParams();
   const copyId = searchParams.get("copyId");
   const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
-  const [isLoadPopoverOpen, setIsLoadPopoverOpen] = useState(false);
-  const [isUnloadPopoverOpen, setIsUnloadPopoverOpen] = useState(false);
+  const [isSubmittingSuccess, setIsSubmittingSuccess] = useState(false);
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
+    mode: "onTouched",
     defaultValues: {
       load_info: "",
       ids_valut: "UAH",
-      crm_load_route_from: [
-        {
-          address: "",
-          street: "",
-          house: "",
-          city: "",
-          lat: 0,
-          lon: 0,
-          ids_route_type: "LOAD_FROM",
-          order_num: 1,
-        },
-      ],
-      crm_load_route_to: [
-        {
-          address: "",
-          street: "",
-          house: "",
-          city: "",
-          lat: 0,
-          lon: 0,
-          ids_route_type: "LOAD_TO",
-          order_num: 1,
-        },
-      ],
-      crm_load_trailer: [],
-      price: null,
-      car_count_begin: 1,
-      is_collective: false,
-      is_price_request: false,
       date_load: toLocalDateString(new Date()),
-      date_unload: null,
 
       ...defaultValues,
     },
   });
 
-  const { control, handleSubmit, setValue, clearErrors, reset, watch } = form;
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    reset,
+    watch,
+    formState,
+  } = form;
 
   // Спостерігаємо за всіма змінами у формі
   const formValues = watch();
@@ -168,7 +155,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     remove: removeTo,
   } = useFieldArray({ control, name: "crm_load_route_to" });
 
-  // Завантаження довідників
+  // ---------- Оптимізовані useEffects ----------
+
+  // 1. Завантаження довідників (лише при першому рендері)
   useEffect(() => {
     api.get("/form-data/getCreateCargoFormData").then(({ data }) => {
       setValutList(
@@ -186,119 +175,166 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     });
   }, []);
 
-  // Встановлення назви компанії при редагуванні
+  // 2. Ініціалізація назви компанії (label)
   useEffect(() => {
-    if (defaultValues?.company_name) {
-      setCompanyLabel(defaultValues.company_name);
-    }
-  }, [defaultValues]);
-  const STORAGE_KEY = "load_form_draft";
-  // ЕФЕКТ 1: Завантаження даних при старті
-  // ЕФЕКТ 1: Завантаження даних при старті
-  useEffect(() => {
-    if (defaultValues) return;
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      try {
-        reset(JSON.parse(savedData)); // Просто завантажуємо як є
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [reset, defaultValues]);
-  // ЕФЕКТ 2: Збереження при кожній зміні
-  useEffect(() => {
-    // Не зберігаємо чернетку, якщо ми в режимі редагування
-    if (defaultValues) return;
-
-    const timer = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(formValues));
-    }, 500); // затримка 1 сек, щоб не "спамити" в пам'ять при кожному символі
-
-    return () => clearTimeout(timer);
-  }, [formValues, defaultValues]);
-  useEffect(() => {
-    if (copyData && !defaultValues) {
-      const prepareForCopy = (data: any) => {
-        return {
-          ...data,
-          id: undefined,
-          crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
-            ...r,
-            id: undefined,
-          })),
-          crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
-            ...r,
-            id: undefined,
-          })),
-          crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
-            ...t,
-            id: undefined,
-          })),
-        };
-      };
-
-      const cleanedData = prepareForCopy(copyData);
-      reset(cleanedData);
-
-      // ВИПРАВЛЕННЯ ТУТ:
-      // Використовуємо кастинг до any або опціональний ланцюжок,
-      // щоб обійти сувору перевірку інтерфейсу
+    if (defaultValues) {
+      // РЕДАГУВАННЯ
+      const name =
+        defaultValues.company_name || defaultValues.client?.company_name || "";
+      setCompanyLabel(name);
+    } else if (copyData) {
+      // КОПІЮВАННЯ
       const clientData =
         (copyData as any).id_client_info || (copyData as any).client;
-
-      if (clientData?.company_name) {
-        setCompanyLabel(clientData.company_name);
-      } else if ((copyData as any).company_name) {
-        // Іноді процедура повертає назву компанії прямо в корені
-        setCompanyLabel((copyData as any).company_name);
+      const name =
+        clientData?.company_name || (copyData as any).company_name || "";
+      setCompanyLabel(name);
+    } else if (!copyId) {
+      // НОВА ЗАЯВКА (з чернетки)
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          setCompanyLabel(parsed?.companyLabel || "");
+        } catch (e) {
+          setCompanyLabel("");
+        }
+      } else {
+        setCompanyLabel(""); // Обов'язково скидаємо, якщо чернетки немає
       }
-
-      toast.info("Дані успішно скопійовано");
     }
-  }, [copyData, reset, defaultValues]);
+  }, [defaultValues, copyData, copyId]);
+
+  // 3. Скидання значень форми (reset)
+  useEffect(() => {
+    if (defaultValues) {
+      reset({
+        ...defaultValues,
+        id_client: defaultValues.id_client ?? defaultValues.client?.id ?? null,
+      });
+    } else if (copyData) {
+      const prepareForCopy = (data: any) => ({
+        ...data,
+        id: undefined,
+        crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
+          ...r,
+          id: undefined,
+        })),
+        crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
+          ...r,
+          id: undefined,
+        })),
+        crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
+          ...t,
+          id: undefined,
+        })),
+      });
+      reset(prepareForCopy(copyData));
+    } else if (!copyId) {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed?.values) reset(parsed.values);
+      } else {
+        // Якщо це створення нової і немає чернетки — ставимо дефолтні
+        reset({
+          load_info: "",
+          ids_valut: "UAH",
+          car_count_begin: 1,
+
+          crm_load_route_from: [
+            { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
+          ],
+          crm_load_route_to: [
+            { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
+          ],
+          crm_load_trailer: [],
+        });
+      }
+    }
+  }, [defaultValues, copyData, reset, copyId]);
+  useEffect(() => {
+    // Зберігаємо ТІЛЬКИ якщо:
+    // - це не редагування (немає defaultValues)
+    // - це не копіювання (немає copyId в URL)
+    // - форма ще не відправлена успішно
+    if (defaultValues || copyId || isSubmittingSuccess) return;
+
+    const timer = setTimeout(() => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          values: formValues,
+          companyLabel: companyLabel,
+        }),
+      );
+    }, 1000); // 1 секунда затримки для продуктивності
+
+    return () => clearTimeout(timer);
+  }, [formValues, defaultValues, copyId, isSubmittingSuccess, companyLabel]);
+
+  // 5. Очищення стану успіху
+  // useEffect(() => {
+  //   if (isSubmittingSuccess) {
+  //     const t = setTimeout(() => setIsSubmittingSuccess(false), 2000);
+  //     return () => clearTimeout(t);
+  //   }
+  // }, [isSubmittingSuccess]);
+
+  useEffect(() => {
+    if (defaultValues || copyId) {
+      // Якщо ми редагуємо або копіюємо, видаляємо чернетку "нової" заявки,
+      // щоб вона не заважала при наступному переході на створення
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [defaultValues, copyId]);
+
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
-    console.log(values, "values");
-
     try {
-      // Зберігаємо дані
+      setIsLoading(true);
       await saveCargo({ ...values, id: defaultValues?.id });
-      toast.success("Готово!");
 
-      // 1. Очищаємо чернетку в localStorage у будь-якому випадку після успіху
+      // 1. Видаляємо дані зі сховища
       localStorage.removeItem(STORAGE_KEY);
 
-      // 2. Якщо ми в режимі РЕДАГУВАННЯ (є defaultValues) — завжди редирект
+      // 2. Блокуємо подальші записи в useEffect
+      setIsSubmittingSuccess(true);
+
+      if (!isNextCargo) {
+        toast.success("Готово!");
+      }
+
       if (defaultValues) {
         router.push("/log/load/active");
         return;
       }
 
-      // 3. Якщо це СТВОРЕННЯ (немає defaultValues)
       if (isNextCargo) {
-        // Якщо обрано "Наступний вантаж":
-        // Просто виводимо повідомлення, форму не скидаємо, нікуди не переходимо.
-        // Користувач може змінити пару полів і натиснути "Зберегти" ще раз.
-        toast.info("Можете створювати наступний вантаж на основі поточного");
+        // Очищуємо лише певні поля, якщо треба "ще одну",
+        // або залишаємо як є, але блокуємо запис на секунду
+        setTimeout(() => setIsSubmittingSuccess(false), 1000);
+        toast.info("Можете створювати наступний вантаж");
       } else {
-        // Якщо "Наступний вантаж" НЕ обрано:
+        // Скидаємо форму
         reset();
         setCompanyLabel("");
         router.push("/log/load/active");
       }
     } catch (err) {
-      console.error(err);
+      setIsSubmittingSuccess(false);
       toast.error("Помилка збереження");
+    } finally {
+      setIsLoading(false);
     }
   };
-  useEffect(() => {
-    if (Object.keys(form.formState.errors).length > 0) {
-      console.log("❌ Помилки валідації:", form.formState.errors);
-    }
-  }, [form.formState.errors]);
 
+  useEffect(() => {
+    if (Object.keys(formState.errors).length > 0) {
+      console.log("Валідаційні помилки:", formState.errors);
+    }
+  }, [formState.errors]);
   return (
-    <div className="max-w-4xl mx-auto mb-10">
+    <div className="max-w-4xl mx-auto pb-20">
       <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm">
         <h3
           className={`${config.label} text-slate-500 uppercase tracking-widest mb-4 font-bold`}
@@ -337,6 +373,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                           {/* FormLabel видалено, назва тепер всередині GoogleLocationInput */}
                           <FormControl>
                             <GoogleLocationInput
+                              required
                               label={`Адреса завантаження #${idx + 1}`}
                               value={formField.value}
                               placeholder=" "
@@ -400,7 +437,13 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 <AppButton
                   type="button"
                   variant="ghost"
-                  className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
+                  leftIcon={<Plus size={14} />} // Зменшуємо іконку
+                  className={cn(
+                    "h-8 flex flex-row text-[10px] w-full", // h-8 замість h-9, менший шрифт
+                    "border-dashed border border-slate-300 dark:border-slate-700",
+                    "hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:border-teal-500 transition-all",
+                    "uppercase tracking-wider font-bold opacity-70 hover:opacity-100", // Стиль для "мікро-кнопки"
+                  )}
                   onClick={() =>
                     appendFrom({
                       address: "",
@@ -414,7 +457,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     })
                   }
                 >
-                  <Plus size={14} className="mr-1" /> Точка завантаження
+                  Завантаження
                 </AppButton>
               </div>
 
@@ -430,6 +473,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                           {/* Старий FormLabel видаляємо, передаємо назву в label пропс нижче */}
                           <FormControl>
                             <GoogleLocationInput
+                              required
                               label={`Адреса розвантаження #${idx + 1}`}
                               value={formField.value}
                               placeholder=" "
@@ -494,7 +538,20 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 <AppButton
                   type="button"
                   variant="ghost"
-                  className="h-9 text-xs w-full border-dashed border border-slate-300 dark:border-slate-700"
+                  leftIcon={<Plus size={14} strokeWidth={3} />}
+                  className={cn(
+                    // Розміри та шрифт (ідентично завантаженню)
+                    "h-8 px-3 text-[10px] font-bold uppercase tracking-widest",
+                    "flex items-center justify-center w-full rounded-xl",
+
+                    // Стиль рамки
+                    "border-dashed border border-zinc-300 dark:border-zinc-700",
+                    "text-zinc-500 dark:text-zinc-400",
+
+                    // Ефекти (зміна кольору на teal при наведенні)
+                    "hover:border-teal-500 hover:bg-teal-50/50 dark:hover:bg-teal-500/5 hover:text-teal-600",
+                    "transition-all duration-200 active:scale-[0.98]",
+                  )}
                   onClick={() =>
                     appendTo({
                       address: "",
@@ -508,7 +565,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     })
                   }
                 >
-                  <Plus size={14} className="mr-1" /> Точка розвантаження
+                  Розвантаження
                 </AppButton>
               </div>
             </div>
@@ -517,24 +574,19 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
             <div className="grid grid-cols-1  gap-4">
               <InputAsyncSelectCompany
                 name="id_client"
-                control={control}
-                label="Клієнт"
-                displayValue={companyLabel} // Ваш існуючий state
-                setDisplayValue={setCompanyLabel} // Ваш існуючий setState
-                loadOptions={async (v) => {
-                  if (v.length < 2) return [];
-                  const { data } = await api.get(`/company/name/${v}`);
-                  return data.map((c: any) => ({
-                    value: c.id,
-                    label: c.company_name,
-                  }));
-                }}
+                control={form.control}
+                label="Компанія"
+                initialLabel={companyLabel}
+                onEntityChange={(company) =>
+                  setCompanyLabel(company ? company.name : "")
+                }
               />
               <InputMultiSelect
                 control={control}
                 name="crm_load_trailer"
                 label="Тип транспорту"
                 options={truckList}
+                required
               />
             </div>
 
@@ -547,12 +599,13 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 icon={Info} // Можна змінити на будь-яку іншу
               />
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <InputNumber
                   name="car_count_begin"
                   control={control}
                   label="К-сть машин"
-                  icon={Truck} // Можна змінити на будь-яку іншу
+                  icon={Truck}
+                  required
                 />
                 <InputFinance
                   name="price"
@@ -560,14 +613,14 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   label="Бюджет перевезення"
                   currency="₴"
                   icon={Wallet}
-                  onChange={(val) => console.log("Чисте число:", val)}
+                  // onChange={(val) => console.log("Чисте число:", val)}
+                  required
                 />
                 <SelectFinance
                   control={control}
                   name="ids_valut"
                   label="Валюта"
-                  options={valutList.slice(0, 4)} // Ваш масив [{label: 'UAH', value: '1'}]
-                  // icon={Wallet} // Можна змінити іконку за бажанням
+                  options={valutList.slice(0, 4)}
                 />
               </div>
             </div>
@@ -607,6 +660,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
             <div className="flex justify-end pt-2">
               <AppButton
+                variant="primary"
                 type="submit"
                 isLoading={isLoading} // Спіннер з'явиться автоматично
                 size="lg" // Використовуємо наш розмір (h-13) або передай className для h-12

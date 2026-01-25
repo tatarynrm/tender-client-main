@@ -1,7 +1,7 @@
-'use client'
+"use client";
 import React, { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-
+ 
 // ThemeToggle.tsx
 // Використовує next-themes + TailwindCSS
 // Кнопка переключає тему між 'light' та 'dark'.
@@ -15,13 +15,14 @@ export default function ThemeSwitcher() {
     setMounted(true);
   }, []);
 
-  if (!mounted) return (
-    <button
-      aria-label="Change theme"
-      className="w-12 h-12 rounded-full p-2 bg-transparent flex items-center justify-center"
-      disabled
-    />
-  );
+  if (!mounted)
+    return (
+      <button
+        aria-label="Change theme"
+        className="w-12 h-12 rounded-full p-2 bg-transparent flex items-center justify-center"
+        disabled
+      />
+    );
 
   const currentTheme = theme === "system" ? systemTheme : theme;
   const isDark = currentTheme === "dark";
@@ -49,7 +50,13 @@ export default function ThemeSwitcher() {
             ${isDark ? "opacity-0 scale-50 rotate-45" : "opacity-100 scale-100 rotate-0"}`}
           aria-hidden
         >
-          <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
+          <circle
+            cx="12"
+            cy="12"
+            r="4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
           <g stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M12 2v2" />
             <path d="M12 20v2" />

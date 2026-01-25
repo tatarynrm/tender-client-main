@@ -1,34 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
-
-import api from "@/shared/api/instance.api";
 import { useParams } from "next/navigation";
-
 import LoadForm from "@/features/log/load/LoadForm";
 import Loading from "@/shared/components/ui/Loading";
+import { useLoadById } from "@/features/log/hooks/useLoads";
 
 export default function EditCargoPage() {
   const { id } = useParams();
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // 1. Extract status helpers directly from your hook
+  const { data, isLoading, isError } = useLoadById(id as string);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data } = await api.get(`/crm/load/edit/${id}`); // 👈 твій ендпоїнт
+  // 2. Handle the loading state
+  if (isLoading) {
+    return <Loading />;
+  }
 
-        setData(data.content[0]);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [id]);
+  // 3. Handle errors or missing data
+  if (isError || !data) {
+    return <div>Заявку не знайдено</div>;
+  }
 
-  if (loading) return <Loading />;
-  if (!data) return <div>Заявку не знайдено</div>;
-
+  // 4. Render the form once data is ready
   return <LoadForm defaultValues={data} />;
 }

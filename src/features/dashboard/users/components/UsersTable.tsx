@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui";
-import { CreateOrUpdateUserDialog } from "../forms/CreateOrUpdateUserDialog";
+// import { CreateOrUpdateUserDialog } from "../forms/CreateOrUpdateUserDialog";
 import { useProfile } from "@/shared/hooks";
 import OnlineStatus from "@/shared/components/UserComponents/OnlineStatus";
 
@@ -174,28 +174,7 @@ export const UsersTable = React.memo(() => {
 
             <DropdownMenuContent align="end" className="w-44">
               {/* Редагувати */}
-              <CreateOrUpdateUserDialog
-                user={{
-                  ...row.original,
-                  usr_phone: row.original.usr_phone.map((p) => ({
-                    phone: p.phone || "",
-                    is_viber: !!p.is_viber,
-                    is_telegram: !!p.is_telegram,
-                    is_whatsapp: !!p.is_whatsapp,
-                  })),
-                }}
-                triggerButton={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full items-center text-center text-xs"
-                  >
-                    <Edit2 color="blue" />
-                    Редагувати
-                  </Button>
-                }
-              />
-
+   
               {/* Видалити */}
               <DropdownMenuItem asChild>
                 <Button

@@ -24,7 +24,6 @@ export default function LogHeader({
 }) {
   // Ці дані будуть надходити з вашого Context, Redux, Zustand або з сервера
 
-
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
   // 2. Будуємо шлях, тільки якщо є аватар у профілі
@@ -80,20 +79,17 @@ export default function LogHeader({
       {/* Права частина: Налаштування та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Група системних кнопок */}
-        <div className="flex items-center p-1 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-          <GlobalSettings />
-          <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
-          <ToggleTheme />
-        </div>
+
+        <GlobalSettings />
+
+        <ToggleTheme />
 
         {/* Меню профілю */}
         <div className="relative pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
-          <DynamicHeaderMenu profile={profile} />
+          <DynamicHeaderMenu />
         </div>
         <UserAvatarMenu
-          userName={profile.name}
-          userEmail={profile.email}
-          avatarUrl={avatarUrl}
+     
         />
       </div>
     </header>

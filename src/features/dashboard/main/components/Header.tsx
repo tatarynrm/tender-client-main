@@ -94,7 +94,7 @@ export default function Header({
 
         {/* Меню профілю */}
         <div className="relative pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
-          <DynamicHeaderMenu profile={profile} />
+          <DynamicHeaderMenu  />
         </div>
       </div>
     </header>

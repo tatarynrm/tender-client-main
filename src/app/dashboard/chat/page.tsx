@@ -254,8 +254,6 @@ export default function ChatComponent() {
   const [chatSocket, setChatSocket] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-
-
   const handleMessage = (msg: Message) => {
     setMessages((prev) => [...prev, msg]);
   };
@@ -282,9 +280,9 @@ export default function ChatComponent() {
       type === "all"
         ? "send_message_to_all"
         : type === "user"
-        ? "send_message_to_user_group"
-        : "send_message_to_room",
-      payload
+          ? "send_message_to_user_group"
+          : "send_message_to_room",
+      payload,
     );
 
     setInput("");

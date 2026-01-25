@@ -107,13 +107,14 @@ const RegisterForm = () => {
                 name="surname"
                 control={form.control}
                 label="Прізвище"
-                
+                   icon={User}
                 disabled={isLoadingRegister}
               />
               <InputText
                 name="name"
                 control={form.control}
                 label="Ім'я"
+                   icon={User}
                 // leftIcon={<User />}
                 disabled={isLoadingRegister}
               />
@@ -178,7 +179,7 @@ const RegisterForm = () => {
                   control={form.control}
                   label="Повтор пароля"
                   type="password"
-                  icon={Lock }
+                  icon={Lock}
                   disabled={isLoadingRegister}
                 />
               </div>
@@ -208,7 +209,7 @@ const RegisterForm = () => {
                 name="company_address"
                 control={form.control}
                 label="Юридична адреса"
-                icon={MapPin }
+                icon={MapPin}
                 disabled={isLoadingRegister}
               />
 
@@ -217,7 +218,7 @@ const RegisterForm = () => {
                   name="company_form"
                   control={form.control}
                   label="Форма (ФОП/ТОВ)"
-                  icon={Briefcase }
+                  icon={Briefcase}
                   disabled={isLoadingRegister}
                 />
 
@@ -288,14 +289,14 @@ const RegisterForm = () => {
             </div>
           </div>
 
-<Button
-  disabled={isLoadingRegister}
-  loading={isLoadingRegister}
-  type="submit"
-  className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10"
->
-  Створити аккаунт
-</Button>
+          <Button
+            disabled={isLoadingRegister}
+            loading={isLoadingRegister}
+            type="submit"
+            className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10"
+          >
+            Створити аккаунт
+          </Button>
         </form>
       </Form>
     </AuthWrapper>

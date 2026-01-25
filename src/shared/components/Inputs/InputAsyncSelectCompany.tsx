@@ -12,27 +12,31 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { inputVariants } from "./styles/styles";
+import api from "@/shared/api/instance.api";
 
 interface Props<T extends FieldValues> {
   name: Path<T>;
   control: Control<T>;
   label: string;
-  loadOptions: (v: string) => Promise<any[]>;
-  displayValue: string;
-  setDisplayValue: (v: string) => void;
   icon?: LucideIcon;
   className?: string;
+  required?: boolean;
+  initialLabel?: string;
+  // ДОДАНО: колбек для передачі назви компанії наверх
+  onEntityChange?: (
+    entity: { id: number | string; name: string } | null,
+  ) => void;
 }
 
 export const InputAsyncSelectCompany = <T extends FieldValues>({
   name,
   control,
   label,
-  loadOptions,
-  displayValue,
-  setDisplayValue,
   icon: Icon = Building2,
   className,
+  required,
+  initialLabel,
+  onEntityChange, // Деструктуризація
 }: Props<T>) => {
   const {
     field,
@@ -43,9 +47,9 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
   const [options, setOptions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [localDisplayValue, setLocalDisplayValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Закриття при кліку поза компонентом
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -59,7 +63,6 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Пошук з дебаунсом
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setOptions([]);
@@ -69,29 +72,63 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
     const delay = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await loadOptions(searchTerm);
-        setOptions(res);
+        const { data } = await api.get(`/company/name/${searchTerm}`);
+        const mappedOptions = data.map((c: any) => ({
+          value: c.id,
+          label: c.company_name,
+        }));
+        setOptions(mappedOptions);
+      } catch (err) {
+        console.error("Fetch companies error:", err);
+        setOptions([]);
       } finally {
         setLoading(false);
       }
     }, 400);
 
     return () => clearTimeout(delay);
-  }, [searchTerm, loadOptions]);
+  }, [searchTerm]);
 
+  // ОНОВЛЕНО: Викликаємо onEntityChange при виборі
   const handleSelect = (option: any) => {
     field.onChange(option.value);
-    setDisplayValue(option.label);
+    setLocalDisplayValue(option.label);
+
+    // Передаємо дані батьківському компоненту для localStorage
+    if (onEntityChange) {
+      onEntityChange({ id: option.value, name: option.label });
+    }
+
     setSearchTerm("");
     setOpen(false);
   };
 
+  // ОНОВЛЕНО: Очищаємо і назву в батьківському компоненті
   const clearSelection = (e: React.MouseEvent) => {
     e.stopPropagation();
     field.onChange(null);
-    setDisplayValue("");
+    setLocalDisplayValue("");
     setSearchTerm("");
+    if (onEntityChange) {
+      onEntityChange(null);
+    }
   };
+
+  useEffect(() => {
+    if (!field.value) {
+      setLocalDisplayValue("");
+      setSearchTerm("");
+    }
+  }, [field.value]);
+
+  // ОНОВЛЕНО: Синхронізація з пропсом initialLabel
+  useEffect(() => {
+    // Якщо прийшов новий initialLabel (наприклад, при зміні ID в URL
+    // або завантаженні нових defaultValues), оновлюємо локальний текст
+    if (initialLabel !== undefined) {
+      setLocalDisplayValue(initialLabel);
+    }
+  }, [initialLabel]); // Слідкуємо саме за зміною вхідного тексту
 
   return (
     <div
@@ -99,8 +136,7 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
       ref={containerRef}
     >
       <div className="relative mt-1.5 group">
-        {/* ІКОНКА ЗЛІВА */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 transition-colors z-30 pointer-events-none">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 z-30 pointer-events-none">
           {loading ? (
             <Loader2 size={18} className="animate-spin text-teal-600" />
           ) : (
@@ -108,14 +144,13 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
           )}
         </div>
 
-        {/* ОСНОВНИЙ INPUT-БЛОК */}
         <div
           onClick={() => setOpen(!open)}
           className={cn(
             inputVariants.base,
             "min-h-[46px] pl-12 pr-10 flex items-center cursor-pointer transition-all duration-200",
             "bg-white dark:bg-slate-900 shadow-sm",
-            "rounded-2xl border-zinc-200 dark:border-white/10", // ВАЖЛИВО: rounded-2xl для стилю
+            "rounded-2xl border-zinc-200 dark:border-white/10",
             open
               ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-teal-500/10 shadow-lg"
               : "hover:border-zinc-300 dark:hover:border-white/20",
@@ -125,15 +160,14 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
           <span
             className={cn(
               "text-[13px] font-medium truncate transition-colors",
-              displayValue
+              localDisplayValue
                 ? "text-zinc-900 dark:text-zinc-100"
                 : "text-transparent",
             )}
           >
-            {displayValue || "Placeholder"}
+            {localDisplayValue || "Placeholder"}
           </span>
 
-          {/* ПРАВІ КНОПКИ (ОЧИСТИТИ ТА СТРІЛКА) */}
           <div className="absolute right-3 flex items-center gap-1">
             {field.value && (
               <button
@@ -153,7 +187,6 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
           </div>
         </div>
 
-        {/* FLOATING LABEL */}
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
@@ -164,10 +197,16 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
           )}
         >
           {label}
+          {required && (
+            <span
+              className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}
+            >
+              *
+            </span>
+          )}
         </label>
       </div>
 
-      {/* ВИПАДАЮЧЕ МЕНЮ */}
       {open && (
         <div
           className={cn(
@@ -176,7 +215,6 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
             "overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200",
           )}
         >
-          {/* ПОЛЕ ПОШУКУ ВСЕРЕДИНІ МЕНЮ */}
           <div className="p-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-white/5">
             <Search size={16} className="text-teal-600" strokeWidth={2.5} />
             <input
@@ -188,7 +226,6 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
             />
           </div>
 
-          {/* СПИСОК ОПЦІЙ */}
           <div className="max-h-[280px] overflow-y-auto custom-scrollbar">
             {options.length > 0 ? (
               <div className="py-1">

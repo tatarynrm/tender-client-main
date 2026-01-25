@@ -1,53 +1,77 @@
 "use client";
 
 import * as React from "react";
-import { useForm, SubmitHandler, FormProvider } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-} from "@/shared/components/ui/form";
-import { Input } from "@/shared/components/ui/input";
-import { Button } from "@/shared/components/ui/button";
-import { Switch } from "@/shared/components/ui/switch";
-import { SearchInput } from "@/shared/components/Inputs/SearchInputWithResult";
-import { IctSwitchWithConfirm } from "@/shared/components/Switch/SwitchWithConfirm";
-import api from "@/shared/api/instance.api";
-import {
-  FaLock,
-  FaKey,
-  FaUserShield,
-  FaMoneyBill,
-  FaChalkboardTeacher,
-  FaLaptopCode,
-  FaUserPlus,
-} from "react-icons/fa";
-import { useAdminUsers } from "@/features/admin/hooks/useAdminUsers";
+import { Form } from "@/shared/components/ui";
 
-const userSchema = z.object({
-  email: z.string().email("Невірний формат").min(5),
-  last_name: z.string().min(1, "Обов'язково"),
-  name: z.string().min(1, "Обов'язково"),
-  surname: z.string().min(1, "Обов'язково"),
-  is_blocked: z.boolean().optional(),
-  two_factor_enabled: z.boolean().optional(),
-  is_admin: z.boolean().optional(),
-  is_accountant: z.boolean().optional(),
-  is_manager: z.boolean().optional(),
-  is_director: z.boolean().optional(),
-  is_ict: z.boolean().optional(),
-  id_company: z.number({ message: "Обов'язково" }),
-});
+import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
+
+
+import { useAdminUsers } from "@/features/admin/hooks/useAdminUsers";
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import {
+  Lock,
+  ShieldCheck,
+  Banknote,
+  GraduationCap,
+  Laptop,
+  UserPlus,
+  Mail,
+  AlertCircle,
+} from "lucide-react";
+import { InputText } from "@/shared/components/Inputs/InputText";
+import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
+import { cn } from "@/shared/utils";
+import { InputSwitchWithConfirm } from "@/shared/components/Inputs/InputSwitchWithConfirm";
+
+const userSchema = z
+  .object({
+    email: z
+      .string()
+      .trim() // Видаляє пробіли на початку і в кінці
+      .toLowerCase() // Перетворює на малий регістр
+      .email("Невірний формат")
+      .min(5, "Обов'язково"),
+    last_name: z.string().min(1, "Обов'язково"),
+    name: z.string().min(1, "Обов'язково"),
+    surname: z.string().min(1, "Обов'язково"),
+    is_blocked: z.boolean().optional(),
+    two_factor_enabled: z.boolean().optional(),
+    is_admin: z.boolean().optional(),
+    is_accountant: z.boolean().optional(),
+    is_manager: z.boolean().optional(),
+    is_director: z.boolean().optional(),
+    is_ict: z.boolean().optional(),
+    id_company: z.number({ message: "Обов'язково" }),
+  })
+  .refine(
+    (data) => {
+      // ПЕРЕВІРКА: хоча б одна з основних ролей має бути true
+      return (
+        data.is_admin ||
+        data.is_accountant ||
+        data.is_manager ||
+        data.is_director
+      );
+    },
+    {
+      message: "Оберіть хоча б одну роль",
+      path: ["is_roles"],
+    },
+  );
 
 type UserFormData = z.infer<typeof userSchema>;
 
 export default function CreateUserPage() {
+  const { config } = useFontSize();
   const { createUser } = useAdminUsers();
+
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
+    mode:'onTouched',
     defaultValues: {
       is_blocked: false,
       two_factor_enabled: false,
@@ -56,273 +80,230 @@ export default function CreateUserPage() {
       is_manager: false,
       is_director: false,
       is_ict: false,
+      email: "",
+      last_name: "",
+      name: "",
+      surname: "",
     },
   });
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    trigger,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = form;
+
   const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     try {
+      console.log(data, "DATA");
       const res = await createUser(data);
+      console.log(res, "res");
 
-      // Перевіряємо, що саме прийшло в консолі
-      console.log("Response from server:", res);
-
-      // Якщо ваш API повертає структуру { data: { status: "ok" } } або просто { status: "ok" }
-      // Переконайтеся, що умова відповідає вашій відповіді
       if (res && (res.status === "ok" || res.data?.status === "ok")) {
-        form.reset({
-          email: "",
-          last_name: "",
-          name: "",
-          surname: "",
-          id_company: undefined, // Очищуємо компанію
-          is_blocked: false,
-          two_factor_enabled: false,
-          is_admin: false,
-          is_accountant: false,
-          is_manager: false,
-          is_director: false,
-          is_ict: false,
-        });
-        console.log("Form has been reset");
+        reset();
       }
     } catch (e) {
       console.error("Submit error:", e);
     }
   };
 
+  const rolesError = (errors as any).is_roles;
+
   return (
-    <div className="px-4 py-6 w-full max-w-5xl mx-auto pb-24">
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {/* КАРТКА 1: ОСНОВНІ ДАНІ */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-5 rounded-3xl shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div className="md:col-span-8">
-                <FormField
-                  control={form.control}
+    <div className="mx-auto mb-10 px-4">
+      <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm">
+        <h3
+          className={cn(
+            config.label,
+            "text-slate-500 uppercase tracking-widest mb-6 font-bold",
+          )}
+        >
+          Новий користувач
+        </h3>
+
+        <Form {...form}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              <div className="md:col-span-7">
+                <InputAsyncSelectCompany
                   name="id_company"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase">
-                        Компанія
-                      </FormLabel>
-                      <SearchInput
-                        url="/company/name"
-                        placeholder="Пошук..."
-                        onChange={(val) => field.onChange(val?.id)}
-                      />
-                    </FormItem>
-                  )}
+                  control={control}
+                  label="Компанія"
+                  required
                 />
               </div>
-              <div className="md:col-span-4">
-                <FormField
-                  control={form.control}
+              <div className="md:col-span-5">
+                <InputText
                   name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-bold text-slate-500 uppercase">
-                        Email
-                      </FormLabel>
-                      <Input
-                        {...field}
-                        placeholder="mail@example.com"
-                        className="h-10 rounded-xl"
-                      />
-                    </FormItem>
-                  )}
+                  control={control}
+                  label="Email"
+                  icon={Mail}
+                  required
                 />
               </div>
-              <div className="md:col-span-12 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                {[
-                  { n: "last_name", l: "Прізвище" },
-                  { n: "name", l: "Ім'я" },
-                  { n: "surname", l: "По батькові" },
-                ].map((u) => (
-                  <FormField
-                    key={u.n}
-                    control={form.control}
-                    name={u.n as any}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-[10px] font-bold text-slate-400 uppercase">
-                          {u.l}
-                        </FormLabel>
-                        <Input
-                          {...field}
-                          className="h-10 rounded-xl bg-slate-50/50"
-                        />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* БЕЗПЕКА */}
-            <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 p-4 rounded-3xl space-y-3">
-              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-2">
-                Безпека
-              </h4>
-              {[
-                {
-                  name: "is_blocked",
-                  label: "Блок",
-                  icon: FaLock,
-                  color: "text-red-500",
-                },
-                {
-                  name: "two_factor_enabled",
-                  label: "2FA",
-                  icon: FaKey,
-                  color: "text-blue-500",
-                  confirm: true,
-                },
-              ].map((s) => (
-                <FormField
-                  key={s.name}
-                  control={form.control}
-                  name={s.name as any}
-                  render={({ field }) => (
-                    <div className="flex items-center justify-between bg-white dark:bg-white/5 p-2 px-3 rounded-xl border border-slate-100 dark:border-transparent transition-colors hover:bg-slate-100/50 dark:hover:bg-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <InputText
+                name="last_name"
+                control={control}
+                label="Прізвище"
+                required
+              />
+              <InputText name="name" control={control} label="Ім'я" required />
+              <InputText
+                name="surname"
+                control={control}
+                label="По батькові"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* БЕЗПЕКА */}
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm space-y-4">
+                <h4 className="text-[10px] font-black uppercase text-slate-400 border-b pb-2">
+                  Безпека
+                </h4>
+                <InputSwitch
+                  control={control}
+                  name="is_blocked"
+                  label="Блокування"
+                  icon={Lock}
+                  className="data-[state=checked]:bg-red-500"
+                />
+                <InputSwitchWithConfirm
+                  icon={ShieldCheck}
+                  label="2FA Аутентифікація"
+                  text="Користувачу буде надсилатись код підтвердження."
+                  field={{
+                    value: form.watch("two_factor_enabled") || false,
+                    onChange: (val) => form.setValue("two_factor_enabled", val),
+                  }}
+                />
+              </div>
+
+              {/* РОЛІ */}
+              <div
+                className={cn(
+                  "md:col-span-2 bg-white dark:bg-slate-900 p-4 rounded-2xl border shadow-sm transition-all",
+                  rolesError
+                    ? "border-red-500 bg-red-50/5"
+                    : "border-slate-200 dark:border-white/10",
+                )}
+              >
+                <div className="flex justify-between items-center border-b pb-2 mb-4">
+                  <h4 className="text-[10px] font-black uppercase text-slate-400">
+                    Ролі доступу
+                  </h4>
+                  {rolesError && (
+                    <span className="text-[10px] text-red-500 font-bold flex items-center gap-1 animate-pulse">
+                      <AlertCircle size={12} /> {rolesError.message}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    {
+                      name: "is_admin",
+                      label: "Admin",
+                      icon: ShieldCheck,
+                      color: "text-red-500",
+                    },
+                    {
+                      name: "is_accountant",
+                      label: "Бухгалтер",
+                      icon: Banknote,
+                      color: "text-amber-500",
+                    },
+                    {
+                      name: "is_manager",
+                      label: "Менеджер",
+                      icon: GraduationCap,
+                      color: "text-indigo-500",
+                    },
+                    {
+                      name: "is_director",
+                      label: "Директор",
+                      icon: ShieldCheck,
+                      color: "text-purple-500",
+                    },
+                  ].map((r) => {
+                    const isActive = form.watch(r.name as any);
+                    return (
                       <label
-                        htmlFor={s.name}
-                        className="flex items-center gap-2 cursor-pointer flex-1 py-1"
-                      >
-                        <s.icon className={`${s.color} text-sm`} />
-                        <span className="text-xs font-medium">{s.label}</span>
-                      </label>
-                      <FormControl>
-                        {s.confirm ? (
-                          <IctSwitchWithConfirm
-                            id={s.name}
-                            field={field}
-                            text="Увімкнути?"
-                          />
-                        ) : (
-                          <Switch
-                            id={s.name}
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className="scale-75"
-                          />
+                        key={r.name}
+                        onClick={() => {
+                          // Додаємо тригер валідації при кліку на картку
+                          setTimeout(() => trigger("is_roles" as any), 10);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center p-3 rounded-xl border transition-all cursor-pointer select-none",
+                          isActive
+                            ? "border-blue-500 bg-blue-50/30 dark:bg-blue-500/10"
+                            : "border-slate-100 dark:border-white/5 bg-slate-50/30 dark:bg-white/5 hover:border-slate-300",
                         )}
-                      </FormControl>
-                    </div>
-                  )}
-                />
-              ))}
-            </div>
-
-            {/* РОЛІ */}
-            <div className="md:col-span-2 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 p-4 rounded-3xl">
-              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-2">
-                Ролі доступу
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  {
-                    name: "is_admin",
-                    label: "Admin",
-                    icon: FaUserShield,
-                    color: "text-red-500",
-                  },
-                  {
-                    name: "is_accountant",
-                    label: "Бухгалтер",
-                    icon: FaMoneyBill,
-                    color: "text-amber-500",
-                  },
-                  {
-                    name: "is_manager",
-                    label: "Менеджер",
-                    icon: FaChalkboardTeacher,
-                    color: "text-indigo-500",
-                  },
-                  {
-                    name: "is_director",
-                    label: "Директор",
-                    icon: FaUserShield,
-                    color: "text-purple-500",
-                  },
-                ].map((r) => (
-                  <FormField
-                    key={r.name}
-                    control={form.control}
-                    name={r.name as any}
-                    render={({ field }) => (
-                      <label
-                        htmlFor={r.name}
-                        className="flex flex-col items-center justify-center bg-white dark:bg-white/5 p-2 rounded-xl border border-slate-100 dark:border-transparent cursor-pointer transition-all hover:shadow-sm hover:border-blue-200 dark:hover:border-white/20 group"
                       >
                         <r.icon
-                          className={`${r.color} text-base mb-1 group-hover:scale-110 transition-transform`}
+                          className={cn(
+                            r.color,
+                            "mb-2",
+                            !isActive && "opacity-50",
+                          )}
+                          size={20}
                         />
-                        <span className="text-[10px] font-bold uppercase mb-2 text-slate-600 dark:text-slate-400">
+                        <span className="text-[10px] font-bold uppercase mb-3 text-slate-500 text-center">
                           {r.label}
                         </span>
-                        <FormControl>
-                          <Switch
-                            id={r.name}
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className="scale-75"
-                          />
-                        </FormControl>
+                        <InputSwitch
+                          control={control}
+                          name={r.name as any}
+                          label=""
+                          className="scale-90 pointer-events-none"
+                        />
                       </label>
-                    )}
-                  />
-                ))}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* ICT СЕКЦІЯ */}
-          <div className="bg-gradient-to-r from-teal-500/10 to-blue-500/10 border border-teal-500/20 p-3 px-5 rounded-2xl">
-            <FormField
-              control={form.control}
-              name="is_ict"
-              render={({ field }) => (
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="is_ict"
-                    className="flex items-center gap-3 cursor-pointer flex-1"
-                  >
-                    <div className="p-2 bg-teal-500/20 rounded-lg">
-                      <FaLaptopCode className="text-teal-600" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold block">
-                        ICT Адміністратор
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        Повний технічний доступ
-                      </span>
-                    </div>
-                  </label>
-                  <FormControl>
-                    <IctSwitchWithConfirm
-                      id="is_ict"
-                      field={field}
-                      text="Надати права?"
-                    />
-                  </FormControl>
-                </div>
-              )}
-            />
-          </div>
+            <div className="flex flex-wrap gap-4 items-center">
+              <InputSwitchWithConfirm
+                id="is_ict"
+                icon={Laptop}
+                label="Користувач ICT ?"
+                text="Користувач отримає повні права адміністратора ICT системи."
+                field={{
+                  value: form.watch("is_ict") || false,
+                  onChange: (val) => {
+                    form.setValue("is_ict", val);
+                    // ICT не є частиною валідації "хоча б одна роль", тому тут тригер не обов'язковий,
+                    // але можна додати для надійності
+                    trigger("is_roles" as any);
+                  },
+                }}
+              />
+            </div>
 
-          <div className="flex justify-end pt-2">
-            <Button
-              type="submit"
-              className="w-full md:w-auto px-12 h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-            >
-              <FaUserPlus /> Створити акаунт
-            </Button>
-          </div>
-        </form>
-      </FormProvider>
+            <div className="flex justify-end pt-4">
+              <AppButton
+                type="submit"
+                size="lg"
+                className="w-full sm:w-auto px-12 shadow-lg bg-blue-600 hover:bg-blue-700"
+                leftIcon={<UserPlus size={18} />}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Створення..." : "Створити акаунт"}
+              </AppButton>
+            </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }
