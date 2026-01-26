@@ -15,8 +15,8 @@ interface InputTextProps<T extends FieldValues> {
   icon?: LucideIcon | null;
   rightLabel?: React.ReactNode;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  // ДОДАНО: пропс required
-  required?: boolean; 
+  required?: boolean;
+  autoComplete?: string;
 }
 
 export const InputText = <T extends FieldValues>({
@@ -29,7 +29,8 @@ export const InputText = <T extends FieldValues>({
   icon: Icon,
   rightLabel,
   onChange: externalOnChange,
-  required, // ДЕСТРУКТУРИЗАЦІЯ
+  required,
+  autoComplete = "off",
 }: InputTextProps<T>) => {
   const {
     field,
@@ -45,14 +46,22 @@ export const InputText = <T extends FieldValues>({
     if (externalOnChange) externalOnChange(e);
   };
 
+  // Базові класи для лейбла, коли він піднятий (focus, заповнений або autofill)
+  const labelFloatingClasses = [
+    "-top-2",
+    "left-2",
+    "text-[10px]",
+    "translate-y-0",
+    "font-bold",
+  ];
+
   return (
     <div className={cn("flex flex-col w-full", className)}>
       {rightLabel && <div className="flex justify-end mb-1">{rightLabel}</div>}
-      
+
       <div className="relative mt-1.5 group">
         <div className="relative flex items-center">
-          
-          {/* ЛІВА ІКОНКА */}
+          {/* Іконка зліва */}
           {Icon && (
             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 transition-colors z-30 pointer-events-none">
               <Icon size={18} strokeWidth={2.5} />
@@ -64,46 +73,56 @@ export const InputText = <T extends FieldValues>({
             id={name}
             type={isPassword ? (showPassword ? "text" : "password") : type}
             disabled={disabled}
-            placeholder=" " 
-            autoComplete={isPassword ? "new-password" : "off"}
+            placeholder=" " // Важливо для роботи селектора :placeholder-shown
+            autoComplete={autoComplete}
             onChange={handleInputChange}
             value={field.value ?? ""}
             className={cn(
               "peer w-full h-11 rounded-md bg-white dark:bg-slate-900 relative z-20 border transition-all outline-none",
+              "text-[14px] text-slate-900 dark:text-white",
+              // Падінги залежно від наявності іконки та типу пароль
               Icon ? "pl-11" : "pl-3.5",
               isPassword ? "pr-11" : "pr-3.5",
-              hasError ? "border-red-500" : "border-zinc-200 dark:border-white/10 focus:border-teal-600",
+              // Кольори бордера
+              hasError
+                ? "border-red-500"
+                : "border-zinc-200 dark:border-white/10 focus:border-teal-600",
+              // Стилізація Autofill (щоб не було "жовтого" фону від Chrome)
+              "autofill:shadow-[inset_0_0_0_1000px_#fff] dark:autofill:shadow-[inset_0_0_0_1000px_#0f172a]",
               disabled && "opacity-50 cursor-not-allowed",
-              "text-[14px] text-slate-900 dark:text-white"
             )}
           />
 
-          {/* ЛЕЙБЛ З АНІМАЦІЄЮ ТА ЗІРОЧКОЮ */}
           {label && (
             <label
               htmlFor={name}
               className={cn(
                 "absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900",
-                "uppercase tracking-widest text-[13px]",
-                
+                "uppercase tracking-widest text-[13px] text-zinc-400",
+                "top-1/2 -translate-y-1/2",
                 Icon ? "left-10" : "left-3",
-                "top-1/2 -translate-y-1/2 text-zinc-400",
 
+                // 1. Стан Фокусу
                 "peer-focus:-top-2 peer-focus:left-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0 peer-focus:text-teal-600",
+
+                // 2. Стан, коли поле вже заповнене користувачем
                 "peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:translate-y-0",
-                
-                hasError && "text-red-500 peer-focus:text-red-500"
+
+                // 3. Стан АВТОЗАПОВНЕННЯ (Autofill)
+                "peer-autofill:-top-2 peer-autofill:left-2 peer-autofill:text-[10px] peer-autofill:translate-y-0",
+
+                // Стан помилки
+                hasError && "text-red-500 peer-focus:text-red-500",
               )}
             >
               {label}
-              {/* ДОДАНО: Відображення зірочки */}
               {required && (
-                <span className="ml-1 text-red-500 font-bold group-focus-within:inline">*</span>
+                <span className="ml-1 text-red-500 font-bold">*</span>
               )}
             </label>
           )}
 
-          {/* КНОПКА ПАРОЛЯ */}
+          {/* Кнопка показати/приховати пароль */}
           {isPassword && (
             <button
               type="button"
@@ -116,7 +135,7 @@ export const InputText = <T extends FieldValues>({
         </div>
       </div>
 
-      {/* ПОВІДОМЛЕННЯ ПРО ПОМИЛКУ */}
+      {/* Повідомлення про помилку */}
       {hasError && (
         <p className="mt-1 ml-1 text-[10px] uppercase text-red-500 tracking-tight font-bold animate-in fade-in slide-in-from-top-1">
           {error.message}

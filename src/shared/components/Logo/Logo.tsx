@@ -20,8 +20,11 @@ const Logo: React.FC<LogoProps> = ({ width = 140, height = 200 }) => {
 
   if (!mounted) return null; // не рендеримо поки не визначена тема
 
+  // const logoSrc =
+  //   theme === "dark" ? "/images/logo/logo-white.png" : "/images/logo/logo.png";
+
   const logoSrc =
-    theme === "dark" ? "/images/logo/logo-white.png" : "/images/logo/logo.png";
+    "/images/logo/logo-white.png"
 
   return (
     <Image

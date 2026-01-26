@@ -14,6 +14,7 @@ import {
 import { LoadApiItem } from "../../types/load.type";
 import { cn } from "@/shared/utils";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { useLoads } from "../../hooks/useLoads";
 
 interface CargoActionsProps {
   load: LoadApiItem;
@@ -42,7 +43,18 @@ export function CargoActions({
   const router = useRouter();
   const pathname = usePathname();
   const { config } = useFontSize();
+  const { deleteCargo, isDeleting } = useLoads();
 
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Ви впевнені, що хочете видалити цей вантаж?")) {
+      try {
+        await deleteCargo(id);
+        // Можна додати toast-сповіщення тут
+      } catch (e) {
+        console.error("Помилка при видаленні", e);
+      }
+    }
+  };
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +176,7 @@ export function CargoActions({
               className={cn(itemClass, "hover:text-blue-600")}
             >
               <CheckCircle2 size={config.icon - 2} className="text-blue-500" />
-              <span className={textClass}>Закрити</span>
+              <span className={textClass}>Закрита нами</span>
             </button>
 
             <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
@@ -196,9 +208,11 @@ export function CargoActions({
                 <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
                 <button
                   onClick={() => {
+                    handleDelete(load.id);
                     onDelete?.(load.id);
                     setIsOpen(false);
                   }}
+                  disabled={isDeleting}
                   className={cn(
                     itemClass,
                     "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30",
@@ -206,7 +220,7 @@ export function CargoActions({
                 >
                   <Trash2 size={config.icon - 2} />
                   <span className={cn(textClass, "font-semibold")}>
-                    Видалити
+                    {isDeleting ? "Видалення..." : "Видалити"}
                   </span>
                 </button>
               </>

@@ -54,7 +54,7 @@ const LoginForm = () => {
                 control={form.control}
                 label="E-mail"
                 type="email"
-         
+         autoComplete="email"
                 disabled={isLoadingLogin}
               />
 

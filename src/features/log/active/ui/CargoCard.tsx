@@ -12,6 +12,9 @@ import {
   ChevronRight,
   History,
   Info,
+  Truck,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils";
@@ -30,6 +33,8 @@ import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { CargoActions } from "./CargoActions";
 import { useEventEffect } from "@/shared/hooks/useEventEffects";
 import { StatusIndicator } from "./CargoCardUpdateColor";
+// Імпортуємо хук
+import { useFontSize } from "@/shared/providers/FontSizeProvider";
 
 interface CargoCardProps {
   load: LoadApiItem;
@@ -38,33 +43,70 @@ interface CargoCardProps {
 }
 
 function CarCounter({
+  icon: Icon,
   label,
   value,
   variant,
+  fontSizeClass,
 }: {
+  icon: React.ComponentType<any>;
   label: string;
   value: number;
   variant: "blue" | "emerald" | "red";
+  fontSizeClass: string;
 }) {
   const styles = {
-    blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
-    emerald: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
-    red: "text-red-500 bg-red-50 dark:bg-red-900/20",
+    blue: "text-blue-600 bg-blue-50 dark:bg-blue-400/10 border-blue-100 dark:border-blue-400/20",
+    emerald:
+      "text-emerald-600 bg-emerald-50 dark:bg-emerald-400/10 border-emerald-100 dark:border-emerald-400/20",
+    red: "text-red-500 bg-red-50 dark:bg-red-400/10 border-red-100 dark:border-red-400/20",
   };
+
   return (
-    <div
-      className={cn(
-        "flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border border-transparent",
-        styles[variant],
-      )}
-    >
-      <span className="opacity-70">{label}:</span>
-      <span>{value}</span>
+    <div className="group/tooltip relative flex">
+      {/* САМА ПІДКАЗКА */}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-bold rounded shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 whitespace-nowrap z-50">
+        {label}
+        {/* Стрілочка підказки */}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100" />
+      </div>
+
+      {/* КНОПКА ЛІЧИЛЬНИКА */}
+      <div
+        className={cn(
+          "flex items-center gap-1.5 px-2 py-1 rounded-lg border cursor-help transition-all",
+          styles[variant],
+        )}
+      >
+        <Icon size={12} className="opacity-80" />
+        <span className={cn("font-bold tabular-nums", fontSizeClass)}>
+          {value}
+        </span>
+      </div>
     </div>
   );
 }
-
+function Tooltip({
+  children,
+  text,
+}: {
+  children: React.ReactNode;
+  text: string;
+}) {
+  return (
+    <div className="group/tooltip relative flex items-center justify-center">
+      {/* Тіло підказки */}
+      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[10px] font-bold rounded-lg shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 whitespace-nowrap z-50 pointer-events-none">
+        {text}
+        {/* Стрілочка */}
+        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-100" />
+      </div>
+      {children}
+    </div>
+  );
+}
 export function CargoCard({ load, filters }: CargoCardProps) {
+  const { config } = useFontSize(); // Отримуємо конфігурацію шрифтів
   const { profile } = useAuth();
   const [isJustCreated, setIsJustCreated] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
@@ -76,7 +118,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [localReadTime, setLocalReadTime] = useState<string | null>(
     load.comment_read_time || null,
   );
-  const [showInfo, setShowInfo] = useState(false);
+
   const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
     useAddCars();
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
@@ -150,10 +192,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   return (
     <>
       <div
-        onDoubleClick={() => setSelectedCargo(load)}
+      
         className={cn(
           "group relative flex flex-col w-full bg-white dark:bg-slate-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:border-blue-400 transition-all duration-200 shadow-sm",
-          "h-[265px] min-h-[265px]",
+          "min-h-[265px] h-auto", // Дозволяємо картці рости, якщо шрифт великий
           isJustCreated && "animate-in fade-in slide-in-from-bottom-2",
           getAnimationClass(),
         )}
@@ -161,41 +203,52 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         <StatusIndicator updatedAt={load.updated_at} />
 
         {/* HEADER */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-50/80 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center justify-between px-3 py-2 bg-zinc-50/80 dark:bg-zinc-800/50 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded shadow-sm">
+            <span
+              className={cn(
+                "font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded shadow-sm shrink-0",
+                config.label,
+              )}
+            >
               #{load.id}
             </span>
-            <span className="text-[9px] font-black text-zinc-500 uppercase truncate">
+            <span
+              className={cn(
+                "font-black text-zinc-500 uppercase truncate",
+                config.label,
+              )}
+            >
               {filters?.transit_dropdown?.find(
                 (t) => t.ids === load.ids_transit_type,
               )?.value || "UA-UA"}
             </span>
           </div>
-          <div className="flex items-center  gap-4">
-            {/* INFO BUTTON -> OPENS DRAWER */}
+          <div className="flex items-center gap-1">
+            <Tooltip text="Деталі вантажу">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCargo(load);
+                }}
+                className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all"
+              >
+                <Info size={config.icon * 0.8} />
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedCargo(load); // Відкриваємо той самий Drawer, що і по дабл-кліку
-              }}
-              className="p-1 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-all"
-              title="Показати деталі"
-            >
-              <Info size={14} />
-            </button>
+            <Tooltip text="Історія змін">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenHistory(true);
+                }}
+                className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+              >
+                <History size={config.icon * 0.8} />
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenHistory(true);
-              }}
-                 title="Показати історію"
-              className="p-1 text-zinc-400 hover:text-blue-500 transition-colors"
-            >
-              <History size={14} />
-            </button>
             <CargoActions
               load={load}
               profile={profile}
@@ -209,52 +262,50 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         </div>
 
         {/* CONTENT */}
-        <div className="flex flex-col flex-1 p-3 min-w-0 gap-2">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <CalendarDays size={10} />
-            <span className="text-[9px] font-medium leading-none">
+        <div className="flex flex-col flex-1 p-3 gap-3">
+          {/* TIME */}
+          <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
+            <CalendarDays size={config.icon * 0.7} />
+            <span className={cn("font-medium leading-none", config.label)}>
               {load.updated_at ? (
-                <>
-                  Оновлено{" "}
+                <span className="truncate">
                   {formatDistanceToNow(new Date(load.updated_at), {
                     addSuffix: true,
                     locale: uk,
                   })}
-                  <span className="opacity-60 ml-1">
-                    ({format(new Date(load.updated_at), "dd.MM HH:mm")})
-                  </span>
-                </>
+                </span>
               ) : (
                 "—"
               )}
             </span>
           </div>
 
-          {/* ROUTE */}
-          <div className="flex flex-wrap items-center gap-x-1 gap-y-1 h-[34px] overflow-hidden content-start">
+          {/* ROUTE - Найважливіша частина для стабільності */}
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-h-[40px]">
             {[...load.crm_load_route_from, ...load.crm_load_route_to].map(
               (point, idx, allPoints) => (
                 <React.Fragment key={idx}>
-                  <div className="flex items-center gap-0.5 max-w-[95px]">
+                  <div className="flex items-center gap-1 bg-zinc-50 dark:bg-zinc-800/40 px-1.5 py-0.5 rounded-md border border-zinc-100 dark:border-zinc-800">
                     <span
                       className={cn(
-                        "text-[11px] font-bold truncate",
-                        idx >= load.crm_load_route_from.length
-                          ? "text-zinc-900 dark:text-zinc-100"
-                          : "text-blue-600 dark:text-blue-400",
+                        "font-bold truncate max-w-[120px]",
+                        config.main,
+                        idx < load.crm_load_route_from.length
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-zinc-900 dark:text-zinc-100",
                       )}
                     >
                       {point.city}
                     </span>
                     <Flag
                       country={point.country || "UA"}
-                      size={8}
-                      className="shrink-0 grayscale-[0.2]"
+                      size={config.icon * 0.6}
+                      className="shrink-0"
                     />
                   </div>
                   {idx !== allPoints.length - 1 && (
                     <ChevronRight
-                      size={10}
+                      size={14}
                       className="text-zinc-300 shrink-0"
                     />
                   )}
@@ -264,100 +315,138 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           </div>
 
           {/* TRAILER & PRICE */}
-          <div className="grid grid-cols-2 gap-2 py-1 border-t border-zinc-50 dark:border-zinc-800/50 mt-1">
+          <div className="grid grid-cols-2 gap-4 py-2 border-y border-zinc-50 dark:border-zinc-800/50">
             <div className="min-w-0">
-              <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">
+              <p
+                className={cn(
+                  "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
+                  config.label,
+                )}
+              >
                 Транспорт
               </p>
-              <p className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 truncate">
+              <p
+                className={cn(
+                  "font-semibold text-zinc-600 dark:text-zinc-300 truncate",
+                  config.label,
+                )}
+              >
                 {load.crm_load_trailer
                   ?.map((t) => t.trailer_type_name)
                   .join(", ") || "—"}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-tighter">
+            <div className="text-right min-w-0">
+              <p
+                className={cn(
+                  "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
+                  config.label,
+                )}
+              >
                 Оплата
               </p>
-              <p className="text-[11px] font-black text-zinc-900 dark:text-zinc-100 truncate">
+              <p
+                className={cn(
+                  "font-black text-blue-600 dark:text-blue-400 truncate",
+                  config.main,
+                )}
+              >
                 {load.price
                   ? `${load.price.toLocaleString()} ${load.valut_name}`
-                  : <span className="font-thin text-red-400">Не вказано</span> }
+                  : "—"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-1 p-1 bg-zinc-50/50 dark:bg-white/5 rounded-lg mt-auto">
+          {/* COUNTERS & BADGES */}
+          <div className="flex items-center justify-between gap-2 p-1 bg-zinc-50/50 dark:bg-white/5 rounded-xl mt-auto border border-zinc-100 dark:border-white/5">
             <div className="flex gap-1">
               <CarCounter
-                label="П"
+                icon={Truck}
+                label="В пошуку"
                 value={load.car_count_actual}
                 variant="blue"
+                fontSizeClass={config.label}
               />
               <CarCounter
-                label="З"
+                icon={CheckCircle2}
+                label="Закриті"
                 value={load.car_count_closed}
                 variant="emerald"
+                fontSizeClass={config.label}
               />
               <CarCounter
-                label="В"
+                icon={XCircle}
+                label="Відмінені"
                 value={load.car_count_canceled}
                 variant="red"
+                fontSizeClass={config.label}
               />
             </div>
-            <div className="flex gap-1.5 pr-1 text-zinc-400">
+
+            <div className="flex gap-1 items-center border-l border-zinc-200 dark:border-zinc-700 pl-2">
               {load.is_collective && (
-                <Layers size={12} className="text-amber-500" />
+                <Tooltip text="Збірний вантаж (LTL)">
+                  <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-400/10 text-amber-600 border border-amber-100 dark:border-amber-400/20">
+                    <Layers size={config.icon * 0.7} />
+                  </div>
+                </Tooltip>
               )}
               {load.is_price_request && (
-                <DollarSign size={12} className="text-emerald-500" />
+                <Tooltip text="Запит ціни">
+                  <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 border border-emerald-100 dark:border-emerald-400/20">
+                    <DollarSign size={config.icon * 0.7} />
+                  </div>
+                </Tooltip>
               )}
             </div>
           </div>
         </div>
 
         {/* FOOTER */}
-        <div className="px-3 py-2 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="px-3 py-2 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-6 h-6 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[9px] font-black shrink-0 border border-white dark:border-zinc-600">
-              {load.author?.substring(0, 2).toUpperCase() || "UA"}
+            <div
+              className={cn(
+                "h-6 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-black px-2 border border-white dark:border-zinc-600 shadow-sm shrink-0",
+                config.label,
+              )}
+            >
+              {load.author?.toUpperCase() || "UA"}
             </div>
-            <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 truncate">
+            <span
+              className={cn(
+                "font-bold text-zinc-600 dark:text-zinc-300 truncate",
+                config.label,
+              )}
+            >
               {load.company_name || "Без компанії"}
             </span>
           </div>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setChatCargo(load);
-            }}
-            className="relative p-1.5 text-zinc-500 hover:text-blue-500 transition-all"
-          >
-            <MessageCircle size={16} />
-            {load.comment_count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white">
-                {load.comment_count}
-              </span>
-            )}
-            {hasUnreadMessages && (
-              <span className="absolute top-1 left-1 w-2 h-2 bg-rose-500 rounded-full border border-white animate-pulse" />
-            )}
-          </button>
+          <Tooltip text={`Повідомлення (${load.comment_count})`}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setChatCargo(load);
+              }}
+              className="relative p-2 text-zinc-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all"
+            >
+              <MessageCircle size={config.icon * 1.1} />
+              {load.comment_count > 0 && (
+                <span className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-0.5">
+                  {load.comment_count}
+                </span>
+              )}
+              {hasUnreadMessages && (
+                <span className="absolute top-0 left-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+              )}
+            </button>
+          </Tooltip>
         </div>
-
-        {showBadge && currentBadge && (
-          <div
-            className={cn(
-              "absolute top-10 right-2 px-2 py-0.5 rounded shadow-sm text-white text-[8px] font-black uppercase z-30 animate-pulse",
-              currentBadge.color,
-            )}
-          >
-            {currentBadge.label}
-          </div>
-        )}
       </div>
 
+      {/* MODALS & DRAWERS */}
       <CargoDetailsDrawer
         cargo={selectedCargo ?? undefined}
         open={!!selectedCargo}

@@ -15,7 +15,7 @@ export const useAddCars = () => {
       return res.data;
     },
     onSuccess: () => {
-      toast.success("Машини додано 🚚");
+     
       queryClient.invalidateQueries({ queryKey: ["loads"] });
     },
     onError: () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import { uk } from "date-fns/locale";
 import api from "@/shared/api/instance.api";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
 
 // Оновлений інтерфейс згідно з вашим JSON
 interface HistoryItem {
@@ -33,6 +34,8 @@ interface HistoryItem {
   information: string;
   operation_name: string;
   operation_time: string;
+  id_usr: number;
+  enable_delete: boolean;
 }
 
 const fetchCargoHistory = async (loadId: number): Promise<HistoryItem[]> => {
@@ -49,6 +52,7 @@ export function CargoHistoryModal({
   onOpenChange: (open: boolean) => void;
   loadId: number;
 }) {
+  const queryClient = useQueryClient();
   const {
     data: historyData = [],
     isLoading,
@@ -58,7 +62,19 @@ export function CargoHistoryModal({
     queryFn: () => fetchCargoHistory(loadId),
     enabled: open,
   });
-
+  const deleteMutation = useMutation({
+    mutationFn: async (item: HistoryItem) => {
+      return await api.post(`/crm/load/load-history/delete`, {
+        id: item.id,
+        table: item.table, // передаємо назву таблиці
+      });
+    },
+    onSuccess: () => {
+      // Оновлюємо дані в списку після видалення
+      queryClient.invalidateQueries({ queryKey: ["cargo-history", loadId] });
+    },
+  });
+  const { profile } = useAuth();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-zinc-950">
@@ -176,13 +192,24 @@ export function CargoHistoryModal({
                                 </div>
                               )}
                             </div>
-                            <Button
-                              onClick={() => alert("У розробці")}
-                              className="bg-red-400"
-                              size={"icon"}
-                            >
-                              <Trash />
-                            </Button>
+                            {profile?.id === item.id_usr &&
+                              item.enable_delete && (
+                                <Button
+                                  onClick={() => {
+                                    if (
+                                      window.confirm(
+                                        "Ви впевнені, що хочете видалити цей запис?",
+                                      )
+                                    ) {
+                                      deleteMutation.mutate(item);
+                                    }
+                                  }}
+                                  className="bg-red-400"
+                                  size={"icon"}
+                                >
+                                  <Trash />
+                                </Button>
+                              )}
                           </div>
                         </div>
                       </div>

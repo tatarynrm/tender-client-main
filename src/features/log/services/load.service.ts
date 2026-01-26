@@ -29,15 +29,25 @@ export const loadService = {
     const { data } = await api.get(`/crm/load/one/${id}`);
     return data.content;
   },
-
+  // services/load.service.ts
+  async deleteLoad(id: number): Promise<any> {
+    const { data } = await api.delete(`/crm/load/delete/${id}`);
+    return data;
+  },
   /** Отримати коментарі по ID */
   getComments: async (loadId: number) => {
     const { data } = await api.get(`/crm/load/comments/${loadId}`);
     return data.content || [];
   },
+  async deleteComment(commentId: number, loadId: number): Promise<any> {
+    const { data } = await api.delete(`crm/load/delete-comment/${commentId}`, {
+      data: { id_crm_load: loadId }, // передаємо loadId, щоб бекенд знав, який вантаж оновити
+    });
+    return data;
+  },
 
   /** Зберегти коментар */
-  saveComment: async (payload: { id_crm_load: number; notes: string }) => {
+  saveComment: async (payload: { id_crm_load: number; notes: string ,id?:number | string}) => {
     const { data } = await api.post("/crm/load/save-comment", payload);
     return data;
   },

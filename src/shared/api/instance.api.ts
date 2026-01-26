@@ -41,11 +41,11 @@ api.interceptors.response.use(
       // }
 
       // Помилка авторизації
-      if (status === 401) {
-        toast.error("Неавторизовано", {
-          description: "Будь ласка, увійдіть у систему.",
-        });
-      }
+      // if (status === 401) {
+      //   toast.error("Неавторизовано", {
+      //     description: "Будь ласка, увійдіть у систему.",
+      //   });
+      // }
     } else {
       toast.error("Помилка мережі", {
         description: "Не вдалося з'єднатися з сервером.",

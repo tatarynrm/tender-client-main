@@ -174,6 +174,45 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     },
     [queryClient, queryKey],
   );
+  const removeFromCache = useCallback(
+    (id: number) => {
+      // Видалити з конкретного поточного списку (швидко)
+      queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
+        if (!old?.content) return old;
+        return {
+          ...old,
+          content: old.content.filter((item) => Number(item.id) !== Number(id)),
+        };
+      });
+
+      // Оновити ВСІ запити, які починаються на "loads", щоб вони перекачали дані або видалили елемент
+      queryClient.setQueriesData<IApiResponse<LoadApiItem[]>>(
+        { queryKey: ["loads"] },
+        (old) => {
+          if (!old?.content) return old;
+          return {
+            ...old,
+            content: old.content.filter(
+              (item) => Number(item.id) !== Number(id),
+            ),
+          };
+        },
+      );
+
+      queryClient.removeQueries({ queryKey: ["load", id] });
+    },
+    [queryClient, queryKey],
+  );
+  // Мутація видалення
+  const { mutateAsync: deleteCargo, isPending: isDeleting } = useMutation({
+    mutationFn: (id: number) => loadService.deleteLoad(id),
+    onSuccess: (_, id) => {
+      // Видаляємо з локального списку після успішного видалення на сервері
+      removeFromCache(id);
+      // Додатково можна сповістити інші частини додатка
+      eventBus.emit("load_deleted", id);
+    },
+  });
   // 4. Запити та мутації
   const { data, isLoading, error, refetch } = useQuery<
     IApiResponse<LoadApiItem[]>
@@ -208,7 +247,7 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       const isMine = data.id_usr === profile?.id;
 
       if (!isMine) {
-        playSound("/sounds/load/new-load-sound.mp3");
+        // playSound("/sounds/load/new-load-sound.mp3");
       }
       updateLocalCache(data);
     };
@@ -226,7 +265,7 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       const isMine = data.sender_id === profile?.id;
 
       if (!isMine) {
-        playSound("/sounds/load/new-chat-message.mp3");
+        // playSound("/sounds/load/new-chat-message.mp3");
       }
 
       updateItemOnly(data);
@@ -265,7 +304,21 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       socket.off("load_remove_car", onUpdateLoadRemoveCar);
     };
   }, [profile?.id, socket, updateLocalCache, updateItemOnly]);
+  useEffect(() => {
+    if (!socket) return;
 
+    // Бекенд надсилає просто ID (число), а не об'єкт {id: number}
+    const onDeleteLoad = (id: number) => {
+      console.log("Socket: removing load from cache", id);
+      removeFromCache(id);
+    };
+
+    socket.on("delete_load", onDeleteLoad);
+
+    return () => {
+      socket.off("delete_load", onDeleteLoad);
+    };
+  }, [socket, removeFromCache]);
   return {
     loads: data?.content ?? [],
     pagination: data?.props?.pagination,
@@ -278,5 +331,8 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     refreshLoadTime,
     updateItemOnly, // Експортуємо цей метод
     queryKey, // Експортуємо ключ, щоб інші хуки могли до нього звертатися
+    deleteCargo,
+    isDeleting,
+    removeFromCache,
   };
 };

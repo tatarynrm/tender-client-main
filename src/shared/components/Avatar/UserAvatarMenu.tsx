@@ -6,6 +6,7 @@ import { LogOut, User, Settings, LayoutDashboard, X } from "lucide-react";
 
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { LogoutButton } from "../Buttons/LogoutButton";
 
 export function UserAvatarMenu() {
   const { profile } = useAuth();
@@ -18,7 +19,10 @@ export function UserAvatarMenu() {
   // Закриття меню при кліку зовні
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (detailsRef.current && !detailsRef.current.contains(event.target as Node)) {
+      if (
+        detailsRef.current &&
+        !detailsRef.current.contains(event.target as Node)
+      ) {
         detailsRef.current.removeAttribute("open");
       }
     };
@@ -49,7 +53,9 @@ export function UserAvatarMenu() {
   };
 
   // Формуємо ініціали з імені
-  const avatarFallback = profile.name ? profile.name.charAt(0).toUpperCase() : "U";
+  const avatarFallback = profile.name
+    ? profile.name.charAt(0).toUpperCase()
+    : "U";
 
   return (
     <>
@@ -57,10 +63,10 @@ export function UserAvatarMenu() {
         <summary className="list-none cursor-pointer outline-none">
           <div className="h-9 w-9 rounded-md border border-zinc-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center bg-white dark:bg-slate-900">
             {profile.avatar_path ? (
-              <img 
-                src={profile.avatar_path} 
-                alt={profile.name} 
-                className="h-full w-full object-cover" 
+              <img
+                src={profile.avatar_path}
+                alt={profile.name}
+                className="h-full w-full object-cover"
               />
             ) : (
               <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
@@ -83,23 +89,16 @@ export function UserAvatarMenu() {
 
           {/* Links */}
           <nav className="p-1.5 flex flex-col gap-0.5">
-            <MenuLink href="/profile" icon={User} label="Мій профіль" />
+            {/* <MenuLink href="/profile" icon={User} label="Мій профіль" />
             <MenuLink href="/dashboard" icon={LayoutDashboard} label="Панель керування" />
-            
+             */}
             {/* Показуємо налаштування лише адмінам, як приклад використання useAuth */}
-            {(profile.is_admin || profile.is_manager) && (
+            {/* {(profile.is_admin || profile.is_manager) && (
                 <MenuLink href="/settings" icon={Settings} label="Налаштування" />
-            )}
-            
-            <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
+            )} */}
 
-            <button
-              onClick={handleLogoutClick}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left group/btn"
-            >
-              <LogOut size={16} strokeWidth={2.5} className="group-hover/btn:translate-x-0.5 transition-transform" />
-              <span className="text-[11px] uppercase tracking-[0.15em] font-bold">Вийти</span>
-            </button>
+            <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
+            <LogoutButton />
           </nav>
         </div>
       </details>
@@ -115,7 +114,7 @@ export function UserAvatarMenu() {
             <h3 className="text-[12px] uppercase tracking-[0.2em] font-bold text-slate-900 dark:text-white">
               Підтвердження
             </h3>
-            <button 
+            <button
               onClick={() => setIsDialogOpen(false)}
               className="text-zinc-400 hover:text-teal-600 transition-colors"
             >
@@ -154,22 +153,40 @@ export function UserAvatarMenu() {
           animation: backdrop-fade 0.2s ease-out;
         }
         @keyframes backdrop-fade {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
       `}</style>
     </>
   );
 }
 
-function MenuLink({ href, icon: Icon, label }: { href: string; icon: any; label: string }) {
+function MenuLink({
+  href,
+  icon: Icon,
+  label,
+}: {
+  href: string;
+  icon: any;
+  label: string;
+}) {
   return (
     <Link
       href={href}
       className="flex items-center gap-3 px-3 py-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-500 transition-all group"
     >
-      <Icon size={16} strokeWidth={2.2} className="text-zinc-400 group-hover:text-teal-600 transition-colors" />
-      <span className="text-[11px] uppercase tracking-[0.15em] font-bold">{label}</span>
+      <Icon
+        size={16}
+        strokeWidth={2.2}
+        className="text-zinc-400 group-hover:text-teal-600 transition-colors"
+      />
+      <span className="text-[11px] uppercase tracking-[0.15em] font-bold">
+        {label}
+      </span>
     </Link>
   );
 }

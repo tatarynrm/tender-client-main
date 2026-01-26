@@ -1,146 +1,250 @@
 "use client";
 
-import React, { useEffect, useTransition } from "react";
-import { Globe, User, LayoutDashboard, RefreshCcw } from "lucide-react";
-
+import React, { useState, useEffect, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import {
-  DistributionBarChart,
-  TendersAreaChart,
-} from "@/shared/components/Charts/Charts";
-import { useFontSize } from "@/shared/providers/FontSizeProvider";
-import { useLocalStorage } from "@/shared/hooks/useLocalStorage"; // Ваш кастомний хук
-import { cn } from "@/shared/utils";
-import { DashboardStats } from "../types/crm.types";
+  RefreshCw,
+  XCircle,
+  Building2,
+  User2,
+  Calendar,
+  TrendingUp,
+} from "lucide-react";
+import { format } from "date-fns";
+import { uk } from "date-fns/locale";
+
+import { DashboardStats, PeriodStats } from "../types/crm.types";
 import { ActiveStatsGrid } from "./components/ActiveStatisticCard";
 import { PublishedStatisticCard } from "./components/PublishedStatisticCard";
 import { ClosedStatisticCard } from "./components/ClosedStatisticCard";
+import { GroupedDistributionChart } from "./components/GroupedDistributionChart";
+import { useProfile } from "@/shared/hooks";
+import { InputDate } from "@/shared/components/Inputs/InputDate";
+import { cn } from "@/shared/utils";
+import api from "@/shared/api/instance.api";
 import { HeaderWidgetContainer } from "./widgets/HeaderWidgetContainer";
-import { RefreshButton } from "@/shared/components/RefreshButton/RefreshButton";
-import BarChartCountry from "./components/BarChartCountry";
 
-interface Props {
-  allData: DashboardStats;
-  myData: DashboardStats;
-}
+const EMPTY_PERIOD: PeriodStats = {
+  day_current: 0,
+  day_prev: 0,
+  week_current: 0,
+  week_prev: 0,
+  month_current: 0,
+  month_prev: 0,
+};
 
-export default function LogDashboardClientPage({ allData, myData }: Props) {
-  const { config } = useFontSize();
-  const { label } = config;
+const StatsSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-pulse">
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="h-48 bg-zinc-100 dark:bg-slate-800 rounded-[2rem]"
+      />
+    ))}
+  </div>
+);
 
-  // Використовуємо localStorage для збереження режиму перегляду
-  const [viewMode, setViewMode] = useLocalStorage<"all" | "my">(
-    "dashboard-view-mode",
-    "my",
+export default function LogDashboardClientPage() {
+  const { profile } = useProfile();
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"company" | "my">("company");
+
+  const { control, watch, reset } = useForm({
+    defaultValues: { date1: "", date2: "" },
+  });
+
+  const formValues = watch();
+
+  const loadStats = useCallback(
+    async (overrides?: { d1?: string; d2?: string }) => {
+      setIsLoading(true);
+      try {
+        const payload = {
+          date1:
+            overrides?.d1 !== undefined
+              ? overrides.d1 || null
+              : formValues.date1 || null,
+          date2:
+            overrides?.d2 !== undefined
+              ? overrides.d2 || null
+              : formValues.date2 || null,
+          id_usr: activeTab === "my" ? profile?.id : null,
+        };
+        const response = await api.post<DashboardStats>(
+          "/crm/statistic/stats",
+          payload,
+        );
+        setData(response.data);
+      } catch (error) {
+        console.error("Помилка завантаження:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [formValues.date1, formValues.date2, activeTab, profile?.id],
   );
 
-  const currentData = viewMode === "all" ? allData : myData;
+  useEffect(() => {
+    loadStats();
+  }, [activeTab]);
 
-  const active = currentData.active[0];
-  const closed = currentData.closed[0];
-  const published = currentData.published[0];
-  // 1. Функція для ручного оновлення
+  const handleClearAll = () => {
+    reset({ date1: "", date2: "" });
+    loadStats({ d1: "", d2: "" });
+  };
+
+  const currentMonthName = format(new Date(), "LLLL yyyy", { locale: uk });
 
   return (
-    <div className="p-1 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 mx-auto pb-60">
-      {/* Верхня панель: Віджети + Компактний перемикач */}
-
+    <div className="p-1 space-y-8  mx-auto transition-all duration-500 pb-20">
       <HeaderWidgetContainer />
+      {/* 1. ПАНЕЛЬ КЕРУВАННЯ (З високим Z-INDEX для календаря) */}
+      <div className=" flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white dark:bg-slate-800/50 backdrop-blur-md p-5 rounded-[2.5rem] border border-zinc-200 dark:border-white/5 shadow-xl">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-5">
+          {/* ТАБИ */}
+          <div className="inline-flex p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-2xl">
+            {[
+              { id: "company", label: "Компанія", icon: Building2 },
+              { id: "my", label: "Моя", icon: User2 },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={cn(
+                  "flex items-center justify-center gap-2 px-6 py-2.5 text-[11px] font-bold uppercase rounded-xl transition-all",
+                  activeTab === tab.id
+                    ? "bg-white dark:bg-slate-700 shadow-md text-teal-600"
+                    : "text-zinc-400",
+                )}
+              >
+                <tab.icon size={16} /> {tab.label}
+              </button>
+            ))}
+          </div>
 
-      {/* Компактний Switcher */}
-      <div className="flex p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-sm w-fit shrink-0">
+          {/* ФІЛЬТРИ ДАТ */}
+          <div className="flex flex-wrap sm:flex-nowrap items-end gap-3">
+            <InputDate
+              control={control}
+              name="date1"
+              label="Від"
+              className="w-full sm:w-40"
+            />
+            <InputDate
+              control={control}
+              name="date2"
+              label="До"
+              className="w-full sm:w-40"
+            />
+            <button
+              onClick={() => loadStats()}
+              disabled={isLoading}
+              className="bg-teal-600 hover:bg-teal-500 text-white px-8 py-3 rounded-xl text-[11px] font-bold uppercase flex items-center gap-3"
+            >
+              {isLoading ? (
+                <RefreshCw className="animate-spin" size={16} />
+              ) : (
+                <TrendingUp size={16} />
+              )}
+              Застосувати
+            </button>
+          </div>
+        </div>
+
         <button
-          onClick={() => setViewMode("my")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all",
-            viewMode === "my"
-              ? "bg-blue-500 text-white shadow-sm"
-              : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
-          )}
+          onClick={handleClearAll}
+          className="flex items-center gap-2 text-zinc-400 hover:text-red-500 text-[11px] font-bold uppercase"
         >
-          <User size={12} strokeWidth={3} />
-          Мої дані
+          <XCircle size={20} />
+          <span>Скинути</span>
         </button>
-        <button
-          onClick={() => setViewMode("all")}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all",
-            viewMode === "all"
-              ? "bg-blue-500 text-white shadow-sm"
-              : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200",
-          )}
-        >
-          <Globe size={12} strokeWidth={3} />
-          Всі дані
-        </button>
-        <RefreshButton />
       </div>
 
-      {/* Grid Картки Статистики */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-        <ActiveStatsGrid data={active} className="w-full h-full" />
-
-        <PublishedStatisticCard
-          title={
-            viewMode === "all" ? "Опубліковано (всі)" : "Опубліковано (мною)"
-          }
-          data={published}
-          className="w-full h-full"
-        />
-
-        <ClosedStatisticCard
-          title={viewMode === "all" ? "Закриті (всі)" : "Закриті (мною)"}
-          data={closed}
-          className="w-full h-full"
-        />
-      </div>
-
-      {/* Grid Графіки */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TendersAreaChart
-          label={viewMode === "all" ? "Загальна динаміка" : "Моя динаміка"}
-          data={[
-            { month: "Попередній", count: published.month_prev },
-            { month: "Поточний", count: published.month_current },
-          ]}
-        />
-
-        <DistributionBarChart
-          label="Розподіл за напрямками"
-          data={[
-            { name: "Export", value: active.export },
-            { name: "Transit", value: active.transit },
-            { name: "Region", value: active.region },
-            { name: "Import", value: active.import },
-          ]}
-        />
-      </div>
-      {/* <BarChartCountry /> */}
-      {/* Статус-бар */}
-      {/* <div
-        className={cn(
-          "p-3 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 flex flex-wrap justify-around gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider",
-          label,
+      {/* 2. ІНФОРМАЦІЙНИЙ РЯДОК */}
+      <div className=" min-h-[40px] flex items-center mb-6">
+        {(!isLoading || data) && (
+          <div className="flex items-center gap-2 px-5 py-2 bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800/30 rounded-full animate-in fade-in slide-in-from-left-4 shadow-sm">
+            <Calendar size={14} className="text-teal-600" />
+            <span className="text-[12px] font-semibold text-teal-800 dark:text-teal-400">
+              {formValues.date1 || formValues.date2
+                ? `Період: ${formValues.date1 || "..."} — ${formValues.date2 || "сьогодні"}`
+                : `Статистика за ${currentMonthName}`}
+            </span>
+          </div>
         )}
-      >
-        <div className="flex items-center gap-2">
-          <div
-            className={cn(
-              "w-1.5 h-1.5 rounded-full animate-pulse",
-              viewMode === "all" ? "bg-amber-500" : "bg-emerald-500",
-            )}
-          />
-          Режим: {viewMode === "all" ? "Загальний" : "Персональний"}
-        </div>
-        <div className="hidden md:block opacity-20">|</div>
-        <div className="flex items-center gap-2">
-          <LayoutDashboard size={12} />
-          Оновлено:{" "}
-          {new Date().toLocaleTimeString("uk-UA", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </div>
-      </div> */}
+      </div>
+
+      {/* 3. КАРТКИ СТАТИСТИКИ */}
+      <div className="">
+        {isLoading && !data ? (
+          <StatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in zoom-in-95 duration-500">
+            <ActiveStatsGrid
+              data={
+                data?.car_actual?.[0] || {
+                  all: 0,
+                  export: 0,
+                  import: 0,
+                  region: 0,
+                  transit: 0,
+                }
+              }
+            />
+            <PublishedStatisticCard
+              title="Опубліковано"
+              data={data?.car_published?.[0] || EMPTY_PERIOD}
+            />
+            <ClosedStatisticCard
+              title="Закрито"
+              data={data?.car_closed?.[0] || EMPTY_PERIOD}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* 4. ГРАФІКИ (З низьким Z-INDEX) */}
+      <div className="  grid grid-cols-1 gap-8">
+        {!data && isLoading ? (
+          <div className="h-[400px] bg-zinc-50 dark:bg-slate-900/20 rounded-[2.5rem] animate-pulse" />
+        ) : (
+          <>
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <GroupedDistributionChart
+                label={
+                  activeTab === "my" ? "Мої Клієнти" : "Аналітика по Клієнтах"
+                }
+                data={
+                  data?.chart_clients?.map((c) => ({
+                    name: c.company_name,
+                    Додано: c.added,
+                    Закрито: c.closed,
+                    Скасовано: c.canceled,
+                  })) || []
+                }
+              />
+            </div>
+            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+              <GroupedDistributionChart
+                label={
+                  activeTab === "my"
+                    ? "Мої Напрямки (Країни)"
+                    : "Аналітика по Країнах"
+                }
+                data={
+                  data?.chart_countries?.map((c) => ({
+                    name: c.country_name || "Не визначено",
+                    Додано: c.added,
+                    Закрито: c.closed,
+                    Скасовано: c.canceled,
+                  })) || []
+                }
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

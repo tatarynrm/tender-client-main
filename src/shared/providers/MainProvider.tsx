@@ -20,7 +20,7 @@ export function MainProvider({ children, profile }: MainProviderProps) {
     <TanstackQueryProvider>
       <ThemeProvider
         attribute={"class"}
-        defaultTheme="system"
+        defaultTheme="light"
         disableTransitionOnChange
         enableSystem
         storageKey="ictender-theme"

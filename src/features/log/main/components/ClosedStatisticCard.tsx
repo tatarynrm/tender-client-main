@@ -75,7 +75,7 @@ export const ClosedStatisticCard = ({
           return (
             <div
               key={item.label}
-              className="group px-2 py-1 flex items-center justify-between rounded-md hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+              className="group px-2 py-1 flex items-center justify-between rounded-md   transition-colors"
             >
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-bold text-slate-400 leading-tight">
@@ -85,15 +85,7 @@ export const ClosedStatisticCard = ({
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                     {item.current}
                   </span>
-                  <div
-                    className={cn(
-                      "flex items-center text-[9px] font-black",
-                      diff.color,
-                    )}
-                  >
-                    {diff.icon}
-                    <span>{diff.text}</span>
-                  </div>
+       
                 </div>
               </div>
 

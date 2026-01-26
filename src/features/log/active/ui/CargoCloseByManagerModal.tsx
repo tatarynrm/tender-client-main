@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Banknote,
   UserCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { uk } from "react-day-picker/locale";
 import { Button } from "@/shared/components/ui/button";
@@ -46,12 +47,9 @@ import { Calendar } from "@/shared/components/ui/calendar";
 import { cn } from "@/shared/utils";
 import { Dropdowns, LoadApiItem } from "../../types/load.type";
 
-/* ===================== SCHEMA ===================== */
-
 const formSchema = z.object({
   id_crm_load: z.number(),
   id_usr_closed: z.string().min(1, "Оберіть менеджера"),
-  // Використовуємо .coerce або обробляємо undefined для коректної валідації порожнього поля
   car_count: z.number({ message: "Введіть число" }).min(1, "Мінімум 1 машина"),
   date_close: z.date({ message: "Виберіть дату" }),
   ids_valut: z.string().min(1, "Оберіть валюту"),
@@ -98,6 +96,7 @@ export function CargoCloseByManagerModal({
     },
   });
 
+  // Reset form when modal opens or load changes
   useEffect(() => {
     if (open) {
       form.reset({
@@ -112,14 +111,14 @@ export function CargoCloseByManagerModal({
     }
   }, [load.id, open, form]);
 
-  // Слідкуємо за значенням
   const watchedCarCount = form.watch("car_count");
   const totalRequired = load.car_count_actual || 1;
-
-  // Перевірки (якщо watchedCarCount порожній, вважаємо його за 0)
   const currentCount = watchedCarCount || 0;
+
   const isOverLimit = currentCount > totalRequired;
-  const isLastCar = currentCount === 1;
+  // Якщо менеджер вводить рівно стільки, скільки залишилося актуальних авто
+  const isClosingLastAvailable =
+    currentCount === totalRequired && totalRequired > 0;
 
   const handleSubmit = async (data: CloseCargoFormValues) => {
     try {
@@ -193,59 +192,39 @@ export function CargoCloseByManagerModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase text-zinc-400">
-                      К-сть авто (Потрібно: {totalRequired})
+                      К-сть авто (Актуально: {totalRequired})
                     </FormLabel>
                     <FormControl>
                       <Input
-                        // Міняємо на text + inputMode, щоб на мобілці була цифрова клавіатура
                         type="text"
                         inputMode="numeric"
-                        placeholder="Введіть к-сть"
-                        // Якщо значення 0 або undefined, показуємо порожній рядок для стирання
+                        placeholder="0"
                         value={field.value === 0 ? "" : (field.value ?? "")}
                         className={cn(
-                          "font-bold",
+                          "font-bold transition-colors",
                           isOverLimit &&
                             "border-red-500 focus-visible:ring-red-500",
+                          isClosingLastAvailable &&
+                            !isOverLimit &&
+                            "border-amber-500 focus-visible:ring-amber-500 text-amber-600",
                         )}
                         onFocus={(e) => e.target.select()}
                         onChange={(e) => {
                           const val = e.target.value;
-
-                          // 1. Дозволяємо порожнє поле для стирання
                           if (val === "") {
-                            field.onChange(""); // Важливо передати порожній рядок
+                            field.onChange("");
                             return;
                           }
-
-                          // 2. Дозволяємо вводити тільки цифри
                           const cleanValue = val.replace(/[^0-9]/g, "");
-
-                          // 3. Передаємо число в форму
-                          if (cleanValue !== "") {
-                            field.onChange(Number(cleanValue));
-                          } else {
-                            field.onChange("");
-                          }
+                          field.onChange(
+                            cleanValue !== "" ? Number(cleanValue) : "",
+                          );
                         }}
-                        // При виході з поля, якщо воно порожнє, ставимо 1 (необов'язково)
                         onBlur={(e) => {
                           if (!e.target.value) field.onChange(1);
                         }}
                       />
                     </FormControl>
-
-                    {isLastCar && !isOverLimit && (
-                      <p className="text-[11px] text-amber-600 font-medium mt-1 animate-in fade-in slide-in-from-top-1">
-                        ⚠️ Якщо ви закриєте 1 авто, заявка перейде в архів!
-                      </p>
-                    )}
-
-                    {isOverLimit && (
-                      <p className="text-[11px] text-red-500 font-bold mt-1">
-                        ❌ Не більше ніж {totalRequired}!
-                      </p>
-                    )}
                     <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
@@ -298,6 +277,27 @@ export function CargoCloseByManagerModal({
               />
             </div>
 
+            {/* ПОПЕРЕДЖЕННЯ ПРО АРХІВУВАННЯ */}
+            {isClosingLastAvailable && !isOverLimit && (
+              <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 animate-in fade-in zoom-in-95">
+                <div className="flex gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 font-bold leading-tight">
+                    Ви закриваєте останнє актуальне авто. Після підтвердження
+                    заявка автоматично перейде в АРХІВ.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isOverLimit && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30">
+                <p className="text-[11px] text-red-600 dark:text-red-400 font-bold flex items-center gap-2">
+                  <span>❌</span> Перевищено ліміт авто (макс: {totalRequired})
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               {/* Ціна */}
               <FormField
@@ -314,7 +314,6 @@ export function CargoCloseByManagerModal({
                           type="text"
                           inputMode="numeric"
                           className="pl-8 font-bold"
-                          // placeholder="0"
                           {...field}
                           onChange={(e) =>
                             field.onChange(
@@ -383,10 +382,12 @@ export function CargoCloseByManagerModal({
                 type="submit"
                 disabled={isLoading || isOverLimit || !watchedCarCount}
                 className={cn(
-                  "w-full h-11 text-base font-bold transition-all",
+                  "w-full h-11 text-base font-bold transition-all shadow-lg",
                   isOverLimit
                     ? "bg-red-600 hover:bg-red-700"
-                    : "bg-emerald-600 hover:bg-emerald-700",
+                    : isClosingLastAvailable
+                      ? "bg-amber-600 hover:bg-amber-700"
+                      : "bg-emerald-600 hover:bg-emerald-700",
                 )}
               >
                 {isLoading ? <Loader2 className="animate-spin mr-2" /> : null}
@@ -394,7 +395,9 @@ export function CargoCloseByManagerModal({
                   ? "Перевищено ліміт"
                   : isLoading
                     ? "Обробка..."
-                    : "Підтвердити та закрити"}
+                    : isClosingLastAvailable
+                      ? "Закрити та архівувати"
+                      : "Підтвердити закриття"}
               </Button>
             </DialogFooter>
           </form>

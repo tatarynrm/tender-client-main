@@ -11,14 +11,12 @@ export const useCloseCargoByManager = () => {
   const { mutateAsync: closeCargoMutate, isPending: isLoadingCloseCargo } =
     useMutation({
       mutationFn: async (data: CloseCargoFormValues) => {
-       
-
         // Шлях до вашого API для закриття вантажу
         const res = await api.post("/crm/load/close-cargo-by-manager", data);
         return res.data;
       },
       onSuccess: () => {
-        toast.success("Вантаж успішно закрито ✅");
+        toast.success("Закрито авто ✅");
         // Оновлюємо список вантажів, щоб дані в таблиці стали актуальними
         queryClient.invalidateQueries({ queryKey: ["loads"] });
       },

@@ -30,7 +30,7 @@ type MenuItem = {
   status?: "inactive";
   info?: string;
 };
-<ShieldCheck />;
+
 const links: MenuItem[] = [
   { name: "Головна", href: "/log", icon: Home },
   {
@@ -41,16 +41,18 @@ const links: MenuItem[] = [
       { name: "Архів", icon: Archive, href: "/log/load/archive" },
     ],
   },
-
+  // Додаємо Карта та Документи зі статусом inactive
   {
     name: "Карта",
     icon: Globe,
-    href: "/log/map",
+    status: "inactive",
+    info: "Coming Soon",
   },
   {
     name: "Документи",
     icon: FileCode2Icon,
-    href: "/log/documents",
+    status: "inactive",
+    info: "Coming Soon",
   },
 ];
 
@@ -68,6 +70,7 @@ export default function LogSidebar({
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const mainLinks = [...links];
+
   useEffect(() => {
     const saved = localStorage.getItem("userSidebarOpenMenus");
     if (saved) setOpenMenus(JSON.parse(saved));
@@ -85,16 +88,15 @@ export default function LogSidebar({
     if (href === "/log") return pathname === "/log";
     return pathname === href || pathname.startsWith(href + "/");
   };
-  // Додаємо тендери тільки якщо користувач адмін
+
   if (profile?.is_admin) {
-    // Вставляємо "Тендери" на 3-тю позицію (індекс 2),
-    // або просто через push() в кінець
     mainLinks.splice(2, 0, {
       name: "Тендери",
       icon: LayoutList,
       href: "/log/tender",
     });
   }
+
   const renderLink = (link: MenuItem, isChild = false) => {
     const { name, href, icon: Icon, children, status, info } = link;
     const activeParent = children?.some((child) => isActive(child.href));
@@ -113,12 +115,17 @@ export default function LogSidebar({
             key={name}
             className={cn(
               commonClasses,
-              "text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed border-transparent",
+              "text-slate-400 dark:text-slate-600 opacity-60 cursor-not-allowed border-transparent bg-transparent select-none",
             )}
             title={info}
           >
-            {Icon && <Icon className="w-5 h-5" />}
-            <span className="font-medium">{name}</span>
+            {Icon && <Icon className="w-5 h-5 opacity-70" />}
+            <div className="flex flex-1 items-center justify-between">
+              <span className="font-medium">{name}</span>
+              <span className="text-[9px] uppercase tracking-tighter bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded-md">
+                В розробці
+              </span>
+            </div>
           </div>
         );
       }
@@ -167,9 +174,7 @@ export default function LogSidebar({
               <Icon
                 className={cn(
                   "w-5 h-5 transition-colors",
-                  active
-                    ? "text-blue-500"
-                    : "text-slate-400 dark:text-slate-500",
+                  active ? "text-blue-500" : "text-slate-400 dark:text-slate-500",
                 )}
               />
             )}
@@ -205,7 +210,7 @@ export default function LogSidebar({
   }
 
   return (
-    <aside className="relative flex flex-col w-64 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-[100dvh] transition-colors duration-300 shrink-0 z-9999">
+    <aside className="relative flex flex-col w-64 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-[100dvh] transition-colors duration-300 shrink-0 z-50">
       <div className="flex-1 min-h-[40vh] overflow-y-auto p-4 space-y-2 custom-scrollbar relative z-10">
         {mainLinks.map((link) => renderLink(link))}
       </div>

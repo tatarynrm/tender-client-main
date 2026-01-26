@@ -16,8 +16,7 @@ export const metadata: Metadata = {
 };
 
 const CrmLoadActivePage = () => {
-  // Розкоментуйте рядок нижче для тесту
-  // throw new Error("Тестова помилка чату");
+ 
 
   return <LoadListComponent active={true} />;
 };

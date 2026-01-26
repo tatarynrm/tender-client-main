@@ -9,7 +9,8 @@ export type AppEventType =
   | "update_load_date"
   | "load_add_car"
   | "load_remove_car"
-  | "user_balance_updated";
+  | "load_deleted"
+  | "user_balance_updated"
 
 export const eventBus = {
   // Викликати подію

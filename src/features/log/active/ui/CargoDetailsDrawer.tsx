@@ -199,7 +199,7 @@ export function CargoDetailsDrawer({
                 {[
                   {
                     v: cargo.car_count_actual,
-                    l: "К-сть актуальних авто",
+                    l: "Актуальні",
                     c: "text-blue-400",
                   },
                   { v: cargo.car_count_add, l: "Додано", c: "text-zinc-400" },
