@@ -182,13 +182,13 @@ export default function LoadChat({
                         >
                           <Pencil size={14} />
                         </button>
-{/* Кнопки для Desktop */}
-<button
-  onClick={() => handleDeleteClick(msg.id)} // ТУТ БУЛО deleteComment
-  className="p-1.5 hover:text-red-500 text-zinc-400 transition-colors"
->
-  <Trash2 size={14} />
-</button>
+                        {/* Кнопки для Desktop */}
+                        <button
+                          onClick={() => handleDeleteClick(msg.id)} // ТУТ БУЛО deleteComment
+                          className="p-1.5 hover:text-red-500 text-zinc-400 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     )}
 
@@ -235,12 +235,12 @@ export default function LoadChat({
                           >
                             <Pencil size={10} /> Редагувати
                           </button>
-<button
-  onClick={() => handleDeleteClick(msg.id)} // ТУТ ПРАВИЛЬНО
-  className="flex items-center gap-1 text-[10px] font-bold text-zinc-400 active:text-red-500"
->
-  <Trash2 size={10} /> Видалити
-</button>
+                          <button
+                            onClick={() => handleDeleteClick(msg.id)} // ТУТ ПРАВИЛЬНО
+                            className="flex items-center gap-1 text-[10px] font-bold text-zinc-400 active:text-red-500"
+                          >
+                            <Trash2 size={10} /> Видалити
+                          </button>
                         </div>
                       )}
                     </div>
