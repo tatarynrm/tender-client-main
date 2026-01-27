@@ -126,6 +126,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       load_info: "",
       ids_valut: "UAH",
       date_load: toLocalDateString(new Date()),
+      crm_load_route_from: [],
+      crm_load_route_to: [],
 
       ...defaultValues,
     },

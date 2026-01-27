@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { IUserProfile } from "../types/user.types";
 
 interface AuthContextType {
@@ -21,8 +27,8 @@ export const AuthCheckProvider = ({
   // Ініціалізуємо стан значенням, яке прийшло з сервера (RootLayout)
   const [profile, setProfile] = useState<IUserProfile | null>(serverProfile);
 
-  // СИНХРОНІЗАЦІЯ: Коли ви логінитесь і викликаєте router.refresh(), 
-  // RootLayout знову робить запит і присилає новий serverProfile. 
+  // СИНХРОНІЗАЦІЯ: Коли ви логінитесь і викликаєте router.refresh(),
+  // RootLayout знову робить запит і присилає новий serverProfile.
   // Цей ефект оновить клієнтський стан без перезавантаження сторінки.
   useEffect(() => {
     setProfile(serverProfile);

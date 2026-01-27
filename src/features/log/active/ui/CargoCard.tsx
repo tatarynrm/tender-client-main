@@ -15,6 +15,11 @@ import {
   Truck,
   CheckCircle2,
   XCircle,
+  Clock,
+  RefreshCcw,
+  User,
+  Building,
+  ArrowRight,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils";
@@ -192,7 +197,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   return (
     <>
       <div
-      
         className={cn(
           "group relative flex flex-col w-full bg-white dark:bg-slate-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden hover:border-blue-400 transition-all duration-200 shadow-sm",
           "min-h-[265px] h-auto", // Дозволяємо картці рости, якщо шрифт великий
@@ -211,7 +215,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 config.label,
               )}
             >
-              #{load.id}
+              {load.id}
             </span>
             <span
               className={cn(
@@ -224,30 +228,59 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               )?.value || "UA-UA"}
             </span>
           </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
+              <CalendarDays size={config.icon * 0.7} />
+              <span className={cn("font-medium leading-none", config.label)}>
+                {load.created_at ? (
+                  <span className="truncate">
+                    {format(new Date(load.created_at), "d MMMM yyyy, HH:mm", {
+                      locale: uk,
+                    })}
+                  </span>
+                ) : (
+                  "—"
+                )}
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
+                <RefreshCcw size={config.icon * 0.7} />
+                <span className={cn("font-medium leading-none", config.label)}>
+                  {load.updated_at ? (
+                    <span className="truncate">
+                      {formatDistanceToNow(new Date(load.updated_at), {
+                        addSuffix: true,
+                        locale: uk,
+                      })}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
           <div className="flex items-center gap-1">
-            <Tooltip text="Деталі вантажу">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedCargo(load);
-                }}
-                className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all"
-              >
-                <Info size={config.icon * 0.8} />
-              </button>
-            </Tooltip>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedCargo(load);
+              }}
+              className="p-1.5 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-all"
+            >
+              <Info size={config.icon * 0.8} />
+            </button>
 
-            <Tooltip text="Історія змін">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenHistory(true);
-                }}
-                className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
-              >
-                <History size={config.icon * 0.8} />
-              </button>
-            </Tooltip>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenHistory(true);
+              }}
+              className="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+            >
+              <History size={config.icon * 0.8} />
+            </button>
 
             <CargoActions
               load={load}
@@ -262,99 +295,163 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         </div>
 
         {/* CONTENT */}
-        <div className="flex flex-col flex-1 p-3 gap-3">
-          {/* TIME */}
-          <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
-            <CalendarDays size={config.icon * 0.7} />
-            <span className={cn("font-medium leading-none", config.label)}>
-              {load.updated_at ? (
-                <span className="truncate">
-                  {formatDistanceToNow(new Date(load.updated_at), {
-                    addSuffix: true,
-                    locale: uk,
-                  })}
-                </span>
-              ) : (
-                "—"
-              )}
-            </span>
-          </div>
 
-          {/* ROUTE - Найважливіша частина для стабільності */}
-          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 min-h-[40px]">
-            {[...load.crm_load_route_from, ...load.crm_load_route_to].map(
-              (point, idx, allPoints) => (
-                <React.Fragment key={idx}>
-                  <div className="flex items-center gap-1 bg-zinc-50 dark:bg-zinc-800/40 px-1.5 py-0.5 rounded-md border border-zinc-100 dark:border-zinc-800">
-                    <span
-                      className={cn(
-                        "font-bold truncate max-w-[120px]",
-                        config.main,
-                        idx < load.crm_load_route_from.length
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-zinc-900 dark:text-zinc-100",
-                      )}
-                    >
-                      {point.city}
-                    </span>
-                    <Flag
-                      country={point.country || "UA"}
-                      size={config.icon * 0.6}
-                      className="shrink-0"
-                    />
-                  </div>
-                  {idx !== allPoints.length - 1 && (
-                    <ChevronRight
-                      size={14}
-                      className="text-zinc-300 shrink-0"
-                    />
-                  )}
-                </React.Fragment>
-              ),
+        <div className="flex flex-col flex-1 p-3 gap-3">
+          {/* DATE */}
+          <div className="flex items-center gap-3 px-3 py-1 bg-zinc-100/50 dark:bg-zinc-900/30 border-b border-zinc-100 dark:border-zinc-800">
+            {/* Дата завантаження */}
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">
+                Завантаження:
+              </span>
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                {load.date_load
+                  ? format(new Date(load.date_load), "dd.MM.yyyy", {
+                      locale: uk,
+                    })
+                  : "—"}
+              </span>
+            </div>
+
+            {load.date_unload && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-700">|</span>
+
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">
+                    Розвантаження:
+                  </span>
+                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                    {load.date_unload
+                      ? format(new Date(load.date_unload), "dd.MM.yyyy", {
+                          locale: uk,
+                        })
+                      : "—"}
+                  </span>
+                </div>
+              </>
             )}
           </div>
+          {/* ROUTE - Найважливіша частина для стабільності */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 min-h-[40px] py-1">
+            {[...load.crm_load_route_from, ...load.crm_load_route_to].map(
+              (point, idx, allPoints) => {
+                const isLoad = idx < load.crm_load_route_from.length;
 
-          {/* TRAILER & PRICE */}
-          <div className="grid grid-cols-2 gap-4 py-2 border-y border-zinc-50 dark:border-zinc-800/50">
-            <div className="min-w-0">
-              <p
-                className={cn(
-                  "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
-                  config.label,
-                )}
-              >
-                Транспорт
-              </p>
-              <p
-                className={cn(
-                  "font-semibold text-zinc-600 dark:text-zinc-300 truncate",
-                  config.label,
-                )}
-              >
-                {load.crm_load_trailer
-                  ?.map((t) => t.trailer_type_name)
-                  .join(", ") || "—"}
-              </p>
+                return (
+                  <React.Fragment key={idx}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md border transition-all shadow-sm",
+                        isLoad
+                          ? "bg-blue-50/50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20" // Завантаження (from)
+                          : "bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20", // Розвантаження (to)
+                      )}
+                    >
+                      {/* Точка */}
+                      <div
+                        className={cn(
+                          "w-1.5 h-1.5 rounded-full shrink-0",
+                          isLoad ? "bg-blue-500" : "bg-emerald-500",
+                        )}
+                      />
+
+                      <span
+                        className={cn(
+                          "font-bold text-[13px] tracking-tight truncate max-w-[110px]",
+                          isLoad
+                            ? "text-blue-900 dark:text-blue-100"
+                            : "text-emerald-900 dark:text-emerald-100",
+                          config.main,
+                        )}
+                      >
+                        {point.city}
+                      </span>
+
+                      <Flag
+                        country={point.country || "UA"}
+                        size={config.icon * 0.7}
+                        className="shrink-0 rounded-sm grayscale-[0.2]"
+                      />
+                    </div>
+
+                    {/* Стрілка між містами */}
+                    {idx !== allPoints.length - 1 && (
+                      <div className="flex items-center text-zinc-300 dark:text-zinc-600">
+                        <ArrowRight size={14} strokeWidth={3} />
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              },
+            )}
+          </div>
+          {/* Transport / Price / Info */}
+          <div className="flex gap-4 py-2 border-y border-zinc-50 dark:border-zinc-800/50">
+            {/* Ліва колонка: Транспорт та Оплата */}
+            <div className="flex flex-col gap-4 min-w-[140px]">
+              <div>
+                <p
+                  className={cn(
+                    "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
+                    config.label,
+                  )}
+                >
+                  Транспорт
+                </p>
+                <p
+                  className={cn(
+                    "font-semibold text-zinc-600 dark:text-zinc-300 truncate",
+                    config.label,
+                  )}
+                >
+                  {load.crm_load_trailer
+                    ?.map((t) => t.trailer_type_name)
+                    .join(", ") || "—"}
+                </p>
+              </div>
+              <div>
+                <span
+                  className={cn(
+                    "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
+                    config.label,
+                  )}
+                >
+                  Оплата
+                </span>
+                <p
+                  className={cn(
+                    "font-black text-green-600 dark:text-blue-400 truncate",
+                    config.main,
+                  )}
+                >
+                  {load.price
+                    ? `${load.price.toLocaleString()} ${load.valut_name}`
+                    : "—"}
+                </p>
+              </div>
             </div>
-            <div className="text-right min-w-0">
+
+            {/* Права колонка: Додаткова інформація зі скролом */}
+            <div className="flex flex-col flex-1 min-w-0">
               <p
                 className={cn(
                   "font-bold text-zinc-400 uppercase tracking-wider mb-0.5",
                   config.label,
                 )}
               >
-                Оплата
+                Інфо
               </p>
-              <p
-                className={cn(
-                  "font-black text-blue-600 dark:text-blue-400 truncate",
-                  config.main,
-                )}
-              >
-                {load.price
-                  ? `${load.price.toLocaleString()} ${load.valut_name}`
-                  : "—"}
-              </p>
+              <div className="relative max-h-[80px] overflow-y-auto pr-1 custom-scrollbar">
+                <p
+                  className={cn(
+                    "text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap break-words",
+                    config.label,
+                  )}
+                >
+                  {load.load_info || "Без додаткової інформації"}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -406,43 +503,53 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         {/* FOOTER */}
         <div className="px-3 py-2 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div
-              className={cn(
-                "h-6 rounded bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center font-black px-2 border border-white dark:border-zinc-600 shadow-sm shrink-0",
-                config.label,
-              )}
-            >
-              {load.author?.toUpperCase() || "UA"}
+            <div className="group relative flex items-center shrink-0">
+              {/* Блок Автора */}
+              <div
+                className={cn(
+                  "h-5 flex items-center gap-1 px-1.5 rounded-l-md  font-bold border-y border-l border-zinc-800 dark:border-zinc-200 shadow-sm text-[10px]",
+                  config.label,
+                )}
+              >
+                <User size={config.icon * 0.5} className="opacity-80" />
+                <span className="leading-none">
+                  {load.author?.toUpperCase() || "UA"}
+                </span>
+              </div>
+
+              {/* Блок Компанії */}
+              <div
+                className={cn(
+                  "h-5 flex items-center gap-1 px-1.5 rounded-r-md bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200 font-bold border border-zinc-200 dark:border-zinc-700 shadow-sm truncate  text-[10px]",
+                  config.label,
+                )}
+              >
+                <Building size={config.icon * 0.5} className="opacity-80" />
+                <span className="">
+                  {load.company_name?.toUpperCase() || "ПРИВАТНА ОСОБА"}
+                </span>
+              </div>
             </div>
-            <span
-              className={cn(
-                "font-bold text-zinc-600 dark:text-zinc-300 truncate",
-                config.label,
-              )}
-            >
-              {load.company_name || "Без компанії"}
-            </span>
+            {/* Альтернативно: легкий бейдж для статусу або типу, якщо потрібно */}
           </div>
 
-          <Tooltip text={`Повідомлення (${load.comment_count})`}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setChatCargo(load);
-              }}
-              className="relative p-2 text-zinc-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all"
-            >
-              <MessageCircle size={config.icon * 1.1} />
-              {load.comment_count > 0 && (
-                <span className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-0.5">
-                  {load.comment_count}
-                </span>
-              )}
-              {hasUnreadMessages && (
-                <span className="absolute top-0 left-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-              )}
-            </button>
-          </Tooltip>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setChatCargo(load);
+            }}
+            className="relative p-2 text-zinc-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all"
+          >
+            <MessageCircle size={config.icon * 1.1} />
+            {load.comment_count > 0 && (
+              <span className="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 px-0.5">
+                {load.comment_count}
+              </span>
+            )}
+            {hasUnreadMessages && (
+              <span className="absolute top-0 left-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+            )}
+          </button>
         </div>
       </div>
 
