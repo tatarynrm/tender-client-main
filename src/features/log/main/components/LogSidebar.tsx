@@ -57,7 +57,7 @@ const links: MenuItem[] = [
 ];
 
 const defaultFooterLinks: MenuItem[] = [
-  { name: "Налаштування", href: "/dashboard/settings", icon: Settings },
+  // { name: "Налаштування", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function LogSidebar({
