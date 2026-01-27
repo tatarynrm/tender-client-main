@@ -17,41 +17,42 @@ interface FontSizeContextType {
   config: FontSizeConfig;
 }
 
-// Оновлені конфігурації з більшими шрифтами
+// Використовуємо inline-style або класи Tailwind, але значення тепер в rem
+// 1rem зазвичай = 16px
 const fontConfigs: Record<FontSizeKey, FontSizeConfig> = {
   xs: {
-    label: "text-xs", // 12px
-    main: "text-sm", // 14px
-    title: "text-base", // 16px
+    label: "text-[0.7rem]", // ~11px
+    main: "text-[0.8rem]", // ~13px
+    title: "text-[0.95rem]", // ~15px
     icon: 14,
   },
   sm: {
-    label: "text-sm", // 14px
-    main: "text-base", // 16px
-    title: "text-lg", // 18px
+    label: "text-[0.875rem]", // 14px (стандарт)
+    main: "text-[1rem]", // 16px
+    title: "text-[1.125rem]", // 18px
     icon: 16,
   },
   base: {
-    label: "text-base", // 16px
-    main: "text-lg", // 18px
-    title: "text-xl", // 20px
+    label: "text-[1rem]", // 16px
+    main: "text-[1.125rem]", // 18px
+    title: "text-[1.25rem]", // 20px
     icon: 20,
   },
   lg: {
-    label: "text-lg", // 18px
-    main: "text-xl", // 20px
-    title: "text-2xl", // 24px
+    label: "text-[1.125rem]", // 18px
+    main: "text-[1.25rem]", // 20px
+    title: "text-[1.5rem]", // 24px
     icon: 24,
   },
 };
 
 const FontSizeContext = createContext<FontSizeContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function FontSizeProvider({ children }: { children: React.ReactNode }) {
-  // Змінюємо дефолтний розмір на "base" (середній), щоб не було занадто мало
-  const [size, setSize] = useState<FontSizeKey>("sm");
+  const [size, setSize] = useState<FontSizeKey>("xs");
+  // Запобігаємо помилкам гідратації (коли серверний і клієнтський HTML не збігаються)
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -65,6 +66,9 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
   const updateSize = (newSize: FontSizeKey) => {
     setSize(newSize);
     localStorage.setItem("app-font-size", newSize);
+
+    // Опціонально: змінюємо базовий rem для всього документа
+    // document.documentElement.style.fontSize = newSize === 'lg' ? '110%' : '100%';
   };
 
   const contextValue = {
@@ -72,6 +76,12 @@ export function FontSizeProvider({ children }: { children: React.ReactNode }) {
     updateSize,
     config: fontConfigs[size],
   };
+
+  // Поки клієнт не завантажився, рендеримо контент з дефолтним розміром,
+  // щоб уникнути помилок Next.js
+  if (!isMounted) {
+    return <div style={{ visibility: "hidden" }}>{children}</div>;
+  }
 
   return (
     <FontSizeContext.Provider value={contextValue}>

@@ -1,21 +1,15 @@
 "use client";
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  QueryKey,
-} from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useCallback } from "react";
 import api from "@/shared/api/instance.api";
 import { loadService } from "../services/load.service";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { useSockets } from "@/shared/providers/SocketProvider";
-import { playSound } from "@/shared/helpers/play-sound";
 import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
 import { eventBus } from "@/shared/lib/event-bus";
-import { SOCKET_EVENTS } from "@romannoris/tender-shared-types";
+
 export interface TenderListFilters {
   search?: string;
   status?: string;
@@ -26,7 +20,7 @@ export interface TenderListFilters {
   city_from?: string;
   page?: number;
 }
-// Додаємо окремий експорт для useLoadById
+
 export const useLoadById = (id?: number | string | null) => {
   return useQuery<LoadApiItem>({
     queryKey: ["load", id],
@@ -39,7 +33,7 @@ export const useLoads = (filters: TenderListFilters = {}) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const { load: socket } = useSockets();
-  // 1. Формування Query Key та параметрів
+
   const params = useMemo(() => {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([key, val]) => {
@@ -57,60 +51,112 @@ export const useLoads = (filters: TenderListFilters = {}) => {
 
   const queryKey = useMemo(() => ["loads", params.toString()], [params]);
 
-  // Ref для доступу до актуальних фільтрів у колбеках сокетів
-  const filtersRef = useRef(filters);
-  useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
-
-  // 2. Перевірка відповідності фільтрам
+  // ВИПРАВЛЕНО: Функція тепер приймає чистий об'єкт filters
   const matchesFilters = useCallback(
-    (item: LoadApiItem, f: TenderListFilters) => {
-      // 1. Захист: якщо item порожній - він не підходить
+    (item: LoadApiItem, currentFilters: any) => {
       if (!item) return false;
 
-      const routeFrom = item.crm_load_route_from || [];
-      const routeTo = item.crm_load_route_to || [];
+      const checkRules: Record<string, (val: any) => boolean> = {
+        status: (val) => String(item.status) === String(val),
 
-      if (f.status && item.status !== f.status) return false;
+        // Перевірка "Мої заявки"
+        my: (val) => {
+          if (val === "true" || val === true) {
+            return Number(item.id_usr) === Number(profile?.id);
+          }
+          return true;
+        },
 
-      if (
-        f.country_from &&
-        !routeFrom.some((r) => r.ids_country === f.country_from)
-      )
-        return false;
+        // Перевірка активності (якщо потрібно фільтрувати за внутрішнім станом)
+        active: (val) => {
+          if (val === true) {
+            // Тут логіка залежить від вашої моделі даних, наприклад:
+            return item.status !== "deleted" && item.status !== "closed";
+          }
+          return true;
+        },
 
-      if (
-        f.regionId &&
-        !routeFrom.some((r) => Number(r.ids_region) === Number(f.regionId))
-      )
-        return false;
+        // Країни та міста
+        // КРАЇНИ (обробка списку через кому)
+        country_from: (val) => {
+          const selectedCountries = String(val).split(",");
+          return (item.crm_load_route_from || []).some((r) =>
+            selectedCountries.includes(String(r.ids_country)),
+          );
+        },
+        country_to: (val) => {
+          const selectedCountries = String(val).split(",");
+          return (item.crm_load_route_to || []).some((r) =>
+            selectedCountries.includes(String(r.ids_country)),
+          );
+        },
 
-      if (
-        f.city_from &&
-        !routeFrom.some((r) =>
-          r.city?.toLowerCase().includes(f.city_from!.toLowerCase()),
-        )
-      )
-        return false;
+        city_from: (val) =>
+          (item.crm_load_route_from || []).some((r) =>
+            r.city?.toLowerCase().includes(String(val).toLowerCase()),
+          ),
+        city_to: (val) =>
+          (item.crm_load_route_to || []).some((r) =>
+            r.city?.toLowerCase().includes(String(val).toLowerCase()),
+          ),
 
-      if (f.search) {
-        const s = f.search.toLowerCase();
-        const matchId = item.id?.toString().includes(s);
-        const matchCityTo = routeTo.some((r) =>
-          r.city?.toLowerCase().includes(s),
-        );
-        const matchCityFrom = routeFrom.some((r) =>
-          r.city?.toLowerCase().includes(s),
-        );
+        // Регіони (підтримка обох назв ключів)
+        region_from: (val) => {
+          const selectedRegions = String(val).split(",").map(Number);
+          return (item.crm_load_route_from || []).some((r) =>
+            selectedRegions.includes(Number(r.ids_region)),
+          );
+        },
+        regionId: (val) =>
+          (item.crm_load_route_from || []).some(
+            (r) => Number(r.ids_region) === Number(val),
+          ),
+        region_to: (val) => {
+          const selectedRegions = String(val).split(",").map(Number);
+          return (item.crm_load_route_to || []).some((r) =>
+            selectedRegions.includes(Number(r.ids_region)),
+          );
+        },
 
-        if (!matchId && !matchCityTo && !matchCityFrom) return false;
-      }
-      return true;
+        search: (val) => {
+          const s = String(val).toLowerCase();
+          return !!(
+            item.id?.toString().includes(s) ||
+            (item.crm_load_route_from || []).some((r) =>
+              r.city?.toLowerCase().includes(s),
+            ) ||
+            (item.crm_load_route_to || []).some((r) =>
+              r.city?.toLowerCase().includes(s),
+            )
+          );
+        },
+      };
+
+      return Object.entries(currentFilters).every(([key, filterValue]) => {
+        console.log(key, filterValue, "KEY FILTER VALUE 128");
+        // Пропускаємо порожні значення, пагінацію та ліміти
+        if (
+          filterValue === undefined ||
+          filterValue === null ||
+          filterValue === "" ||
+          ["page", "limit"].includes(key)
+        ) {
+          return true;
+        }
+
+        if (checkRules[key]) {
+          console.log(checkRules[key], "CHECKRULES KEY");
+
+          return checkRules[key](filterValue);
+        }
+
+        // Якщо прийшов фільтр, для якого ми не написали правило (наприклад, trailer_type),
+        // поки що повертаємо true, щоб не зламати все, або додай правило вище.
+        return true;
+      });
     },
-    [],
+    [profile?.id], // Важливо додати profile?.id сюди
   );
-
   const updateLocalCache = useCallback(
     (newItem: LoadApiItem) => {
       if (!newItem || !newItem.id) return;
@@ -118,50 +164,30 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
         if (!old?.content) return old;
 
-        // 1. Перевіряємо відповідність фільтрам
-        const matchesBaseFilters = matchesFilters(newItem, filtersRef.current);
-
-        // 2. ДОДАТКОВА ПЕРЕВІРКА: якщо машин 0, то об'єкт НЕ підходить для списку
-        // Припускаємо, що поле називається car_count_actual (як ви вказали)
+        // ВИПРАВЛЕНО: передаємо актуальний об'єкт filters
+        const isMatch = matchesFilters(newItem, filters);
         const hasCars = Number(newItem.car_count_actual) > 0;
+        const shouldBeInList = isMatch && hasCars;
 
-        const isMatch = matchesBaseFilters && hasCars;
-
-        // Створюємо новий масив без цього елемента
-        const filteredContent = old.content.filter((l) => l.id !== newItem.id);
-
-        // Якщо підходить (є машини + фільтри) - додаємо, якщо ні - просто лишаємо відфільтрований
-        const newContent = isMatch
-          ? [{ ...newItem }, ...filteredContent]
-          : filteredContent;
+        const otherItems = old.content.filter((l) => l.id !== newItem.id);
 
         return {
           ...old,
-          content: newContent.slice(0, 50),
+          content: shouldBeInList
+            ? [{ ...newItem }, ...otherItems].slice(0, 50)
+            : otherItems,
         };
       });
 
-      // Окремий кеш для одного вантажу теж можна оновити або видалити
-      queryClient.setQueryData(["load", newItem.id], { ...newItem });
+      queryClient.setQueryData(["load", newItem.id], newItem);
     },
-    [queryClient, queryKey, matchesFilters],
+    [queryClient, queryKey, matchesFilters, filters], // filters додано в залежності
   );
-  // Додайте це всередину хука useLoads
+
   const updateItemOnly = useCallback(
     (newItem: LoadApiItem) => {
       queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
-        if (!old) return old;
-
-        // Перевіряємо, чи кількість коментарів дійсно змінилася,
-        // щоб не тригерити рендер всього списку дарма
-        const existingItem = old.content.find((i) => i.id === newItem.id);
-        if (
-          existingItem?.comment_count === newItem.comment_count &&
-          existingItem?.comment_last_time === newItem.comment_last_time
-        ) {
-          return old;
-        }
-
+        if (!old?.content) return old;
         return {
           ...old,
           content: old.content.map((item) =>
@@ -169,14 +195,13 @@ export const useLoads = (filters: TenderListFilters = {}) => {
           ),
         };
       });
-
       queryClient.setQueryData(["load", newItem.id], newItem);
     },
     [queryClient, queryKey],
   );
+
   const removeFromCache = useCallback(
     (id: number) => {
-      // Видалити з конкретного поточного списку (швидко)
       queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
         if (!old?.content) return old;
         return {
@@ -184,36 +209,19 @@ export const useLoads = (filters: TenderListFilters = {}) => {
           content: old.content.filter((item) => Number(item.id) !== Number(id)),
         };
       });
-
-      // Оновити ВСІ запити, які починаються на "loads", щоб вони перекачали дані або видалили елемент
-      queryClient.setQueriesData<IApiResponse<LoadApiItem[]>>(
-        { queryKey: ["loads"] },
-        (old) => {
-          if (!old?.content) return old;
-          return {
-            ...old,
-            content: old.content.filter(
-              (item) => Number(item.id) !== Number(id),
-            ),
-          };
-        },
-      );
-
       queryClient.removeQueries({ queryKey: ["load", id] });
     },
     [queryClient, queryKey],
   );
-  // Мутація видалення
+
   const { mutateAsync: deleteCargo, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) => loadService.deleteLoad(id),
     onSuccess: (_, id) => {
-      // Видаляємо з локального списку після успішного видалення на сервері
       removeFromCache(id);
-      // Додатково можна сповістити інші частини додатка
       eventBus.emit("load_deleted", id);
     },
   });
-  // 4. Запити та мутації
+
   const { data, isLoading, error, refetch } = useQuery<
     IApiResponse<LoadApiItem[]>
   >({
@@ -239,19 +247,10 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     },
   );
 
-  // 5. Ефект сокетів
   useEffect(() => {
     if (!profile?.id || !socket) return;
 
-    const onNewLoad = (data: LoadApiItem) => {
-      const isMine = data.id_usr === profile?.id;
-
-      if (!isMine) {
-        // playSound("/sounds/load/new-load-sound.mp3");
-      }
-      updateLocalCache(data);
-    };
-
+    const onNewLoad = (data: LoadApiItem) => updateLocalCache(data);
     const onUpdateLoad = (data: LoadApiItem) => {
       updateLocalCache(data);
       eventBus.emit("cargo_shake", data.id);
@@ -260,30 +259,17 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       updateLocalCache(data);
       eventBus.emit("update_load_date", data.id);
     };
-    // Всередині useEffect для сокетів у useLoads
-    const onUpdateComment = (data: LoadApiItem & { sender_id?: number }) => {
-      const isMine = data.sender_id === profile?.id;
-
-      if (!isMine) {
-        // playSound("/sounds/load/new-chat-message.mp3");
-      }
-
-      updateItemOnly(data);
-    };
-    const onUpdateCommentCount = (data: LoadApiItem) => {
-      updateItemOnly(data);
-    };
+    const onUpdateComment = (data: LoadApiItem) => updateItemOnly(data);
+    const onUpdateCommentCount = (data: LoadApiItem) => updateItemOnly(data);
     const onUpdateLoadAddCar = (data: LoadApiItem) => {
-      console.log(data, "ADD CAR");
       updateLocalCache(data);
       eventBus.emit("load_add_car", data.id);
     };
     const onUpdateLoadRemoveCar = (data: LoadApiItem) => {
-      console.log(data, "DATA REMOVE CAR");
-
       updateLocalCache(data);
       eventBus.emit("load_remove_car", data.id);
     };
+
     socket.on("new_load", onNewLoad);
     socket.on("update_load", onUpdateLoad);
     socket.on("new_load_comment", onUpdateComment);
@@ -299,26 +285,21 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       socket.off("new_load_comment", onUpdateComment);
       socket.off("update_chat_count_load", onUpdateCommentCount);
       socket.off("edit_load", onUpdateLoad);
-      socket.off("update_load_date", onUpdateLoadDate); // ✅ виправлено
+      socket.off("update_load_date", onUpdateLoadDate);
       socket.off("load_add_car", onUpdateLoadAddCar);
       socket.off("load_remove_car", onUpdateLoadRemoveCar);
     };
   }, [profile?.id, socket, updateLocalCache, updateItemOnly]);
+
   useEffect(() => {
     if (!socket) return;
-
-    // Бекенд надсилає просто ID (число), а не об'єкт {id: number}
-    const onDeleteLoad = (id: number) => {
-      console.log("Socket: removing load from cache", id);
-      removeFromCache(id);
-    };
-
+    const onDeleteLoad = (id: number) => removeFromCache(id);
     socket.on("delete_load", onDeleteLoad);
-
     return () => {
       socket.off("delete_load", onDeleteLoad);
     };
   }, [socket, removeFromCache]);
+
   return {
     loads: data?.content ?? [],
     pagination: data?.props?.pagination,
@@ -329,8 +310,8 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     refetch,
     saveCargo,
     refreshLoadTime,
-    updateItemOnly, // Експортуємо цей метод
-    queryKey, // Експортуємо ключ, щоб інші хуки могли до нього звертатися
+    updateItemOnly,
+    queryKey,
     deleteCargo,
     isDeleting,
     removeFromCache,

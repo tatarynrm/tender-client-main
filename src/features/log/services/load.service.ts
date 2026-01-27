@@ -47,7 +47,11 @@ export const loadService = {
   },
 
   /** Зберегти коментар */
-  saveComment: async (payload: { id_crm_load: number; notes: string ,id?:number | string}) => {
+  saveComment: async (payload: {
+    id_crm_load: number;
+    notes: string;
+    id?: number | string;
+  }) => {
     const { data } = await api.post("/crm/load/save-comment", payload);
     return data;
   },

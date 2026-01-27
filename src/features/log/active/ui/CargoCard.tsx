@@ -229,20 +229,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </span>
           </div>
           <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
-              <CalendarDays size={config.icon * 0.7} />
-              <span className={cn("font-medium leading-none", config.label)}>
-                {load.created_at ? (
-                  <span className="truncate">
-                    {format(new Date(load.created_at), "d MMMM yyyy, HH:mm", {
-                      locale: uk,
-                    })}
-                  </span>
-                ) : (
-                  "—"
-                )}
-              </span>
-            </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5 text-zinc-400 shrink-0">
                 <RefreshCcw size={config.icon * 0.7} />
@@ -503,11 +489,11 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         {/* FOOTER */}
         <div className="px-3 py-2 flex items-center justify-between bg-zinc-50/80 dark:bg-zinc-800/40 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="group relative flex items-center shrink-0">
+            <div className="group relative flex gap-1 shrink-0">
               {/* Блок Автора */}
               <div
                 className={cn(
-                  "h-5 flex items-center gap-1 px-1.5 rounded-l-md  font-bold border-y border-l border-zinc-800 dark:border-zinc-200 shadow-sm text-[10px]",
+                  "h-5 flex items-center gap-1 px-1.5 rounded-l-md  font-bold   border-zinc-800 dark:border-zinc-200 shadow-sm text-[10px]",
                   config.label,
                 )}
               >
@@ -526,7 +512,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               >
                 <Building size={config.icon * 0.5} className="opacity-80" />
                 <span className="">
-                  {load.company_name?.toUpperCase() || "ПРИВАТНА ОСОБА"}
+                  {load.company_name?.toUpperCase() || "---"}
                 </span>
               </div>
             </div>
