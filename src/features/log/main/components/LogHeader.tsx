@@ -10,6 +10,7 @@ import { cn } from "@/shared/utils";
 import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
+import { DateTimeWidget } from "../widgets/DateTimeWidget";
 
 export default function LogHeader({
   onMenuClick,
@@ -43,7 +44,7 @@ export default function LogHeader({
         >
           <Menu className="text-slate-600 dark:text-slate-300 w-6 h-6" />
         </button>
-
+ 
         {/* Перемикач сайдбару (Десктоп) */}
         <div className="hidden md:flex items-center relative">
           {closeSidebarState ? (
@@ -74,7 +75,9 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
+          <DateTimeWidget />
       </div>
+           
 
       {/* Права частина: Налаштування та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
