@@ -44,7 +44,7 @@ export default function LogHeader({
         >
           <Menu className="text-slate-600 dark:text-slate-300 w-6 h-6" />
         </button>
- 
+
         {/* Перемикач сайдбару (Десктоп) */}
         <div className="hidden md:flex items-center relative">
           {closeSidebarState ? (
@@ -75,9 +75,10 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
-          <DateTimeWidget />
+<div className="hidden sm:block">
+  <DateTimeWidget />
+</div>
       </div>
-           
 
       {/* Права частина: Налаштування та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
