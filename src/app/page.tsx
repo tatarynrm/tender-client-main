@@ -159,7 +159,7 @@ export default function HomePage() {
           <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed mb-10">
             Ми будуємо не просто CRM, а інтелектуальну екосистему, яка об'єднає
             <span className="text-teal-400"> менеджерів</span>,
-            <span className="text-teal-400"> замовників</span> та
+            {/* <span className="text-teal-400"> замовників</span> та */}
             <span className="text-teal-400"> перевізників</span> в єдиному
             цифровому просторі.
           </p>
@@ -191,7 +191,7 @@ export default function HomePage() {
       {/* ВІЗІЯ: ТРИ СТОВПИ ЕКОСИСТЕМИ */}
       <section className="py-24 px-6 relative z-10">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="flex justify-between gap-8">
             {/* Для Менеджерів */}
             <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-teal-500/30 transition-all group">
               <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-400 mb-6 group-hover:scale-110 transition-transform">
@@ -206,7 +206,7 @@ export default function HomePage() {
             </div>
 
             {/* Для Замовників */}
-            <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-all group">
+            {/* <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-indigo-500/30 transition-all group">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-6 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={24} />
               </div>
@@ -215,7 +215,7 @@ export default function HomePage() {
                 Прямий доступ до надійних перевізників, прозорі тендери в
                 реальному часі та контроль вантажу на кожному етапі шляху.
               </p>
-            </div>
+            </div> */}
 
             {/* Для Перевізників */}
             <div className="p-8 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all group">

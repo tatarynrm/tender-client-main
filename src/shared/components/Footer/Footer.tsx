@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-white font-bold mb-6 italic">Платформа</h4>
             <ul className="space-y-4 text-sm text-slate-400">
-              <li><Link href="#features" className="hover:text-white transition-colors">Тендери</Link></li>
+              {/* <li><Link href="#features" className="hover:text-white transition-colors">Тендери</Link></li> */}
               <li><Link href="#features" className="hover:text-white transition-colors">Облік транспорту</Link></li>
               <li><Link href="#features" className="hover:text-white transition-colors">AI-аналітика</Link></li>
               <li><Link href="#features" className="hover:text-white transition-colors">Документообіг</Link></li>
@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
           </div>
 
           {/* Колонка 3: Компанія */}
-          <div>
+          {/* <div>
             <h4 className="text-white font-bold mb-6 italic">Компанія</h4>
             <ul className="space-y-4 text-sm text-slate-400">
               <li><Link href="#about" className="hover:text-white transition-colors">Про нас</Link></li>
@@ -53,7 +53,7 @@ const Footer: React.FC = () => {
               <li><Link href="#" className="hover:text-white transition-colors">Умови використання</Link></li>
               <li><Link href="#" className="hover:text-white transition-colors">Конфіденційність</Link></li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Колонка 4: Контакти */}
           <div>
