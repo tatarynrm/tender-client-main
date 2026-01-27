@@ -23,6 +23,7 @@ import { LoadActiveFilters } from "./components/LoadActiveFilters";
 import { LoadApiItem } from "../types/load.type";
 
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
+import { EmptyLoads } from "./components/EmptyLoads";
 interface Props {
   active?: boolean;
   archive?: boolean;
@@ -136,23 +137,32 @@ export default function LoadListComponent({ active, archive }: Props) {
       />
       {/* СПИСОК ТА ПАГІНАЦІЯ (ЗАВЖДИ ВИДИМІ) */}
       <div className="space-y-6">
-        <div className={`grid ${gridClass} gap-6 mb-10 `}>
-          {loads.map((item: LoadApiItem) => (
-            <CargoCard
-              key={item.id}
-              load={item}
-              filters={loadFilters}
-              regionsData={loadFilters?.region_dropdown}
-            />
-          ))}
-        </div>
+        {loads.length > 0 ? (
+          <>
+            {/* Сітка з картками */}
+            <div className={`grid ${gridClass} gap-6 mb-10`}>
+              {loads.map((item: LoadApiItem) => (
+                <CargoCard
+                  key={item.id}
+                  load={item}
+                  filters={loadFilters}
+                  regionsData={loadFilters?.region_dropdown}
+                />
+              ))}
+            </div>
 
-        {pagination && pagination.page_count > 1 && (
-          <Pagination
-            page={currentParams.page}
-            pageCount={pagination.page_count}
-            onChange={(p) => updateUrl({ ...currentParams, page: p })}
-          />
+            {/* Пагінація показується тільки якщо є дані та більше ніж 1 сторінка */}
+            {pagination && pagination.page_count > 1 && (
+              <Pagination
+                page={currentParams.page}
+                pageCount={pagination.page_count}
+                onChange={(p) => updateUrl({ ...currentParams, page: p })}
+              />
+            )}
+          </>
+        ) : (
+          /* Компонент, який ми створили раніше */
+          <EmptyLoads onReset={() => updateUrl({ page: 1 })} />
         )}
       </div>
     </div>
