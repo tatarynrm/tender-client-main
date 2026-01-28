@@ -12,7 +12,7 @@ import { FontSizeProvider } from "./FontSizeProvider";
 import { GlobalModalContainer } from "../components/Modals/GlobalModals/GlobalModalContainer";
 
 interface MainProviderProps extends PropsWithChildren {
-  profile: IUserProfile | null; // мінімально потрібне поле
+  profile?: IUserProfile | null; // мінімально потрібне поле
 }
 
 export function MainProvider({ children, profile }: MainProviderProps) {
@@ -26,11 +26,11 @@ export function MainProvider({ children, profile }: MainProviderProps) {
         storageKey="ictender-theme"
       >
         <AuthCheckProvider profile={profile ?? null}>
-          <ClientOnlyProvider>
-            <SocketProvider profile={profile ?? null}>
-              <FontSizeProvider>{children}</FontSizeProvider>
-            </SocketProvider>
-          </ClientOnlyProvider>
+          <SocketProvider>
+            <FontSizeProvider>
+              <ClientOnlyProvider>{children}</ClientOnlyProvider>
+            </FontSizeProvider>
+          </SocketProvider>
         </AuthCheckProvider>
         <ToastProvider />
       </ThemeProvider>

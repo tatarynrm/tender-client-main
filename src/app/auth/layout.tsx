@@ -10,6 +10,7 @@ export default async function AuthLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
+
   if (profile) redirect("/dashboard");
   if (!profile) return <>{children}</>;
 }

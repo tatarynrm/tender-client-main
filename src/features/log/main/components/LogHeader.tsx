@@ -11,6 +11,7 @@ import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
+import UpdatesList from "@/shared/noris-components/UpdateList";
 
 export default function LogHeader({
   onMenuClick,
@@ -21,7 +22,7 @@ export default function LogHeader({
   onMenuClick?: () => void;
   toggleSidebarState?: () => void;
   closeSidebarState?: boolean;
-  profile: IUserProfile;
+  profile?: IUserProfile;
 }) {
   // Ці дані будуть надходити з вашого Context, Redux, Zustand або з сервера
 
@@ -75,9 +76,9 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
-<div className="hidden sm:block">
-  <DateTimeWidget />
-</div>
+        <div className="hidden sm:block">
+          <DateTimeWidget />
+        </div>
       </div>
 
       {/* Права частина: Налаштування та Дії */}

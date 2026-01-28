@@ -12,6 +12,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
+  console.log(profile, "PROFILE dashboard layout");
 
   // --- 🔒 Перевірки доступу ---
   if (!profile) return redirect("/auth/login");

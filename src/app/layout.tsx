@@ -4,6 +4,7 @@ import "../shared/styles/globals.css";
 import { MainProvider } from "@/shared/providers";
 import NextTopLoader from "nextjs-toploader";
 import { getProfile } from "@/shared/server/getProfile";
+import { redirect } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,6 +57,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getProfile();
+  console.log(profile, "PROFILE  60 main layout");
 
   return (
     <html lang="en" suppressHydrationWarning className="scrollbar-thin">
@@ -78,7 +80,7 @@ export default async function RootLayout({
           showForHashAnchor={true} // якщо переходиш на хеш-лінк, теж показує
         />
 
-        <MainProvider profile={profile}>{children}</MainProvider>
+        <MainProvider profile={profile ?? null}>{children}</MainProvider>
       </body>
     </html>
   );

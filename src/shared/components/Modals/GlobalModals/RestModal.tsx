@@ -15,7 +15,7 @@ export const RestModal = ({ close }: { close: () => void }) => {
   const fetchGif = useCallback(async () => {
     setIsGifLoading(true);
     setHasError(false);
-    // dsad
+
     try {
       // Ключові слова змінено на більш "обідні" та позитивні
       const keywords = [

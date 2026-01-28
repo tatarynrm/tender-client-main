@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Archive,
   FileCode2Icon,
+  RefreshCcw,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -27,7 +28,7 @@ type MenuItem = {
   href?: string;
   icon?: React.ComponentType<any>;
   children?: MenuItem[];
-  status?: "inactive";
+  status?: "inactive" | "new";
   info?: string;
 };
 
@@ -40,6 +41,13 @@ const links: MenuItem[] = [
       { name: "Активні", icon: ShieldCheck, href: "/log/load/active" },
       { name: "Архів", icon: Archive, href: "/log/load/archive" },
     ],
+  },
+  {
+    name: "Оновлення!",
+    icon: RefreshCcw,
+    status: "new",
+    href: "/log/updates",
+    info: "New",
   },
   // Додаємо Карта та Документи зі статусом inactive
   {
@@ -102,7 +110,7 @@ export default function LogSidebar({
     const activeParent = children?.some((child) => isActive(child.href));
     const active = isActive(href) || activeParent;
     const isInactive = status === "inactive";
-
+    const isNew = status === "new"; // Перевірка на статус NEW
     const commonClasses = cn(
       "flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 border mb-0.5",
       isChild && "ml-4",
@@ -150,9 +158,20 @@ export default function LogSidebar({
               )}
             />
           )}
+
           <span className={active ? "font-semibold" : "font-medium"}>
             {name}
           </span>
+
+          {/* Анімація NEW */}
+          {isNew && (
+            <span className="absolute right-2 flex h-4 w-8">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
+              <span className="relative inline-flex rounded-md bg-red-500 px-1 text-[9px] font-bold text-white items-center justify-center">
+                NEW
+              </span>
+            </span>
+          )}
         </Link>
       );
     }
@@ -174,7 +193,9 @@ export default function LogSidebar({
               <Icon
                 className={cn(
                   "w-5 h-5 transition-colors",
-                  active ? "text-blue-500" : "text-slate-400 dark:text-slate-500",
+                  active
+                    ? "text-blue-500"
+                    : "text-slate-400 dark:text-slate-500",
                 )}
               />
             )}

@@ -5,7 +5,7 @@ import React from "react";
 
 const PayPage = async () => {
   const user = await fetchServer.get<IUserProfile>("/auth/me");
-  console.log(user, "USER");
+
 if (!user) {
   return null
 }

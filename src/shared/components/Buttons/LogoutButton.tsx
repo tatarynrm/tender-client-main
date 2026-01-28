@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { LogOut, X, AlertCircle } from "lucide-react";
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
 import { LogoutModal } from "../Modals/SystemModals/LogoutModal";
+import { useSockets } from "@/shared/providers/SocketProvider";
 
 interface LogoutButtonProps {
   onBeforeOpen?: () => void;
@@ -13,6 +14,7 @@ export function LogoutButton({ onBeforeOpen }: LogoutButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { logout } = useProfileLogoutMutation();
+  const { user: userSocket, chat, tender, load } = useSockets();
 
   useEffect(() => {
     if (isDialogOpen) {
@@ -29,6 +31,12 @@ export function LogoutButton({ onBeforeOpen }: LogoutButtonProps) {
   };
 
   const handleConfirmLogout = () => {
+      const allSockets = [userSocket, chat, tender, load];
+      allSockets.forEach(socket => {
+      if (socket && typeof socket.disconnect === 'function') {
+        socket.disconnect(); 
+      }
+    });
     logout();
     setIsDialogOpen(false);
   };
@@ -53,8 +61,6 @@ export function LogoutButton({ onBeforeOpen }: LogoutButtonProps) {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onConfirm={handleConfirmLogout}
-       
-        
       />
     </>
   );

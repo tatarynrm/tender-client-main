@@ -40,6 +40,13 @@ import { useEventEffect } from "@/shared/hooks/useEventEffects";
 import { StatusIndicator } from "./CargoCardUpdateColor";
 // Імпортуємо хук
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
+import {
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  Tooltip as SahdcnTooltip,
+} from "@/shared/components/ui";
 
 interface CargoCardProps {
   load: LoadApiItem;
@@ -111,8 +118,12 @@ function Tooltip({
   );
 }
 export function CargoCard({ load, filters }: CargoCardProps) {
+  console.log(filters?.region_dropdown, "REGION");
+
+  // if (!load) return null;
   const { config } = useFontSize(); // Отримуємо конфігурацію шрифтів
   const { profile } = useAuth();
+  const onlineUsers = useOnlineUsers(); // Твій новий хук
   const [isJustCreated, setIsJustCreated] = useState(false);
   const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
   const [chatCargo, setChatCargo] = useState<LoadApiItem | null>(null);
@@ -123,6 +134,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [localReadTime, setLocalReadTime] = useState<string | null>(
     load.comment_read_time || null,
   );
+
+  const isOnline = onlineUsers.has(String(load.id_usr));
 
   const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
     useAddCars();
@@ -319,53 +332,89 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             )}
           </div>
           {/* ROUTE - Найважливіша частина для стабільності */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 min-h-[40px] py-1">
+          <div className="flex flex-wrap items-center gap-2 py-1">
             {[...load.crm_load_route_from, ...load.crm_load_route_to].map(
               (point, idx, allPoints) => {
                 const isLoad = idx < load.crm_load_route_from.length;
 
+                // Знаходимо назву області
+                const regionData = filters?.region_dropdown?.find(
+                  (r: any) => r.ids === point.ids_region,
+                );
+                const displayRegionName =
+                  regionData?.region_name || point.region || "";
+                const hasAddress = point.street || point.house;
+
+                // Умова: чи показувати тултіп взагалі?
+                const shouldShowTooltip = displayRegionName || hasAddress;
+
+                const Content = (
+                  <div
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all shrink-0",
+                      shouldShowTooltip ? "cursor-help" : "cursor-default",
+                      isLoad
+                        ? "bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
+                        : "bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400",
+                    )}
+                  >
+                    <span className="text-[11px] font-bold whitespace-nowrap">
+                      {idx + 1}. {point.city}
+                    </span>
+                    <Flag
+                      country={point.country || "UA"}
+                      size={10}
+                      className="rounded-sm opacity-90"
+                    />
+                  </div>
+                );
+
                 return (
                   <React.Fragment key={idx}>
-                    <div
-                      className={cn(
-                        "flex items-center gap-1.5 px-2 py-1 rounded-md border transition-all shadow-sm",
-                        isLoad
-                          ? "bg-blue-50/50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20" // Завантаження (from)
-                          : "bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20", // Розвантаження (to)
-                      )}
-                    >
-                      {/* Точка */}
-                      <div
-                        className={cn(
-                          "w-1.5 h-1.5 rounded-full shrink-0",
-                          isLoad ? "bg-blue-500" : "bg-emerald-500",
-                        )}
-                      />
+                    {shouldShowTooltip ? (
+                      <TooltipProvider delayDuration={100}>
+                        <SahdcnTooltip>
+                          <TooltipTrigger asChild>{Content}</TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-lg z-[100]"
+                          >
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                                  {idx + 1}. {point.city}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-black tracking-tight">
+                                  {point.country}
+                                </span>
+                              </div>
 
-                      <span
-                        className={cn(
-                          "font-bold text-[13px] tracking-tight truncate max-w-[110px]",
-                          isLoad
-                            ? "text-blue-900 dark:text-blue-100"
-                            : "text-emerald-900 dark:text-emerald-100",
-                          config.main,
-                        )}
-                      >
-                        {point.city}
-                      </span>
+                              {displayRegionName && (
+                                <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider">
+                                  {displayRegionName}
+                                </div>
+                              )}
 
-                      <Flag
-                        country={point.country || "UA"}
-                        size={config.icon * 0.7}
-                        className="shrink-0 rounded-sm grayscale-[0.2]"
-                      />
-                    </div>
+                              {hasAddress && (
+                                <div className="text-[11px] text-zinc-400 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-800 pt-1.5 mt-0.5 italic">
+                                  {point.street}
+                                  {point.house ? `, ${point.house}` : ""}
+                                </div>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </SahdcnTooltip>
+                      </TooltipProvider>
+                    ) : (
+                      Content
+                    )}
 
-                    {/* Стрілка між містами */}
+                    {/* Стрілка */}
                     {idx !== allPoints.length - 1 && (
-                      <div className="flex items-center text-zinc-300 dark:text-zinc-600">
-                        <ArrowRight size={14} strokeWidth={3} />
-                      </div>
+                      <ArrowRight
+                        size={14}
+                        className="text-zinc-300 dark:text-zinc-700 shrink-0"
+                      />
                     )}
                   </React.Fragment>
                 );
@@ -493,16 +542,32 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               {/* Блок Автора */}
               <div
                 className={cn(
-                  "h-5 flex items-center gap-1 px-1.5 rounded-l-md  font-bold   border-zinc-800 dark:border-zinc-200 shadow-sm text-[10px]",
+                  "h-5 flex items-center gap-1 px-1.5 rounded-l-md font-bold border-r border-zinc-200 dark:border-zinc-700 shadow-sm text-[10px] relative overflow-hidden",
+                  isOnline
+                    ? "bg-emerald-50 text-zinc-700 dark:bg-emerald-500/10 dark:text-zinc-400"
+                    : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
                   config.label,
                 )}
               >
-                <User size={config.icon * 0.5} className="opacity-80" />
-                <span className="leading-none">
+                {/* Пульсуюча крапка онлайн-статусу */}
+                <span
+                  className={cn(
+                    "w-1.5 h-1.5 rounded-full shrink-0",
+                    isOnline ? "bg-emerald-500 animate-pulse" : "bg-red-400",
+                  )}
+                />
+
+                <span className="leading-none ml-0.5">
                   {load.author?.toUpperCase() || "UA"}
                 </span>
-              </div>
 
+                {/* Tooltip при наведенні (опціонально) */}
+                <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity cursor-help">
+                  <Tooltip text={true ? "Менеджер онлайн" : "Менеджер офлайн"}>
+                    <div className="w-full h-full" />
+                  </Tooltip>
+                </div>
+              </div>
               {/* Блок Компанії */}
               <div
                 className={cn(

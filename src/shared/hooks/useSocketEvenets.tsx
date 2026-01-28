@@ -14,18 +14,19 @@ export const useSocketEvents = () => {
   const { user, load, tender, chat } = useSockets();
 
   useEffect(() => {
-    if (user) registerUserEvents(user); // Тільки звуки/тости/модальні вікна
-    if (load) registerLoadEvents(load); // Тільки звуки/тости/модальні вікна
-    if (tender) registerLoadEvents(tender); // Тільки звуки/тости/модальні вікна
-    if (chat) registerChatEvents(chat); // Тільки звуки/тости/модальні вікна
+    // Реєструємо івенти, якщо сокет існує
+    if (user) registerUserEvents(user);
+    if (load) registerLoadEvents(load);
+    // if (tender) registerLoadEvents(tender); // Перевір, чи тут не має бути registerTenderEvents?
+    // if (chat) registerChatEvents(chat);
 
     return () => {
-      // Видаляємо ТІЛЬКИ глобальні івенти
-      unregisterEvents(user, GLOBAL_USER_EVENTS);
-      unregisterEvents(load, GLOBAL_LOAD_EVENTS);
-
-      // Твій useLoads зі своїми івентами ("new_load", "edit_load")
-      // залишиться працювати, бо їх немає в цих списках!
+      // Очищення: передаємо сокети, тільки якщо вони існують
+      if (user) unregisterEvents(user, GLOBAL_USER_EVENTS);
+      if (load) unregisterEvents(load, GLOBAL_LOAD_EVENTS);
+      // Додай очищення для chat/tender, якщо вони мають глобальні списки
     };
-  }, [user, load]);
+    
+    // ВАЖЛИВО: додаємо ВСІ сокети в залежності
+  }, [user, load, tender, chat]); 
 };

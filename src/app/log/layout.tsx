@@ -5,6 +5,7 @@ import { AuthCheckProvider } from "@/shared/providers/AuthCheckProvider";
 import { getProfile } from "@/shared/server/getProfile";
 import { ModalProvider } from "@/shared/providers/GlobalModalProvider";
 import { RestTimerTracker } from "@/shared/components/Modals/GlobalModals/Trackers/RestTimerTracker";
+import { UpdatesIntroModal } from "@/shared/components/Modals/SystemModals/UpdatesIntroModal";
 
 export default async function LogLayout({
   children,
@@ -12,6 +13,7 @@ export default async function LogLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
+  // console.log(profile, "PROFILE ------------------");
 
   if (!profile) redirect("/auth/login");
   if (profile.is_blocked) redirect("/blocked");
@@ -22,6 +24,7 @@ export default async function LogLayout({
     <LogShell profile={profile}>
       <ModalProvider>
         <RestTimerTracker />
+        <UpdatesIntroModal />
         {children}
       </ModalProvider>
     </LogShell>

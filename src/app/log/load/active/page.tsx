@@ -16,8 +16,6 @@ export const metadata: Metadata = {
 };
 
 const CrmLoadActivePage = () => {
- 
-
   return <LoadListComponent active={true} />;
 };
 

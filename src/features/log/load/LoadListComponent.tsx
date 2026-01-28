@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React, { useMemo, useCallback } from "react"; // Додано useCallback
 import { useSearchParams } from "next/navigation";
 import { ChevronUp, Settings2 } from "lucide-react";
 
@@ -13,7 +13,7 @@ import { Pagination } from "@/shared/components/Pagination/Pagination";
 
 import { useGridColumns } from "@/shared/hooks/useGridColumns";
 import { useFilters } from "@/shared/hooks/useFilters";
-import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl"; // Імпорт хука
+import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl";
 
 import { CargoCard } from "@/features/log/active/ui/CargoCard";
 import { useLoads } from "@/features/log/hooks/useLoads";
@@ -24,31 +24,25 @@ import { LoadApiItem } from "../types/load.type";
 
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 import { EmptyLoads } from "./components/EmptyLoads";
+import UpdatesList from "@/shared/noris-components/UpdateList";
+
 interface Props {
   active?: boolean;
   archive?: boolean;
 }
+
 export default function LoadListComponent({ active, archive }: Props) {
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
 
-  const handleRemoveFilter = (key: string, valueToRemove: string) => {
-    // Просто викликаємо хук
-    removeFilter(key, valueToRemove, currentParams);
-  };
-
-  const handleReset = () => {
-    reset(); // скидання внутрішнього стану useFilters
-    resetFilters(); // чистка URL
-  };
-  // Керування видимістю інструментів
+  // 1. УСІ ХУКИ МАЮТЬ БУТИ ТУТ (ДО БУДЬ-ЯКИХ IF/RETURN)
   const { isVisible, toggle } = useVisibilityControl("load_list");
-
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
     "loadListColumns",
     3,
   );
 
+  // Мемоїзація параметрів, щоб уникнути зайвих ререндерів useLoads
   const currentParams = useMemo(
     () => ({
       country_from: searchParams.get("country_from") || "",
@@ -70,6 +64,7 @@ export default function LoadListComponent({ active, archive }: Props) {
     }),
     [searchParams],
   );
+
   const queryFilters = useMemo(
     () => ({
       ...currentParams,
@@ -78,35 +73,48 @@ export default function LoadListComponent({ active, archive }: Props) {
     }),
     [currentParams, active, archive],
   );
+
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { loads, pagination, saveCargo, isLoading, error } =
-    useLoads(queryFilters);
+
+  // Викликаємо запити даних ТУТ
+  const { loads, pagination, isLoading, error } = useLoads(queryFilters);
   const { loadFilters } = useGetLoadFilters();
 
+  // 2. ОБРОБКА ПОДІЙ (Callback для стабільності пропсів)
+  const handleRemoveFilter = useCallback(
+    (key: string, valueToRemove: string) => {
+      removeFilter(key, valueToRemove, currentParams);
+    },
+    [removeFilter, currentParams],
+  );
+
+  const handleReset = useCallback(() => {
+    reset();
+    resetFilters();
+  }, [reset, resetFilters]);
+
+  // 3. ТІЛЬКИ ПІСЛЯ ВСІХ ХУКІВ РОБИМО УМОВНИЙ RETURN
   if (isLoading) return <Loader />;
   if (error) return <ErrorState />;
 
   return (
     <div className="space-y-4 pb-40">
-      {/* HEADER ПАНЕЛЬ */}
+     
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggle}
-            className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
-          >
-            {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
-            {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggle}
+          className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
+        >
+          {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
+          {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
+        </Button>
       </div>
 
-      {/* БЛОК ІНСТРУМЕНТІВ (ПРИХОВУЄТЬСЯ) */}
       {isVisible && (
-        <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300 p-0 m-0">
-          <div className="flex justify-between items-center  p-2 rounded-lg">
+        <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center p-2 rounded-lg">
             <LoadFiltersSheet
               filters={filters}
               setFilters={setFilters}
@@ -129,29 +137,23 @@ export default function LoadListComponent({ active, archive }: Props) {
           </div>
         </div>
       )}
+
       <LoadActiveFilters
         currentParams={currentParams}
         onRemove={handleRemoveFilter}
         onClear={handleReset}
         dropdowns={loadFilters}
       />
-      {/* СПИСОК ТА ПАГІНАЦІЯ (ЗАВЖДИ ВИДИМІ) */}
+
       <div className="space-y-6">
         {loads.length > 0 ? (
           <>
-            {/* Сітка з картками */}
             <div className={`grid ${gridClass} gap-6 mb-10`}>
               {loads.map((item: LoadApiItem) => (
-                <CargoCard
-                  key={item.id}
-                  load={item}
-                  filters={loadFilters}
-                  regionsData={loadFilters?.region_dropdown}
-                />
+                <CargoCard key={item.id} load={item} filters={loadFilters} />
               ))}
             </div>
 
-            {/* Пагінація показується тільки якщо є дані та більше ніж 1 сторінка */}
             {pagination && pagination.page_count > 1 && (
               <Pagination
                 page={currentParams.page}
@@ -161,7 +163,6 @@ export default function LoadListComponent({ active, archive }: Props) {
             )}
           </>
         ) : (
-          /* Компонент, який ми створили раніше */
           <EmptyLoads onReset={() => updateUrl({ page: 1 })} />
         )}
       </div>

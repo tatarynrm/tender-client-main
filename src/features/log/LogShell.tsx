@@ -15,6 +15,7 @@ export default function LogShell({
   const [closeSidebar, setCloseSidebar] = useState(false); // Для десктопа (сховано/показано)
   const [mounted, setMounted] = useState(false);
 
+
   // 1. Гідрація та завантаження стану
   useEffect(() => {
     const savedState = localStorage.getItem("closeSidebar");

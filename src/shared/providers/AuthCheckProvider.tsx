@@ -6,15 +6,16 @@ import {
   ReactNode,
   useEffect,
   useState,
+  useMemo,
 } from "react";
 import { IUserProfile } from "../types/user.types";
 
 interface AuthContextType {
-  profile: IUserProfile | null; // null — якщо не залогінений
+  profile: IUserProfile | null;
   setProfile: (profile: IUserProfile | null) => void;
+  isAuthenticated: boolean; // Корисно для швидких перевірок
 }
 
-// Створюємо контекст з початковим значенням undefined для перевірки помилок
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthCheckProvider = ({
@@ -24,18 +25,22 @@ export const AuthCheckProvider = ({
   profile: IUserProfile | null;
   children: ReactNode;
 }) => {
-  // Ініціалізуємо стан значенням, яке прийшло з сервера (RootLayout)
   const [profile, setProfile] = useState<IUserProfile | null>(serverProfile);
 
-  // СИНХРОНІЗАЦІЯ: Коли ви логінитесь і викликаєте router.refresh(),
-  // RootLayout знову робить запит і присилає новий serverProfile.
-  // Цей ефект оновить клієнтський стан без перезавантаження сторінки.
+  // Синхронізація з сервером (наприклад, після router.refresh())
   useEffect(() => {
     setProfile(serverProfile);
   }, [serverProfile]);
 
+  // Оптимізація об'єкта контексту
+  const value = useMemo(() => ({
+    profile,
+    setProfile,
+    isAuthenticated: !!profile
+  }), [profile]);
+
   return (
-    <AuthContext.Provider value={{ profile, setProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -43,7 +48,7 @@ export const AuthCheckProvider = ({
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within AuthCheckProvider");
   }
   return context;

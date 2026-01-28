@@ -12,6 +12,8 @@ export type LoadRouteItem = {
   ids_country: string; // "UA"
   ids_route_type: "LOAD_FROM" | "LOAD_TO";
   region: string | null;
+  street: string | null;
+  house: string | null;
 };
 
 export type LoadTrailerItem = {

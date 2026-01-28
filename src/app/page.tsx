@@ -127,7 +127,6 @@ import {
 } from "lucide-react";
 import MainHeader from "@/features/home/main/components/MainHeader";
 import Footer from "@/shared/components/Footer/Footer";
-import { useProfile } from "@/shared/hooks"; // Використовуємо клієнтський хук для консистентності
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import Link from "next/link";
 

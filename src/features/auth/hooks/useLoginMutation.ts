@@ -7,11 +7,53 @@ import { useRouter } from "next/navigation";
 import { Dispatch } from "react";
 import { useAuth } from "@/shared/providers/AuthCheckProvider"; // Імпортуємо ваш хук
 
+// export function useLoginMutation(
+//   setIsShowTwoFactor: Dispatch<React.SetStateAction<boolean>>,
+// ) {
+//   const router = useRouter();
+//   const { setProfile } = useAuth(); // Отримуємо доступ до оновлення профілю
+
+//   const { mutate: login, isPending: isLoadingLogin } = useMutation({
+//     mutationKey: ["login user"],
+//     mutationFn: async ({ values }: { values: TypeLoginSchema }) => {
+//       return authService.login(values);
+//     },
+//     onSuccess(data: any) {
+//       // 1. Перевірка на 2FA
+//       if (data?.data?.message?.includes("Перевірте вашу пошту")) {
+//         setIsShowTwoFactor(true);
+//         toast.info("Перевірте пошту. Введіть код 2FA");
+//         return;
+//       }
+
+//       // 2. Успішний вхід — оновлюємо дані в клієнтському контексті миттєво
+//       // Припускаємо, що дані користувача приходять у data.data.user (перевірте структуру вашого API)
+//       if (data?.data?.user) {
+//         setProfile(data.data.user);
+//       }
+
+//       toast.success("Успішний вхід!");
+
+//       // 3. Синхронізація сервера
+//       // Це змусить RootLayout заново виконати getProfile() на фоні
+//       router.refresh();
+
+//       // 4. Перехід на головну панель
+//       router.push("/dashboard");
+//     },
+//     onError(error: any) {
+//       const err = error?.response?.data as ErrorResponse | undefined;
+//       toast.error(err?.message || "Помилка входу");
+//     },
+//   });
+
+//   return { login, isLoadingLogin };
+// }
 export function useLoginMutation(
   setIsShowTwoFactor: Dispatch<React.SetStateAction<boolean>>,
 ) {
   const router = useRouter();
-  const { setProfile } = useAuth(); // Отримуємо доступ до оновлення профілю
+  const { setProfile } = useAuth();
 
   const { mutate: login, isPending: isLoadingLogin } = useMutation({
     mutationKey: ["login user"],
@@ -26,24 +68,26 @@ export function useLoginMutation(
         return;
       }
 
-      // 2. Успішний вхід — оновлюємо дані в клієнтському контексті миттєво
-      // Припускаємо, що дані користувача приходять у data.data.user (перевірте структуру вашого API)
+      // 2. Оновлюємо стейт
       if (data?.data?.user) {
         setProfile(data.data.user);
       }
 
       toast.success("Успішний вхід!");
 
-      // 3. Синхронізація сервера
-      // Це змусить RootLayout заново виконати getProfile() на фоні
-      router.refresh();
-
-      // 4. Перехід на головну панель
+      // 3. ПРАВИЛЬНА ПОСЛІДОВНІСТЬ:
+      // Спочатку refresh, щоб сервер оновив profile в RootLayout
+      router.refresh(); 
+      
+      // Невелика затримка або просто push. 
+      // Завдяки тому, що ми в MainProvider прокинули profile, 
+      // інтерфейс не "сіпнеться".
       router.push("/dashboard");
     },
     onError(error: any) {
       const err = error?.response?.data as ErrorResponse | undefined;
-      toast.error(err?.message || "Помилка входу");
+      const message = Array.isArray(err?.message) ? err.message[0] : err?.message;
+      toast.error(message || "Помилка входу");
     },
   });
 
