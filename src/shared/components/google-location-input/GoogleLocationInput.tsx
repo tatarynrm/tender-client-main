@@ -108,7 +108,7 @@ export const GoogleLocationInput = ({
             value={query}
             disabled={disabled}
             placeholder={placeholder}
-            autoComplete="off"
+            autoComplete="new-password"
             spellCheck="false"
             onChange={(e) => {
               setQuery(e.target.value);

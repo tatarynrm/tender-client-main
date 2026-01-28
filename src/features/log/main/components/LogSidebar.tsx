@@ -165,7 +165,7 @@ export default function LogSidebar({
 
           {/* Анімація NEW */}
           {isNew && (
-            <span className="absolute right-2 flex h-4 w-8">
+            <span className="absolute right-[30] flex h-4 w-8">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
               <span className="relative inline-flex rounded-md bg-red-500 px-1 text-[9px] font-bold text-white items-center justify-center">
                 NEW

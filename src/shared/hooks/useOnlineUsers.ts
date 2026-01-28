@@ -48,6 +48,7 @@ export const useOnlineUsers = () => {
     userSocket.on("disconnect", (reason) => {
       console.log("🔌 Socket disconnected:", reason);
     });
+    console.log("USER ONKIKLE HOOK");
 
     return () => {
       userSocket.off("user_status_change", handleStatusChange);
