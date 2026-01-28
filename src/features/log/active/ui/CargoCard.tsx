@@ -344,14 +344,15 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 const displayRegionName =
                   regionData?.region_name || point.region || "";
                 const hasAddress = point.street || point.house;
-
+                const postCcode = point.country !== "UA" && point.post_code;
+                const countrySign = point.country !== "UA" && point.country;
                 // Умова: чи показувати тултіп взагалі?
                 const shouldShowTooltip = displayRegionName || hasAddress;
 
                 const Content = (
                   <div
                     className={cn(
-                      "flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all shrink-0",
+                      "flex relative items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all shrink-0",
                       shouldShowTooltip ? "cursor-help" : "cursor-default",
                       isLoad
                         ? "bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
@@ -366,6 +367,11 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                       size={10}
                       className="rounded-sm opacity-90"
                     />
+                    <div className="absolute font-bold right-0 top-[-10] flex flex-row gap-2 items-center text-center">
+                         <span className="text-xs">{countrySign}</span>
+                      <span className="text-xs">{postCcode}</span>
+                   
+                    </div>
                   </div>
                 );
 

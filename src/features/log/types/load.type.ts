@@ -14,6 +14,7 @@ export type LoadRouteItem = {
   region: string | null;
   street: string | null;
   house: string | null;
+  post_code: string | null;
 };
 
 export type LoadTrailerItem = {

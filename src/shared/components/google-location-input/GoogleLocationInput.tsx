@@ -34,6 +34,7 @@ export const GoogleLocationInput = ({
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+
   const searchPlaces = useCallback(
     debounce(async (q: string) => {
       if (q.length < 3 || selected) {
@@ -176,6 +177,8 @@ export const GoogleLocationInput = ({
                       const { data: location } = await api.post("/location/resolve", {
                         placeId: r.place_id,
                       });
+                      console.log(location,'LOCATION----- 180');
+                      
                       const displayValue = location.city || mainText;
                       onChange(location);
                       setQuery(displayValue);

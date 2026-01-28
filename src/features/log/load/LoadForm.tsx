@@ -67,6 +67,7 @@ const routeSchema = z.object({
   ids_region: z.string().nullable().optional(),
   street: z.string().optional().nullable(),
   house: z.string().optional().nullable(),
+  post_code: z.string().optional().nullable(),
 });
 
 const trailerSchema = z.object({
@@ -392,6 +393,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   ids_region: location.regionCode || null,
                                   street: location.street || null,
                                   house: location.house || null,
+                                  post_code: location.postCode || null,
                                 };
 
                                 // 3. Оновлюємо всі поля за один прохід
@@ -452,6 +454,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       street: "",
                       house: "",
                       city: "",
+                      post_code: "",
                       lat: 0,
                       lon: 0,
                       ids_route_type: "LOAD_FROM",
@@ -492,6 +495,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   ids_region: location.regionCode || null,
                                   street: location.street || null,
                                   house: location.house || null,
+                                  post_code: location.postCode || null,
                                 };
 
                                 // 3. Оновлюємо все однією дією через ітерацію ключі
@@ -560,6 +564,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       street: "",
                       house: "",
                       city: "",
+                      post_code: "",
                       lat: 0,
                       lon: 0,
                       ids_route_type: "LOAD_TO",
