@@ -46,7 +46,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
-
+  // Стан для збереження часу останнього прочитання (локально)
+  const [localReadTime, setLocalReadTime] = useState<string | null>(
+    load.comment_read_time || null,
+  );
   const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
     useAddCars();
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
@@ -74,6 +77,23 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     ? Date.now() - new Date(load.created_at).getTime() < 3600000
     : false;
 
+  // Логіка визначення, чи є нові повідомлення
+  const hasUnreadMessages = React.useMemo(() => {
+    const lastTime = load?.comment_last_time;
+    // Пріоритет локальному стану, якщо ми щойно закрили чат
+    const readTime = localReadTime || load?.comment_read_time;
+
+    if (!lastTime || !load?.comment_count) return false;
+    if (!readTime) return true;
+
+    // Якщо час останнього коментаря більший за час прочитання (з невеликим зазором в 1 сек)
+    return new Date(lastTime).getTime() > new Date(readTime).getTime() + 1000;
+  }, [
+    load.comment_last_time,
+    load.comment_count,
+    load.comment_read_time,
+    localReadTime,
+  ]);
   return (
     <>
       <div
@@ -267,6 +287,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                   {load.comment_count}
                 </span>
               )}
+              {/* НОВИЙ ПУЛЬСУЮЧИЙ ІНДИКАТОР */}
+              {hasUnreadMessages && (
+                <span className="absolute top-0 left-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+              )}
             </button>
           </div>
         </div>
@@ -282,7 +306,11 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         <LoadChat
           cargoId={chatCargo.id}
           open={!!chatCargo}
-          onClose={() => setChatCargo(null)}
+         onClose={() => {
+      setChatCargo(null);
+      // Оновлюємо локальний час прочитання на поточний
+      setLocalReadTime(new Date().toISOString());
+    }}
         />
       )}
       <AddCarsModal
