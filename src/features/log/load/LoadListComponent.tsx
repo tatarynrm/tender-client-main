@@ -34,7 +34,7 @@ interface Props {
 export default function LoadListComponent({ active, archive }: Props) {
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
-
+  const LIMIT_STORAGE_KEY = "load_list_limit";
   // 1. УСІ ХУКИ МАЮТЬ БУТИ ТУТ (ДО БУДЬ-ЯКИХ IF/RETURN)
   const { isVisible, toggle } = useVisibilityControl("load_list");
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
@@ -43,8 +43,22 @@ export default function LoadListComponent({ active, archive }: Props) {
   );
 
   // Мемоїзація параметрів, щоб уникнути зайвих ререндерів useLoads
-  const currentParams = useMemo(
-    () => ({
+
+  const currentParams = useMemo(() => {
+    // Отримуємо ліміт: URL -> LocalStorage -> Default(10)
+    const getInitialLimit = () => {
+      const urlLimit = searchParams.get("limit");
+      if (urlLimit) return Number(urlLimit);
+
+      if (typeof window !== "undefined") {
+        const storedLimit = localStorage.getItem(LIMIT_STORAGE_KEY);
+        if (storedLimit) return Number(storedLimit);
+      }
+
+      return 10;
+    };
+
+    return {
       country_from: searchParams.get("country_from") || "",
       country_to: searchParams.get("country_to") || "",
       region_from: searchParams.get("region_from") || "",
@@ -60,11 +74,9 @@ export default function LoadListComponent({ active, archive }: Props) {
       is_collective: searchParams.get("is_collective") || "",
       participate: searchParams.get("participate") || "",
       my: searchParams.get("my") || "",
-      limit: Number(searchParams.get("limit") || 10),
-    }),
-    [searchParams],
-  );
-
+      limit: getInitialLimit(),
+    };
+  }, [searchParams]);
   const queryFilters = useMemo(
     () => ({
       ...currentParams,
@@ -99,7 +111,6 @@ export default function LoadListComponent({ active, archive }: Props) {
 
   return (
     <div className="space-y-4 pb-40">
-     
       <div className="flex items-center justify-between gap-4">
         <Button
           variant="ghost"
@@ -128,11 +139,14 @@ export default function LoadListComponent({ active, archive }: Props) {
               columnOptions={columnOptions}
             />
             <ItemsPerPage
-              options={[10, 20, 50, 100]}
+              options={[10, 20, 50, 100,200]}
               defaultValue={currentParams.limit}
-              onChange={(newLimit) =>
-                updateUrl({ ...currentParams, limit: newLimit, page: 1 })
-              }
+              onChange={(newLimit) => {
+                // Зберігаємо в браузері
+                localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
+                // Оновлюємо URL
+                updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+              }}
             />
           </div>
         </div>
