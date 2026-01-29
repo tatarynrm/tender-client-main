@@ -111,35 +111,23 @@ export default function LoadListComponent({ active, archive }: Props) {
 
   return (
     <div className="space-y-4 pb-40">
-      <div className="flex items-center justify-between gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggle}
-          className="gap-2 text-zinc-500 hover:text-orange-600 transition-all font-bold uppercase text-[10px] tracking-widest"
-        >
-          {isVisible ? <ChevronUp size={16} /> : <Settings2 size={16} />}
-          {isVisible ? "Приховати інструменти" : "Налаштування та фільтри"}
-        </Button>
-      </div>
-
-      {isVisible && (
-        <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex justify-between items-center p-2 rounded-lg">
-            <LoadFiltersSheet
-              filters={filters}
-              setFilters={setFilters}
-              apply={() => updateUrl({ ...filters, page: 1 })}
-              reset={handleReset}
-              dropdowns={loadFilters}
-            />
+      <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300 ">
+        <div className="flex justify-between items-center p-0 rounded-lg">
+          <LoadFiltersSheet
+            filters={filters}
+            setFilters={setFilters}
+            apply={() => updateUrl({ ...filters, page: 1 })}
+            reset={handleReset}
+            dropdowns={loadFilters}
+          />
+          <div className="flex gap-2 items-center text-center">
             <GridColumnSelector
               gridCols={gridCols}
               setGridCols={setGridCols}
               columnOptions={columnOptions}
             />
             <ItemsPerPage
-              options={[10, 20, 50, 100,200]}
+              options={[10, 20, 50, 100, 200]}
               defaultValue={currentParams.limit}
               onChange={(newLimit) => {
                 // Зберігаємо в браузері
@@ -150,7 +138,7 @@ export default function LoadListComponent({ active, archive }: Props) {
             />
           </div>
         </div>
-      )}
+      </div>
 
       <LoadActiveFilters
         currentParams={currentParams}
