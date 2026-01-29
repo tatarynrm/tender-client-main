@@ -167,7 +167,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         <StatusIndicator updatedAt={load.updated_at} />
 
         {/* HEADER */}
-        <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 min-w-0 w-full">
+        <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 min-w-0 w-full">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <span
               className={cn(
