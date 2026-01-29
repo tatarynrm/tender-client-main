@@ -266,9 +266,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 config.main,
               )}
             >
-              {load.date_load
-                ? format(new Date(load.date_load), "dd.MM HH:mm")
-                : "—"}
+              {load.date_load ? format(new Date(load.date_load), "dd.MM") : "—"}
             </span>
           </div>
           <div className="bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start">
@@ -350,7 +348,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </h3>
             <div
               className={cn(
-                "text-zinc-500 dark:text-zinc-400 leading-snug overflow-y-auto max-h-[100px] pr-1 custom-scrollbar break-words whitespace-pre-wrap",
+                "text-zinc-500 dark:text-zinc-400 leading-snug overflow-y-auto max-h-[160px] pr-1 scrollbar-thin  break-words whitespace-pre-wrap",
                 config.main,
               )}
             >
