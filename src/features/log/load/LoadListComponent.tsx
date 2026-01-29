@@ -111,31 +111,32 @@ export default function LoadListComponent({ active, archive }: Props) {
 
   return (
     <div className="space-y-4 pb-40">
-      <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300 ">
-        <div className="flex justify-between items-center p-0 rounded-lg">
-          <LoadFiltersSheet
-            filters={filters}
-            setFilters={setFilters}
-            apply={() => updateUrl({ ...filters, page: 1 })}
-            reset={handleReset}
-            dropdowns={loadFilters}
-          />
-          <div className="flex gap-2 items-center text-center">
-            <GridColumnSelector
-              gridCols={gridCols}
-              setGridCols={setGridCols}
-              columnOptions={columnOptions}
+      {/* ЗАКРІПЛЕНИЙ БЛОК (STICKY) */}
+      <div className="sticky top-[-20] z-30 pt-2 pb-2  backdrop-blur-xs -mx-2 px-2 transition-all">
+        <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center p-0 rounded-lg">
+            <LoadFiltersSheet
+              filters={filters}
+              setFilters={setFilters}
+              apply={() => updateUrl({ ...filters, page: 1 })}
+              reset={handleReset}
+              dropdowns={loadFilters}
             />
-            <ItemsPerPage
-              options={[10, 20, 50, 100, 200]}
-              defaultValue={currentParams.limit}
-              onChange={(newLimit) => {
-                // Зберігаємо в браузері
-                localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
-                // Оновлюємо URL
-                updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-              }}
-            />
+            <div className="flex gap-2 items-center text-center">
+              <GridColumnSelector
+                gridCols={gridCols}
+                setGridCols={setGridCols}
+                columnOptions={columnOptions}
+              />
+              <ItemsPerPage
+                options={[10, 20, 50, 100, 200]}
+                defaultValue={currentParams.limit}
+                onChange={(newLimit) => {
+                  localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
+                  updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
