@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { useEffect, ReactNode } from "react";
 
 // 1. Визначаємо перелік доступних команд
-export type SystemCommandType = 
-  | "FORCE_RELOAD" 
-  | "FORCE_LOGOUT" 
-  | "SHOW_NOTIFICATION" 
+export type SystemCommandType =
+  | "FORCE_RELOAD"
+  | "FORCE_LOGOUT"
+  | "SHOW_NOTIFICATION"
   | "UPDATE_CARGO_PRICE";
 
 // 2. Типізуємо структуру самої події
@@ -22,16 +22,20 @@ interface SocketActionProviderProps {
   children: ReactNode;
 }
 
-export const SocketActionProvider = ({ children }: SocketActionProviderProps) => {
-  const { load: loadSocket } = useSockets();
-  const {  logout } = useProfileLogoutMutation();
+export const CRMSocketActionProvider = ({
+  children,
+}: SocketActionProviderProps) => {
+  const { user: userSocket } = useSockets();
+  const { logout } = useProfileLogoutMutation();
 
   useEffect(() => {
-    if (!loadSocket) return;
+    if (!userSocket) return;
 
     // 3. Об'єкт команд з типізованими ключами
     const commands: Record<SystemCommandType, (data?: any) => void> = {
       FORCE_RELOAD: () => {
+        console.log("FORCE");
+
         window.location.reload();
       },
       FORCE_LOGOUT: () => {
@@ -56,12 +60,12 @@ export const SocketActionProvider = ({ children }: SocketActionProviderProps) =>
       }
     };
 
-    loadSocket.on("system_command", handleSystemCommand);
+    userSocket.on("system_command", handleSystemCommand);
 
     return () => {
-      loadSocket.off("system_command", handleSystemCommand);
+      userSocket.off("system_command", handleSystemCommand);
     };
-  }, [loadSocket, logout]);
+  }, [userSocket, logout]);
 
   return <>{children}</>;
 };

@@ -10,6 +10,7 @@ import {
   Truck,
   CheckCircle2,
   XCircle,
+  Copy,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils";
@@ -30,6 +31,7 @@ import { useEventEffect } from "@/shared/hooks/useEventEffects";
 import { StatusIndicator } from "./CargoCardUpdateColor";
 import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
 import { RoutePoint } from "./RoutePointTooltip";
+import { toast } from "sonner";
 
 interface CargoCardProps {
   load: LoadApiItem;
@@ -46,6 +48,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
+  const isOnline = onlineUsers.has(String(load.id_usr));
   // Стан для збереження часу останнього прочитання (локально)
   const [localReadTime, setLocalReadTime] = useState<string | null>(
     load.comment_read_time || null,
@@ -94,6 +97,90 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     load.comment_read_time,
     localReadTime,
   ]);
+
+  const handleCopyLoad = () => {
+    // 1. Мапінг прапорів (проста функція для візуалу)
+    const getFlag = (countryCode?: string) => {
+      if (!countryCode) return "";
+      return countryCode === "UA"
+        ? "🇺🇦"
+        : countryCode === "DE"
+          ? "🇩🇪"
+          : countryCode === "PL"
+            ? "🇵🇱"
+            : "🏳️";
+    };
+
+    // 2. Формуємо маршрут "Звідки" з прапором та країною
+    const fromPoints = load.crm_load_route_from
+      .map(
+        (p) =>
+          `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region} обл.)` : ""}`,
+      )
+      .join(" — ");
+
+    // 3. Формуємо маршрут "Куди"
+    const toPoints = load.crm_load_route_to
+      .map(
+        (p) =>
+          `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region} обл.)` : ""}`,
+      )
+      .join(" — ");
+
+    // 4. Типи транспорту (якщо їх багато, виводимо через кому)
+    const trailers = load.crm_load_trailer?.length
+      ? load.crm_load_trailer.map((t) => t.trailer_type_name).join(", ")
+      : "Не вказано";
+
+    // 5. Робота з ціною та запитом ціни
+    const priceDisplay = load.is_price_request
+      ? "Запит ціни (ставка в месенджер)"
+      : `${load.price?.toLocaleString()} ${load.valut_name}`;
+
+    // 6. Дати (перевірка на наявність)
+    const dateLoad = load.date_load
+      ? format(new Date(load.date_load), "dd.MM.yyyy")
+      : "Терміново";
+    const dateUnload = load.date_unload
+      ? format(new Date(load.date_unload), "dd.MM.yyyy")
+      : "—";
+
+    // 7. Формуємо структуру повідомлення
+    const textToCopy = [
+      `📎 *ЗАЯВКА #${load.id}*`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `🚚 *Транзит:* ${load.transit_type || "Не вказано"}`,
+      `📍 *Звідки:* ${fromPoints}`,
+      `🏁 *Куди:* ${toPoints}`,
+      `📅 *Дата завантаження:* ${dateLoad}`,
+      `📅 *Дата розвантаження:* ${dateUnload}`,
+      `🚛 *Транспорт:* ${trailers}`,
+      `💰 *Ставка:* ${priceDisplay}`,
+      load.load_info
+        ? `\nℹ️ *Додатково:* ${load.load_info.substring(0, 300)}${load.load_info.length > 300 ? "..." : ""}`
+        : null,
+      `━━━━━━━━━━━━━━━━━━`,
+      `👤 *Менеджер:* ${load.author}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // Копіювання
+    navigator.clipboard
+      .writeText(textToCopy)
+      .then(() => {
+        toast.success("Скопійовано у буфер", {
+          description: `Заявка #${load.id} готова до вставки (CTRL+V)`,
+          icon: <Copy className="w-4 h-4 text-blue-500" />, // Синій колір акцентує на дії
+          duration: 3000,
+        });
+      })
+      .catch(() => {
+        toast.error("Помилка копіювання", {
+          description: "Будь ласка, спробуйте ще раз",
+        });
+      });
+  };
   return (
     <>
       <div
@@ -106,32 +193,83 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         <StatusIndicator updatedAt={load.updated_at} />
 
         {/* HEADER */}
-        <div className="flex flex-wrap items-center justify-between px-3 py-1.5 gap-y-2 border-b border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <span className="flex items-center justify-center min-w-[24px] h-5 px-1 rounded bg-blue-600 text-white font-bold text-[10px] shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 min-w-0 w-full">
+          {/* Ліва частина - Гнучка */}
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {/* ID - Завжди фіксований */}
+            <span className="flex items-center justify-center min-w-[28px] h-6 px-1.5 rounded-md bg-blue-600 text-white font-bold text-[10px] tracking-wider shrink-0">
               {load.id}
             </span>
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-tight truncate">
-              <span className="text-zinc-500 truncate">
-                {load.author || "Павлюк І."}
-              </span>
-              <span className="text-zinc-300">|</span>
-              <span className="text-blue-600 dark:text-blue-400 truncate">
-                {load.company_name || "ASTARTA TRADING"}
-              </span>
+
+            {/* Контейнер інфо - стискається перший */}
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+              {/* Статус - Фіксований */}
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-full shrink-0">
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full shrink-0",
+                    isOnline
+                      ? "bg-emerald-500 animate-pulse"
+                      : "bg-zinc-300 dark:bg-zinc-600",
+                  )}
+                />
+                <span className="text-[8px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-tighter">
+                  {load.author}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden group/marquee">
+                <span className="text-zinc-300 dark:text-zinc-700 shrink-0">
+                  |
+                </span>
+
+                <div className="relative overflow-hidden w-full h-5 flex items-center cursor-help">
+                  {/* Внутрішній контейнер з переходом */}
+                  <div
+                    className="flex whitespace-nowrap transition-transform duration-[2000ms] ease-in-out w-max hover:-translate-x-[calc(100%-100%)]"
+                    style={{
+                      // Якщо ширина тексту менша за контейнер, рух буде 0
+                      transform: "translateX(0)",
+                    }}
+                    /* Додаємо невеликий хак: рух спрацює тільки якщо ми наведемо, 
+         і контейнер вирахує різницю автоматично через translate */
+                    onMouseEnter={(e) => {
+                      const target = e.currentTarget;
+                      const parent = target.parentElement;
+                      if (parent && target.scrollWidth > parent.offsetWidth) {
+                        const distance =
+                          target.scrollWidth - parent.offsetWidth;
+                        target.style.transform = `translateX(-${distance + 10}px)`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateX(0)";
+                    }}
+                  >
+                    <span className="font-semibold text-blue-600 dark:text-blue-400 text-xs uppercase tracking-wide">
+                      {load.company_name || "ASTARTA TRADING"}
+                    </span>
+                  </div>
+
+                  {/* Градієнт з'являється тільки якщо текст довгий (опціонально можна додати логіку і сюди) */}
+                  <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent pointer-events-none" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-zinc-400 text-[10px] font-bold bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-700">
-              <History size={10} />
-              <span className="tabular-nums">
+          {/* Права частина - Фіксована */}
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
+            <div className="hidden md:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
+              <History size={13} strokeWidth={2.5} />
+              <span className="text-[8px] font-medium tabular-nums">
                 {load.updated_at
-                  ? format(new Date(load.updated_at), "dd.MM.yy HH:mm")
+                  ? format(new Date(load.updated_at), "dd.MM HH:mm")
                   : "—"}
               </span>
             </div>
-            <div className="flex items-center scale-90">
+
+            <div className="flex items-center border-l border-zinc-100 dark:border-zinc-800 pl-2">
               <CargoActions
                 load={load}
                 profile={profile}
@@ -144,7 +282,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </div>
           </div>
         </div>
-
         {/* DATES BAR */}
         <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-800 text-[11px] font-bold">
           <div className="bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start">
@@ -265,6 +402,14 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Нова кнопка копіювання */}
+            <button
+              onClick={handleCopyLoad}
+              title="Скопіювати дані"
+              className="p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 hover:text-emerald-500 transition-colors"
+            >
+              <Copy size={16} />
+            </button>
             <button
               onClick={() => setOpenHistory(true)}
               className="p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 hover:text-blue-500 transition-colors"
@@ -306,11 +451,11 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         <LoadChat
           cargoId={chatCargo.id}
           open={!!chatCargo}
-         onClose={() => {
-      setChatCargo(null);
-      // Оновлюємо локальний час прочитання на поточний
-      setLocalReadTime(new Date().toISOString());
-    }}
+          onClose={() => {
+            setChatCargo(null);
+            // Оновлюємо локальний час прочитання на поточний
+            setLocalReadTime(new Date().toISOString());
+          }}
         />
       )}
       <AddCarsModal

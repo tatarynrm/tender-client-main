@@ -277,3 +277,33 @@ section[id] {
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Бігуща строка в карточках */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-container {
+  display: flex;
+  width: max-content;
+  animation: marquee 2s linear infinite;
+}
+
+.animate-marquee-container:hover {
+  animation-play-state: paused;
+}

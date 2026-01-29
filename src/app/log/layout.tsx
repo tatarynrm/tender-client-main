@@ -6,6 +6,7 @@ import { getProfile } from "@/shared/server/getProfile";
 import { ModalProvider } from "@/shared/providers/GlobalModalProvider";
 import { RestTimerTracker } from "@/shared/components/Modals/GlobalModals/Trackers/RestTimerTracker";
 import { UpdatesIntroModal } from "@/shared/components/Modals/SystemModals/UpdatesIntroModal";
+import { CRMSocketActionProvider } from "@/shared/providers/SocketActionsProviders/CRMSocketActionProvider";
 
 export default async function LogLayout({
   children,
@@ -22,11 +23,13 @@ export default async function LogLayout({
   return (
     // <AuthCheckProvider profile={profile}>
     <LogShell profile={profile}>
-      <ModalProvider>
-        <RestTimerTracker />
-        <UpdatesIntroModal />
-        {children}
-      </ModalProvider>
+      <CRMSocketActionProvider>
+        <ModalProvider>
+          <RestTimerTracker />
+          <UpdatesIntroModal />
+          {children}
+        </ModalProvider>
+      </CRMSocketActionProvider>
     </LogShell>
     // </AuthCheckProvider>
   );
