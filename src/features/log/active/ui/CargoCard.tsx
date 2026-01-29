@@ -364,11 +364,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           <div className="flex gap-1.5">
             {[
               {
-                icon: Map,
-                val: load.car_count_actual,
-                color: "text-blue-600 bg-blue-50",
-              },
-              {
                 icon: Truck,
                 val: load.car_count_actual,
                 color: "text-blue-600 bg-blue-50",
