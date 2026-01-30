@@ -23,7 +23,7 @@ interface CargoActionsProps {
   onAddCars: () => void;
   onRemoveCars: () => void;
   onCloseCargo: () => void;
-  onRefresh: (id: number) => void;
+
   onCopy?: (load: LoadApiItem) => void;
   onDelete?: (id: number) => void;
 }
@@ -35,7 +35,7 @@ export function CargoActions({
   onAddCars,
   onRemoveCars,
   onCloseCargo,
-  onRefresh,
+
   onDelete,
 }: CargoActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,7 +43,7 @@ export function CargoActions({
   const router = useRouter();
   const pathname = usePathname();
   const { config } = useFontSize();
-  const { deleteCargo, isDeleting } = useLoads();
+  const { deleteCargo, isDeleting,refreshLoadTime } = useLoads();
 
   const handleDelete = async (id: number) => {
     if (window.confirm("Ви впевнені, що хочете видалити цей вантаж?")) {
@@ -159,7 +159,7 @@ export function CargoActions({
 
             <button
               onClick={() => {
-                onRefresh(load.id);
+                refreshLoadTime(load.id);
                 setIsOpen(false);
               }}
               className={cn(itemClass, "hover:text-emerald-600")}

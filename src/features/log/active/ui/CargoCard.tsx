@@ -60,7 +60,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     useAddCars();
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
-  const { refreshLoadTime } = useLoads();
 
   const { isActive: isShaking } = useEventEffect(load.id, [
     "cargo_shake",
@@ -225,7 +224,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                       {load.company_name || "ASTARTA TRADING"}
                     </span>
                   </div>
-                  <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent pointer-events-none" />
+                  {/* <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent pointer-events-none" /> */}
                 </div>
               </div>
             </div>
@@ -247,7 +246,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 onAddCars={() => setOpenAddCars(true)}
                 onRemoveCars={() => setOpenRemoveCars(true)}
                 onCloseCargo={() => setOpenCloseCargoByManager(true)}
-                onRefresh={refreshLoadTime}
                 canDelete={canDelete}
               />
             </div>
