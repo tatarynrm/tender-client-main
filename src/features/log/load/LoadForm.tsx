@@ -451,14 +451,16 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   onClick={() =>
                     appendFrom({
                       address: "",
-                      street: "",
-                      house: "",
+                      ids_route_type: "LOAD_FROM" as const, // Явне приведення до enum
+                      order_num: Number(fromFields.length + 1), // Гарантуємо число
                       city: "",
-                      post_code: "",
+                      country: "",
                       lat: 0,
                       lon: 0,
-                      ids_route_type: "LOAD_FROM",
-                      order_num: fromFields.length + 1,
+                      ids_region: null,
+                      street: null,
+                      house: null,
+                      post_code: null,
                     })
                   }
                 >
@@ -561,14 +563,16 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   onClick={() =>
                     appendTo({
                       address: "",
-                      street: "",
-                      house: "",
+                      ids_route_type: "LOAD_TO" as const, // Явне приведення до enum
+                      order_num: Number(toFields.length + 1), // Гарантуємо число
                       city: "",
-                      post_code: "",
+                      country: "",
                       lat: 0,
                       lon: 0,
-                      ids_route_type: "LOAD_TO",
-                      order_num: toFields.length + 1,
+                      ids_region: null,
+                      street: null,
+                      house: null,
+                      post_code: null,
                     })
                   }
                 >
