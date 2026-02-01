@@ -3,6 +3,9 @@
 @import "leaflet/dist/leaflet.css";
 @plugin 'tailwind-scrollbar';
 
+
+@import './animation.effects.css';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

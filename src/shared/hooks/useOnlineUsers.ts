@@ -1,36 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSockets } from "../providers/SocketProvider";
 
-// React: хук для отримання статусу конкретного користувача
-// useOnlineUsers.ts
 export const useOnlineUsers = () => {
-  const { user: userSocket } = useSockets();
+  const { load: loadSocket } = useSockets();
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!userSocket) {
-      setOnlineUsers(new Set());
-      return;
-    }
-
-    const fetchOnline = () => {
-      console.log("📡 Fetching online users list...");
-      userSocket.emit("get_online_users", (ids: string[]) => {
+  const fetchOnlineList = useCallback(() => {
+    if (loadSocket?.connected) {
+      loadSocket.emit("get_online_users", (ids: string[]) => {
         if (Array.isArray(ids)) {
           setOnlineUsers(new Set(ids.map(String)));
         }
       });
-    };
-
-    // Якщо сокет ВЖЕ підключений на момент рендеру (таке часто буває при Login)
-    if (userSocket.connected) {
-      fetchOnline();
     }
+  }, [loadSocket]);
 
-    const handleStatusChange = (data: {
-      userId: string;
-      isOnline: boolean;
-    }) => {
+  useEffect(() => {
+    if (!loadSocket) return;
+
+    // Очищуємо список при зміні сокета (наприклад, при перелогіні)
+    setOnlineUsers(new Set());
+
+    const handleStatusChange = (data: { userId: string; isOnline: boolean }) => {
       if (!data?.userId) return;
       setOnlineUsers((prev) => {
         const newSet = new Set(prev);
@@ -40,22 +31,34 @@ export const useOnlineUsers = () => {
       });
     };
 
-    userSocket.on("user_status_change", handleStatusChange);
-    userSocket.on("connect", fetchOnline);
+    const onConnect = () => {
+      console.log("🟢 Connected/Reconnected to /load");
+      loadSocket.emit("heartbeat");
+      fetchOnlineList();
+    };
 
-    // Замість повного очищення при disconnect, краще просто чекати reconnect
-    // або очищати тільки якщо ми реально розлогінились
-    userSocket.on("disconnect", (reason) => {
-      console.log("🔌 Socket disconnected:", reason);
-    });
-    console.log("USER ONKIKLE HOOK");
+    loadSocket.on("user_status_change", handleStatusChange);
+    loadSocket.on("connect", onConnect);
+    // Важливо для перелогіну:
+    loadSocket.on("reconnect", onConnect);
+
+    // Якщо сокет вже підключився поки хук монтувався
+    if (loadSocket.connected) {
+      onConnect();
+    }
+
+    const heartbeatInterval = setInterval(() => {
+      if (loadSocket.connected) loadSocket.emit("heartbeat");
+    }, 45000);
 
     return () => {
-      userSocket.off("user_status_change", handleStatusChange);
-      userSocket.off("connect", fetchOnline);
-      userSocket.off("disconnect");
+      clearInterval(heartbeatInterval);
+      loadSocket.off("user_status_change", handleStatusChange);
+      loadSocket.off("connect", onConnect);
+      loadSocket.off("reconnect", onConnect);
     };
-  }, [userSocket]); // Хук перепідпишеться, коли SocketProvider дасть новий об'єкт сокета
+    // Додаємо loadSocket як залежність, щоб при його зміні (після login) хук перезібрався
+  }, [loadSocket, fetchOnlineList]); 
 
   return onlineUsers;
 };

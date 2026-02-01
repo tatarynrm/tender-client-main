@@ -6,6 +6,7 @@ import { ErrorResponse } from "@/shared/api";
 import { useRouter } from "next/navigation";
 import { Dispatch } from "react";
 import { useAuth } from "@/shared/providers/AuthCheckProvider"; // Імпортуємо ваш хук
+import { useSockets } from "@/shared/providers/SocketProvider";
 
 // export function useLoginMutation(
 //   setIsShowTwoFactor: Dispatch<React.SetStateAction<boolean>>,
@@ -54,7 +55,7 @@ export function useLoginMutation(
 ) {
   const router = useRouter();
   const { setProfile } = useAuth();
-
+  const { load: loadSocket } = useSockets();
   const { mutate: login, isPending: isLoadingLogin } = useMutation({
     mutationKey: ["login user"],
     mutationFn: async ({ values }: { values: TypeLoginSchema }) => {
@@ -69,24 +70,38 @@ export function useLoginMutation(
       }
 
       // 2. Оновлюємо стейт
-      if (data?.data?.user) {
-        setProfile(data.data.user);
-      }
+      const user = data?.data?.user;
 
+      if (user) {
+        setProfile(user);
+
+        // ВИПРАВЛЕННЯ ПОМИЛКИ ТУТ:
+        if (loadSocket) {
+          // 1. Оновлюємо дані авторизації всередині об'єкта сокета
+          loadSocket.auth = { userId: String(user.id) };
+
+          // 2. Перепідключаємось, щоб бекенд отримав новий handshake
+          loadSocket.disconnect().connect();
+
+          console.log("🔌 Socket reconnected with user:", user.id);
+        }
+      }
       toast.success("Успішний вхід!");
 
       // 3. ПРАВИЛЬНА ПОСЛІДОВНІСТЬ:
       // Спочатку refresh, щоб сервер оновив profile в RootLayout
-      router.refresh(); 
-      
-      // Невелика затримка або просто push. 
-      // Завдяки тому, що ми в MainProvider прокинули profile, 
+      router.refresh();
+
+      // Невелика затримка або просто push.
+      // Завдяки тому, що ми в MainProvider прокинули profile,
       // інтерфейс не "сіпнеться".
       router.push("/dashboard");
     },
     onError(error: any) {
       const err = error?.response?.data as ErrorResponse | undefined;
-      const message = Array.isArray(err?.message) ? err.message[0] : err?.message;
+      const message = Array.isArray(err?.message)
+        ? err.message[0]
+        : err?.message;
       toast.error(message || "Помилка входу");
     },
   });

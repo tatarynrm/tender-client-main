@@ -8,9 +8,20 @@ import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
-import { AppEventType, eventBus } from "@/shared/lib/event-bus";
+import { eventBus } from "@/shared/lib/event-bus";
+import { SOCKET_EVENTS } from "@/shared/constants/socket-evenets";
 
-// --- Types ---
+// export interface TenderListFilters {
+//   search?: string;
+//   status?: string;
+//   regionId?: number;
+//   countryId?: string;
+//   country_from?: string;
+//   city_to?: string;
+//   city_from?: string;
+//   page?: number;
+//   [key: string]: any; // Дозволить приймати додаткові параметри, якщо потрібно
+// }
 export interface TenderListFilters {
   active?: boolean;
   archive?: boolean;
@@ -18,52 +29,6 @@ export interface TenderListFilters {
   limit?: number;
   [key: string]: any;
 }
-
-// --- Constants & Helpers ---
-const FILTER_RULES: Record<string, (item: LoadApiItem, val: any, profileId?: number) => boolean> = {
-  status: (item, val) => String(item.status) === String(val),
-  my: (item, val, profileId) => {
-    if (val === "true" || val === true) return Number(item.id_usr) === profileId;
-    return true;
-  },
-  active: (item, val) => {
-    if (val === true) return item.status !== "deleted" && item.status !== "closed";
-    return true;
-  },
-  country_from: (item, val) => {
-    const selected = String(val).split(",");
-    return (item.crm_load_route_from || []).some(r => selected.includes(String(r.ids_country)));
-  },
-  country_to: (item, val) => {
-    const selected = String(val).split(",");
-    return (item.crm_load_route_to || []).some(r => selected.includes(String(r.ids_country)));
-  },
-  city_from: (item, val) =>
-    (item.crm_load_route_from || []).some(r => r.city?.toLowerCase().includes(String(val).toLowerCase())),
-  city_to: (item, val) =>
-    (item.crm_load_route_to || []).some(r => r.city?.toLowerCase().includes(String(val).toLowerCase())),
-  region_from: (item, val) => {
-    const selected = String(val).split(",").map(Number);
-    return (item.crm_load_route_from || []).some(r => selected.includes(Number(r.ids_region)));
-  },
-  region_to: (item, val) => {
-    const selected = String(val).split(",").map(Number);
-    return (item.crm_load_route_to || []).some(r => selected.includes(Number(r.ids_region)));
-  },
-  regionId: (item, val) =>
-    (item.crm_load_route_from || []).some(r => Number(r.ids_region) === Number(val)),
-  search: (item, val) => {
-    const s = String(val).toLowerCase();
-    return !!(
-      item.id?.toString().includes(s) ||
-      item.crm_load_route_from?.some(r => r.city?.toLowerCase().includes(s)) ||
-      item.crm_load_route_to?.some(r => r.city?.toLowerCase().includes(s))
-    );
-  },
-};
-
-// --- Hooks ---
-
 export const useLoadById = (id?: number | string | null) => {
   return useQuery<LoadApiItem>({
     queryKey: ["load", id],
@@ -77,11 +42,15 @@ export const useLoads = (filters: TenderListFilters = {}) => {
   const queryClient = useQueryClient();
   const { load: socket } = useSockets();
 
-  // 1. Params & Keys
   const params = useMemo(() => {
     const p = new URLSearchParams();
     Object.entries(filters).forEach(([key, val]) => {
-      if (val !== undefined && val !== null && val !== "" && !(Array.isArray(val) && val.length === 0)) {
+      if (
+        val !== undefined &&
+        val !== null &&
+        val !== "" &&
+        !(Array.isArray(val) && val.length === 0)
+      ) {
         p.set(key, String(val));
       }
     });
@@ -89,37 +58,121 @@ export const useLoads = (filters: TenderListFilters = {}) => {
   }, [filters]);
 
   const queryKey = useMemo(() => ["loads", params.toString()], [params]);
-  const hasRequiredParams = filters.active !== undefined || filters.archive !== undefined;
 
-  // 2. Fetch Data
-  const { data, isLoading, error, refetch } = useQuery<IApiResponse<LoadApiItem[]>>({
-    queryKey,
-    queryFn: () => loadService.getLoads(params),
-    enabled: hasRequiredParams,
-    staleTime: 1000 * 60,
-  });
-
-  // 3. Cache Matcher Logic
+  // ВИПРАВЛЕНО: Функція тепер приймає чистий об'єкт filters
   const matchesFilters = useCallback(
-    (item: LoadApiItem, currentFilters: TenderListFilters) => {
+    (item: LoadApiItem, currentFilters: any) => {
       if (!item) return false;
+
+      const checkRules: Record<string, (val: any) => boolean> = {
+        status: (val) => String(item.status) === String(val),
+
+        // Перевірка "Мої заявки"
+        my: (val) => {
+          if (val === "true" || val === true) {
+            return Number(item.id_usr) === Number(profile?.id);
+          }
+          return true;
+        },
+
+        // Перевірка активності (якщо потрібно фільтрувати за внутрішнім станом)
+        active: (val) => {
+          if (val === true) {
+            // Тут логіка залежить від вашої моделі даних, наприклад:
+            return item.status !== "deleted" && item.status !== "closed";
+          }
+          return true;
+        },
+
+        // Країни та міста
+        // КРАЇНИ (обробка списку через кому)
+        country_from: (val) => {
+          const selectedCountries = String(val).split(",");
+          return (item.crm_load_route_from || []).some((r) =>
+            selectedCountries.includes(String(r.ids_country)),
+          );
+        },
+        country_to: (val) => {
+          const selectedCountries = String(val).split(",");
+          return (item.crm_load_route_to || []).some((r) =>
+            selectedCountries.includes(String(r.ids_country)),
+          );
+        },
+
+        city_from: (val) =>
+          (item.crm_load_route_from || []).some((r) =>
+            r.city?.toLowerCase().includes(String(val).toLowerCase()),
+          ),
+        city_to: (val) =>
+          (item.crm_load_route_to || []).some((r) =>
+            r.city?.toLowerCase().includes(String(val).toLowerCase()),
+          ),
+
+        // Регіони (підтримка обох назв ключів)
+        region_from: (val) => {
+          const selectedRegions = String(val).split(",").map(Number);
+          return (item.crm_load_route_from || []).some((r) =>
+            selectedRegions.includes(Number(r.ids_region)),
+          );
+        },
+        regionId: (val) =>
+          (item.crm_load_route_from || []).some(
+            (r) => Number(r.ids_region) === Number(val),
+          ),
+        region_to: (val) => {
+          const selectedRegions = String(val).split(",").map(Number);
+          return (item.crm_load_route_to || []).some((r) =>
+            selectedRegions.includes(Number(r.ids_region)),
+          );
+        },
+
+        search: (val) => {
+          const s = String(val).toLowerCase();
+          return !!(
+            item.id?.toString().includes(s) ||
+            (item.crm_load_route_from || []).some((r) =>
+              r.city?.toLowerCase().includes(s),
+            ) ||
+            (item.crm_load_route_to || []).some((r) =>
+              r.city?.toLowerCase().includes(s),
+            )
+          );
+        },
+      };
+
       return Object.entries(currentFilters).every(([key, filterValue]) => {
-        if (!filterValue || ["page", "limit"].includes(key)) return true;
-        const rule = FILTER_RULES[key];
-        return rule ? rule(item, filterValue, profile?.id) : true;
+        console.log(key, filterValue, "KEY FILTER VALUE 128");
+        // Пропускаємо порожні значення, пагінацію та ліміти
+        if (
+          filterValue === undefined ||
+          filterValue === null ||
+          filterValue === "" ||
+          ["page", "limit"].includes(key)
+        ) {
+          return true;
+        }
+
+        if (checkRules[key]) {
+          console.log(checkRules[key], "CHECKRULES KEY");
+
+          return checkRules[key](filterValue);
+        }
+
+        // Якщо прийшов фільтр, для якого ми не написали правило (наприклад, trailer_type),
+        // поки що повертаємо true, щоб не зламати все, або додай правило вище.
+        return true;
       });
     },
-    [profile?.id]
+    [profile?.id], // Важливо додати profile?.id сюди
   );
-
-  // 4. Cache Update Actions
   const updateLocalCache = useCallback(
     (newItem: LoadApiItem) => {
-      if (!newItem?.id) return;
+      if (!newItem || !newItem.id) return;
 
       queryClient.setQueryData<IApiResponse<LoadApiItem[]>>(queryKey, (old) => {
         if (!old?.content) return old;
 
+        // ВИПРАВЛЕНО: передаємо актуальний об'єкт filters
         const isMatch = matchesFilters(newItem, filters);
         const hasCars = Number(newItem.car_count_actual) > 0;
         const shouldBeInList = isMatch && hasCars;
@@ -128,15 +181,15 @@ export const useLoads = (filters: TenderListFilters = {}) => {
 
         return {
           ...old,
-          content: shouldBeInList 
-            ? [{ ...newItem }, ...otherItems].slice(0, 50) 
+          content: shouldBeInList
+            ? [{ ...newItem }, ...otherItems].slice(0, 50)
             : otherItems,
         };
       });
 
       queryClient.setQueryData(["load", newItem.id], newItem);
     },
-    [queryClient, queryKey, matchesFilters, filters]
+    [queryClient, queryKey, matchesFilters, filters], // filters додано в залежності
   );
 
   const updateItemOnly = useCallback(
@@ -145,12 +198,14 @@ export const useLoads = (filters: TenderListFilters = {}) => {
         if (!old?.content) return old;
         return {
           ...old,
-          content: old.content.map((item) => (item.id === newItem.id ? { ...item, ...newItem } : item)),
+          content: old.content.map((item) =>
+            item.id === newItem.id ? { ...item, ...newItem } : item,
+          ),
         };
       });
       queryClient.setQueryData(["load", newItem.id], newItem);
     },
-    [queryClient, queryKey]
+    [queryClient, queryKey],
   );
 
   const removeFromCache = useCallback(
@@ -164,17 +219,8 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       });
       queryClient.removeQueries({ queryKey: ["load", id] });
     },
-    [queryClient, queryKey]
+    [queryClient, queryKey],
   );
-
-  // 5. Mutations
-  const { mutateAsync: saveCargo, isPending: isSaving } = useMutation({
-    mutationFn: (payload: any) => api.post("/crm/load/save", payload).then((r) => r.data),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["loads"], exact: false });
-      if (data?.id) updateLocalCache(data);
-    },
-  });
 
   const { mutateAsync: deleteCargo, isPending: isDeleting } = useMutation({
     mutationFn: (id: number) => loadService.deleteLoad(id),
@@ -183,70 +229,107 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       eventBus.emit("load_deleted", id);
     },
   });
+  const hasRequiredParams =
+    filters.active !== undefined || filters.archive !== undefined;
 
-  const { mutateAsync: refreshLoadTime, isPending: isRefreshing } = useMutation({
-    mutationFn: (id: number) => api.post("/crm/load/load-update", { id }).then((r) => r.data),
-    onSuccess: (updatedItem) => updateLocalCache(updatedItem),
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey,
+    queryFn: () => loadService.getLoads(params),
+    enabled: hasRequiredParams, // Це КЛЮЧ до відміни першого порожнього запиту
+    staleTime: 1000 * 60,
   });
 
-  // 6. Socket Side-Effects
+  const { mutateAsync: saveCargo, isPending: isSaving } = useMutation({
+    mutationFn: (payload: any) =>
+      api.post("/crm/load/save", payload).then((r) => r.data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["loads"], exact: false });
+      if (data?.id) updateLocalCache(data);
+    },
+  });
+
+  const { mutateAsync: refreshLoadTime, isPending: isRefreshing } = useMutation(
+    {
+      mutationFn: (id: number) =>
+        api.post("/crm/load/load-update", { id }).then((r) => r.data),
+      onSuccess: (updatedItem) => updateLocalCache(updatedItem),
+    },
+  );
+
   useEffect(() => {
     if (!profile?.id || !socket) return;
 
-    const handlers = {
-      update: (data: LoadApiItem) => {
-        updateLocalCache(data);
-        eventBus.emit("cargo_shake", data.id);
+    // 1. Групуємо логіку обробників для чистоти
+    const h = {
+      cache: (d: LoadApiItem) => updateLocalCache(d),
+      item: (d: LoadApiItem) => updateItemOnly(d),
+      shake: (d: LoadApiItem) => {
+        updateLocalCache(d);
+        eventBus.emit("cargo_shake", d.id);
       },
-      date: (data: LoadApiItem) => {
-        updateLocalCache(data);
-        eventBus.emit("update_load_date", data.id);
+      date: (d: LoadApiItem) => {
+        updateLocalCache(d);
+        eventBus.emit("update_load_date", d.id);
       },
-      cars: (data: LoadApiItem, event: string) => {
-        updateLocalCache(data);
-        eventBus.emit(event as AppEventType, data.id);
+      addCar: (d: LoadApiItem) => {
+        updateLocalCache(d);
+        eventBus.emit("load_add_car", d.id);
       },
-      comment: (data: LoadApiItem) => updateItemOnly(data),
+      removeCar: (d: LoadApiItem) => {
+        updateLocalCache(d);
+        eventBus.emit("load_remove_car", d.id);
+      },
       delete: (id: number) => removeFromCache(id),
     };
 
-    socket.on("new_load", updateLocalCache);
-    socket.on("update_load", handlers.update);
-    socket.on("edit_load", handlers.update);
-    socket.on("update_load_date", handlers.date);
-    socket.on("new_load_comment", handlers.comment);
-    socket.on("update_chat_count_load", handlers.comment);
-    socket.on("load_add_car", (d) => handlers.cars(d, "load_add_car"));
-    socket.on("load_remove_car", (d) => handlers.cars(d, "load_remove_car"));
-    socket.on("delete_load", handlers.delete);
+    // 2. Мапа подій (Socket Event -> Handler)
+    const eventMap: Record<string, Function> = {
+      // Події, що викликають "трясіння" картки (cargo_shake)
+      [SOCKET_EVENTS.LOAD.UPDATE]: h.shake,
+      [SOCKET_EVENTS.LOAD.EDIT]: h.shake,
+      [SOCKET_EVENTS.LOAD.CLOSE_CAR_BY_MANAGER]: h.shake,
+
+      // Події машин
+      [SOCKET_EVENTS.LOAD.ADD_CAR]: h.addCar,
+      [SOCKET_EVENTS.LOAD.REMOVE_CAR]: h.removeCar,
+
+      // Інші
+      [SOCKET_EVENTS.LOAD.NEW]: h.cache,
+      [SOCKET_EVENTS.LOAD.DATE_UPDATE]: h.date,
+      [SOCKET_EVENTS.LOAD.DELETE]: h.delete,
+
+      // Тільки оновлення даних (без візуальних ефектів shake)
+      [SOCKET_EVENTS.LOAD.COMMENT]: h.item,
+      [SOCKET_EVENTS.LOAD.COMMENT_UPDATE]: h.item,
+      [SOCKET_EVENTS.LOAD.CHAT_COUNT_UPDATE]: h.item,
+    };
+
+    // Масова підписка
+    Object.entries(eventMap).forEach(([event, handler]) => {
+      socket.on(event, handler as any);
+    });
 
     return () => {
-      socket.off("new_load");
-      socket.off("update_load");
-      socket.off("edit_load");
-      socket.off("update_load_date");
-      socket.off("new_load_comment");
-      socket.off("update_chat_count_load");
-      socket.off("load_add_car");
-      socket.off("load_remove_car");
-      socket.off("delete_load");
+      Object.entries(eventMap).forEach(([event, handler]) => {
+        socket.off(event, handler as any);
+      });
     };
   }, [profile?.id, socket, updateLocalCache, updateItemOnly, removeFromCache]);
-
+  const isReallyLoading = isLoading || (hasRequiredParams && !data);
   return {
     loads: data?.content ?? [],
     pagination: data?.props?.pagination,
-    isLoading: isLoading || (hasRequiredParams && !data),
+    isLoading: isReallyLoading,
     isSaving,
     isRefreshing,
-    isDeleting,
     error,
     refetch,
     saveCargo,
-    deleteCargo,
     refreshLoadTime,
     updateItemOnly,
-    removeFromCache,
     queryKey,
+    deleteCargo,
+    isDeleting,
+    removeFromCache,
   };
 };

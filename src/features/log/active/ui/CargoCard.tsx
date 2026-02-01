@@ -33,11 +33,19 @@ import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
 import { RoutePoint } from "./RoutePointTooltip";
 import { toast } from "sonner";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { eventBus } from "@/shared/lib/event-bus";
 
 interface CargoCardProps {
   load: LoadApiItem;
   filters?: Dropdowns;
 }
+const EVENT_LABELS: Record<string, string> = {
+  cargo_shake: "Оновлено",
+  update_comment: "Новий коментар",
+  update_load_date: "Заявку оновлено",
+  load_add_car: "Додано авто",
+  load_remove_car: "Видалено авто",
+};
 
 export function CargoCard({ load, filters }: CargoCardProps) {
   const { config, size } = useFontSize(); // Отримуємо динамічний конфіг
@@ -50,7 +58,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [openRemoveCars, setOpenRemoveCars] = useState(false);
   const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
   const [openHistory, setOpenHistory] = useState(false);
-  const [isActionsExpanded, setIsActionsExpanded] = useState(false);
+  // const [isActionsExpanded, setIsActionsExpanded] = useState(false);
+  const [lastEvent, setLastEvent] = useState<string | null>(null);
   const isOnline = onlineUsers.has(String(load.id_usr));
   const [localReadTime, setLocalReadTime] = useState<string | null>(
     load.comment_read_time || null,
@@ -61,12 +70,12 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
   const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
 
-  const { isActive: isShaking } = useEventEffect(load.id, [
-    "cargo_shake",
-    "update_comment",
-    "update_load_date",
-    "load_add_car",
-  ]);
+  // const { isActive: isShaking } = useEventEffect(load.id, [
+  //   "cargo_shake",
+  //   "update_comment",
+  //   "update_load_date",
+  //   "load_add_car",
+  // ]);
 
   useEffect(() => {
     if (!load.created_at) return;
@@ -154,6 +163,37 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
     window.open(url, "_blank");
   };
+  useEffect(() => {
+    const events = [
+      "cargo_shake",
+      "update_comment",
+      "update_load_date",
+      "load_add_car",
+      "load_remove_car",
+    ];
+
+    const handler = (e: any) => {
+      // e.type - це назва події
+      setLastEvent(e.type);
+
+      // Очищуємо бейдж через 3 секунди
+      setTimeout(() => setLastEvent(null), 3000);
+    };
+
+    events.forEach((event) =>
+      eventBus.on(event as any, (e) => {
+        // Перевіряємо, чи подія стосується саме цієї картки
+        if (e.detail === load.id) handler(e);
+      }),
+    );
+
+    return () => {
+      events.forEach((event) => eventBus.off(event as any, handler as any));
+    };
+  }, [load.id]);
+
+  const isShaking = !!lastEvent;
+
   return (
     <>
       <div
@@ -164,7 +204,23 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         )}
       >
         <StatusIndicator updatedAt={load.updated_at} />
-
+        {/* ЕФЕКТНИЙ БЕЙДЖ ПОДІЇ */}
+        <div
+          className={cn(
+            "absolute top-2 left-1/2 -translate-x-1/2 z-[100] pointer-events-none transition-all duration-500",
+            lastEvent
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-4",
+          )}
+        >
+          <div className="flex items-center gap-2 bg-blue-600/90 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-[0_4px_12px_rgba(37,99,235,0.4)] border border-blue-400/50 uppercase tracking-widest whitespace-nowrap">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            {EVENT_LABELS[lastEvent || ""] || "Оновлення"}
+          </div>
+        </div>
         {/* HEADER */}
         <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 min-w-0 w-full">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -284,7 +340,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         {/* MAIN CONTENT */}
         <div className="flex flex-col md:flex-row flex-1 p-4 gap-4">
           <div className="flex-[1.5] flex flex-col gap-0.5 min-w-0">
-            <div className="flex-[1.5] flex flex-col min-w-0">
+            <div className="flex-[1.5] flex flex-col min-w-0 ">
               <RoutePoint point={firstPoint} isMain />
               <div
                 className={cn(
