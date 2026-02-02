@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import Loader from "@/shared/components/Loaders/MainLoader";
@@ -36,7 +36,7 @@ export default function LoadListComponent({ active, archive }: Props) {
   const { isVisible, toggle } = useVisibilityControl("load_list");
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
     "loadListColumns",
-    3
+    3,
   );
 
   // 1. Отримуємо параметри з URL (тільки ті, що реально існують)
@@ -58,10 +58,20 @@ export default function LoadListComponent({ active, archive }: Props) {
 
     // Збираємо фільтри, уникаючи порожніх рядків
     const filterKeys = [
-      "country_from", "country_to", "region_from", "region_to",
-      "city_from", "city_to", "trailer_type", "company",
-      "manager", "transit", "is_price_request", "is_collective",
-      "participate", "my"
+      "country_from",
+      "country_to",
+      "region_from",
+      "region_to",
+      "city_from",
+      "city_to",
+      "trailer_type",
+      "company",
+      "manager",
+      "transit",
+      "is_price_request",
+      "is_collective",
+      "participate",
+      "my",
     ];
 
     filterKeys.forEach((key) => {
@@ -93,13 +103,35 @@ export default function LoadListComponent({ active, archive }: Props) {
     (key: string, valueToRemove: string) => {
       removeFilter(key, valueToRemove, currentParams);
     },
-    [removeFilter, currentParams]
+    [removeFilter, currentParams],
   );
 
   const handleReset = useCallback(() => {
     reset();
     resetFilters();
+    sessionStorage.removeItem(PERSIST_KEY); // Видаляємо пам'ять про фільтри
+    updateUrl({ page: 1 }); // Очищуємо URL повністю
   }, [reset, resetFilters]);
+
+  // Константа для ключа (можна винести в конфіг)
+  const PERSIST_KEY = "active_load_filters_cache";
+
+  // Додайте цей ефект всередині компонента
+  useEffect(() => {
+    // 1. Коли параметри в URL змінюються, зберігаємо їх у сесію (крім дефолтних)
+    if (searchParams.toString()) {
+      sessionStorage.setItem(PERSIST_KEY, searchParams.toString());
+    }
+    // 2. Якщо ми зайшли на сторінку з порожнім URL, але в сесії щось є — відновлюємо
+    else {
+      const saved = sessionStorage.getItem(PERSIST_KEY);
+      if (saved) {
+        // Використовуємо ваш updateUrl, щоб закинути старі фільтри в URL
+        const params = Object.fromEntries(new URLSearchParams(saved));
+        updateUrl(params);
+      }
+    }
+  }, [searchParams, updateUrl]);
 
   // 6. Рендер станів завантаження/помилки
   if (isLoading) return <Loader />;

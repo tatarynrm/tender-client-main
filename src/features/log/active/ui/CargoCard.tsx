@@ -108,26 +108,54 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const handleCopyLoad = () => {
     const getFlag = (code?: string) =>
       code === "UA" ? "🇺🇦" : code === "DE" ? "🇩🇪" : code === "PL" ? "🇵🇱" : "🏳️";
-    const fromPoints = load.crm_load_route_from
-      .map(
-        (p) =>
-          `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region} обл.)` : ""}`,
-      )
-      .join(" — ");
-    const toPoints = load.crm_load_route_to
-      .map(
-        (p) =>
-          `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region} обл.)` : ""}`,
-      )
-      .join(" — ");
-    const priceDisplay = load.is_price_request
-      ? "Запит ціни"
-      : `${load.price?.toLocaleString()} ${load.valut_name}`;
 
-    const textToCopy = `📎 ЗАЯВКА #${load.id}\n📍 Звідки: ${fromPoints}\n🏁 Куди: ${toPoints}\n💰 Ставка: ${priceDisplay}\n👤 Менеджер: ${load.author}`;
+    // Форматування точок маршруту
+    const formatRoute = (points: any[]) =>
+      points
+        .map(
+          (p) =>
+            `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region})` : ""}`,
+        )
+        .join(" — ");
+
+    const fromPoints = formatRoute(load.crm_load_route_from);
+    const toPoints = formatRoute(load.crm_load_route_to);
+
+    // Типи причепів
+    const trailers =
+      load.crm_load_trailer?.map((t: any) => t.trailer_type_name).join(", ") ||
+      "Не вказано";
+    // Логіка відображення ціни
+    const getPriceDisplay = () => {
+      if (load.is_price_request) return "Запит ціни";
+
+      // Якщо ціна 0, null або undefined
+      if (!load.price || load.price === 0) return "—";
+
+      return `${load.price.toLocaleString()} ${load.valut_name}${load.is_collective ? " (Збірний)" : ""}`;
+    };
+    const priceDisplay = getPriceDisplay();
+    // Форматування ціни
+
+    // Дати (завантаження — розвантаження)
+    const dateInfo = `📅 ${load.date_load}${load.date_unload ? ` — ${load.date_unload}` : ""}`;
+
+    // Текст для копіювання
+    const textToCopy = [
+      `📎 ЗАЯВКА #${load.id}`,
+      `--------------------------`,
+      `📍 ЗВІДКИ: ${fromPoints}`,
+      `🏁 КУДИ: ${toPoints}`,
+      `🗓️ ДАТА: ${dateInfo}`,
+      `🚛 ТИП: ${trailers} (${load.transit_type})`,
+      `🔢 К-СТЬ АВТО: ${load.car_count_actual}`,
+      `💰 СТАВКА: ${priceDisplay}`,
+      `--------------------------`,
+      `👤 Менеджер: ${load.author}`,
+    ].join("\n");
 
     navigator.clipboard.writeText(textToCopy).then(() => {
-      toast.success("Скопійовано", {
+      toast.success("Деталі заявки скопійовано", {
         icon: <Copy className="w-4 h-4 text-blue-500" />,
       });
     });

@@ -7,6 +7,7 @@ import {
   TendersAreaChart,
 } from "@/shared/components/Charts/Charts";
 import Loader from "@/shared/components/Loaders/MainLoader";
+import { HeaderWidgetContainer } from "@/features/log/main/widgets/HeaderWidgetContainer";
 
 // Mock data (як у тебе була)
 const mockData = {
@@ -35,7 +36,8 @@ export default function DashboardContainer() {
   if (!data) return <Loader />;
 
   return (
-    <div className="space-y-1 animate-in fade-in duration-700">
+    <div className="space-y-4 animate-in fade-in duration-700">
+      <HeaderWidgetContainer/>
       {/* Grid Картки */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
