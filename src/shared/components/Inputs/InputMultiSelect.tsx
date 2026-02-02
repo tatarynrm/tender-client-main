@@ -63,7 +63,11 @@ export const InputMultiSelect = <T extends FieldValues>({
     } else {
       currentValues.push({ [valueKey]: val });
     }
+
     field.onChange(currentValues);
+
+    // ДОДАЙТЕ ЦЕЙ РЯДОК:
+    setTimeout(() => setOpen(false), 150);
   };
 
   const removeOption = (e: React.MouseEvent, val: string | number) => {
@@ -85,10 +89,14 @@ export const InputMultiSelect = <T extends FieldValues>({
     >
       <div className="relative mt-1.5 group">
         {/* ІКОНКА ТРАНСПОРТУ */}
-        <div className={cn(
-          "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
-          open ? "text-teal-600" : "text-zinc-400 group-focus-within:text-teal-600"
-        )}>
+        <div
+          className={cn(
+            "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
+            open
+              ? "text-teal-600"
+              : "text-zinc-400 group-focus-within:text-teal-600",
+          )}
+        >
           <Truck size={18} strokeWidth={2.2} />
         </div>
 
@@ -142,9 +150,12 @@ export const InputMultiSelect = <T extends FieldValues>({
               </button>
             )}
             <div className="w-[1px] h-4 bg-zinc-200 dark:bg-zinc-800 mx-0.5" />
-            <ChevronDown 
-              size={16} 
-              className={cn("transition-transform duration-200", open && "rotate-180 text-teal-600")} 
+            <ChevronDown
+              size={16}
+              className={cn(
+                "transition-transform duration-200",
+                open && "rotate-180 text-teal-600",
+              )}
             />
           </div>
         </div>
@@ -161,7 +172,11 @@ export const InputMultiSelect = <T extends FieldValues>({
         >
           {label}
           {required && (
-            <span className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}>*</span>
+            <span
+              className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}
+            >
+              *
+            </span>
           )}
         </label>
       </div>

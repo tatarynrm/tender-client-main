@@ -237,7 +237,25 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       const savedData = localStorage.getItem(STORAGE_KEY);
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        if (parsed?.values) reset(parsed.values);
+        if (parsed?.values) {
+          // Переконуємось, що у кожної точки є порядок
+          const sanitizedValues = {
+            ...parsed.values,
+            crm_load_route_from: parsed.values.crm_load_route_from?.map(
+              (r: any, i: number) => ({
+                ...r,
+                order_num: r.order_num || i + 1,
+              }),
+            ),
+            crm_load_route_to: parsed.values.crm_load_route_to?.map(
+              (r: any, i: number) => ({
+                ...r,
+                order_num: r.order_num || i + 1,
+              }),
+            ),
+          };
+          reset(sanitizedValues);
+        }
       } else {
         // Якщо це створення нової і немає чернетки — ставимо дефолтні
         reset({
@@ -394,6 +412,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   street: location.street || null,
                                   house: location.house || null,
                                   post_code: location.postCode || null,
+                                  order_num: idx + 1,
                                 };
 
                                 // 3. Оновлюємо всі поля за один прохід
@@ -452,7 +471,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     appendFrom({
                       address: "",
                       ids_route_type: "LOAD_FROM" as const, // Явне приведення до enum
-                      order_num: Number(fromFields.length + 1), // Гарантуємо число
+                      order_num: fromFields.length + 1, // Гарантуємо число
                       city: "",
                       country: "",
                       lat: 0,
@@ -498,6 +517,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   street: location.street || null,
                                   house: location.house || null,
                                   post_code: location.postCode || null,
+                                  order_num: idx + 1,
                                 };
 
                                 // 3. Оновлюємо все однією дією через ітерацію ключі
@@ -564,7 +584,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     appendTo({
                       address: "",
                       ids_route_type: "LOAD_TO" as const, // Явне приведення до enum
-                      order_num: Number(toFields.length + 1), // Гарантуємо число
+                      order_num: toFields.length + 1, // Гарантуємо число
                       city: "",
                       country: "",
                       lat: 0,

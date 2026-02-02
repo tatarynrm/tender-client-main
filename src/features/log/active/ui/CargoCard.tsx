@@ -305,7 +305,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                         config.main,
                       )}
                     >
-                      {load.company_name || "ASTARTA TRADING"}
+                      {load.company_name || "-----"}
                     </span>
                   </div>
                   {/* <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent pointer-events-none" /> */}
