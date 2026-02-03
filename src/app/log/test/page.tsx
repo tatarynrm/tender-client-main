@@ -7,6 +7,7 @@ import * as z from "zod";
 import { InputText } from "@/shared/components/Inputs/InputText";
 import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
 import { InputDateRange } from "@/shared/components/Inputs/InputDateRange"; // Імпортуємо новий компонент
+import api from "@/shared/api/instance.api";
 
 // Оновлюємо схему валідації
 const formSchema = z.object({
@@ -51,6 +52,17 @@ const RegistrationPage = () => {
 useEffect(()=>{
 console.log(formState.errors,'ERROR');
 
+const getUsrtList = async ()=>{
+  try {
+    const {data} = await api.post('/users/user-list-ict')
+    console.log(data,'DATA');
+    
+  } catch (error) {
+    console.log(error);
+    
+  }
+}
+getUsrtList()
 },[])
   return (
     <div className="max-w-md mx-auto mt-10 p-6 shadow-xl rounded-xl border border-zinc-100 dark:border-white/5 bg-white dark:bg-slate-900">

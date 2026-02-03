@@ -35,13 +35,16 @@ import {
   Switch,
 } from "@/shared/components/ui";
 import AuthWrapper from "./AuthWrapper";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
+import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
+import { InputNumber } from "@/shared/components/Inputs/InputNumber";
 
 const RegisterForm = () => {
   const [preRegisterData, setPreRegisterData] = useState<any>({});
 
   const form = useForm<TypeRegisterSchema>({
     resolver: zodResolver(RegisterSchema),
-    mode: "onChange",
+    mode: "onTouched",
     defaultValues: {
       surname: "",
       name: "",
@@ -107,14 +110,14 @@ const RegisterForm = () => {
                 name="surname"
                 control={form.control}
                 label="Прізвище"
-                   icon={User}
+                icon={User}
                 disabled={isLoadingRegister}
               />
               <InputText
                 name="name"
                 control={form.control}
                 label="Ім'я"
-                   icon={User}
+                icon={User}
                 // leftIcon={<User />}
                 disabled={isLoadingRegister}
               />
@@ -125,30 +128,14 @@ const RegisterForm = () => {
                 icon={User}
                 disabled={isLoadingRegister}
               />
-
-              <FormField
-                control={form.control}
+              <PhoneInput
                 name="phone"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col space-y-1.5">
-                    <FormLabel className="text-[11px] font-bold uppercase text-zinc-400 ml-1">
-                      Контактний номер
-                    </FormLabel>
-                    <FormControl>
-                      <PhoneInput
-                        defaultCountry="UA"
-                        international
-                        disabled={isLoadingRegister}
-                        value={field.value}
-                        onChange={field.onChange}
-                        className="flex h-11 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px] uppercase font-black tracking-tight" />
-                  </FormItem>
-                )}
+                control={form.control}
+                label="Контактний номер"
+                defaultCountry="UA"
+                international
+                disabled={isLoadingRegister}
               />
-
               <InputText
                 name="email"
                 control={form.control}
@@ -257,46 +244,41 @@ const RegisterForm = () => {
               </div>
 
               {/* Перемикачі */}
-              <div className="space-y-3 pt-2 border-t border-zinc-50 dark:border-zinc-800">
+              <div className="space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 {[
                   { name: "company_vat_payer", label: "Платник ПДВ" },
                   { name: "company_carrier", label: "Я перевізник" },
                   { name: "company_expedition", label: "Я експедитор" },
                   { name: "company_freighter", label: "Я замовник" },
                 ].map((item) => (
-                  <FormField
+                  <InputSwitch
                     key={item.name}
-                    control={form.control}
                     name={item.name as any}
-                    render={({ field }) => (
-                      <FormItem className="flex items-center justify-between space-y-0 rounded-lg border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 p-1 px-2 transition-colors">
-                        <FormLabel className="text-[12px] uppercase font-bold text-zinc-500 cursor-pointer">
-                          {item.label}
-                        </FormLabel>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            disabled={isLoadingRegister}
-                            className="scale-75"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
+                    control={form.control}
+                    label={item.label}
+                    className="hover:bg-zinc-50 dark:hover:bg-white/5 py-2 rounded-lg transition-colors"
                   />
                 ))}
+
+                {/* Висновок загальної помилки для ролей */}
+                {/* Перевірка через опціональний ланцюжок і типізацію */}
+                {form.formState.errors &&
+                  (form.formState.errors as any).roles_error && (
+                    <p className="text-[10px] uppercase font-black tracking-tight text-red-500 ml-1 mt-2">
+                      {(form.formState.errors as any).roles_error.message}
+                    </p>
+                  )}
               </div>
             </div>
           </div>
 
-          <Button
+          <AppButton
             disabled={isLoadingRegister}
-            loading={isLoadingRegister}
             type="submit"
             className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10"
           >
             Створити аккаунт
-          </Button>
+          </AppButton>
         </form>
       </Form>
     </AuthWrapper>

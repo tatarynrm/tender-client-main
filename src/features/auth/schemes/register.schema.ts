@@ -97,6 +97,20 @@ export const RegisterSchema = z
         fatal: true, // зупиняє подальші непотрібні перевірки для цього поля
       });
     }
-  });
+  })
+  .refine(
+    (data) => {
+      // Перевірка: чи є хоча б одне true
+      return (
+        data.company_carrier ||
+        data.company_expedition ||
+        data.company_freighter
+      );
+    },
+    {
+      message: "Оберіть хоча б одну роль (Перевізник, Експедитор або Замовник)",
+      path: ["roles_error"], // Створюємо віртуальний шлях для помилки
+    },
+  );
 
 export type TypeRegisterSchema = z.infer<typeof RegisterSchema>;

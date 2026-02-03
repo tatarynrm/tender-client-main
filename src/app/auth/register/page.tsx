@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-20">
       <Logo />
       <div className="p-3 relative  ">
         <RegisterForm />
