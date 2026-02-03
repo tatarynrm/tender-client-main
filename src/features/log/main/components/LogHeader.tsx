@@ -12,6 +12,7 @@ import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
 import UpdatesList from "@/shared/noris-components/UpdateList";
+import { FeedbackButton } from "@/shared/components/Modals/FeedbackButton/FeedbackGoogleFormModal";
 
 export default function LogHeader({
   onMenuClick,
@@ -84,7 +85,7 @@ export default function LogHeader({
       {/* Права частина: Налаштування та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Група системних кнопок */}
-
+        <FeedbackButton />
         <GlobalSettings />
 
         <ToggleTheme />
