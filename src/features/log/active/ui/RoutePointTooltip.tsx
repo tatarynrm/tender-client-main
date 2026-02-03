@@ -77,7 +77,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
             >
               {point.city}
               
-              {!isUkraine && point.country && (
+              {point.country && (
                 <span className="text-[10px] font-bold opacity-60 uppercase">
                   ({point.country})
                 </span>
