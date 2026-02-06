@@ -74,31 +74,49 @@ const routeSchema = z.object({
   post_code: z.string().optional().nullable(),
 });
 
-const cargoServerSchema = z.object({
-  price: z
-    .number()
-    .max(99999999.99, "Ціна занадто велика")
-    .nullable()
-    .optional(),
-  ids_valut: z.string().optional(),
-  id_client: z.number().nullable().optional(),
-  load_info: z.string().optional(),
-  crm_load_route_from: z
-    .array(routeSchema)
-    .min(1, "Додайте точку завантаження"),
-  crm_load_route_to: z.array(routeSchema).min(1, "Додайте точку розвантаження"),
-  crm_load_trailer: z
-    .array(z.object({ ids_trailer_type: z.string() }))
-    .min(1, "Оберіть тип транспорту"),
-  is_price_request: z.boolean().optional(),
-  is_collective: z.boolean().optional(),
-  car_count_begin: z
-    .number()
-    .min(1, "Мінімальна к-сть 1")
-    .max(100, "Максимальна к-сть 100"),
-  date_load: z.string().min(1, "Дата завантаження є обов'язковою"),
-  date_unload: z.string().nullable().optional(),
-});
+const cargoServerSchema = z
+  .object({
+    price: z
+      .number()
+      .max(99999999.99, "Ціна занадто велика")
+      .nullable()
+      .optional(),
+    ids_valut: z.string().optional(),
+    id_client: z.number().nullable().optional(),
+    load_info: z.string().optional(),
+    crm_load_route_from: z
+      .array(routeSchema)
+      .min(1, "Додайте точку завантаження"),
+    crm_load_route_to: z
+      .array(routeSchema)
+      .min(1, "Додайте точку розвантаження"),
+    crm_load_trailer: z
+      .array(z.object({ ids_trailer_type: z.string() }))
+      .min(1, "Оберіть тип транспорту"),
+    is_price_request: z.boolean().optional(),
+    is_collective: z.boolean().optional(),
+    car_count_begin: z
+      .number()
+      .min(1, "Мінімальна к-сть 1")
+      .max(100, "Максимальна к-сть 100"),
+    date_load: z.string().min(1, "Дата завантаження є обов'язковою"),
+    date_unload: z.string().nullable().optional(),
+  })
+.refine(
+  (data) => {
+    if (!data.date_unload || !data.date_load) return true;
+
+    // Створюємо об'єкти дати, обнуляючи час для чистого порівняння дат
+    const load = new Date(data.date_load).setHours(0, 0, 0, 0);
+    const unload = new Date(data.date_unload).setHours(0, 0, 0, 0);
+
+    return unload >= load;
+  },
+  {
+    message: "Дата розвантаження не може бути раніше дати завантаження",
+    path: ["date_unload"],
+  }
+);
 
 export type CargoServerFormValues = z.infer<typeof cargoServerSchema>;
 
