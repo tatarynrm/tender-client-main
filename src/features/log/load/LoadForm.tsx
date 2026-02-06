@@ -49,7 +49,7 @@ import axios from "axios";
 
 // ---------- Helpers & Schemas ----------
 
-const STORAGE_KEY = "load_from_draft";
+const STORAGE_KEY = "load_from_draft_v2";
 
 const toLocalDateString = (date: Date | null) => {
   if (!date) return null;
