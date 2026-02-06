@@ -1,18 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/shared/components/ui";
-
-import api from "@/shared/api/instance.api";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   Boxes,
@@ -24,30 +16,41 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+
+// Shared UI & Components
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage,
+} from "@/shared/components/ui";
+import api from "@/shared/api/instance.api";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
-import { useRouter, useSearchParams } from "next/navigation";
-
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
-
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { cn } from "@/shared/utils";
 
-import { useLoadById, useLoads } from "../hooks/useLoads";
-import { renderLocationDetails } from "./LocationDetails";
-
+// Form Controls
 import { InputFinance } from "@/shared/components/Inputs/InputFinance";
 import { InputNumber } from "@/shared/components/Inputs/InputNumber";
 import { SelectFinance } from "@/shared/components/Select/SelectFinance";
-
 import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
 import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
-
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputDate } from "@/shared/components/Inputs/InputDate";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
-import { cn } from "@/shared/utils";
-// ---------- Schemas ----------
-// Функція зберігає "чисту" дату без урахування часового поясу
+
+// Hooks & Helpers
+import { useLoadById, useLoads } from "../hooks/useLoads";
+import { renderLocationDetails } from "./LocationDetails";
+import axios from "axios";
+
+// ---------- Helpers & Schemas ----------
+
+const STORAGE_KEY = "load_from_draft";
+
 const toLocalDateString = (date: Date | null) => {
   if (!date) return null;
   const year = date.getFullYear();
@@ -55,11 +58,12 @@ const toLocalDateString = (date: Date | null) => {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+
 const routeSchema = z.object({
   id: z.number().optional(),
   lat: z.number().optional(),
   lon: z.number().optional(),
-  address: z.string().min(1, "Будь ласка, вкажіть адресу (виберіть зі списку)"),
+  address: z.string().min(1, "Будь ласка, вкажіть адресу"),
   ids_route_type: z.enum(["LOAD_FROM", "LOAD_TO"]),
   country: z.string().optional(),
   city: z.string().optional(),
@@ -70,33 +74,29 @@ const routeSchema = z.object({
   post_code: z.string().optional().nullable(),
 });
 
-const trailerSchema = z.object({
-  ids_trailer_type: z.string().min(1, "Виберіть тип причепу"),
-});
-
 const cargoServerSchema = z.object({
   price: z
     .number()
-    .max(99999999.99, { message: "Ціна не може перевищувати 999,999.99" })
+    .max(99999999.99, "Ціна занадто велика")
     .nullable()
     .optional(),
   ids_valut: z.string().optional(),
-  id_client: z.number().nullable().optional(), // Дозволяємо null
+  id_client: z.number().nullable().optional(),
   load_info: z.string().optional(),
   crm_load_route_from: z
     .array(routeSchema)
     .min(1, "Додайте точку завантаження"),
   crm_load_route_to: z.array(routeSchema).min(1, "Додайте точку розвантаження"),
-  crm_load_trailer: z.array(trailerSchema).min(1, "Оберіть тип транспорту"),
+  crm_load_trailer: z
+    .array(z.object({ ids_trailer_type: z.string() }))
+    .min(1, "Оберіть тип транспорту"),
   is_price_request: z.boolean().optional(),
   is_collective: z.boolean().optional(),
   car_count_begin: z
-    .number({ message: "Вкажіть кількість" })
-    .min(1, { message: "Мінімальна к-сть 1" })
-    .max(100, { message: "Максимальна к-сть 100" }),
-  date_load: z
-    .string({ message: "Дата завантаження є обов'язковою" })
-    .min(1, "Будь ласка, оберіть дату"),
+    .number()
+    .min(1, "Мінімальна к-сть 1")
+    .max(100, "Максимальна к-сть 100"),
+  date_load: z.string().min(1, "Дата завантаження є обов'язковою"),
   date_unload: z.string().nullable().optional(),
 });
 
@@ -107,72 +107,29 @@ interface LoadFormProps {
 }
 
 export default function LoadForm({ defaultValues }: LoadFormProps) {
-  const STORAGE_KEY = "load_from_draft";
   const { config } = useFontSize();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const copyId = searchParams.get("copyId");
+
+  // States
   const [valutList, setValutList] = useState<any[]>([]);
   const [truckList, setTruckList] = useState<any[]>([]);
   const [isNextCargo, setIsNextCargo] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [companyLabel, setCompanyLabel] = useState<string>("");
-  const { saveCargo } = useLoads({});
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const copyId = searchParams.get("copyId");
-  const { data: copyData, isLoading: isCopyLoading } = useLoadById(copyId);
   const [isSubmittingSuccess, setIsSubmittingSuccess] = useState(false);
+
+  // API Hooks
+  const { saveCargo } = useLoads({});
+  const { data: copyData } = useLoadById(copyId);
+
+  // Form Initialization
   const form = useForm<CargoServerFormValues>({
     resolver: zodResolver(cargoServerSchema),
     mode: "onTouched",
-    defaultValues: {
-      load_info: "",
-      ids_valut: "UAH",
-      date_load: toLocalDateString(new Date()),
-      crm_load_route_from: [
-        { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
-      ],
-      crm_load_route_to: [
-        { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
-      ],
-
-      ...defaultValues,
-    },
-  });
-
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    clearErrors,
-    reset,
-    watch,
-    formState,
-  } = form;
-
-  // Спостерігаємо за всіма змінами у формі
-  const formValues = watch();
-  const {
-    fields: fromFields,
-    append: appendFrom,
-    remove: removeFrom,
-  } = useFieldArray({ control, name: "crm_load_route_from" });
-
-  const {
-    fields: toFields,
-    append: appendTo,
-    remove: removeTo,
-  } = useFieldArray({ control, name: "crm_load_route_to" });
-
-  // ---------- Оптимізовані useEffects ----------
-  const handleManualReset = () => {
-    if (window.confirm("Ви впевнені, що хочете повністю очистити форму?")) {
-      // 1. Очищуємо localStorage
-      localStorage.removeItem(STORAGE_KEY);
-
-      // 2. Скидаємо стейт лейблу компанії
-      setCompanyLabel("");
-
-      // 3. Скидаємо форму до початкових значень
-      reset({
+    defaultValues: useMemo(
+      () => ({
         load_info: "",
         ids_valut: "UAH",
         car_count_begin: 1,
@@ -184,12 +141,43 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
           { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
         ],
         crm_load_trailer: [],
-      });
+        ...defaultValues,
+      }),
+      [defaultValues],
+    ),
+  });
 
-      toast.info("Форму очищено");
-    }
-  };
-  // 1. Завантаження довідників (лише при першому рендері)
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    clearErrors,
+    reset,
+    watch,
+    formState,
+  } = form;
+  const formValues = watch();
+
+  const {
+    fields: fromFields,
+    append: appendFrom,
+    remove: removeFrom,
+  } = useFieldArray({
+    control,
+    name: "crm_load_route_from",
+  });
+  const {
+    fields: toFields,
+    append: appendTo,
+    remove: removeTo,
+  } = useFieldArray({
+    control,
+    name: "crm_load_route_to",
+  });
+
+  // ---------- Effects ----------
+
+  // 1. Fetch Dictionaries
   useEffect(() => {
     api.get("/form-data/getCreateCargoFormData").then(({ data }) => {
       setValutList(
@@ -207,251 +195,138 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     });
   }, []);
 
-  // 2. Ініціалізація назви компанії (label)
+  // 2. Data Synchronization (Edit / Copy / Draft)
   useEffect(() => {
     if (defaultValues) {
-      // РЕДАГУВАННЯ
       const name =
         defaultValues.company_name || defaultValues.client?.company_name || "";
       setCompanyLabel(name);
-    } else if (copyData) {
-      // КОПІЮВАННЯ
-      const clientData =
-        (copyData as any).id_client_info || (copyData as any).client;
-      const name =
-        clientData?.company_name || (copyData as any).company_name || "";
-      setCompanyLabel(name);
-    } else if (!copyId) {
-      // НОВА ЗАЯВКА (з чернетки)
-      const savedData = localStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          setCompanyLabel(parsed?.companyLabel || "");
-        } catch (e) {
-          setCompanyLabel("");
-        }
-      } else {
-        setCompanyLabel(""); // Обов'язково скидаємо, якщо чернетки немає
-      }
-    }
-  }, [defaultValues, copyData, copyId]);
-
-  // 3. Скидання значень форми (reset)
-  useEffect(() => {
-    if (defaultValues) {
       reset({
         ...defaultValues,
         id_client: defaultValues.id_client ?? defaultValues.client?.id ?? null,
-        // Гарантуємо наявність ids_route_type при редагуванні
-        crm_load_route_from: defaultValues.crm_load_route_from?.map(
-          (r: any, i: number) => ({
-            ...r,
-            ids_route_type:
-              r.ids_route_type === "LOAD_FROM" || r.ids_route_type === "LOAD_TO"
-                ? r.ids_route_type
-                : "LOAD_FROM",
-            order_num: r.order_num || i + 1,
-          }),
-        ),
-        crm_load_route_to: defaultValues.crm_load_route_to?.map(
-          (r: any, i: number) => ({
-            ...r,
-            ids_route_type:
-              r.ids_route_type === "LOAD_FROM" || r.ids_route_type === "LOAD_TO"
-                ? r.ids_route_type
-                : "LOAD_TO",
-            order_num: r.order_num || i + 1,
-          }),
-        ),
       });
     } else if (copyData) {
-      const prepareForCopy = (data: any) => ({
+      const clientData =
+        (copyData as any).id_client_info || (copyData as any).client;
+      setCompanyLabel(clientData?.company_name || "");
+
+      const prepareCopy = (data: any) => ({
         ...data,
         id: undefined,
-        crm_load_route_from: data.crm_load_route_from?.map(
-          (r: any, i: number) => ({
-            ...r,
-            id: undefined,
-            ids_route_type:
-              r.ids_route_type === "LOAD_FROM" || r.ids_route_type === "LOAD_TO"
-                ? r.ids_route_type
-                : "LOAD_FROM",
-            order_num: r.order_num || i + 1,
-          }),
-        ),
-        crm_load_route_to: data.crm_load_route_to?.map((r: any, i: number) => ({
+        crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
           ...r,
           id: undefined,
-          ids_route_type:
-            r.ids_route_type === "LOAD_FROM" || r.ids_route_type === "LOAD_TO"
-              ? r.ids_route_type
-              : "LOAD_TO",
-          order_num: r.order_num || i + 1,
+        })),
+        crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
+          ...r,
+          id: undefined,
         })),
         crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
           ...t,
           id: undefined,
         })),
       });
-      reset(prepareForCopy(copyData));
-    } else if (!copyId) {
-      const savedData = localStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        const parsed = JSON.parse(savedData);
-        if (parsed?.values) {
-          // Переконуємось, що у кожної точки є порядок
-          const sanitizedValues = {
-            ...parsed.values,
-            crm_load_route_from: parsed.values.crm_load_route_from?.map(
-              (r: any, i: number) => ({
-                ...r,
-                order_num: r.order_num || i + 1,
-                ids_route_type:
-                  r.ids_route_type === "LOAD_FROM" ||
-                  r.ids_route_type === "LOAD_TO"
-                    ? r.ids_route_type
-                    : "LOAD_FROM",
-              }),
-            ),
-            crm_load_route_to: parsed.values.crm_load_route_to?.map(
-              (r: any, i: number) => ({
-                ...r,
-                order_num: r.order_num || i + 1,
-                ids_route_type:
-                  r.ids_route_type === "LOAD_FROM" ||
-                  r.ids_route_type === "LOAD_TO"
-                    ? r.ids_route_type
-                    : "LOAD_TO",
-              }),
-            ),
-          };
-          reset(sanitizedValues);
-        }
-      } else {
-        // Якщо це створення нової і немає чернетки — ставимо дефолтні
-        reset({
-          load_info: "",
-          ids_valut: "UAH",
-          car_count_begin: 1,
-          crm_load_route_from: [
-            {
-              address: "",
-              ids_route_type: "LOAD_FROM",
-              order_num: 1,
-              city: "",
-              country: "",
-              lat: 0,
-              lon: 0,
-            },
-          ],
-          crm_load_route_to: [
-            {
-              address: "",
-              ids_route_type: "LOAD_TO",
-              order_num: 1,
-              city: "",
-              country: "",
-              lat: 0,
-              lon: 0,
-            },
-          ],
-          crm_load_trailer: [],
-        });
+      reset(prepareCopy(copyData));
+    } else {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCompanyLabel(parsed.companyLabel || "");
+        reset(parsed.values);
       }
     }
-  }, [defaultValues, copyData, reset, copyId]);
+  }, [defaultValues, copyData, reset]);
+
+  // 3. Auto-save Draft
   useEffect(() => {
     if (defaultValues || copyId || isSubmittingSuccess) return;
-
     const timer = setTimeout(() => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({
-          values: formValues,
-          companyLabel: companyLabel,
-        }),
+        JSON.stringify({ values: formValues, companyLabel }),
       );
-    }, 1000); // 1 секунда затримки для продуктивності
-
+    }, 300);
     return () => clearTimeout(timer);
-  }, [formValues, defaultValues, copyId, isSubmittingSuccess, companyLabel]);
+  }, [formValues, companyLabel, isSubmittingSuccess, defaultValues, copyId]);
 
-  useEffect(() => {
-    if (defaultValues || copyId) {
+  // ---------- Handlers ----------
+
+  const handleManualReset = () => {
+    if (window.confirm("Очистити всю форму та чернетку?")) {
       localStorage.removeItem(STORAGE_KEY);
+      setCompanyLabel("");
+      reset({
+        load_info: "",
+        ids_valut: "UAH",
+        car_count_begin: 1,
+        date_load: toLocalDateString(new Date()) || "",
+        crm_load_route_from: [
+          { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
+        ],
+        crm_load_route_to: [
+          { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
+        ],
+      });
+      toast.info("Форму очищено");
     }
-  }, [defaultValues, copyId]);
+  };
 
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
       setIsLoading(true);
-
-      // Валідація перед відправкою - перевіряємо ids_route_type у всіх маршрутах
-      const invalidFromRoutes = values.crm_load_route_from?.filter(
-        (r) => !r.ids_route_type,
-      );
-      const invalidToRoutes = values.crm_load_route_to?.filter(
-        (r) => !r.ids_route_type,
-      );
-
-      if (invalidFromRoutes?.length || invalidToRoutes?.length) {
-        toast.error(
-          "Помилка: не вказано тип маршруту. Спробуйте оновити сторінку.",
-        );
-        setIsLoading(false);
-        return;
-      }
-
       await saveCargo({ ...values, id: defaultValues?.id });
 
-      // 1. Видаляємо дані зі сховища
       localStorage.removeItem(STORAGE_KEY);
-
-      // 2. Блокуємо подальші записи в useEffect
       setIsSubmittingSuccess(true);
 
       if (!isNextCargo) {
-        toast.success("Готово!");
-      }
-
-      if (defaultValues) {
+        toast.success("Заявку збережено!");
         router.push("/log/load/active");
-        return;
-      }
-
-      if (isNextCargo) {
-        // Очищуємо лише певні поля, якщо треба "ще одну",
-        // або залишаємо як є, але блокуємо запис на секунду
-        setTimeout(() => setIsSubmittingSuccess(false), 1000);
-        toast.info("Можете створювати наступний вантаж");
       } else {
-        // Скидаємо форму
-        reset();
-        setCompanyLabel("");
-        router.push("/log/load/active");
+        const currentValues = form.getValues();
+        reset({
+          ...currentValues,
+          crm_load_route_from: [
+            { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
+          ],
+          crm_load_route_to: [
+            { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
+          ],
+        });
+
+        setTimeout(() => setIsSubmittingSuccess(false), 1000);
+        toast.info("Готово! Введіть новий маршрут.");
       }
     } catch (err) {
+      // Перевіряємо, чи є помилка об'єктом Axios з response
+      if (axios.isAxiosError(err) && err.response) {
+        const errorMessage = err.response.data?.message || "Помилка сервера";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Виникла непередбачувана помилка");
+      }
       setIsSubmittingSuccess(false);
-      // toast.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (Object.keys(formState.errors).length > 0) {
-      console.log("Валідаційні помилки:", formState.errors);
-    }
-  }, [formState.errors]);
   return (
     <div className="max-w-4xl mx-auto pb-20">
-      <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm">
-        <div className="flex justify-between items-center mb-4">
+      <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-6 rounded-[1.5rem] shadow-sm">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
           <h3
-            className={`${config.label} text-slate-500 uppercase tracking-widest font-bold`}
+            className={cn(
+              config.label,
+              "text-slate-500 uppercase tracking-widest font-bold",
+            )}
           >
-            {defaultValues ? "Редагування" : "Нова заявка"}
+            {defaultValues
+              ? "Редагування"
+              : copyId
+                ? "Копіювання"
+                : "Нова заявка"}
           </h3>
 
           {!defaultValues && !copyId && (
@@ -462,109 +337,89 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 size="sm"
                 onClick={handleManualReset}
                 className="text-slate-400 hover:text-red-500 h-8 px-2"
-                // Використовуємо MyTooltip як іконку зліва
-                leftIcon={<X />}
+                leftIcon={<X size={16} />}
               >
-                Очистити форму
+                Очистити
               </AppButton>
               <MyTooltip
-                text={`Використати якщо вам потрібно створити зовсім іншу заявку  або коли у вас виникла помилка з додаванням заявки!!!Повністю очистити форму та видалити збережену чернетку`}
+                text="Повністю очистити форму та видалити чернетку"
                 icon={<Info size={14} />}
-                size={14}
-                className="hover:text-inherit" // щоб колір іконки змінювався разом з текстом кнопки
               />
             </div>
           )}
         </div>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-              {/* Дата завантаження */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Dates Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputDate
                 name="date_load"
                 control={control}
                 label="Дата завантаження"
                 required
               />
-
-              {/* Дата розвантаження */}
               <InputDate
                 name="date_unload"
                 control={control}
                 label="Дата розвантаження"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* КОЛОНКА: ЗВІДКИ */}
-              <div className="space-y-3">
+
+            {/* Routes Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* FROM */}
+              <div className="space-y-4">
                 {fromFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2 w-full">
+                  <div key={field.id} className="flex items-end gap-2 group">
                     <FormField
                       control={control}
                       name={`crm_load_route_from.${idx}.address`}
                       render={({ field: formField }) => (
                         <FormItem className="flex-1">
-                          {/* FormLabel видалено, назва тепер всередині GoogleLocationInput */}
                           <FormControl>
                             <GoogleLocationInput
                               required
-                              label={`Адреса завантаження #${idx + 1}`}
+                              label={`Завантаження #${idx + 1}`}
                               value={formField.value}
-                              placeholder=" "
-                              onChange={(location) => {
-                                // 1. Оновлюємо основне поле (місто)
-                                formField.onChange(location.city || "");
-
-                                // 2. Створюємо карту відповідності: ключ у формі -> значення з location
-                                const fieldsMap = {
-                                  lat: location.lat,
-                                  lon: location.lng, // тут lng перетворюємо на lon
-                                  country: location.countryCode,
-                                  city: location.city,
-                                  ids_region: location.regionCode || null,
-                                  street: location.street || null,
-                                  house: location.house || null,
-                                  post_code: location.postCode || null,
+                              onChange={(loc) => {
+                                formField.onChange(loc.city || "");
+                                const data = {
+                                  lat: loc.lat,
+                                  lon: loc.lng,
+                                  country: loc.countryCode,
+                                  city: loc.city,
+                                  ids_region: loc.regionCode,
+                                  street: loc.street,
+                                  house: loc.house,
+                                  post_code: loc.postCode,
                                   order_num: idx + 1,
-                                  ids_route_type: "LOAD_FROM", // Завжди встановлюємо тип
+                                  ids_route_type: "LOAD_FROM",
                                 };
-
-                                // 3. Оновлюємо всі поля за один прохід
-                                Object.entries(fieldsMap).forEach(
-                                  ([key, value]) => {
-                                    setValue(
-                                      `crm_load_route_from.${idx}.${key}` as any,
-                                      value,
-                                    );
-                                  },
+                                Object.entries(data).forEach(([k, v]) =>
+                                  setValue(
+                                    `crm_load_route_from.${idx}.${k}` as any,
+                                    v,
+                                  ),
                                 );
-
-                                // 4. Очищаємо помилку
                                 clearErrors(
                                   `crm_load_route_from.${idx}.address`,
                                 );
                               }}
                             />
                           </FormControl>
-
-                          {/* Вивід деталей (країна, місто тощо) */}
                           {renderLocationDetails(
                             formValues.crm_load_route_from?.[idx],
                           )}
-
-                          <FormMessage className="ml-1 text-[10px] uppercase font-bold" />
+                          <FormMessage className="text-[10px] uppercase font-bold" />
                         </FormItem>
                       )}
                     />
-
-                    {/* Кнопка видалення (якщо більше однієї точки завантаження) */}
                     {fromFields.length > 1 && (
                       <AppButton
-                        type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1.5 h-10 w-10 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        className="mb-1.5 text-red-400 hover:text-red-500"
                         onClick={() => removeFrom(idx)}
                       >
                         <Minus size={16} />
@@ -575,103 +430,66 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 <AppButton
                   type="button"
                   variant="ghost"
-                  leftIcon={<Plus size={14} />} // Зменшуємо іконку
-                  className={cn(
-                    "h-8 flex flex-row text-[10px] w-full", // h-8 замість h-9, менший шрифт
-                    "border-dashed border border-slate-300 dark:border-slate-700",
-                    "hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:border-teal-500 transition-all",
-                    "uppercase tracking-wider font-bold opacity-70 hover:opacity-100", // Стиль для "мікро-кнопки"
-                  )}
+                  leftIcon={<Plus size={14} />}
+                  className="h-8 w-full border-dashed border-slate-300 text-[10px] uppercase font-bold"
                   onClick={() =>
                     appendFrom({
                       address: "",
-                      ids_route_type: "LOAD_FROM", // Явне приведення до enum
-                      order_num: fromFields.length + 1, // Гарантуємо число
-                      city: "",
-                      country: "",
-                      lat: 0,
-                      lon: 0,
-                      ids_region: null,
-                      street: null,
-                      house: null,
-                      post_code: null,
+                      ids_route_type: "LOAD_FROM",
+                      order_num: fromFields.length + 1,
                     })
                   }
                 >
-                  Завантаження
+                  Додати точку
                 </AppButton>
               </div>
 
-              {/* КОЛОНКА: КУДИ */}
-              <div className="space-y-3">
+              {/* TO */}
+              <div className="space-y-4">
                 {toFields.map((field, idx) => (
-                  <div key={field.id} className="flex items-end gap-2 w-full">
+                  <div key={field.id} className="flex items-end gap-2">
                     <FormField
                       control={control}
                       name={`crm_load_route_to.${idx}.address`}
                       render={({ field: formField }) => (
                         <FormItem className="flex-1">
-                          {/* Старий FormLabel видаляємо, передаємо назву в label пропс нижче */}
                           <FormControl>
                             <GoogleLocationInput
                               required
-                              label={`Адреса розвантаження #${idx + 1}`}
+                              label={`Розвантаження #${idx + 1}`}
                               value={formField.value}
-                              placeholder=" "
-                              onChange={(location) => {
-                                // 1. Оновлюємо основне видиме поле
-                                formField.onChange(location.city || "");
-
-                                // 2. Створюємо об'єкт з даними, де ключі точно збігаються з полями форми
-                                const locationData = {
-                                  lat: location.lat,
-                                  lon: location.lng,
-                                  country: location.countryCode,
-                                  city: location.city,
-                                  ids_region: location.regionCode || null,
-                                  street: location.street || null,
-                                  house: location.house || null,
-                                  post_code: location.postCode || null,
+                              onChange={(loc) => {
+                                formField.onChange(loc.city || "");
+                                const data = {
+                                  lat: loc.lat,
+                                  lon: loc.lng,
+                                  country: loc.countryCode,
+                                  city: loc.city,
                                   order_num: idx + 1,
-                                  ids_route_type: "LOAD_TO", // Завжди встановлюємо тип
+                                  ids_route_type: "LOAD_TO",
                                 };
-
-                                // 3. Оновлюємо все однією дією через ітерацію ключі
-                                Object.entries(locationData).forEach(
-                                  ([key, value]) => {
-                                    setValue(
-                                      `crm_load_route_to.${idx}.${key}` as any,
-                                      value,
-                                      {
-                                        shouldValidate: true,
-                                        shouldDirty: true,
-                                      },
-                                    );
-                                  },
+                                Object.entries(data).forEach(([k, v]) =>
+                                  setValue(
+                                    `crm_load_route_to.${idx}.${k}` as any,
+                                    v,
+                                  ),
                                 );
-
                                 clearErrors(`crm_load_route_to.${idx}.address`);
                               }}
                             />
                           </FormControl>
-
-                          {/* Деталі локації (місто, країна тощо) під інпутом */}
                           {renderLocationDetails(
                             formValues.crm_load_route_to?.[idx],
                           )}
-
-                          <FormMessage className="ml-1 text-[10px] uppercase font-bold" />
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
-
-                    {/* Кнопка видалення, вирівняна по центру інпуту (не лейблу) */}
                     {toFields.length > 1 && (
                       <AppButton
-                        type="button"
                         variant="ghost"
                         size="icon"
-                        className="mb-1.5 h-10 w-10 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        className="mb-1.5 text-red-400"
                         onClick={() => removeTo(idx)}
                       >
                         <Minus size={16} />
@@ -682,71 +500,49 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 <AppButton
                   type="button"
                   variant="ghost"
-                  leftIcon={<Plus size={14} strokeWidth={3} />}
-                  className={cn(
-                    // Розміри та шрифт (ідентично завантаженню)
-                    "h-8 px-3 text-[10px] font-bold uppercase tracking-widest",
-                    "flex items-center justify-center w-full rounded-xl",
-
-                    // Стиль рамки
-                    "border-dashed border border-zinc-300 dark:border-zinc-700",
-                    "text-zinc-500 dark:text-zinc-400",
-
-                    // Ефекти (зміна кольору на teal при наведенні)
-                    "hover:border-teal-500 hover:bg-teal-50/50 dark:hover:bg-teal-500/5 hover:text-teal-600",
-                    "transition-all duration-200 active:scale-[0.98]",
-                  )}
+                  leftIcon={<Plus size={14} />}
+                  className="h-8 w-full border-dashed border-slate-300 text-[10px] uppercase font-bold"
                   onClick={() =>
                     appendTo({
                       address: "",
-                      ids_route_type: "LOAD_TO", // Явне приведення до enum
-                      order_num: toFields.length + 1, // Гарантуємо число
-                      city: "",
-                      country: "",
-                      lat: 0,
-                      lon: 0,
-                      ids_region: null,
-                      street: null,
-                      house: null,
-                      post_code: null,
+                      ids_route_type: "LOAD_TO",
+                      order_num: toFields.length + 1,
                     })
                   }
                 >
-                  Розвантаження
+                  Додати точку
                 </AppButton>
               </div>
             </div>
 
-            {/* КЛІЄНТ ТА ТРАНСПОРТ */}
-            <div className="grid grid-cols-1  gap-4">
+            {/* Client & Truck */}
+            <div className="grid grid-cols-1 gap-4">
               <InputAsyncSelectCompany
                 name="id_client"
-                control={form.control}
+                control={control}
                 label="Компанія"
                 initialLabel={companyLabel}
-                onEntityChange={(company) =>
-                  setCompanyLabel(company ? company.name : "")
-                }
+                onEntityChange={(c) => setCompanyLabel(c?.name || "")}
               />
               <InputMultiSelect
-                control={control}
                 name="crm_load_trailer"
+                control={control}
                 label="Тип транспорту"
                 options={truckList}
                 required
               />
             </div>
 
-            {/* ОПИС, КІЛЬКІСТЬ, ЦІНА */}
-            <div className="space-y-3">
+            {/* Info & Finance */}
+            <div className="space-y-4">
               <InputTextarea
                 name="load_info"
                 control={control}
                 label="Деталі вантажу"
-                icon={Info} // Можна змінити на будь-яку іншу
+                icon={Info}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <InputNumber
                   name="car_count_begin"
                   control={control}
@@ -756,68 +552,62 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                 />
                 <InputFinance
                   name="price"
-                  control={form.control}
-                  label="Бюджет перевезення"
+                  control={control}
+                  label="Бюджет"
                   currency="₴"
                   icon={Wallet}
-                  // onChange={(val) => console.log("Чисте число:", val)}
                 />
                 <SelectFinance
-                  control={control}
                   name="ids_valut"
+                  control={control}
                   label="Валюта"
                   options={valutList.slice(0, 4)}
                 />
               </div>
             </div>
 
-            {/* ПЕРЕМИКАЧІ */}
-            <div className="flex flex-wrap gap-4 p-4 bg-white dark:bg-slate-900 rounded-xl items-center justify-between border border-slate-200 dark:border-white/10 shadow-sm">
-              <div className="flex gap-8">
+            {/* Switches */}
+            <div className="flex flex-wrap gap-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5 items-center justify-between">
+              <div className="flex gap-6">
                 <InputSwitch
-                  control={control}
                   name="is_collective"
-                  label="Збірний вантаж"
+                  control={control}
+                  label="Збірний"
                   icon={Boxes}
                 />
-
                 <InputSwitch
-                  control={control}
                   name="is_price_request"
+                  control={control}
                   label="Запит ціни"
                   icon={CircleDollarSign}
                 />
               </div>
 
-              {/* Синій блок "Ще одну" — залишаємо акцентним */}
-              <div className="flex items-center gap-3 bg-blue-50/50 dark:bg-blue-500/10 px-4 py-2 rounded-lg border border-blue-100 dark:border-blue-500/20 transition-all hover:bg-blue-50">
-                <div className="flex items-center gap-2">
-                  <InputSwitch
-                    id="is_next"
-                    checked={isNextCargo}
-                    label="Ще одну"
-                    onCheckedChange={setIsNextCargo}
-                    className="data-[state=checked]:bg-blue-600"
-                  />
-                  <MyTooltip text="Форма не буде очищена після збереження" />
-                </div>
+              <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-2 rounded-xl border border-blue-500/10">
+                <InputSwitch
+                  id="is_next"
+                  checked={isNextCargo}
+                  label="Ще одну"
+                  onCheckedChange={setIsNextCargo}
+                  className="data-[state=checked]:bg-blue-600"
+                />
+                <MyTooltip text="Форма не буде очищена після збереження" />
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            {/* Actions */}
+            <div className="flex justify-end pt-4">
               <AppButton
                 variant="primary"
                 type="submit"
-                isLoading={isLoading} // Спіннер з'явиться автоматично
-                size="lg" // Використовуємо наш розмір (h-13) або передай className для h-12
-                className="px-10 shadow-lg" // Додаткові стилі, якщо потрібно
+                isLoading={isLoading}
+                className="px-12 h-12 shadow-blue-500/20 shadow-lg"
               >
-                {/* Логіка тексту залишається такою ж, але без перевірки isLoading, бо компонент сам її обробить */}
                 {copyId
                   ? "Створити копію"
                   : defaultValues
                     ? "Оновити дані"
-                    : "Опублікувати"}
+                    : "Опублікувати вантаж"}
               </AppButton>
             </div>
           </form>
