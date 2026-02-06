@@ -223,13 +223,17 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       const prepareForCopy = (data: any) => ({
         ...data,
         id: undefined,
-        crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
+        crm_load_route_from: data.crm_load_route_from?.map((r: any, i: number) => ({
           ...r,
           id: undefined,
+          ids_route_type: "LOAD_FROM", // Гарантуємо наявність
+          order_num: r.order_num || i + 1,
         })),
-        crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
+        crm_load_route_to: data.crm_load_route_to?.map((r: any, i: number) => ({
           ...r,
           id: undefined,
+          ids_route_type: "LOAD_TO", // Гарантуємо наявність
+          order_num: r.order_num || i + 1,
         })),
         crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
           ...t,
@@ -249,12 +253,14 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
               (r: any, i: number) => ({
                 ...r,
                 order_num: r.order_num || i + 1,
+                ids_route_type: r.ids_route_type ?? "LOAD_FROM",
               }),
             ),
             crm_load_route_to: parsed.values.crm_load_route_to?.map(
               (r: any, i: number) => ({
                 ...r,
                 order_num: r.order_num || i + 1,
+                ids_route_type: r.ids_route_type ?? "LOAD_TO",
               }),
             ),
           };
@@ -279,10 +285,6 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     }
   }, [defaultValues, copyData, reset, copyId]);
   useEffect(() => {
-    // Зберігаємо ТІЛЬКИ якщо:
-    // - це не редагування (немає defaultValues)
-    // - це не копіювання (немає copyId в URL)
-    // - форма ще не відправлена успішно
     if (defaultValues || copyId || isSubmittingSuccess) return;
 
     const timer = setTimeout(() => {
@@ -298,18 +300,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     return () => clearTimeout(timer);
   }, [formValues, defaultValues, copyId, isSubmittingSuccess, companyLabel]);
 
-  // 5. Очищення стану успіху
-  // useEffect(() => {
-  //   if (isSubmittingSuccess) {
-  //     const t = setTimeout(() => setIsSubmittingSuccess(false), 2000);
-  //     return () => clearTimeout(t);
-  //   }
-  // }, [isSubmittingSuccess]);
-
   useEffect(() => {
     if (defaultValues || copyId) {
-      // Якщо ми редагуємо або копіюємо, видаляємо чернетку "нової" заявки,
-      // щоб вона не заважала при наступному переході на створення
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [defaultValues, copyId]);
@@ -317,6 +309,17 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
       setIsLoading(true);
+      
+      // Валідація перед відправкою - перевіряємо ids_route_type у всіх маршрутах
+      const invalidFromRoutes = values.crm_load_route_from?.filter(r => !r.ids_route_type);
+      const invalidToRoutes = values.crm_load_route_to?.filter(r => !r.ids_route_type);
+      
+      if (invalidFromRoutes?.length || invalidToRoutes?.length) {
+        toast.error("Помилка: не вказано тип маршруту. Спробуйте оновити сторінку.");
+        setIsLoading(false);
+        return;
+      }
+      
       await saveCargo({ ...values, id: defaultValues?.id });
 
       // 1. Видаляємо дані зі сховища
@@ -417,6 +420,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   house: location.house || null,
                                   post_code: location.postCode || null,
                                   order_num: idx + 1,
+                                  ids_route_type: "LOAD_FROM", // Завжди встановлюємо тип
                                 };
 
                                 // 3. Оновлюємо всі поля за один прохід
@@ -522,6 +526,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                   house: location.house || null,
                                   post_code: location.postCode || null,
                                   order_num: idx + 1,
+                                  ids_route_type: "LOAD_TO", // Завжди встановлюємо тип
                                 };
 
                                 // 3. Оновлюємо все однією дією через ітерацію ключі

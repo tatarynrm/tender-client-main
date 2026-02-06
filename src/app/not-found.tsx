@@ -19,6 +19,7 @@ export default function NotFound() {
 
   const returnLink = getReturnLink();
 
+  // 0739617714
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-[#020617] px-6 transition-colors duration-300">
       {/* Декоративні фонові елементи */}
