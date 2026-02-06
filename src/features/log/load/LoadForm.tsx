@@ -223,12 +223,14 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       const prepareForCopy = (data: any) => ({
         ...data,
         id: undefined,
-        crm_load_route_from: data.crm_load_route_from?.map((r: any, i: number) => ({
-          ...r,
-          id: undefined,
-          ids_route_type: "LOAD_FROM", // Гарантуємо наявність
-          order_num: r.order_num || i + 1,
-        })),
+        crm_load_route_from: data.crm_load_route_from?.map(
+          (r: any, i: number) => ({
+            ...r,
+            id: undefined,
+            ids_route_type: "LOAD_FROM", // Гарантуємо наявність
+            order_num: r.order_num || i + 1,
+          }),
+        ),
         crm_load_route_to: data.crm_load_route_to?.map((r: any, i: number) => ({
           ...r,
           id: undefined,
@@ -272,12 +274,27 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
           load_info: "",
           ids_valut: "UAH",
           car_count_begin: 1,
-
           crm_load_route_from: [
-            { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
+            {
+              address: "",
+              ids_route_type: "LOAD_FROM",
+              order_num: 1,
+              city: "",
+              country: "",
+              lat: 0,
+              lon: 0,
+            },
           ],
           crm_load_route_to: [
-            { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
+            {
+              address: "",
+              ids_route_type: "LOAD_TO",
+              order_num: 1,
+              city: "",
+              country: "",
+              lat: 0,
+              lon: 0,
+            },
           ],
           crm_load_trailer: [],
         });
@@ -309,17 +326,23 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
       setIsLoading(true);
-      
+
       // Валідація перед відправкою - перевіряємо ids_route_type у всіх маршрутах
-      const invalidFromRoutes = values.crm_load_route_from?.filter(r => !r.ids_route_type);
-      const invalidToRoutes = values.crm_load_route_to?.filter(r => !r.ids_route_type);
-      
+      const invalidFromRoutes = values.crm_load_route_from?.filter(
+        (r) => !r.ids_route_type,
+      );
+      const invalidToRoutes = values.crm_load_route_to?.filter(
+        (r) => !r.ids_route_type,
+      );
+
       if (invalidFromRoutes?.length || invalidToRoutes?.length) {
-        toast.error("Помилка: не вказано тип маршруту. Спробуйте оновити сторінку.");
+        toast.error(
+          "Помилка: не вказано тип маршруту. Спробуйте оновити сторінку.",
+        );
         setIsLoading(false);
         return;
       }
-      
+
       await saveCargo({ ...values, id: defaultValues?.id });
 
       // 1. Видаляємо дані зі сховища
