@@ -398,7 +398,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       }
     } catch (err) {
       setIsSubmittingSuccess(false);
-      toast.error("Помилка збереження");
+      // toast.error(err);
     } finally {
       setIsLoading(false);
     }

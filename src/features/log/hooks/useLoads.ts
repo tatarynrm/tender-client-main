@@ -10,6 +10,8 @@ import { LoadApiItem } from "../types/load.type";
 import { IApiResponse } from "@/shared/api/api.type";
 import { eventBus } from "@/shared/lib/event-bus";
 import { SOCKET_EVENTS } from "@/shared/constants/socket-evenets";
+import axios from "axios";
+import { toast } from "sonner";
 
 // export interface TenderListFilters {
 //   search?: string;
@@ -245,6 +247,17 @@ export const useLoads = (filters: TenderListFilters = {}) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["loads"], exact: false });
       if (data?.id) updateLocalCache(data);
+    },
+    onError: (err) => {
+      if (axios.isAxiosError(err)) {
+        // Тепер TS знає, що це AxiosError і властивість response існує
+        const message = err.response?.data?.message || "Виникла помилка";
+        console.log(message, "DATA");
+        toast.message(message)
+      } else {
+        // Обробка звичайної помилки JS
+        console.log(err.message);
+      }
     },
   });
 
