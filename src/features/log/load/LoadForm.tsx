@@ -163,7 +163,32 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   } = useFieldArray({ control, name: "crm_load_route_to" });
 
   // ---------- Оптимізовані useEffects ----------
+  const handleManualReset = () => {
+    if (window.confirm("Ви впевнені, що хочете повністю очистити форму?")) {
+      // 1. Очищуємо localStorage
+      localStorage.removeItem(STORAGE_KEY);
 
+      // 2. Скидаємо стейт лейблу компанії
+      setCompanyLabel("");
+
+      // 3. Скидаємо форму до початкових значень
+      reset({
+        load_info: "",
+        ids_valut: "UAH",
+        car_count_begin: 1,
+        date_load: toLocalDateString(new Date()) || "",
+        crm_load_route_from: [
+          { address: "", ids_route_type: "LOAD_FROM", order_num: 1 },
+        ],
+        crm_load_route_to: [
+          { address: "", ids_route_type: "LOAD_TO", order_num: 1 },
+        ],
+        crm_load_trailer: [],
+      });
+
+      toast.info("Форму очищено");
+    }
+  };
   // 1. Завантаження довідників (лише при першому рендері)
   useEffect(() => {
     api.get("/form-data/getCreateCargoFormData").then(({ data }) => {
@@ -387,11 +412,35 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   return (
     <div className="max-w-4xl mx-auto pb-20">
       <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[1.5rem] shadow-sm">
-        <h3
-          className={`${config.label} text-slate-500 uppercase tracking-widest mb-4 font-bold`}
-        >
-          {defaultValues ? "Редагування" : "Нова заявка"}
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3
+            className={`${config.label} text-slate-500 uppercase tracking-widest font-bold`}
+          >
+            {defaultValues ? "Редагування" : "Нова заявка"}
+          </h3>
+
+          {!defaultValues && !copyId && (
+            <div className="flex items-center gap-2">
+              <AppButton
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleManualReset}
+                className="text-slate-400 hover:text-red-500 h-8 px-2"
+                // Використовуємо MyTooltip як іконку зліва
+                leftIcon={<X />}
+              >
+                Очистити форму
+              </AppButton>
+              <MyTooltip
+                text="Повністю очистити форму та видалити збережену чернетку! Якщо й надалі після кнопки опублікувати не буде відбуватись жодної дії і заявка зависне"
+                icon={<Info size={14} />}
+                size={14}
+                className="hover:text-inherit" // щоб колір іконки змінювався разом з текстом кнопки
+              />
+            </div>
+          )}
+        </div>
 
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
