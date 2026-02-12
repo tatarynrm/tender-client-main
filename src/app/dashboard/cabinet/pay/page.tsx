@@ -11,11 +11,7 @@ if (!user) {
 }
   return (
     <div>
-      <h1>Pay Page</h1>
-      <p>Company Name: {user.company_name || "не вказано"}</p>
-      <p>Name: {user.name}</p>
-      <p>Surname: {user.surname}</p>
-      <p>Email: {user.email}</p>
+
     </div>
   );
 };

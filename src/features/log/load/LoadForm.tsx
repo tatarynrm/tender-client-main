@@ -46,6 +46,7 @@ import { AppButton } from "@/shared/components/Buttons/AppButton";
 import { useLoadById, useLoads } from "../hooks/useLoads";
 import { renderLocationDetails } from "./LocationDetails";
 import axios from "axios";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
 
 // ---------- Helpers & Schemas ----------
 
@@ -99,24 +100,26 @@ const cargoServerSchema = z
       .number()
       .min(1, "Мінімальна к-сть 1")
       .max(100, "Максимальна к-сть 100"),
-    date_load: z.string().min(1, "Дата завантаження є обов'язковою"),
+    date_load: z
+      .string({ message: "Дата завантаження є обов'язковою" })
+      .min(1, "Дата завантаження є обов'язковою"),
     date_unload: z.string().nullable().optional(),
   })
-.refine(
-  (data) => {
-    if (!data.date_unload || !data.date_load) return true;
+  .refine(
+    (data) => {
+      if (!data.date_unload || !data.date_load) return true;
 
-    // Створюємо об'єкти дати, обнуляючи час для чистого порівняння дат
-    const load = new Date(data.date_load).setHours(0, 0, 0, 0);
-    const unload = new Date(data.date_unload).setHours(0, 0, 0, 0);
+      // Створюємо об'єкти дати, обнуляючи час для чистого порівняння дат
+      const load = new Date(data.date_load).setHours(0, 0, 0, 0);
+      const unload = new Date(data.date_unload).setHours(0, 0, 0, 0);
 
-    return unload >= load;
-  },
-  {
-    message: "Дата розвантаження не може бути раніше дати завантаження",
-    path: ["date_unload"],
-  }
-);
+      return unload >= load;
+    },
+    {
+      message: "Дата розвантаження не може бути раніше дати завантаження",
+      path: ["date_unload"],
+    },
+  );
 
 export type CargoServerFormValues = z.infer<typeof cargoServerSchema>;
 
@@ -129,7 +132,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const copyId = searchParams.get("copyId");
-
+  const { profile } = useAuth();
   // States
   const [valutList, setValutList] = useState<any[]>([]);
   const [truckList, setTruckList] = useState<any[]>([]);
@@ -141,6 +144,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   // API Hooks
   const { saveCargo } = useLoads({});
   const { data: copyData } = useLoadById(copyId);
+  console.log(defaultValues, "DEFAULT VALUES");
 
   // Form Initialization
   const form = useForm<CargoServerFormValues>({
@@ -292,7 +296,10 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
       setIsLoading(true);
-      await saveCargo({ ...values, id: defaultValues?.id });
+      await saveCargo({
+        ...values,
+        id: defaultValues?.id,
+      });
 
       localStorage.removeItem(STORAGE_KEY);
       setIsSubmittingSuccess(true);

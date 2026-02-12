@@ -69,7 +69,7 @@ const HeroSection = ({ profile }: { profile?: IUserProfile }) => {
               className={`${buttonVariants()} px-8 py-4 text-lg rounded-full flex items-center gap-2 bg-gradient-to-r from-teal-500 to-indigo-500 text-white shadow-lg`}
             >
               <User size={20} />
-              {profile.company_name || "Мій кабінет"}
+              {profile.company.company_name || "Мій кабінет"}
               <ChevronDown
                 size={18}
                 className={`transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -96,7 +96,7 @@ const HeroSection = ({ profile }: { profile?: IUserProfile }) => {
                         Авторизовано як
                       </p>
                       <p className="text-white font-medium truncate">
-                        {profile.company_name}
+                        {profile.company.company_name || `${profile.person.surname} ${profile.person.name}`}
                       </p>
                     </div>
 

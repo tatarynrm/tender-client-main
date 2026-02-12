@@ -60,7 +60,7 @@ export function CargoActions({
 
   const isArchive = pathname?.includes("archive");
   const hasAccess =
-    profile?.is_crm_admin || String(profile?.id) === String(load.id_usr);
+    profile.role.is_admin || String(profile?.person.id) === String(load.id_author);
 
   // Розрахунок позиції при відкритті
   const toggleMenu = (e: React.MouseEvent) => {

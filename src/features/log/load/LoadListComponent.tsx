@@ -22,6 +22,7 @@ import { LoadApiItem } from "../types/load.type";
 
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 import { EmptyLoads } from "./components/EmptyLoads";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
 
 interface Props {
   active?: boolean;
@@ -33,7 +34,6 @@ export default function LoadListComponent({ active, archive }: Props) {
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
   const LIMIT_STORAGE_KEY = "load_list_limit";
 
-  const { isVisible, toggle } = useVisibilityControl("load_list");
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
     "loadListColumns",
     3,
@@ -72,6 +72,7 @@ export default function LoadListComponent({ active, archive }: Props) {
       "is_collective",
       "participate",
       "my",
+      "department",
     ];
 
     filterKeys.forEach((key) => {
@@ -92,7 +93,8 @@ export default function LoadListComponent({ active, archive }: Props) {
   }, [currentParams, active, archive]);
 
   // 3. Хуки даних (useLoads тепер має внутрішній enabled: !!active || !!archive)
-  const { loads, pagination, isLoading, error } = useLoads(queryFilters);
+  const { loads, pagination, add_data, isLoading, error } =
+    useLoads(queryFilters);
   const { loadFilters } = useGetLoadFilters();
 
   // 4. Управління станом форми фільтрів (для Modal/Sheet)
@@ -149,7 +151,16 @@ export default function LoadListComponent({ active, archive }: Props) {
               apply={() => updateUrl({ ...filters, page: 1 })}
               reset={handleReset}
               dropdowns={loadFilters}
+              add_data={add_data}
             />
+            {/* <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-md">
+
+  <AppButton className="px-2 py-1 text-xs h-7">Усі: {add_data?.count_all}</AppButton>
+  <AppButton className="px-2 py-1 text-xs h-7">Екс: {add_data?.count_exp}</AppButton>
+  <AppButton className="px-2 py-1 text-xs h-7">Імп: {add_data?.count_imp}</AppButton>
+  <AppButton className="px-2 py-1 text-xs h-7">Регіональні: {add_data?.count_reg}</AppButton>
+  <AppButton className="px-2 py-1 text-xs h-7">Транзит: {add_data?.count_tr}</AppButton>
+</div> */}
             <div className="flex gap-2 items-center">
               <GridColumnSelector
                 gridCols={gridCols}

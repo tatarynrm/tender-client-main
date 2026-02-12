@@ -22,16 +22,26 @@ import {
   SelectContent,
   SelectItem,
 } from "@/shared/components/ui";
-import AsyncSelect from "react-select/async";
-import { default as ReactSelect } from "react-select";
+
 import api from "@/shared/api/instance.api";
-import { toast } from "sonner";
-import { Minus, Plus } from "lucide-react";
+
+import { Box, Boxes, Car, Minus, Notebook, Plus, Weight } from "lucide-react";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 import { useRouter } from "next/navigation";
 import DateTimePicker from "@/shared/components/Inputs/DatePicker";
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
 import { useSockets } from "@/shared/providers/SocketProvider";
+import { InputNumber } from "@/shared/components/Inputs/InputNumber";
+import { InputFinance } from "@/shared/components/Inputs/InputFinance";
+import { SelectFinance } from "@/shared/components/Select/SelectFinance";
+import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
+import { AppButton } from "@/shared/components/Buttons/AppButton";
+import { InputText } from "@/shared/components/Inputs/InputText";
+import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
+import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
+import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
+import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
+import { toast } from "sonner";
 
 // ---------- Schemas ----------
 const routeSchema = z.object({
@@ -72,9 +82,9 @@ const tenderFormSchema = z
     price_start: z.number().optional(),
     price_step: z.number({ message: "Вкажіть крок ставки" }).optional(),
     // price_redemption: z.number().optional(), // ⬅ ДЛЯ REDEMTION
-    ids_type: z.enum(["GENERAL", "PRICE_REQUEST"]),
-    ids_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
-    duration_continue: z.boolean(),
+    ids_type: z.enum(["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"]),
+    ids_carrier_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
+
     request_price: z.boolean(),
     without_vat: z.boolean(),
     tender_route: z.array(routeSchema).min(1),
@@ -85,6 +95,7 @@ const tenderFormSchema = z
     load_info: z.string().optional(),
     volume: z.number({ message: `Вкажіть об'єм` }),
     weight: z.number({ message: "Вкажіть вагу" }),
+    palet_count: z.number({ message: "Вкажіть кількість палет" }),
     ids_valut: z.string().optional(),
     cost_redemption: z.number().optional(),
     time_start: z.date({
@@ -95,10 +106,16 @@ const tenderFormSchema = z
         message: "Вкажіть дату завершення тендеру",
       })
       .optional(),
+
+    date_load: z.date({
+      message: "Вкажіть дату завантаження",
+    }),
+    date_load2: z.date().optional().nullable(),
+    date_unload: z.date().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     /* ------- GENERAL ------- */
-    if (data.ids_type === "GENERAL") {
+    if (data.ids_type === "AUCTION") {
       if (!data.price_start) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -142,7 +159,7 @@ interface TenderFormProps {
 
 export default function TenderSaveForm({
   defaultValues,
-  isEdit = false,
+  isEdit,
 }: TenderFormProps) {
   const router = useRouter();
   const [truckList, setTruckList] = useState<
@@ -157,7 +174,7 @@ export default function TenderSaveForm({
   const [tenderType, setTenderType] = useState<
     { label: string; value: string }[]
   >([]);
-  const [valut, setValut] = useState<{ label: string; value: number }[]>([]);
+  const [valut, setValut] = useState<{ label: string; value: string }[]>([]);
   const [rating, setRating] = useState<{ label: string; value: string }[]>([]);
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const [isNextTender, setIsNextTender] = useState(false);
@@ -169,9 +186,9 @@ export default function TenderSaveForm({
       notes: "",
       id_owner_company: null,
       car_count: 1,
-      ids_type: "GENERAL",
-      ids_rating: "MAIN", // ← виправлена назва
-      duration_continue: true,
+      ids_type: "AUCTION",
+      ids_carrier_rating: "MAIN", // ← виправлена назва
+
       request_price: false,
       without_vat: true,
       tender_route: [
@@ -183,6 +200,11 @@ export default function TenderSaveForm({
       company_name: "",
       load_info: "",
       time_start: new Date(),
+      palet_count: 32,
+      weight: 22,
+      volume: 86,
+      ids_valut: "UAH",
+
       ...defaultValues,
     },
   });
@@ -212,8 +234,6 @@ export default function TenderSaveForm({
         const { data } = await api.get(
           "/tender/form-data/getCreateTenderFormData",
         );
-    ;
-
         setTruckList(
           data.content.trailer_type_dropdown.map((t: any) => ({
             value: t.ids,
@@ -256,12 +276,7 @@ export default function TenderSaveForm({
     };
     getTruckList();
   }, []);
-  // useEffect(() => {
-  //   if (typeValue === "REQUEST_PRICE") {
-  //     // Очищаємо помилки для полів, які тепер не є обов'язковими
-  //     clearErrors(["price_start", "price_step", "ids_valut"]);
-  //   }
-  // }, [typeValue, clearErrors]);
+
   const loadOptionsFromApi = (url: string) => async (inputValue: string) => {
     if (!inputValue) return [];
     try {
@@ -278,6 +293,8 @@ export default function TenderSaveForm({
   };
 
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
+    console.log(values, "VALUES");
+
     try {
       const payload = { ...values };
       if (defaultValues?.id) payload.id = defaultValues.id;
@@ -288,16 +305,50 @@ export default function TenderSaveForm({
       tenderSocket?.emit("tender_updated"); // Бажано передати назву події
 
       if (!isNextTender) {
-        router.push("/log/tender"); // Наприклад, перенаправлення
+        router.back(); // Наприклад, перенаправлення
       }
+      router.back(); // Наприклад, перенаправлення
     } catch (err) {
       console.error(err);
       toast.error("Помилка при збереженні тендеру");
     }
   };
+  useEffect(() => {
+    if (defaultValues) {
+      // Створюємо копію дефолтних значень з перетвореними датами
+      const preparedValues = {
+        ...defaultValues,
+        time_start: defaultValues.time_start
+          ? new Date(defaultValues.time_start)
+          : new Date(),
+        time_end: defaultValues.time_end
+          ? new Date(defaultValues.time_end)
+          : null,
+        date_load: defaultValues.date_load
+          ? new Date(defaultValues.date_load)
+          : null,
+        date_load2: defaultValues.date_load2
+          ? new Date(defaultValues.date_load2)
+          : null,
+        date_unload: defaultValues.date_unload
+          ? new Date(defaultValues.date_unload)
+          : null,
+      };
+
+      // Оновлюємо форму
+      form.reset(preparedValues as TenderFormValues);
+
+      // Якщо у вас є кастомні лейбли (наприклад, назва компанії)
+      if (defaultValues.company_name) {
+        setCompanyLabel(defaultValues.company_name);
+      }
+    }
+  }, [defaultValues, form.reset]);
+
+  console.log(errors, "ERRRORS");
 
   return (
-    <Card className="max-w-3xl mx-auto p-3 mb-20">
+    <Card className=" mx-auto p-3 mb-20">
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <fieldset disabled={isSubmitting} className="space-y-4">
@@ -326,7 +377,7 @@ export default function TenderSaveForm({
               />
               <FormField
                 control={control}
-                name="ids_rating"
+                name="ids_carrier_rating"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Рейтинг перевізника</FormLabel>
@@ -380,91 +431,25 @@ export default function TenderSaveForm({
                 )}
               />
             </div>
-            {/* Cargo */}
-            <FormField
-              control={control}
-              name="cargo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Вантаж</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage>{errors.cargo?.message}</FormMessage>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+              <InputDateWithTime
+                name="date_load"
+                control={control}
+                label="Дата завантаження з"
+              />
 
-            {/* Notes */}
-            <FormField
-              control={control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Примітки</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+              <InputDateWithTime
+                name="date_load2"
+                control={control}
+                label="Дата завантаження по"
+              />
 
-            {/* Company */}
-            <FormField
-              control={control}
-              name="id_owner_company"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Компанія</FormLabel>
-                  <FormControl>
-                    <AsyncSelect
-                      cacheOptions
-                      loadOptions={loadOptionsFromApi("/company/name")}
-                      defaultOptions
-                      placeholder="Введіть назву компанії"
-                      noOptionsMessage={() => "Немає результатів"}
-                      value={
-                        field.value
-                          ? { value: field.value, label: companyLabel }
-                          : null
-                      }
-                      onChange={(option) => {
-                        field.onChange(option?.value ?? null);
-                        setCompanyLabel(option?.label ?? "");
-                      }}
-                      styles={{
-                        option: (base, state) => ({
-                          ...base,
-                          color: "black", // 🔹 колір тексту у випадаючому списку
-                          backgroundColor: state.isFocused
-                            ? "rgba(0, 128, 128, 0.1)" // легкий teal при наведенні
-                            : "white", // фон опції
-                          cursor: "pointer",
-                        }),
-                        singleValue: (base) => ({
-                          ...base,
-                          color: "black", // 🔹 колір вибраного значення у полі
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          color: "black", // 🔹 колір введеного тексту при пошуку
-                        }),
-                        placeholder: (base) => ({
-                          ...base,
-                          color: "#666", // 🔹 колір placeholder’а
-                        }),
-                        menu: (base) => ({
-                          ...base,
-                          backgroundColor: "white", // фон випадаючого списку
-                          zIndex: 10,
-                        }),
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
+              <InputDateWithTime
+                name="date_unload"
+                control={control}
+                label="Дата розвантаження"
+              />
+            </div>
             {/* Routes */}
             <div className="flex flex-col gap-4">
               {routeFields.map((field, idx) => (
@@ -476,20 +461,6 @@ export default function TenderSaveForm({
                       <FormItem className="flex-1">
                         <FormLabel>{`Адреса #${idx + 1}`}</FormLabel>
                         <FormControl>
-                          {/* <NominatimInput
-                          value={f.value ?? ""}
-                          onChange={(addr, country, city) => {
-                            // console.log(addr, country, city, "------------");
-
-                            f.onChange(addr);
-                            setValue(
-                              `tender_route.${idx}.country`,
-                              country || ""
-                            );
-                            setValue(`tender_route.${idx}.city`, city || "");
-                            clearErrors(`tender_route.${idx}.address` || "");
-                          }}
-                        /> */}
                           <GoogleLocationInput
                             value={f.value ?? ""}
                             onChange={(location) => {
@@ -613,362 +584,142 @@ export default function TenderSaveForm({
                 <Plus />
               </Button>
             </div>
+            <InputText
+              icon={Box}
+              name="cargo"
+              control={control}
+              label="Вантаж"
+            />
+            <InputTextarea
+              icon={Notebook}
+              name="notes"
+              control={control}
+              label="Примітки"
+            />
 
+            <InputAsyncSelectCompany
+              name="id_owner_company"
+              control={control}
+              label="Компанія"
+              initialLabel={companyLabel}
+              onEntityChange={(c) => setCompanyLabel(c?.name || "")}
+            />
             {/* Trailer */}
-            <FormField
-              control={control}
+
+            <InputMultiSelect
               name="tender_trailer"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Тип транспорту</FormLabel>
-                  <FormControl>
-                    <ReactSelect
-                      isMulti
-                      options={truckList}
-                      value={truckList.filter((t) =>
-                        field.value.some(
-                          (v: any) => v.ids_trailer_type === t.value,
-                        ),
-                      )}
-                      onChange={(options: any) =>
-                        field.onChange(
-                          options
-                            ? options.map((o: any) => ({
-                                ids_trailer_type: o.value,
-                              }))
-                            : [],
-                        )
-                      }
-                      placeholder="Оберіть тип транспорту"
-                      closeMenuOnSelect={false}
-                      {...({ menuShouldCloseOnSelect: false } as any)}
-                      hideSelectedOptions={false}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            {/* Load Type */}
-            <FormField
               control={control}
-              name="tender_load"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Тип завантаження</FormLabel>
-                  <FormControl>
-                    <ReactSelect
-                      isMulti
-                      options={loadList}
-                      value={loadList.filter((t) =>
-                        field.value.some(
-                          (v: any) => v.ids_load_type === t.value,
-                        ),
-                      )}
-                      onChange={(options: any) =>
-                        field.onChange(
-                          options
-                            ? options.map((o: any) => ({
-                                ids_load_type: o.value,
-                              }))
-                            : [],
-                        )
-                      }
-                      placeholder="Оберіть тип завантаження"
-                      closeMenuOnSelect={false}
-                      {...({ menuShouldCloseOnSelect: false } as any)}
-                      hideSelectedOptions={false}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+              label="Тип транспорту"
+              options={truckList}
+              required
             />
+
+            <InputMultiSelect
+              name="tender_load" // тепер тут буде просто ["BACK", "TOP"]
+              control={control}
+              label="Тип завантаження"
+              options={loadList}
+              required
+              valueKey="ids_load_type" // вказуємо, що значення для форми береться з цього ключа в об'єкті
+            />
+
             {/* Load Permission Dropdown */}
-            <FormField
+            <InputMultiSelect
+              name="tender_permission" // тепер тут буде просто ["BACK", "TOP"]
               control={control}
-              name="tender_permission"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Дозволи / Документи</FormLabel>
-                  <FormControl>
-                    <ReactSelect
-                      isMulti
-                      options={tenderPermission}
-                      value={tenderPermission.filter((t) =>
-                        (field.value ?? []).some(
-                          (v: any) => v.ids_permission_type === t.value,
-                        ),
-                      )}
-                      onChange={(options: any) =>
-                        field.onChange(
-                          options
-                            ? options.map((o: any) => ({
-                                ids_permission_type: o.value,
-                              }))
-                            : [],
-                        )
-                      }
-                      placeholder="Оберіть дозволи"
-                      closeMenuOnSelect={false}
-                      {...({ menuShouldCloseOnSelect: false } as any)}
-                      hideSelectedOptions={false}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
+              label="Тип дозволу"
+              options={tenderPermission}
+              required
+              valueKey="ids_permission_type" // вказуємо, що значення для форми береться з цього ключа в об'єкті
             />
 
             {/* Options */}
             <div className="flex gap-4 flex-wrap">
-              <FormField
+              <InputSwitch
                 control={control}
                 name="without_vat"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <FormLabel>Без ПДВ</FormLabel>
-                  </FormItem>
-                )}
+                label="Без ПДВ"
               />
-              {/* <FormField
-              control={control}
-              name="duration_continue"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FormLabel>Тривалий тендер</FormLabel>
-                </FormItem>
-              )}
-            /> */}
-              {/* <FormField
-              control={control}
-              name="request_price"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FormLabel>Запит ціни</FormLabel>
-                </FormItem>
-              )}
-            /> */}
             </div>
 
             {/* Car count / Cost / price_step */}
             <div className="flex gap-4 flex-wrap">
-              <FormField
+              <InputNumber
                 control={control}
                 name="car_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>К-сть авто</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={field.value ?? ""}
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value),
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage>{errors.car_count?.message}</FormMessage>
-                  </FormItem>
-                )}
+                label="К-сть авто"
+                icon={Car}
+                placeholder="1 Авто"
               />
-              <FormField
-                control={control}
-                name="weight"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Вага</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={field.value ?? ""}
-                        placeholder="22 Тон"
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value),
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <InputNumber
+                  control={control}
+                  name="weight"
+                  label="Вага"
+                  icon={Weight}
+                  placeholder="22 Тон"
+                />
 
-              <FormField
-                control={control}
-                name="volume"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Об’єм</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        value={field.value ?? ""}
-                        placeholder="86 Куб"
-                        onChange={(e) =>
-                          field.onChange(
-                            e.target.value === "" ? "" : Number(e.target.value),
-                          )
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <InputNumber
+                  control={control}
+                  name="volume"
+                  label="Об’єм"
+                  icon={Box}
+                  placeholder="86 Куб"
+                />
+
+                <InputNumber
+                  control={control}
+                  name="palet_count"
+                  label="К-сть палет"
+                  icon={Boxes}
+                  placeholder="32 Палет"
+                />
+              </div>
 
               <div className="border-b border-red-200 w-full h-[3px]"></div>
               {/* CONDITIONAL FIELDS */}
-              {typeValue === "GENERAL" && (
+              {typeValue === "AUCTION" && (
                 <>
-                  <FormField
-                    control={control}
+                  <InputFinance
                     name="price_start"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Стартова ціна</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value),
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage>{errors.car_count?.message}</FormMessage>
-                      </FormItem>
-                    )}
+                    control={control}
+                    label="Стартова ціна"
                   />
-                  <FormField
-                    control={form.control}
+                  <SelectFinance
                     name="ids_valut"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>Валюта</FormLabel>
-                        <FormControl>
-                          <Select
-                            // disabled={isLoadingRegister}
-                            value={field.value?.toString() || ""}
-                            onValueChange={(val) => field.onChange(val)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Вкажіть валюту" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {valut
-                                ?.slice(0, 4)
-                                .map(
-                                  (
-                                    item: any,
-                                    idx: React.Key | null | undefined,
-                                  ) => {
-                                    // console.log(item, "ITEM");
+                    control={control}
+                    label="Валюта"
+                    options={valut.slice(0, 4)}
+                  />
 
-                                    return (
-                                      <SelectItem
-                                        key={idx}
-                                        value={String(item.value)}
-                                      >
-                                        {item.label.toUpperCase()}
-                                      </SelectItem>
-                                    );
-                                  },
-                                )}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={control}
+                  <InputFinance
                     name="price_step"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Крок ставки</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value),
-                              )
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
                     control={control}
+                    label="Крок ставки"
+                  />
+
+                  <InputFinance
                     name="cost_redemption"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ціна викупу</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            value={field.value ?? ""}
-                            onChange={(e) =>
-                              field.onChange(
-                                e.target.value === ""
-                                  ? ""
-                                  : Number(e.target.value),
-                              )
-                            }
-                          />
-                        </FormControl>
-                        {/* <FormMessage>{errors.car_count?.message}</FormMessage> */}
-                      </FormItem>
-                    )}
+                    control={control}
+                    label="Ціна викупу"
                   />
                 </>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <Switch
-                id="is-next-check"
+            <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-2 rounded-xl border border-blue-500/10">
+              <InputSwitch
+                id="is_next"
                 checked={isNextTender}
+                label="Ще один тендер після збереження"
                 onCheckedChange={setIsNextTender}
-                className="data-[state=checked]:bg-orange-500"
+                className="data-[state=checked]:bg-blue-600"
               />
-              <div className="space-y-0.5">
-                <Label
-                  htmlFor="is-next-check"
-                  className="text-sm font-bold uppercase text-zinc-700"
-                >
-                  Створити наступний
-                </Label>
-                <p className="text-[10px] text-zinc-500 uppercase">
-                  Після збереження форма залишиться відкритою
-                </p>
-              </div>
+              <MyTooltip text="Форма не буде очищена після збереження" />
             </div>
             {/* Submit */}
             <div className="flex justify-end gap-3 pt-4">
-              <Button
+              <AppButton
                 type="submit"
                 disabled={isSubmitting}
                 className="min-w-[150px]"
@@ -1001,7 +752,7 @@ export default function TenderSaveForm({
                 ) : (
                   "Створити тендер"
                 )}
-              </Button>
+              </AppButton>
             </div>
           </fieldset>
         </form>

@@ -72,7 +72,7 @@ const MainHeader = ({ profile }: { profile?: IUserProfile }) => {
                     Ваш аккаунт
                   </p>
                   <p className="text-lg font-bold text-white mb-3">
-                    {profile.company_name}
+                    {profile.company.company_name || `${profile.person.surname} ${profile.person.name}`}
                   </p>
                   <div className="flex flex-col gap-2">
                     <Link

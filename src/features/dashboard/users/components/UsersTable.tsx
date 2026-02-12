@@ -160,7 +160,7 @@ export const UsersTable = React.memo(() => {
       header: "Дії",
       cell: ({ row }) => {
         // Якщо профіль не адміністратор, то нічого не показуємо
-        if (!profile?.is_admin) {
+        if (!profile?.role.is_admin) {
           return "⛔";
         }
 

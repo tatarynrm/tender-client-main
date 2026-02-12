@@ -11,6 +11,9 @@ import {
   XCircle,
   Copy,
   Map,
+  Boxes,
+  DollarSign,
+  CircleDollarSign,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils";
@@ -60,7 +63,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
   const [openHistory, setOpenHistory] = useState(false);
   // const [isActionsExpanded, setIsActionsExpanded] = useState(false);
   const [lastEvent, setLastEvent] = useState<string | null>(null);
-  const isOnline = onlineUsers.has(String(load.id_usr));
+  const isOnline = onlineUsers.has(String(load.id_author));
   const [localReadTime, setLocalReadTime] = useState<string | null>(
     load.comment_read_time || null,
   );
@@ -315,14 +318,14 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           </div>
 
           <div className="flex items-center gap-3 shrink-0 ml-auto">
-            <div className="hidden md:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
+            {/* <div className="hidden md:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
               <History size={config.icon - 4} strokeWidth={2.5} />
               <span className={cn("font-medium tabular-nums", config.label)}>
-                {load.updated_at
-                  ? format(new Date(load.updated_at), "dd.MM HH:mm")
+                {load.created_at
+                  ? format(new Date(load.created_at), "dd.MM HH:mm")
                   : "—"}
               </span>
-            </div>
+            </div> */}
             <div className="flex items-center border-l border-zinc-100 dark:border-zinc-800 pl-2">
               <CargoActions
                 load={load}
@@ -411,6 +414,20 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 ) : (
                   <span className="bg-red-500 p-1 rounded-xl">
                     Ціна не вказана
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center text-center">
+                {load.is_collective && (
+                  <span title="Збірний вантаж">
+                    <Boxes className="text-blue-500 ml-1" />
+                  </span>
+                )}
+                {load.is_price_request && (
+                  <span title="Запит ціни">
+                    {" "}
+                    <CircleDollarSign className="text-green-500 ml-1" />
                   </span>
                 )}
               </div>

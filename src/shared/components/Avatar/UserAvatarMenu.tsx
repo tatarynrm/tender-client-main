@@ -53,8 +53,8 @@ export function UserAvatarMenu() {
   };
 
   // Формуємо ініціали з імені
-  const avatarFallback = profile.name
-    ? profile.name.charAt(0).toUpperCase()
+  const avatarFallback = profile.person.name
+    ? profile.person.name.charAt(0).toUpperCase()
     : "U";
 
   return (
@@ -62,7 +62,7 @@ export function UserAvatarMenu() {
       <details ref={detailsRef} className="relative list-none group">
         <summary className="list-none cursor-pointer outline-none">
           <div className="h-9 w-9 rounded-md border border-zinc-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center bg-white dark:bg-slate-900">
-            {profile.avatar_path ? (
+            {/* {profile.avatar_path ? (
               <img
                 src={profile.avatar_path}
                 alt={profile.name}
@@ -72,7 +72,7 @@ export function UserAvatarMenu() {
               <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
                 {avatarFallback}
               </span>
-            )}
+            )} */}
           </div>
         </summary>
 
@@ -80,7 +80,7 @@ export function UserAvatarMenu() {
           {/* Header */}
           <div className="px-4 py-3 bg-zinc-50/50 dark:bg-white/5 border-b border-zinc-100 dark:border-white/5">
             <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-slate-900 dark:text-white truncate">
-              {profile.name} {profile.surname}
+              {profile.person.name} {profile.person.surname}
             </p>
             <p className="text-[11px] text-zinc-500 truncate mt-0.5">
               {profile.email}

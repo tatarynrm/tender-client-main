@@ -75,7 +75,7 @@ export default function AdminHeader({
             </div>
           </div>
           <span className="text-xs text-slate-500 font-bold opacity-70">
-            {profile?.surname} {profile?.name?.charAt(0)}.{profile?.last_name?.charAt(0)}.
+            {profile?.person.surname} {profile?.person.name?.charAt(0)}.{profile?.person.last_name?.charAt(0)}.
           </span>
         </div>
       </div>

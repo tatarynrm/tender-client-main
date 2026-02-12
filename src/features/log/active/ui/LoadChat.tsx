@@ -20,11 +20,12 @@ import {
   Pencil,
   RotateCcw,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, isToday, isYesterday } from "date-fns";
 import { useCargoChat } from "../../hooks/useLoadChat";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { cn } from "@/shared/utils";
 import { usePathname } from "next/navigation";
+import { uk } from "date-fns/locale";
 
 export default function LoadChat({
   cargoId,
@@ -57,10 +58,23 @@ export default function LoadChat({
   } = useCargoChat(cargoId, open);
 
   const isMyComment = useCallback(
-    (uid: any) => Number(uid) === Number(profile?.id),
+    (uid: any) => Number(uid) === Number(profile?.person.id),
     [profile?.id],
   );
+  const formatOperationTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const timeStr = format(date, "HH:mm");
 
+    if (isToday(date)) {
+      return `Сьогодні, ${timeStr}`;
+    }
+    if (isYesterday(date)) {
+      return `Вчора, ${timeStr}`;
+    }
+
+    // Для всіх інших дат: "11 лют., 14:30"
+    return format(date, "d MMM, HH:mm", { locale: uk });
+  };
   const handleSend = async () => {
     if (!input.trim() || isSaving || isArchive) return;
     const text = input.trim();
@@ -142,9 +156,9 @@ export default function LoadChat({
         {/* MESSAGES AREA */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-slate-50/50 dark:bg-transparent custom-scrollbar">
           {comments.map((msg: any, idx: number) => {
-            const mine = isMyComment(msg.id_usr);
+            const mine = isMyComment(msg.id_author);
             const isFirst =
-              idx === 0 || comments[idx - 1].id_usr !== msg.id_usr;
+              idx === 0 || comments[idx - 1].id_author !== msg.id_author;
 
             return (
               <div
@@ -222,7 +236,7 @@ export default function LoadChat({
                           )}
                         >
                           {msg.operation_time &&
-                            format(new Date(msg.operation_time), "HH:mm")}
+                            formatOperationTime(msg.operation_time)}
                         </div>
                       </div>
 

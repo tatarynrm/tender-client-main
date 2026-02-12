@@ -31,9 +31,6 @@ export default function LogHeader({
 
   // 2. Будуємо шлях, тільки якщо є аватар у профілі
   // Також перевіряємо, щоб не було подвійного слеша //
-  const avatarUrl = profile?.avatar_path
-    ? `${baseUrl.replace(/\/$/, "")}/${profile.avatar_path.replace(/^\//, "")}`
-    : undefined;
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">

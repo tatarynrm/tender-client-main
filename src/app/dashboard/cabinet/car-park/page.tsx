@@ -9,7 +9,7 @@ type ApiResponse = {
 const CarPark = async () => {
   const res = await fetchServer.post<ApiResponse>("/transport/page-info");
   const transport = await fetchServer.post<ApiResponse>("/transport/list");
-  console.log(transport.data, "TRANSPORT DATA");
+
 
   // Витягуємо дані
   const { transport_count, trailer_type_dropdown, vehicle_type_dropdown } =

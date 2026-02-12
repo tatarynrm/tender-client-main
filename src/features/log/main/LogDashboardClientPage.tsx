@@ -69,7 +69,7 @@ export default function LogDashboardClientPage() {
             overrides?.d2 !== undefined
               ? overrides.d2 || null
               : formValues.date2 || null,
-          id_usr: activeTab === "my" ? profile?.id : null,
+          id_person: activeTab === "my" ? profile?.person.id : null,
         };
         const response = await api.post<DashboardStats>(
           "/crm/statistic/stats",

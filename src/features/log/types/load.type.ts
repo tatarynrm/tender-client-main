@@ -54,6 +54,7 @@ export type LoadApiItem = {
   id_usr: number;
   date_load: string | Date;
   date_unload: string | Date;
+  id_author?: number;
 };
 
 export interface ValutDropdownItem {
@@ -103,6 +104,11 @@ export interface DropdownOption {
   valut_name?: string; // Для valut_dropdown
   short_name?: string;
 }
+export interface DepartmentDropdownOption {
+  ids: string | number;
+  value: string; // Для trailer_type_dropdown, company_dropdown
+
+}
 
 export interface Dropdowns {
   load_cancel_type_dropdown?: DropdownOption[];
@@ -116,4 +122,5 @@ export interface Dropdowns {
   load_type_dropdown?: DropdownOption[];
   tender_type_dropdown?: DropdownOption[];
   transit_dropdown?: DropdownOption[];
+  department_dropdown?: DepartmentDropdownOption[];
 }

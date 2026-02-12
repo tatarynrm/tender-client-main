@@ -219,7 +219,7 @@ export default function Sidebar({
   };
 
   const footerLinks = [...defaultFooterLinks];
-  if (profile?.is_admin && profile.is_ict ) {
+  if (profile?.role.is_admin && profile.role.is_ict ) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
       { name: "CRM система", href: "/log", icon: FileStack }

@@ -68,14 +68,14 @@ export default function Header({
         <div className="hidden lg:flex flex-col border-l border-slate-200 dark:border-white/10 pl-6">
           <div className="flex items-center gap-2">
             <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white truncate max-w-[250px]">
-              {profile?.company_name_full}
+              {profile?.company.company_name}
             </span>
-            {profile?.is_ict_admin && (
+            {profile?.verified && (
               <ShieldCheck size={14} className="text-blue-500" />
             )}
           </div>
           <span className="text-xs text-slate-500 font-bold opacity-70">
-            {profile?.surname} {profile?.name?.charAt(0)}.{profile?.last_name?.charAt(0)}.
+            {profile?.person.surname} {profile?.person.name?.charAt(0)}.{profile?.person.last_name?.charAt(0)}.
           </span>
         </div>
       </div>

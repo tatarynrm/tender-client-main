@@ -139,7 +139,7 @@ const NominatimInput = ({
               key={idx}
               className="p-1 cursor-pointer"
               onClick={() => {
-                console.log(r, "RRRRR 123");
+           
 
                 onChange(
                   r.name,
@@ -241,7 +241,7 @@ export default function CargoForm() {
   useEffect(() => {
     getFormData();
   }, []);
-  console.log(isNextCargo, "IS next");
+
 
   const onSubmit: SubmitHandler<CargoServerFormValues> = async (values) => {
     try {
@@ -401,7 +401,7 @@ export default function CargoForm() {
                             value={watch(`crm_load_route_to.${index}.address`)}
                             placeholder="Введіть адресу розвантаження..."
                             onChange={(address, lat, lon, country, city) => {
-                              console.log(address);
+                           
 
                               setValue(
                                 `crm_load_route_to.${index}.address`,
@@ -610,7 +610,7 @@ export default function CargoForm() {
                           ?.slice(0, 4)
                           .map(
                             (item: any, idx: React.Key | null | undefined) => {
-                              console.log(item, "ITEM");
+                        
 
                               return (
                                 <SelectItem

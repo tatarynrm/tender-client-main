@@ -14,6 +14,8 @@ import {
   Map as MapIcon,
   Copy,
   DollarSign,
+  Boxes,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 
@@ -160,12 +162,25 @@ export function CargoDetailsDrawer({
                 </p>
               </div>
             </div>
+                          <div className="flex items-center text-center">
+                {cargo.is_collective && (
+                  <span title="Збірний вантаж">
+                    <Boxes className="text-blue-500 ml-1" />
+                  </span>
+                )}
+                {cargo.is_price_request && (
+                  <span title="Запит ціни">
+                    {" "}
+                    <CircleDollarSign className="text-green-500 ml-1" />
+                  </span>
+                )}
+              </div>
             {/* Маршрут */}
             <div className="bg-zinc-50 dark:bg-zinc-900/50 p-5 rounded-2xl border border-zinc-100 dark:border-zinc-800 relative">
               <div className="flex flex-col gap-6">
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-zinc-400 uppercase">
@@ -178,8 +193,8 @@ export function CargoDetailsDrawer({
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-zinc-400 uppercase">

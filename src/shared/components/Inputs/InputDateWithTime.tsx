@@ -50,21 +50,26 @@ export const InputDateWithTime = <T extends FieldValues>({
   } = useController({ name, control });
 
   const [isOpen, setIsOpen] = useState(false);
-  const [openUp, setOpenUp] = useState(false); // Стан для напрямку відкриття
+  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedDate = field.value ? new Date(field.value) : null;
-  const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
+  // Працюємо з об'єктом Date
+  const value = field.value as unknown;
 
-  // Логіка розрахунку місця на екрані
+  const selectedDate =
+    value instanceof Date
+      ? value
+      : typeof value === "string" && value.length > 0
+        ? new Date(value)
+        : null;
+
+  const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
   useLayoutEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
-      const dropdownHeight = 400; // Орієнтовна висота нашого календаря
-
-      // Якщо місця знизу менше ніж висота календаря, відкриваємо вгору
+      const dropdownHeight = 400;
       setOpenUp(spaceBelow < dropdownHeight && rect.top > dropdownHeight);
     }
   }, [isOpen]);
@@ -88,7 +93,7 @@ export const InputDateWithTime = <T extends FieldValues>({
       type === "hours"
         ? setHours(baseDate, value)
         : setMinutes(baseDate, value);
-    field.onChange(newDate.toISOString());
+    field.onChange(newDate); // Передаємо об'єкт Date
   };
 
   const renderDays = () => {
@@ -114,7 +119,7 @@ export const InputDateWithTime = <T extends FieldValues>({
               ? getMinutes(selectedDate)
               : getMinutes(new Date());
             const combinedDate = setMinutes(setHours(day, hours), mins);
-            field.onChange(combinedDate.toISOString());
+            field.onChange(combinedDate); // Передаємо об'єкт Date
           }}
           className={cn(
             "h-8 w-8 flex items-center justify-center text-[12px] rounded-lg cursor-pointer transition-all",
@@ -141,7 +146,7 @@ export const InputDateWithTime = <T extends FieldValues>({
         <div
           className={cn(
             "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
-            isOpen
+            isOpen || field.value
               ? "text-teal-600"
               : "text-zinc-400 group-focus-within:text-teal-600",
           )}
@@ -157,7 +162,7 @@ export const InputDateWithTime = <T extends FieldValues>({
             isOpen
               ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
               : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
-            error ? "border-red-500" : "",
+            error ? "border-red-500 ring-red-500" : "",
           )}
         >
           <span
@@ -208,8 +213,7 @@ export const InputDateWithTime = <T extends FieldValues>({
               : "top-[calc(100%+8px)] origin-top slide-in-from-top-2",
           )}
         >
-          <div className="flex   divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
-            {/* КАЛЕНДАР */}
+          <div className="flex divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
             <div className="p-4">
               <div className="flex items-center justify-between mb-4 px-1">
                 <button
@@ -244,14 +248,12 @@ export const InputDateWithTime = <T extends FieldValues>({
               <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
             </div>
 
-            {/* ВИБІР ЧАСУ (ДВІ КОЛОНКИ ПОРУЧ) */}
             <div className="bg-zinc-50/50 dark:bg-white/5 flex flex-col w-[140px]">
               <div className="flex items-center justify-center h-10 border-b border-zinc-100 dark:border-zinc-800">
                 <Clock size={14} className="text-teal-600" />
               </div>
 
               <div className="flex h-[240px] overflow-hidden">
-                {/* Години */}
                 <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide border-r border-zinc-100 dark:border-zinc-800">
                   {Array.from({ length: 24 }).map((_, i) => (
                     <button
@@ -270,7 +272,6 @@ export const InputDateWithTime = <T extends FieldValues>({
                   ))}
                 </div>
 
-                {/* Хвилини */}
                 <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
                   {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
                     <button

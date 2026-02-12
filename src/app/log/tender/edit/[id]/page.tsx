@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 
 import LoadForm from "@/features/log/load/LoadForm";
 import Loading from "@/shared/components/ui/Loading";
+import TenderSaveForm from "@/features/log/tender/components/TenderSaveForm";
 
 export default function EditCargoPage() {
   const { id } = useParams();
@@ -15,10 +16,10 @@ export default function EditCargoPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await api.get(`/crm/load/edit/${id}`); // 👈 твій ендпоїнт
+        const { data } = await api.get(`/tender/${id}`);
+        console.log(data, "DATA");
 
-
-        setData(data.data);
+        setData(data.content);
       } catch (err) {
         console.error(err);
       } finally {
@@ -31,5 +32,5 @@ export default function EditCargoPage() {
   if (loading) return <Loading />;
   if (!data) return <div>Заявку не знайдено</div>;
 
-  return <LoadForm defaultValues={data}  />;
+  return <TenderSaveForm defaultValues={data} isEdit={true} />;
 }

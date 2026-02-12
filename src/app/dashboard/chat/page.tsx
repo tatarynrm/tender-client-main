@@ -269,7 +269,7 @@ export default function ChatComponent() {
 
     const payload: any = {
       text: input,
-      fromName: `${profile?.surname} ${profile?.name} ${profile?.last_name}`,
+      fromName: `${profile?.id} ${profile?.id} ${profile?.id}`,
       usr_id: profile?.id,
     };
 

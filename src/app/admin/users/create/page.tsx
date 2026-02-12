@@ -98,9 +98,9 @@ export default function CreateUserPage() {
 
   const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     try {
-      console.log(data, "DATA");
+  
       const res = await createUser(data);
-      console.log(res, "res");
+
 
       if (res && (res.status === "ok" || res.data?.status === "ok")) {
         reset();

@@ -1,27 +1,49 @@
 export interface IUserProfile {
   id: number;
-  createdAt: string;
-  updatedAt: string;
+  role: IUserRole;
   email: string;
-  provider: string;
-  password: string;
-  telegram_id?: number | null;
+  person: IPerson;
+  company: ICompany;
+  verified: boolean;
+  department: IDepartment;
+  is_blocked: boolean;
+}
 
-  isVerified: boolean;
-  isTwoFactorEnabled: boolean;
+export interface IUserRole {
+  is_ict: boolean;
+  is_admin: boolean;
+  is_manager: boolean;
+}
 
+export interface IPerson {
+  id: number;
   name: string;
-  is_ict?: boolean;
-  company_name?: string;
-  company_name_full?: string;
+  ids_sex: 'M' | 'F' | string; // Використовуємо union type для статі
   surname: string;
+  birthday: string | null;
   last_name: string;
-  is_admin?: boolean;
-  is_accountant?: boolean;
-  is_manager?: boolean;
-  is_director?: boolean;
-  is_blocked?: boolean;
-  is_ict_admin?: boolean;
-  is_crm_admin?: boolean;
-  avatar_path?: string;
+}
+
+export interface ICompany {
+  id: number;
+  devid: number | null;
+  edrpou: string;
+  gps_lat: number | null;
+  gps_lon: number | null;
+  web_site: string;
+  is_client: boolean;
+  black_list: boolean;
+  is_blocked: boolean;
+  is_carrier: boolean;
+  ids_country: string;
+  company_form: string;
+  company_name: string;
+  is_expedition: boolean;
+}
+
+export interface IDepartment {
+  id: number;
+  idnt: any | null; // Замінити на конкретний тип, якщо відома структура idnt
+  root_company: number;
+  department_name: string;
 }

@@ -13,7 +13,7 @@ export const ActiveStatsGrid = ({ data, className }: Props) => {
     { label: "Експорт", value: data.export, icon: <MoveUpRight size={12} />, color: "bg-emerald-500/10", iconColor: "text-emerald-500" },
     { label: "Імпорт", value: data.import, icon: <MoveDownLeft size={12} />, color: "bg-blue-500/10", iconColor: "text-blue-500" },
     { label: "Регіон", value: data.region, icon: <Map size={12} />, color: "bg-amber-500/10", iconColor: "text-amber-500" },
-    { label: "Транзит", value: data.transit, icon: <Truck size={12} />, color: "bg-purple-500/10", iconColor: "text-purple-500" },
+    { label: "Вид перевезень", value: data.transit, icon: <Truck size={12} />, color: "bg-purple-500/10", iconColor: "text-purple-500" },
   ];
 
   return (

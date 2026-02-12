@@ -17,6 +17,8 @@ import {
   Archive,
   FileCode2Icon,
   RefreshCcw,
+  ArchiveIcon,
+  ActivitySquare,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -42,11 +44,18 @@ const links: MenuItem[] = [
       { name: "Архів", icon: Archive, href: "/log/load/archive" },
     ],
   },
+  // {
+  //   name: "Оновлення!",
+  //   icon: RefreshCcw,
+  //   status: "new",
+  //   href: "/log/updates",
+  //   info: "New",
+  // },
   {
-    name: "Оновлення!",
-    icon: RefreshCcw,
+    name: "Документи",
+    icon: FileStack,
     status: "new",
-    href: "/log/updates",
+    href: "/log/files",
     info: "New",
   },
   // Додаємо Карта та Документи зі статусом inactive
@@ -97,11 +106,19 @@ export default function LogSidebar({
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  if (profile?.is_admin) {
+  if (profile?.role.is_admin) {
     mainLinks.splice(2, 0, {
       name: "Тендери",
       icon: LayoutList,
-      href: "/log/tender",
+      // href: "/log/tender",
+      children: [
+        { name: "Чернетки", icon: ShieldCheck, href: "/log/tender/draft" },
+        { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
+        { name: "Активні", icon: ActivitySquare, href: "/log/tender/active" },
+        { name: "Аналіз", icon: BarChart, href: "/log/tender/analyze" },
+        { name: "Завершені", icon: BarChart, href: "/log/tender/closed" },
+        { name: "Архів", icon: ArchiveIcon, href: "/log/tender/archive" },
+      ],
     });
   }
 
@@ -223,7 +240,7 @@ export default function LogSidebar({
   };
 
   const footerLinks = [...defaultFooterLinks];
-  if (profile?.is_admin) {
+  if (profile?.role.is_admin) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
       { name: "Основна платформа", href: "/dashboard", icon: FileStack },

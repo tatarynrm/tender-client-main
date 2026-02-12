@@ -105,19 +105,29 @@ export const InputText = <T extends FieldValues>({
                 // 1. Стан Фокусу
                 "peer-focus:-top-2 peer-focus:left-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0 peer-focus:text-teal-600",
 
-                // 2. Стан, коли поле вже заповнене користувачем
+                // 2. Стан, коли поле вже заповнене (ДОДАНО КОЛІР)
                 "peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:translate-y-0",
+                "peer-[:not(:placeholder-shown)]:text-teal-600 dark:peer-[:not(:placeholder-shown)]:text-teal-500 peer-[:not(:placeholder-shown)]:font-bold",
 
                 // 3. Стан АВТОЗАПОВНЕННЯ (Autofill)
                 "peer-autofill:-top-2 peer-autofill:left-2 peer-autofill:text-[10px] peer-autofill:translate-y-0",
+                "peer-autofill:text-teal-600 dark:peer-autofill:text-teal-500",
 
-                // Стан помилки
-                hasError && "text-red-500 peer-focus:text-red-500",
+                // Стан помилки (має вищий пріоритет)
+                hasError &&
+                  "text-red-500 peer-focus:text-red-500 peer-[:not(:placeholder-shown)]:text-red-500",
               )}
             >
               {label}
               {required && (
-                <span className="ml-1 text-red-500 font-bold">*</span>
+                <span
+                  className={cn(
+                    "ml-1 font-bold",
+                    hasError ? "text-red-500" : "text-teal-600",
+                  )}
+                >
+                  *
+                </span>
               )}
             </label>
           )}

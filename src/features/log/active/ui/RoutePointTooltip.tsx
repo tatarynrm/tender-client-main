@@ -60,7 +60,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
             <div
               className={cn(
                 "rounded-full shrink-0 transition-all duration-300",
-                isMain ? "w-2.5 h-2.5" : "w-1.5 h-1.5",
+                isMain ? "w-2.5 h-2.5" : "w-2 h-2",
                 isLoad
                   ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
                   : "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]"
@@ -72,7 +72,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
                 "font-black truncate tracking-tight flex items-baseline gap-1",
                 isMain
                   ? "text-[16px] text-zinc-800 dark:text-zinc-100"
-                  : "text-[11px] text-zinc-400 font-bold"
+                  : "text-[13px] text-zinc-700 font-bold"
               )}
             >
               {point.city}

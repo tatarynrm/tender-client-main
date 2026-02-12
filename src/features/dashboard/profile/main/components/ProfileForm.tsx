@@ -31,9 +31,9 @@ const ProfileForm = () => {
   const form = useForm<TypeProfileSchema>({
     resolver: zodResolver(ProfileSchema),
     values: {
-      name: profile?.name || "",
+      name: profile?.person.name || "",
       email: profile?.email || "",
-      isTwoFactorEnabled: profile?.isTwoFactorEnabled || false,
+      isTwoFactorEnabled: false
     },
   });
   const { updateProfile, isLoadingUpdateProfile } = useUpdateProfileMutation();

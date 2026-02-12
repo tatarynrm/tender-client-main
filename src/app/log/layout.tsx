@@ -18,7 +18,7 @@ export default async function LogLayout({
 
   if (!profile) redirect("/auth/login");
   if (profile.is_blocked) redirect("/blocked");
-  if (!profile.is_ict) redirect("/dashboard");
+  if (!profile.role.is_ict) redirect("/dashboard");
 
   return (
     // <AuthCheckProvider profile={profile}>
@@ -26,7 +26,7 @@ export default async function LogLayout({
       <CRMSocketActionProvider>
         <ModalProvider>
           <RestTimerTracker />
-          <UpdatesIntroModal />
+
           {children}
         </ModalProvider>
       </CRMSocketActionProvider>

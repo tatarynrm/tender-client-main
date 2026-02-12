@@ -41,8 +41,6 @@ export default function SessionsPage() {
     return <div>Не вдалось завантажити сесії</div>;
   }
 
-  console.log(sessions, "SESSIONS");
-
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 text-black">
       <h1 className="text-3xl font-bold mb-6">Мої сесії</h1>

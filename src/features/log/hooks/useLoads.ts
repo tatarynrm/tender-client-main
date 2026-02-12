@@ -253,7 +253,7 @@ export const useLoads = (filters: TenderListFilters = {}) => {
         // Тепер TS знає, що це AxiosError і властивість response існує
         const message = err.response?.data?.message || "Виникла помилка";
         console.log(message, "DATA");
-        toast.message(message)
+        toast.message(message);
       } else {
         // Обробка звичайної помилки JS
         console.log(err.message);
@@ -332,6 +332,7 @@ export const useLoads = (filters: TenderListFilters = {}) => {
   return {
     loads: data?.content ?? [],
     pagination: data?.props?.pagination,
+    add_data: data?.add_data,
     isLoading: isReallyLoading,
     isSaving,
     isRefreshing,

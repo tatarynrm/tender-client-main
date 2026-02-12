@@ -13,7 +13,6 @@ import {
   Skeleton,
 } from "@/shared/components/ui";
 import { LogOut } from "lucide-react";
-import { IUser } from "@/features/auth/types";
 import { IUserProfile } from "@/shared/types/user.types";
 
 interface UserButtonProps {
@@ -30,7 +29,7 @@ const UserButton = ({ profile }: UserButtonProps) => {
       <DropdownMenuTrigger className="cursor-pointer">
         <Avatar>
           {/* <AvatarImage src={profile.picture} /> */}
-          <AvatarFallback>{profile.name.slice(0, 1)}</AvatarFallback>
+          <AvatarFallback>{profile.person.name?.slice(0, 1)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent className='w-40 align="end" cursor-pointer'>

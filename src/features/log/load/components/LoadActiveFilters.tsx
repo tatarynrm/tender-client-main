@@ -24,11 +24,12 @@ const labelMap: Record<string, string> = {
   tender_type: "Тип тендеру",
   manager: "Менеджер",
   company: "Компанія",
-  transit: "Транзит",
+  transit: "Вид перевезень",
   is_price_request: "Запит ціни",
   is_collective: "Збірний вантаж",
   my:'Мої',
   participate:'Я приймаю участь',
+  department: "Відділ",
 };
 
 export const LoadActiveFilters = ({
@@ -85,6 +86,12 @@ export const LoadActiveFilters = ({
       case "transit":
         return (
           dropdowns.transit_dropdown?.find(
+            (s: any) => String(s.ids) === String(value),
+          )?.value || value
+        );
+      case "department":
+        return (
+          dropdowns.department_dropdown?.find(
             (s: any) => String(s.ids) === String(value),
           )?.value || value
         );

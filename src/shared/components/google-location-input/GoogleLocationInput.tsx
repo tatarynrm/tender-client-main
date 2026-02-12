@@ -34,7 +34,6 @@ export const GoogleLocationInput = ({
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-
   const searchPlaces = useCallback(
     debounce(async (q: string) => {
       if (q.length < 3 || selected) {
@@ -64,7 +63,10 @@ export const GoogleLocationInput = ({
   // Закриття списку при кліку поза компонентом
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
         setResults([]);
       }
     };
@@ -90,14 +92,19 @@ export const GoogleLocationInput = ({
     <div className={cn("relative w-full", className)} ref={containerRef}>
       <div className="relative mt-1.5 group">
         <div className="relative flex items-center">
-          
           {/* ЛІВА ІКОНКА (MapPin або Loader) */}
-          <div className={cn(
-            "absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors z-30 pointer-events-none",
-            "text-zinc-400 group-focus-within:text-teal-600"
-          )}>
+          <div
+            className={cn(
+              "absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors z-30 pointer-events-none",
+              "text-zinc-400 group-focus-within:text-teal-600",
+            )}
+          >
             {isLoading ? (
-              <Loader2 size={18} strokeWidth={2.5} className="animate-spin text-teal-500" />
+              <Loader2
+                size={18}
+                strokeWidth={2.5}
+                className="animate-spin text-teal-500"
+              />
             ) : (
               <MapPin size={18} strokeWidth={2.5} />
             )}
@@ -118,7 +125,7 @@ export const GoogleLocationInput = ({
               inputVariants.base,
               "peer rounded-2xl !pl-11 pr-10 bg-white dark:bg-slate-900 relative z-20 h-[46px] transition-all duration-200",
               "border-zinc-200 dark:border-white/10 hover:border-zinc-300 focus:border-teal-600 focus:ring-[0.5px] focus:ring-teal-600",
-              disabled && inputVariants.disabled
+              disabled && inputVariants.disabled,
             )}
           />
 
@@ -139,15 +146,15 @@ export const GoogleLocationInput = ({
               className={cn(
                 "absolute transition-all duration-200 ease-in-out pointer-events-none z-40",
                 "px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[12px] font-medium",
-                
+
                 // Стан спокою
                 "left-10 top-1/2 -translate-y-1/2 text-zinc-400",
 
                 // Стан Floating
                 "peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0",
                 "peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:translate-y-0",
-                
-                "peer-focus:text-teal-600 dark:peer-focus:text-teal-500"
+
+                "peer-focus:text-teal-600 dark:peer-focus:text-teal-500",
               )}
             >
               {label}
@@ -165,7 +172,8 @@ export const GoogleLocationInput = ({
           <div className="max-h-[250px] overflow-y-auto custom-scrollbar">
             {results.map((r) => {
               const mainText = r.structured_formatting?.main_text || "";
-              const secondaryText = r.structured_formatting?.secondary_text || "";
+              const secondaryText =
+                r.structured_formatting?.secondary_text || "";
 
               return (
                 <li
@@ -174,12 +182,48 @@ export const GoogleLocationInput = ({
                   onClick={async () => {
                     try {
                       setIsLoading(true);
-                      const { data: location } = await api.post("/location/resolve", {
-                        placeId: r.place_id,
-                      });
-                      console.log(location,'LOCATION----- 180');
-                      
-                      const displayValue = location.city || mainText;
+interface Term {
+  offset: number;
+  value: string;
+}
+
+const terms: Term[] = r.terms || [];
+
+// спробуємо знайти поштовий код (формат XX-XXX або цифри)
+const postalCodeTerm = terms.find(t => /^\d{2,5}(-\d{2,4})?$/.test(t.value));
+const cityTerm = terms.find(t => t?.value && !postalCodeTerm?.value?.includes(t.value));
+const countryTerm = terms[2]?.value; // можна залишити як fallback
+
+const isUkraine = /україна/i.test(countryTerm || "");
+
+// формуємо displayName
+let displayName = "";
+
+if (cityTerm?.value) {
+  displayName = cityTerm.value.trim();
+
+  if (!isUkraine && postalCodeTerm?.value) {
+    displayName = `${cityTerm.value.trim()} ${postalCodeTerm.value.trim()}`;
+  }
+} else if (postalCodeTerm?.value) {
+  displayName = postalCodeTerm.value.trim();
+}
+
+
+
+                      const { data: location } = await api.post(
+                        "/location/resolve",
+                        {
+                          placeId: r.place_id,
+                          displayName,
+                        },
+                      );
+
+                      const displayValue =
+                        displayName ||
+                        mainText ||
+                        location.city ||
+                        location.country;
                       onChange(location);
                       setQuery(displayValue);
                       setSelected(displayValue);
@@ -192,7 +236,10 @@ export const GoogleLocationInput = ({
                   }}
                 >
                   <div className="mt-1">
-                    <Navigation size={14} className="text-zinc-400 group-hover:text-teal-500 transition-colors" />
+                    <Navigation
+                      size={14}
+                      className="text-zinc-400 group-hover:text-teal-500 transition-colors"
+                    />
                   </div>
                   <div className="flex flex-col">
                     <span className="font-bold text-[13px] text-zinc-700 dark:text-zinc-200 group-hover:text-teal-600 transition-colors">

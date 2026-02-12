@@ -77,9 +77,9 @@ export default function CreateCompanyPage() {
   const onSubmit: SubmitHandler<CompanyFormData> = async (data) => {
     try {
       const res = await api.post("/company/admin/create", data);
-      console.log("Company created:", res.data);
+
       toast.success("Успішне створення компанії");
-      console.log(res,'RESSSS!!!');
+ 
       
       // form.reset();
     } catch (error) {
@@ -99,7 +99,6 @@ export default function CreateCompanyPage() {
     getPreRegisterData();
   }, []);
 
-  console.log(preRegisterData, "preregister data");
 
   return (
     <div className="px-4 py-6 w-full overflow-y-auto">
