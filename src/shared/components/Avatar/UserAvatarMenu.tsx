@@ -62,17 +62,11 @@ export function UserAvatarMenu() {
       <details ref={detailsRef} className="relative list-none group">
         <summary className="list-none cursor-pointer outline-none">
           <div className="h-9 w-9 rounded-md border border-zinc-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center bg-white dark:bg-slate-900">
-            {/* {profile.avatar_path ? (
-              <img
-                src={profile.avatar_path}
-                alt={profile.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
+  
               <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
                 {avatarFallback}
               </span>
-            )} */}
+        
           </div>
         </summary>
 
