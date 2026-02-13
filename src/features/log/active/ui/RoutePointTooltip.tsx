@@ -72,7 +72,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
                 "font-black truncate tracking-tight flex items-baseline gap-1",
                 isMain
                   ? "text-[16px] text-zinc-800 dark:text-zinc-100"
-                  : "text-[13px] text-zinc-700 font-bold"
+                  : "text-[14px] text-gray-300 font-bold"
               )}
             >
               {point.city}
@@ -97,7 +97,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
                 Детальна інформація
               </span>
             </div>
-            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300 max-w-[220px] leading-snug">
+            <p className="text-xs font-medium text-zinc-600 dark:text-white max-w-[220px] leading-snug">
               {fullAddress}
             </p>
           </div>
