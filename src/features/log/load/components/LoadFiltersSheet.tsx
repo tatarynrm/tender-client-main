@@ -22,7 +22,6 @@ import {
   UserCircle2,
   CircleDollarSign,
   Handshake,
-  Check,
 } from "lucide-react";
 import NativeSelect from "@/shared/components/Select/NativeSelect";
 import { cn } from "@/shared/utils";
@@ -37,6 +36,7 @@ interface TenderFiltersProps<T extends Filters> {
   dropdowns?: Dropdowns;
   add_data?: ILoadAddData;
 }
+
 export const LoadFiltersSheet = <T extends Filters>({
   filters,
   setFilters,
@@ -48,12 +48,10 @@ export const LoadFiltersSheet = <T extends Filters>({
   const [open, setOpen] = useState(false);
 
   const updateField = (field: keyof T, value: any) => {
-    // Якщо значення порожнє, або дорівнює false (для чекбоксів/булевих кнопок)
-    // ми встановлюємо undefined, щоб параметр зник з URL
     const finalValue = value === "" || value === false ? undefined : value;
-
     setFilters((prev) => ({ ...prev, [field]: finalValue }));
   };
+
   const handleApply = () => {
     apply();
     setOpen(false);
@@ -76,25 +74,29 @@ export const LoadFiltersSheet = <T extends Filters>({
           Фільтри
         </Button>
       </SheetTrigger>
-
-      {/* Збільшена ширина до 600px */}
       <SheetContent
         side="left"
-        className="w-full sm:max-w-[600px] flex flex-col h-[100dvh] border-r shadow-2xl p-0"
+        className="w-full sm:max-w-[600px] min-h-screen flex flex-col p-0 border-r shadow-2xl"
       >
-        <SheetHeader className="p-4 border-b shrink-0 bg-white dark:bg-zinc-950 z-10">
+        {/* HEADER: shrink-0 — заголовок завжди зверху */}
+        <SheetHeader className="p-4 border-b bg-white dark:bg-zinc-950 shrink-0">
           <SheetTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-50">
             <Settings2 className="h-4 w-4 text-orange-500" />
             Параметри пошуку
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="flex-1">
-          {/* Грід: 1 колонка на мобільних, 2 колонки на екранах від 640px */}
+        {/* MIDDLE CONTENT: flex-1 розтягується, ScrollArea всередині скролить */}
+        <ScrollArea
+          className="
+    flex-1
+    overflow-y-auto
+    max-h-[calc(100vh-120px)]
+    sm:max-h-[calc(100vh-140px)]
+  "
+        >
           <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            {/* --- ЛІВА КОЛОНКА --- */}
             <div className="space-y-6">
-              {/* ПЕРСОНАЛЬНІ (на всю ширину своєї колонки) */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
                   <UserCircle2 className="h-3 w-3 text-zinc-400" />
@@ -160,7 +162,6 @@ export const LoadFiltersSheet = <T extends Filters>({
                 </div>
               </section>
 
-              {/* МАРШРУТ ЗВІДКИ */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2 pb-1 border-b border-orange-100/50">
                   <MapPin className="h-3.5 w-3.5 text-orange-500" />
@@ -200,7 +201,6 @@ export const LoadFiltersSheet = <T extends Filters>({
                 </div>
               </section>
 
-              {/* МАРШРУТ КУДИ */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2 pb-1 border-b border-orange-100/50">
                   <MapPin className="h-3.5 w-3.5 text-orange-500" />
@@ -241,9 +241,7 @@ export const LoadFiltersSheet = <T extends Filters>({
               </section>
             </div>
 
-            {/* --- ПРАВА КОЛОНКА --- */}
             <div className="space-y-6">
-              {/* ТРАНСПОРТ */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2 pb-1 border-b border-blue-100/50">
                   <Truck className="h-3.5 w-3.5 text-blue-500" />
@@ -268,7 +266,6 @@ export const LoadFiltersSheet = <T extends Filters>({
                 />
               </section>
 
-              {/* КОНТРАГЕНТИ */}
               <section className="space-y-3">
                 <div className="flex items-center gap-2 pb-1 border-b border-zinc-100/50">
                   <Settings2 className="h-3.5 w-3.5 text-zinc-500" />
@@ -307,20 +304,21 @@ export const LoadFiltersSheet = <T extends Filters>({
           </div>
         </ScrollArea>
 
-        <SheetFooter className="p-4 border-t bg-gray-50 dark:bg-zinc-900 shrink-0">
-          <div className="flex items-center gap-3 w-full">
+        {/* FOOTER: shrink-0 — завжди притиснутий до низу і не зникає */}
+        <SheetFooter className="sticky bottom-0 z-20 p-4 border-t bg-gray-50 dark:bg-zinc-900">
+          <div className="flex flex-row items-center gap-3 w-full">
             <Button
-              variant="ghost"
+              variant="outline"
               className="flex-1 h-10 text-xs"
               onClick={handleReset}
             >
-              Очистити все
+              Очистити
             </Button>
             <Button
               className="flex-[2] bg-orange-500 hover:bg-orange-600 h-10 text-xs font-bold rounded-xl"
               onClick={handleApply}
             >
-              Застосувати фільтри
+              Застосувати
             </Button>
           </div>
         </SheetFooter>
