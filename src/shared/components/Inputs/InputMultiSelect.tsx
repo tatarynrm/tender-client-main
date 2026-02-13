@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useController, Control, FieldValues, Path } from "react-hook-form";
 import { cn } from "@/shared/utils";
-import { Truck, X, ChevronDown, Check } from "lucide-react";
+import { Truck, X, ChevronDown, Check, LucideIcon } from "lucide-react";
 import { inputVariants } from "./styles/styles";
 
 interface Option {
@@ -16,7 +16,8 @@ interface Props<T extends FieldValues> {
   control: Control<T>;
   label: string;
   options: Option[];
-  valueKey?: string; // Ключ об'єкта, наприклад "ids_trailer_type"
+  valueKey?: string;
+  icon?: LucideIcon; // Новий проп для іконки
   required?: boolean;
   className?: string;
 }
@@ -27,6 +28,7 @@ export const InputMultiSelect = <T extends FieldValues>({
   label,
   options,
   valueKey = "ids_trailer_type",
+  icon: Icon = Truck, // Якщо не передано, використовуємо Truck
   required = false,
   className,
 }: Props<T>) => {
@@ -38,7 +40,6 @@ export const InputMultiSelect = <T extends FieldValues>({
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Отримуємо масив значень (ID) з масиву об'єктів у формі
   const selectedValues = (field.value || []).map((v: any) => v[valueKey]);
 
   useEffect(() => {
@@ -65,9 +66,9 @@ export const InputMultiSelect = <T extends FieldValues>({
     }
 
     field.onChange(currentValues);
-
-    // ДОДАЙТЕ ЦЕЙ РЯДОК:
-    setTimeout(() => setOpen(false), 150);
+    // Для мультиселекту зазвичай краще не закривати список одразу, 
+    // але я залишив вашу логіку з setTimeout, якщо вона вам потрібна:
+    // setTimeout(() => setOpen(false), 150); 
   };
 
   const removeOption = (e: React.MouseEvent, val: string | number) => {
@@ -88,19 +89,18 @@ export const InputMultiSelect = <T extends FieldValues>({
       ref={containerRef}
     >
       <div className="relative mt-1.5 group">
-        {/* ІКОНКА ТРАНСПОРТУ */}
+        {/* ДИНАМІЧНА ІКОНКА */}
         <div
           className={cn(
             "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
-            open
+            open || selectedValues.length > 0
               ? "text-teal-600"
               : "text-zinc-400 group-focus-within:text-teal-600",
           )}
         >
-          <Truck size={18} strokeWidth={2.2} />
+          <Icon size={18} strokeWidth={2.2} />
         </div>
 
-        {/* ГОЛОВНИЙ КОНТЕЙНЕР ІНПУТУ */}
         <div
           onClick={() => setOpen(!open)}
           className={cn(
@@ -113,7 +113,6 @@ export const InputMultiSelect = <T extends FieldValues>({
             error ? "border-red-500 ring-red-500" : "",
           )}
         >
-          {/* ОБРАНІ ЕЛЕМЕНТИ (BADGES) */}
           {selectedValues.length > 0 ? (
             selectedValues.map((val: any) => {
               const option = options.find((o) => o.value === val);
@@ -137,7 +136,6 @@ export const InputMultiSelect = <T extends FieldValues>({
             <span className="text-transparent">Placeholder</span>
           )}
 
-          {/* ПРАВА ЧАСТИНА: ОЧИСТИТИ ТА СТРІЛКА */}
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {selectedValues.length > 0 && (
               <button
@@ -160,7 +158,6 @@ export const InputMultiSelect = <T extends FieldValues>({
           </div>
         </div>
 
-        {/* ЛЕЙБЛ */}
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
@@ -181,7 +178,6 @@ export const InputMultiSelect = <T extends FieldValues>({
         </label>
       </div>
 
-      {/* ВИПАДАЮЧИЙ СПИСОК */}
       {open && (
         <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="max-h-[250px] overflow-y-auto p-1.5 custom-scrollbar">
@@ -219,7 +215,6 @@ export const InputMultiSelect = <T extends FieldValues>({
         </div>
       )}
 
-      {/* ПОВІДОМЛЕННЯ ПРО ПОМИЛКУ */}
       {error && (
         <p className="mt-1.5 ml-3 text-[10px] uppercase text-red-500 font-bold tracking-wider animate-in fade-in slide-in-from-left-1">
           {error.message}

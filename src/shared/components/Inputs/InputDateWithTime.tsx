@@ -54,7 +54,6 @@ export const InputDateWithTime = <T extends FieldValues>({
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Працюємо з об'єктом Date
   const value = field.value as unknown;
 
   const selectedDate =
@@ -65,6 +64,7 @@ export const InputDateWithTime = <T extends FieldValues>({
         : null;
 
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
+
   useLayoutEffect(() => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
@@ -87,13 +87,22 @@ export const InputDateWithTime = <T extends FieldValues>({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleTimeChange = (type: "hours" | "minutes", value: number) => {
+  const handleTimeChange = (type: "hours" | "minutes", val: number) => {
     const baseDate = selectedDate || new Date();
+    
+    // ЛОГІКА TOGGLE: якщо клікаємо на вже обраний час — скидаємо в 0
+    const isCurrentlySelected = type === "hours" 
+      ? getHours(baseDate) === val 
+      : getMinutes(baseDate) === val;
+
+    const newValue = isCurrentlySelected ? 0 : val;
+
     const newDate =
       type === "hours"
-        ? setHours(baseDate, value)
-        : setMinutes(baseDate, value);
-    field.onChange(newDate); // Передаємо об'єкт Date
+        ? setHours(baseDate, newValue)
+        : setMinutes(baseDate, newValue);
+        
+    field.onChange(newDate);
   };
 
   const renderDays = () => {
@@ -112,14 +121,10 @@ export const InputDateWithTime = <T extends FieldValues>({
         <div
           key={day.toString()}
           onClick={() => {
-            const hours = selectedDate
-              ? getHours(selectedDate)
-              : getHours(new Date());
-            const mins = selectedDate
-              ? getMinutes(selectedDate)
-              : getMinutes(new Date());
+            const hours = selectedDate ? getHours(selectedDate) : 0;
+            const mins = selectedDate ? getMinutes(selectedDate) : 0;
             const combinedDate = setMinutes(setHours(day, hours), mins);
-            field.onChange(combinedDate); // Передаємо об'єкт Date
+            field.onChange(combinedDate);
           }}
           className={cn(
             "h-8 w-8 flex items-center justify-center text-[12px] rounded-lg cursor-pointer transition-all",
@@ -171,9 +176,16 @@ export const InputDateWithTime = <T extends FieldValues>({
               !field.value && "text-transparent",
             )}
           >
-            {field.value
-              ? format(new Date(field.value), "dd.MM.yyyy HH:mm")
-              : "Обрати дату"}
+            {field.value ? (
+              (() => {
+                const d = new Date(field.value);
+                // Якщо 00:00 — показуємо тільки дату
+                const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+                return format(d, hasTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy");
+              })()
+            ) : (
+              "Обрати дату"
+            )}
           </span>
 
           {field.value && (

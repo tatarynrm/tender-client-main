@@ -99,6 +99,10 @@ export interface ITender {
 
   cost_start: number;
 
+  ref_temperature_from: number | null;
+
+  ref_temperature_to: number | null;
+
   tender_status: string;
   valut_name?: string;
 

@@ -11,11 +11,8 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-  Input,
-  Textarea,
   Button,
   Switch,
-  Label,
   SelectTrigger,
   SelectValue,
   Select,
@@ -25,10 +22,24 @@ import {
 
 import api from "@/shared/api/instance.api";
 
-import { Box, Boxes, Car, Minus, Notebook, Plus, Weight } from "lucide-react";
-import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
+import {
+  Box,
+  Boxes,
+  Calendar,
+  Car,
+  DockIcon,
+  DollarSign,
+  FileText,
+  MapPin,
+  Minus,
+  Notebook,
+  Plus,
+  Truck,
+  Weight,
+} from "lucide-react";
+
 import { useRouter } from "next/navigation";
-import DateTimePicker from "@/shared/components/Inputs/DatePicker";
+
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { InputNumber } from "@/shared/components/Inputs/InputNumber";
@@ -88,16 +99,18 @@ const tenderFormSchema = z
     request_price: z.boolean(),
     without_vat: z.boolean(),
     tender_route: z.array(routeSchema).min(1),
-    tender_trailer: z.array(trailerSchema).min(1),
-    tender_load: z.array(loadSchema).min(1),
+    tender_trailer: z.array(trailerSchema).min(1, "Вкажіть тип транспорту"),
+    tender_load: z.array(loadSchema).min(1, "Вкажіть тип завантаження"),
     tender_permission: z.array(tenderPermissionSchema).optional(),
-    company_name: z.string().optional(),
+    company_name: z.string().optional().nullable(),
     load_info: z.string().optional(),
     volume: z.number({ message: `Вкажіть об'єм` }),
     weight: z.number({ message: "Вкажіть вагу" }),
     palet_count: z.number({ message: "Вкажіть кількість палет" }),
     ids_valut: z.string().optional(),
     cost_redemption: z.number().optional(),
+    ref_temperature_to: z.number().optional().nullable(),
+    ref_temperature_from: z.number().optional().nullable(),
     time_start: z.date({
       message: "Вкажіть дату початку тендеру",
     }),
@@ -105,7 +118,8 @@ const tenderFormSchema = z
       .date({
         message: "Вкажіть дату завершення тендеру",
       })
-      .optional(),
+      .optional()
+      .nullable(),
 
     date_load: z.date({
       message: "Вкажіть дату завантаження",
@@ -114,29 +128,38 @@ const tenderFormSchema = z
     date_unload: z.date().optional().nullable(),
   })
   .superRefine((data, ctx) => {
-    /* ------- GENERAL ------- */
-    if (data.ids_type === "AUCTION") {
-      if (!data.price_start) {
+    // 1. Якщо РЕДУКЦІОН або РЕДУКЦІОН З ВИКУПОМ
+    if (
+      data.ids_type === "REDUCTION" ||
+      data.ids_type === "REDUCTION_WITH_REDEMPTION"
+    ) {
+      if (!data.price_start || data.price_start <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Стартова ціна обов'язкова",
+          message: "Стартова ціна обов'язкова для редукціону",
           path: ["price_start"],
         });
       }
-      if (!data.ids_valut) {
+    }
+
+    // 2. Якщо тільки РЕДУКЦІОН З ВИКУПОМ
+    if (data.ids_type === "REDUCTION_WITH_REDEMPTION") {
+      if (!data.cost_redemption || data.cost_redemption <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Валюта обов'язкова",
-          path: ["ids_valut"],
+          message: "Ціна викупу обов'язкова",
+          path: ["cost_redemption"],
         });
       }
-      if (!data.price_step) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Крок ставки обов'язковий",
-          path: ["price_step"],
-        });
-      }
+    }
+
+    // 3. Валюта потрібна для всіх, де є ціна (за бажанням можна додати умови)
+    if (data.ids_type !== "AUCTION" && !data.ids_valut) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Валюта обов'язкова",
+        path: ["ids_valut"],
+      });
     }
   });
 
@@ -277,21 +300,6 @@ export default function TenderSaveForm({
     getTruckList();
   }, []);
 
-  const loadOptionsFromApi = (url: string) => async (inputValue: string) => {
-    if (!inputValue) return [];
-    try {
-      const response = await api.get<any>(
-        `${url}/${encodeURIComponent(inputValue)}`,
-      );
-      return response.data.map((company: any) => ({
-        value: company.id,
-        label: company.company_name,
-      }));
-    } catch {
-      return [];
-    }
-  };
-
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
     console.log(values, "VALUES");
 
@@ -347,345 +355,412 @@ export default function TenderSaveForm({
 
   console.log(errors, "ERRRORS");
 
+  const tenderTrailer = watch("tender_trailer");
+  const isOnlyRef =
+    tenderTrailer.length === 1 && tenderTrailer[0].ids_trailer_type === "REF";
+
+  useEffect(() => {
+    if (!isOnlyRef) {
+      setValue("ref_temperature_from", null);
+      setValue("ref_temperature_to", null);
+    }
+  }, [isOnlyRef, setValue]);
+
   return (
-    <Card className=" mx-auto p-3 mb-20">
+    <Card className="mx-auto shadow-lg border-t-4 border-t-blue-600">
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold text-slate-800">
+          {isEdit ? "Редагування тендеру" : "Створення нового тендеру"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Заповніть деталі перевезення та умови аукціону
+        </p>
+      </div>
+
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <fieldset disabled={isSubmitting} className="space-y-4">
-            <div className="flex justify-between">
-              <FormField
-                control={control}
-                name="ids_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Тип тендеру</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Оберіть тип" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {tenderType.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="ids_carrier_rating"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Рейтинг перевізника</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Оберіть тип" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rating.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="flex justify-between">
-              <FormField
-                control={form.control}
-                name="time_start"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DateTimePicker
-                        label="Початок тендеру"
-                        onChange={(date) => field.onChange(date)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="time_end"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <DateTimePicker
-                        label="Кінець тендеру"
-                        onChange={(date) => field.onChange(date)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-              <InputDateWithTime
-                name="date_load"
-                control={control}
-                label="Дата завантаження з"
-              />
-
-              <InputDateWithTime
-                name="date_load2"
-                control={control}
-                label="Дата завантаження по"
-              />
-
-              <InputDateWithTime
-                name="date_unload"
-                control={control}
-                label="Дата розвантаження"
-              />
-            </div>
-            {/* Routes */}
-            <div className="flex flex-col gap-4">
-              {routeFields.map((field, idx) => (
-                <div key={field.id} className="flex items-center gap-2 mb-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-8">
+          <fieldset disabled={isSubmitting} className="space-y-8">
+            {/* SECTION 1: Основна інформація */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50/50 rounded-xl border">
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2 text-blue-700 text-sm uppercase tracking-wider">
+                  <Box className="w-4 h-4" /> Основна інформація
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={control}
-                    name={`tender_route.${idx}.address`}
-                    render={({ field: f }) => (
-                      <FormItem className="flex-1">
-                        <FormLabel>{`Адреса #${idx + 1}`}</FormLabel>
-                        <FormControl>
-                          <GoogleLocationInput
-                            value={f.value ?? ""}
-                            onChange={(location) => {
-                              console.log(location, "Location");
-
-                              // формуємо addr для input
-                              const addr = location.street
-                                ? `${location.street}${
-                                    location.house ? `, ${location.house}` : ""
-                                  }`
-                                : location.city || "";
-
-                              // оновлюємо input field
-                              f.onChange(addr);
-                              setValue(`tender_route.${idx}.lat`, location.lat);
-                              setValue(`tender_route.${idx}.lon`, location.lng);
-                              // оновлюємо country/city в формі
-                              setValue(
-                                `tender_route.${idx}.country`,
-                                location.countryCode || "",
-                              );
-                              setValue(
-                                `tender_route.${idx}.city`,
-                                location.city || "",
-                              );
-
-                              // очищаємо помилки
-                              clearErrors(`tender_route.${idx}.address`);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage>
-                          {errors?.tender_route?.[idx]?.address?.message}
-                        </FormMessage>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={control}
-                    name={`tender_route.${idx}.ids_point`}
-                    render={({ field: f }) => (
+                    name="ids_type"
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Тип точки</FormLabel>
-                        <Select value={f.value} onValueChange={f.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Виберіть тип" />
+                        <FormLabel>Тип тендеру</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Оберіть тип" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="LOAD_FROM">
-                              Завантаження
-                            </SelectItem>
-                            <SelectItem value="CUSTOM_UP">
-                              Замитнення
-                            </SelectItem>
-                            <SelectItem value="CUSTOM_DOWN">
-                              Розмитнення
-                            </SelectItem>
-                            <SelectItem value="LOAD_TO">
-                              Розвантаження
-                            </SelectItem>
-                            <SelectItem value="BORDER">Кордон</SelectItem>
+                            {tenderType.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>
+                                {t.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  {/* показуємо тільки якщо тип — завантаження або розвантаження */}
-                  {["LOAD_FROM", "LOAD_TO"].includes(
-                    watch(`tender_route.${idx}.ids_point`),
-                  ) && (
-                    <>
-                      <FormField
-                        control={control}
-                        name={`tender_route.${idx}.customs`}
-                        render={({ field }) => (
-                          <FormItem className="flex items-center gap-2">
-                            <Switch
-                              id={`tender_route.${idx}.customs`}
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                            <FormLabel htmlFor={`tender_route.${idx}.customs`}>
-                              На місці ?
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      <MyTooltip
-                        text="Вказувати якщо замитнення або розмитнення по місцях"
-                        important
-                      />
-                    </>
-                  )}
-
-                  {idx > 0 && (
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeRoute(idx)}
-                    >
-                      <Minus />
-                    </Button>
-                  )}
+                  <FormField
+                    control={control}
+                    name="ids_carrier_rating"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Рейтинг</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Рейтинг" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {rating.map((t) => (
+                              <SelectItem key={t.value} value={t.value}>
+                                {t.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  appendRoute({
-                    address: "",
-                    ids_point: "LOAD_FROM",
-                    order_num: routeFields.length + 1,
-                    customs: false,
-                    city: "",
-                  })
-                }
-              >
-                <Plus />
-              </Button>
-            </div>
-            <InputText
-              icon={Box}
-              name="cargo"
-              control={control}
-              label="Вантаж"
-            />
-            <InputTextarea
-              icon={Notebook}
-              name="notes"
-              control={control}
-              label="Примітки"
-            />
-
-            <InputAsyncSelectCompany
-              name="id_owner_company"
-              control={control}
-              label="Компанія"
-              initialLabel={companyLabel}
-              onEntityChange={(c) => setCompanyLabel(c?.name || "")}
-            />
-            {/* Trailer */}
-
-            <InputMultiSelect
-              name="tender_trailer"
-              control={control}
-              label="Тип транспорту"
-              options={truckList}
-              required
-            />
-
-            <InputMultiSelect
-              name="tender_load" // тепер тут буде просто ["BACK", "TOP"]
-              control={control}
-              label="Тип завантаження"
-              options={loadList}
-              required
-              valueKey="ids_load_type" // вказуємо, що значення для форми береться з цього ключа в об'єкті
-            />
-
-            {/* Load Permission Dropdown */}
-            <InputMultiSelect
-              name="tender_permission" // тепер тут буде просто ["BACK", "TOP"]
-              control={control}
-              label="Тип дозволу"
-              options={tenderPermission}
-              required
-              valueKey="ids_permission_type" // вказуємо, що значення для форми береться з цього ключа в об'єкті
-            />
-
-            {/* Options */}
-            <div className="flex gap-4 flex-wrap">
-              <InputSwitch
-                control={control}
-                name="without_vat"
-                label="Без ПДВ"
-              />
-            </div>
-
-            {/* Car count / Cost / price_step */}
-            <div className="flex gap-4 flex-wrap">
-              <InputNumber
-                control={control}
-                name="car_count"
-                label="К-сть авто"
-                icon={Car}
-                placeholder="1 Авто"
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <InputNumber
+                <InputAsyncSelectCompany
+                  name="id_owner_company"
                   control={control}
-                  name="weight"
-                  label="Вага"
-                  icon={Weight}
-                  placeholder="22 Тон"
-                />
-
-                <InputNumber
-                  control={control}
-                  name="volume"
-                  label="Об’єм"
-                  icon={Box}
-                  placeholder="86 Куб"
-                />
-
-                <InputNumber
-                  control={control}
-                  name="palet_count"
-                  label="К-сть палет"
-                  icon={Boxes}
-                  placeholder="32 Палет"
+                  label="Компанія замовник"
+                  initialLabel={companyLabel}
+                  onEntityChange={(c) => setCompanyLabel(c?.name || "")}
                 />
               </div>
 
-              <div className="border-b border-red-200 w-full h-[3px]"></div>
-              {/* CONDITIONAL FIELDS */}
-              {typeValue === "AUCTION" && (
-                <>
-                  <InputFinance
-                    name="price_start"
+              {/* SECTION 2: Дати тендеру */}
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2 text-blue-700 text-sm uppercase tracking-wider">
+                  <Calendar className="w-4 h-4" /> Терміни проведення
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <InputDateWithTime
+                    name="time_start"
                     control={control}
-                    label="Стартова ціна"
+                    label="Початок"
                   />
+                  <InputDateWithTime
+                    name="time_end"
+                    control={control}
+                    label="Кінець"
+                  />
+                </div>
+                <div className="pt-2 italic text-xs text-muted-foreground bg-blue-50 p-2 rounded">
+                  Вкажіть час, протягом якого перевізники зможуть подавати
+                  ставки.
+                </div>
+              </div>
+            </div>
+            {/* SECTION: Дати завантаження та розвантаження (ПЕРЕД МАРШРУТОМ) */}
+            <div className="space-y-4 p-4 bg-emerald-50/20 rounded-xl border border-emerald-100">
+              <h3 className="font-semibold flex items-center gap-2 text-emerald-700 text-sm uppercase tracking-wider">
+                <Calendar className="w-4 h-4" /> Графік логістики
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <InputDateWithTime
+                  name="date_load"
+                  control={control}
+                  label="Завантаження (з)"
+                />
+                <InputDateWithTime
+                  name="date_load2"
+                  control={control}
+                  label="Завантаження (до)"
+                />
+                <InputDateWithTime
+                  name="date_unload"
+                  control={control}
+                  label="Розвантаження (план)"
+                />
+              </div>
+            </div>
+            {/* SECTION 3: Маршрут (Динамічний) */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-semibold flex items-center gap-2 text-orange-700 text-sm uppercase tracking-wider">
+                  <MapPin className="w-4 h-4" /> Маршрут та точки
+                </h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1 border-orange-200 text-orange-700 hover:bg-orange-50"
+                  onClick={() =>
+                    appendRoute({
+                      address: "",
+                      ids_point: "LOAD_TO",
+                      order_num: routeFields.length + 1,
+                      customs: false,
+                      city: "",
+                    })
+                  }
+                >
+                  <Plus className="w-4 h-4" /> Додати точку
+                </Button>
+              </div>
+
+              <div className="space-y-3 bg-orange-50/20 p-4 rounded-xl border border-orange-100">
+                {routeFields.map((field, idx) => (
+                  <div
+                    key={field.id}
+                    className="flex flex-wrap md:flex-nowrap items-end gap-3 p-3 bg-white rounded-lg border shadow-sm relative"
+                  >
+                    <div className="flex-1 min-w-[250px]">
+                      <FormField
+                        control={control}
+                        name={`tender_route.${idx}.address`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">{`Адреса #${idx + 1}`}</FormLabel>
+                            <FormControl>
+                              <GoogleLocationInput
+                                value={f.value ?? ""}
+                                onChange={(location) => {
+                                  const addr = location.street
+                                    ? `${location.street}${location.house ? `, ${location.house}` : ""}`
+                                    : location.city || "";
+                                  f.onChange(addr);
+                                  setValue(
+                                    `tender_route.${idx}.lat`,
+                                    location.lat,
+                                  );
+                                  setValue(
+                                    `tender_route.${idx}.lon`,
+                                    location.lng,
+                                  );
+                                  setValue(
+                                    `tender_route.${idx}.country`,
+                                    location.countryCode || "",
+                                  );
+                                  setValue(
+                                    `tender_route.${idx}.city`,
+                                    location.city || "",
+                                  );
+                                  clearErrors(`tender_route.${idx}.address`);
+                                }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="w-full md:w-[180px]">
+                      <FormField
+                        control={control}
+                        name={`tender_route.${idx}.ids_point`}
+                        render={({ field: f }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">
+                              Тип точки
+                            </FormLabel>
+                            <Select value={f.value} onValueChange={f.onChange}>
+                              <SelectTrigger className="h-10">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="LOAD_FROM">
+                                  Завантаження
+                                </SelectItem>
+                                <SelectItem value="CUSTOM_UP">
+                                  Замитнення
+                                </SelectItem>
+                                <SelectItem value="CUSTOM_DOWN">
+                                  Розмитнення
+                                </SelectItem>
+                                <SelectItem value="LOAD_TO">
+                                  Розвантаження
+                                </SelectItem>
+                                <SelectItem value="BORDER">Кордон</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {["LOAD_FROM", "LOAD_TO"].includes(
+                      watch(`tender_route.${idx}.ids_point`),
+                    ) && (
+                      <div className="flex items-center gap-2 pb-2 px-2 border-l h-10">
+                        <FormField
+                          control={control}
+                          name={`tender_route.${idx}.customs`}
+                          render={({ field }) => (
+                            <FormItem className="flex items-center gap-2">
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                              <FormLabel className="text-xs cursor-pointer">
+                                Митниця
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+
+                    {idx > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => removeRoute(idx)}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 4: Деталі вантажу та транспорту */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-4">
+                <h3 className="font-semibold flex items-center gap-2 text-emerald-700 text-sm uppercase tracking-wider">
+                  <Truck className="w-4 h-4" /> Параметри перевезення
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InputText
+                    icon={Box}
+                    name="cargo"
+                    control={control}
+                    label="Назва вантажу"
+                  />
+                  <InputMultiSelect
+                    name="tender_trailer"
+                    control={control}
+                    label="Тип транспорту"
+                    options={truckList}
+                    required
+                  />
+                  {isOnlyRef && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <InputNumber
+                        name="ref_temperature_from"
+                        control={control}
+                        label="Температура від (°C)"
+                        required
+                        minus
+                      />
+                      <InputNumber
+                        name="ref_temperature_to"
+                        control={control}
+                        label="Температура до (°C)"
+                        required
+                        minus
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <InputMultiSelect
+                    name="tender_load"
+                    control={control}
+                    label="Тип завантаження"
+                    options={loadList}
+                    valueKey="ids_load_type"
+                    required
+                  />
+                  <InputMultiSelect
+                    name="tender_permission"
+                    control={control}
+                    label="Дозволи"
+                    icon={FileText}
+                    options={tenderPermission}
+                    valueKey="ids_permission_type"
+                    required
+                  />
+                </div>
+                <InputTextarea
+                  icon={Notebook}
+                  name="notes"
+                  control={control}
+                  label="Додаткові примітки"
+                />
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border space-y-4">
+                <h3 className="font-semibold text-slate-700 text-sm uppercase tracking-wider">
+                  Габарити
+                </h3>
+                <InputNumber
+                  control={control}
+                  name="car_count"
+                  label="К-сть авто"
+                  icon={Car}
+                />
+                <InputNumber
+                  control={control}
+                  name="weight"
+                  label="Вага (т)"
+                  icon={Weight}
+                />
+                <InputNumber
+                  control={control}
+                  name="volume"
+                  label="Об'єм (м³)"
+                  icon={Box}
+                />
+                <InputNumber
+                  control={control}
+                  name="palet_count"
+                  label="Палети (шт)"
+                  icon={Boxes}
+                />
+              </div>
+            </div>
+
+            {/* SECTION 5: Фінанси */}
+            {(typeValue === "AUCTION" ||
+              typeValue === "REDUCTION" ||
+              typeValue === "REDUCTION_WITH_REDEMPTION") && (
+              <div className="p-4 bg-red-50/30 rounded-xl border border-red-100">
+                <h3 className="font-semibold flex items-center gap-2 text-red-700 text-sm uppercase tracking-wider mb-4">
+                  <DollarSign className="w-4 h-4" /> Фінансові умови
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Поле ЦІНА з'являється тільки для РЕДУКЦІОНІВ */}
+                  {(typeValue === "REDUCTION" ||
+                    typeValue === "REDUCTION_WITH_REDEMPTION") && (
+                    <InputFinance
+                      name="price_start" // Використовуємо як основну ціну
+                      control={control}
+                      label="Ціна"
+                    />
+                  )}
+
+                  {/* Поле СТАРТОВА ЦІНА тільки для АУКЦІОНУ */}
+                  {typeValue === "AUCTION" && (
+                    <InputFinance
+                      name="price_start"
+                      control={control}
+                      label="Старт"
+                    />
+                  )}
+
                   <SelectFinance
                     name="ids_valut"
                     control={control}
@@ -693,66 +768,66 @@ export default function TenderSaveForm({
                     options={valut.slice(0, 4)}
                   />
 
+                  {/* Крок ставки зазвичай потрібен тільки для аукціону або редукціону (опціонально) */}
                   <InputFinance
                     name="price_step"
                     control={control}
-                    label="Крок ставки"
+                    label="Крок"
                   />
 
-                  <InputFinance
-                    name="cost_redemption"
+                  {/* Поле ВИКУП тільки для редукціону з викупом або аукціону (якщо передбачено логікою) */}
+                  {typeValue === "REDUCTION_WITH_REDEMPTION" && (
+                    <InputFinance
+                      name="cost_redemption"
+                      control={control}
+                      label="Викуп"
+                      required // Можна додати візуальну помітку
+                    />
+                  )}
+                </div>
+
+                <div className="mt-4 border-t pt-4">
+                  <InputSwitch
                     control={control}
-                    label="Ціна викупу"
+                    name="without_vat"
+                    label="Ставка без ПДВ"
                   />
-                </>
-              )}
-            </div>
-            <div className="flex items-center gap-3 bg-blue-500/5 px-4 py-2 rounded-xl border border-blue-500/10">
-              <InputSwitch
-                id="is_next"
-                checked={isNextTender}
-                label="Ще один тендер після збереження"
-                onCheckedChange={setIsNextTender}
-                className="data-[state=checked]:bg-blue-600"
-              />
-              <MyTooltip text="Форма не буде очищена після збереження" />
-            </div>
-            {/* Submit */}
-            <div className="flex justify-end gap-3 pt-4">
-              <AppButton
-                type="submit"
-                disabled={isSubmitting}
-                className="min-w-[150px]"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Збереження...
-                  </span>
-                ) : isEdit ? (
-                  "Оновити тендер"
-                ) : (
-                  "Створити тендер"
-                )}
-              </AppButton>
+                </div>
+              </div>
+            )}
+
+            {/* Footer actions */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-6 border-t">
+              <div className="flex items-center gap-3 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+                <InputSwitch
+                  id="is_next"
+                  checked={isNextTender}
+                  onCheckedChange={setIsNextTender}
+                  label="Створити наступний після збереження"
+                />
+              </div>
+
+              <div className="flex gap-3 w-full md:w-auto">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => form.reset()}
+                  className="flex-1 md:flex-none"
+                >
+                  Очистити
+                </Button>
+                <AppButton
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="min-w-[200px] flex-1 md:flex-none shadow-md"
+                >
+                  {isSubmitting
+                    ? "Збереження..."
+                    : isEdit
+                      ? "Оновити тендер"
+                      : "Створити тендер"}
+                </AppButton>
+              </div>
             </div>
           </fieldset>
         </form>

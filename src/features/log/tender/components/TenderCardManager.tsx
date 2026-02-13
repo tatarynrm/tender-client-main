@@ -15,6 +15,9 @@ import {
   MapPin,
   Weight,
   Box,
+  ThermometerSnowflake,
+  ThermometerSun,
+  Snowflake,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -62,9 +65,25 @@ export function TenderCardManagers({
 
   const stars =
     Number(cargo.rating) === 2 ? 5 : Number(cargo.rating) === 1 ? 3 : 1;
+  const isRef = cargo?.tender_trailer?.some(
+    (t) => t.ids_trailer_type === "REF",
+  );
 
+  // Допоміжна функція для знаків (якщо ще не додали)
+  const formatTemp = (temp: number | null | undefined) => {
+    if (temp === null || temp === undefined) return "";
+    return temp > 0 ? `+${temp}` : temp.toString();
+  };
   return (
     <Card className="w-full border-slate-200/60 dark:border-white/5 bg-white dark:bg-slate-900/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl overflow-hidden mb-2">
+      {/* Декоративні сніжинки для REF режиму */}
+      {isRef && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+          <Snowflake className="absolute -top-1 -right-1 text-blue-400/10 w-12 h-12 rotate-12" />
+          <Snowflake className="absolute top-4 -right-3 text-blue-500/5 w-8 h-8 -rotate-12" />
+          <Snowflake className="absolute -bottom-2 right-10 text-blue-300/10 w-10 h-10 rotate-45" />
+        </div>
+      )}
       {/* HEADER - Більш вузький */}
       <div className="bg-slate-50 dark:bg-white/[0.03] px-3 py-1.5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
         <div className="flex items-center gap-3">
@@ -170,7 +189,7 @@ export function TenderCardManagers({
                   Транзит
                 </p>
                 {transitPoints.length > 0 ? (
-                  transitPoints.slice(0, 2).map((p) => (
+                  transitPoints.map((p) => (
                     <div
                       key={p.id}
                       className="flex flex-col mb-1 last:mb-0 leading-tight"
@@ -265,17 +284,46 @@ export function TenderCardManagers({
             </div>
 
             <div className="flex flex-wrap gap-1">
-              {cargo.tender_trailer?.slice(0, 2).map((t, i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "px-1.5 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded text-[10px] font-bold uppercase border border-slate-200 dark:border-white/5",
-                    label,
-                  )}
-                >
-                  {t.trailer_type_name}
-                </span>
-              ))}
+              {cargo.tender_trailer?.map((t, i) => {
+                const isRef = t.ids_trailer_type === "REF";
+                const hasTemp =
+                  cargo?.ref_temperature_from !== undefined ||
+                  cargo?.ref_temperature_to !== undefined;
+
+                return (
+                  <div key={i} className="flex items-center gap-1">
+                    {/* Назва причепа */}
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border transition-colors",
+                        isRef
+                          ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
+                          : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-white/5 dark:border-white/5 dark:text-slate-400",
+                        label,
+                      )}
+                    >
+                      {t.trailer_type_name}
+                    </span>
+
+                    {/* Температурний режим (тільки для REF) */}
+                    {isRef && hasTemp && (
+                      <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-full animate-in fade-in zoom-in duration-300">
+                        {/* Іконка: сніжинка якщо мінус, сонце якщо плюс */}
+                        {(cargo.ref_temperature_from ?? 0) < 0 ? (
+                          <ThermometerSnowflake className="w-3 h-3 text-blue-500 animate-pulse" />
+                        ) : (
+                          <ThermometerSun className="w-3 h-3 text-orange-500" />
+                        )}
+
+                        <span className="text-[10px] font-bold text-slate-700 dark:text-rose-300 tracking-tighter">
+                          {formatTemp(cargo.ref_temperature_from)}°..
+                          {formatTemp(cargo.ref_temperature_to)}°C
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <span
                 className={cn(
                   "ml-auto font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
