@@ -72,7 +72,7 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
                 "font-black truncate tracking-tight flex items-baseline gap-1",
                 isMain
                   ? "text-[16px] text-zinc-800 dark:text-zinc-100"
-                  : "text-[14px] text-gray-300 font-bold"
+                  : "text-[14px] text-zinc-700 dark:text-zinc-100 font-bold"
               )}
             >
               {point.city}
