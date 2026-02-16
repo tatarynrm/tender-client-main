@@ -65,12 +65,7 @@ const links: MenuItem[] = [
     status: "inactive",
     info: "Coming Soon",
   },
-  {
-    name: "Документи",
-    icon: FileCode2Icon,
-    status: "inactive",
-    info: "Coming Soon",
-  },
+
 ];
 
 const defaultFooterLinks: MenuItem[] = [

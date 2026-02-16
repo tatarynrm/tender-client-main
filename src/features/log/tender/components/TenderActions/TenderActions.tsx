@@ -9,6 +9,7 @@ import { useFontSize } from "@/shared/providers/FontSizeProvider";
 // Імпорт нових компонентів
 import { DraftActions } from "./DraftActions";
 import { ActiveActions } from "./ActiveActions";
+import { PlanActions } from "./PlanActions";
 
 interface TenderActionsProps {
   tender: any;
@@ -98,27 +99,18 @@ export default function TenderActions({
             onClose={handleClose}
           />
         )}
-
-        {canDelete && (
-          <>
-            <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
-            <button
-              onClick={() => {
-                if (confirm("Видалити цей тендер?")) {
-                  /* delete logic */
-                }
-                handleClose();
-              }}
-              className={cn(
-                itemClass,
-                "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30",
-              )}
-            >
-              <Trash2 size={config.icon - 2} />
-              <span className={cn(textClass, "font-semibold")}>Видалити</span>
-            </button>
-          </>
+        {tender.ids_status === "PLAN" && (
+          <PlanActions
+            tender={tender}
+            itemClass={itemClass}
+            textClass={textClass}
+            config={config}
+            onClose={handleClose}
+          />
         )}
+
+
+        
       </div>
     </div>
   );

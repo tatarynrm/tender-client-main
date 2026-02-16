@@ -19,6 +19,9 @@ import TenderFullInfoModal from "@/features/log/tender/components/TenderFullInfo
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
+interface Props {
+  status?: string;
+}
 
 // Імпорт всіх варіантів карток
 import { TenderCardOne } from "./components/cards-examples/CardOne";
@@ -32,7 +35,7 @@ import { TenderCardSix } from "./components/cards-examples/CardSix";
 // Тип для доступних варіантів дизайну
 type CardVariant = "v1" | "v2" | "v3" | "v4" | "v5" | 'v6'
 
-export default function ClientsTenderPage() {
+export default function ClientsTenderPage({status}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tenderFilters } = useTenderClientFormData();
@@ -59,9 +62,15 @@ export default function ClientsTenderPage() {
     }),
     [searchParams],
   );
-
+  const queryFilters = useMemo(
+    () => ({
+      ...currentParams,
+      status,
+    }),
+    [currentParams, status],
+  );
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { tenders, pagination, isLoading, error } = useTenderListClient(currentParams);
+  const { tenders, pagination, isLoading, error } = useTenderListClient(queryFilters);
 
   // 2. Функція рендеру вибраної картки
   const renderTenderCard = (item: ITender) => {

@@ -25,7 +25,7 @@ const TenderLoader = () => {
       </div>
       <div className="flex flex-col items-center">
         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400 animate-pulse">
-          Пошук активних тендерів
+          Пошук  тендерів
         </span>
         <div className="flex gap-1 mt-2">
           <div className="w-1 h-1 bg-orange-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>

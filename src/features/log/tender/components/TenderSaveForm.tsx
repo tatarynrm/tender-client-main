@@ -452,7 +452,7 @@ export default function TenderSaveForm({
                 <h3 className="font-semibold flex items-center gap-2 text-blue-700 text-sm uppercase tracking-wider">
                   <Calendar className="w-4 h-4" /> Терміни проведення
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputDateWithTime
                     name="time_start"
                     control={control}

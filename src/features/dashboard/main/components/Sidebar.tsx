@@ -22,6 +22,10 @@ import {
   Car,
   HousePlug,
   PersonStandingIcon,
+  Archive,
+  Check,
+  ShieldCheck,
+  ArrowBigRight,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -74,6 +78,29 @@ const links: MenuItem[] = [
     name: "Тендери",
     icon: LayoutList,
     href: "/dashboard/tender",
+    children:[
+            {
+        name: "Заплановані",
+        href: "/dashboard/tender/plan",
+        icon: ArrowBigRight,
+      },
+            {
+        name: "Активні",
+        href: "/dashboard/tender/active",
+        icon: ShieldCheck,
+      },
+            {
+        name: "Завершені",
+        href: "/dashboard/tender/closed",
+        icon: Check,
+      },
+            {
+        name: "Архів",
+        href: "/dashboard/tender/archive",
+        icon: Archive,
+      },
+    ]
+
   },
   {
     name: "Персональні дані",
