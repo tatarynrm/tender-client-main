@@ -9,7 +9,6 @@ import { Form } from "@/shared/components/ui";
 import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
 
-
 import { useAdminUsers } from "@/features/admin/hooks/useAdminUsers";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import {
@@ -27,6 +26,15 @@ import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSe
 import { cn } from "@/shared/utils";
 import { InputSwitchWithConfirm } from "@/shared/components/Inputs/InputSwitchWithConfirm";
 
+const personPhone = z.array(
+  z.object({
+    phone: z.string().min(5, "Невірний формат"),
+    is_telegram: z.boolean().optional(),
+    is_viber: z.boolean().optional(),
+    is_whatsapp: z.boolean().optional(),
+  }),
+);
+
 const userSchema = z
   .object({
     email: z
@@ -36,26 +44,23 @@ const userSchema = z
       .email("Невірний формат")
       .min(5, "Обов'язково"),
     last_name: z.string().min(1, "Обов'язково"),
+    ids_sex: z.enum(["W", "M"], { message: "Оберіть стать" }),
     name: z.string().min(1, "Обов'язково"),
     surname: z.string().min(1, "Обов'язково"),
     is_blocked: z.boolean().optional(),
-    two_factor_enabled: z.boolean().optional(),
+
     is_admin: z.boolean().optional(),
-    is_accountant: z.boolean().optional(),
+
     is_manager: z.boolean().optional(),
-    is_director: z.boolean().optional(),
+
     is_ict: z.boolean().optional(),
     id_company: z.number({ message: "Обов'язково" }),
+    person_phone: personPhone.optional(),
   })
   .refine(
     (data) => {
       // ПЕРЕВІРКА: хоча б одна з основних ролей має бути true
-      return (
-        data.is_admin ||
-        data.is_accountant ||
-        data.is_manager ||
-        data.is_director
-      );
+      return data.is_admin || data.is_manager;
     },
     {
       message: "Оберіть хоча б одну роль",
@@ -71,14 +76,14 @@ export default function CreateUserPage() {
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
-    mode:'onTouched',
+    mode: "onTouched",
     defaultValues: {
       is_blocked: false,
-      two_factor_enabled: false,
+
       is_admin: false,
-      is_accountant: false,
+
       is_manager: false,
-      is_director: false,
+
       is_ict: false,
       email: "",
       last_name: "",
@@ -98,9 +103,7 @@ export default function CreateUserPage() {
 
   const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     try {
-  
       const res = await createUser(data);
-
 
       if (res && (res.status === "ok" || res.data?.status === "ok")) {
         reset();
@@ -175,15 +178,6 @@ export default function CreateUserPage() {
                   icon={Lock}
                   className="data-[state=checked]:bg-red-500"
                 />
-                <InputSwitchWithConfirm
-                  icon={ShieldCheck}
-                  label="2FA Аутентифікація"
-                  text="Користувачу буде надсилатись код підтвердження."
-                  field={{
-                    value: form.watch("two_factor_enabled") || false,
-                    onChange: (val) => form.setValue("two_factor_enabled", val),
-                  }}
-                />
               </div>
 
               {/* РОЛІ */}
@@ -214,23 +208,12 @@ export default function CreateUserPage() {
                       icon: ShieldCheck,
                       color: "text-red-500",
                     },
-                    {
-                      name: "is_accountant",
-                      label: "Бухгалтер",
-                      icon: Banknote,
-                      color: "text-amber-500",
-                    },
+
                     {
                       name: "is_manager",
                       label: "Менеджер",
                       icon: GraduationCap,
                       color: "text-indigo-500",
-                    },
-                    {
-                      name: "is_director",
-                      label: "Директор",
-                      icon: ShieldCheck,
-                      color: "text-purple-500",
                     },
                   ].map((r) => {
                     const isActive = form.watch(r.name as any);

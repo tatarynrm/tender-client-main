@@ -104,7 +104,7 @@ export default function AdminDashboard() {
             <h1
               className={cn(
                 "font-black tracking-tight text-slate-900 dark:text-white",
-                title
+                title,
               )}
             >
               Адмін-панель
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
             className={cn(
               "relative overflow-hidden p-6 rounded-[2rem] border transition-all duration-300 hover:scale-[1.02]",
               "bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl shadow-sm",
-              item.borderColor
+              item.borderColor,
             )}
           >
             <div className="flex justify-between items-start mb-4">
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
               <div
                 className={cn(
                   "font-black text-slate-900 dark:text-white",
-                  title
+                  title,
                 )}
               >
                 {item.value}
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
               <p
                 className={cn(
                   "font-bold text-slate-500 dark:text-slate-400",
-                  label
+                  label,
                 )}
               >
                 {item.label}
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
               <p
                 className={cn(
                   "text-[10px] uppercase tracking-wider font-black opacity-50 dark:text-slate-500",
-                  label
+                  label,
                 )}
               >
                 {item.description}
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
           <h3
             className={cn(
               "text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-6 font-bold",
-              label
+              label,
             )}
           >
             Розподіл компаній
