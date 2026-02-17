@@ -33,7 +33,7 @@ export function UserAvatarForm() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        console.log("Аватар успішно завантажено");
+
       }
     } catch (error) {
       console.error("Помилка завантаження:", error);

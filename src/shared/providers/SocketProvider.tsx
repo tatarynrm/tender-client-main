@@ -36,7 +36,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     const cleanupSockets = () => {
       Object.entries(socketsRef.current).forEach(([ns, socket]) => {
         if (socket) {
-          console.log(`🔌 Disconnecting from ${ns}...`);
+          // console.log(`🔌 Disconnecting from ${ns}...`);
           socket.removeAllListeners();
           socket.disconnect();
         }
@@ -56,9 +56,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     // щоб уникнути дублів та "завислих" з'єднань від попереднього сеансу
     cleanupSockets();
 
-    console.log(
-      `🚀 Initializing sockets for user: ${currentProfile.person.id}`,
-    );
+    // console.log(
+    //   `🚀 Initializing sockets for user: ${currentProfile.person.id}`,
+    // );
 
     const namespaces: Namespace[] = ["chat", "tender", "user"];
     if (currentProfile.role.is_ict) namespaces.push("load");
@@ -87,7 +87,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       });
 
       socket.on("connect", () => {
-        console.log(`✅ Connected to ${ns} (ID: ${currentProfile.person.id})`);
+        // console.log(`✅ Connected to ${ns} (ID: ${currentProfile.person.id})`);
       });
 
       socket.on("connect_error", (err) => {

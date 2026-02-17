@@ -172,7 +172,7 @@ export default function LoadListComponent({ active, archive }: Props) {
       </div>
 
       {/* ЦЕНТР: Segmented Control (Швидкі фільтри) */}
-      <div className="flex items-center p-1 bg-muted/50 rounded-2xl border border-border/50 shadow-sm transition-all hover:bg-muted/80">
+      <div className="flex flex-wrap items-center p-1 bg-muted/50 rounded-2xl border border-border/50 shadow-sm transition-all hover:bg-muted/80">
         {/* Кнопка Усі */}
         <QuickFilterBtn
           label="Усі"
@@ -184,7 +184,7 @@ export default function LoadListComponent({ active, archive }: Props) {
           }}
         />
 
-        <div className="w-px h-4 bg-border/60 mx-1" />
+        <div className="w-px h-4 bg-border/60 mx-1 " />
 
         {[
           { id: "E", label: "Екс", count: add_data?.count_exp },

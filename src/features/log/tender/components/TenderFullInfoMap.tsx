@@ -139,7 +139,7 @@ function RoutingMachine({ points, onReady }: { points: ITenderRoute[], onReady?:
     control.on('routesfound', (e: any) => {
       const routes = e.routes;
       const distanceInKm = routes[0].summary.totalDistance / 1000;
-      console.log(`Дистанція: ${distanceInKm.toFixed(1)} км`);
+      // console.log(`Дистанція: ${distanceInKm.toFixed(1)} км`);
       if (onReady) onReady(distanceInKm);
     });
 

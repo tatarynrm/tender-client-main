@@ -45,7 +45,7 @@ export const CRMSocketActionProvider = ({
         toast.info(data?.message || "Системне повідомлення");
       },
       UPDATE_CARGO_PRICE: (data) => {
-        console.log("Оновлення ціни для:", data?.id);
+        // console.log("Оновлення ціни для:", data?.id);
         // Тут логіка з queryClient.invalidateQueries
       },
     };

@@ -55,7 +55,7 @@ console.log(formState.errors,'ERROR');
 const getUsrtList = async ()=>{
   try {
     const {data} = await api.post('/users/user-list-ict')
-    console.log(data,'DATA');
+    // console.log(data,'DATA');
     
   } catch (error) {
     console.log(error);

@@ -9,6 +9,6 @@ export const registerChatEvents = (socket: Socket) => {
   });
 
   socket.on("user_typing", (data) => {
-    console.log(`${data.username} пише...`);
+    // console.log(`${data.username} пише...`);
   });
 };

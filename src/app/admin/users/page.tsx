@@ -21,13 +21,13 @@ export default function UsersPage() {
   const columns: ColumnDef<any>[] = [
     { 
       header: "ПІБ", 
-      accessorFn: (row) => `${row.surname || ""} ${row.name || ""} ${row.last_name || ""}` 
+      accessorFn: (row) => `${row.person?.surname || ""} ${row.person?.name || ""} ${row.person?.last_name || ""}` 
     },
     { accessorKey: "email", header: "Email" },
     {
       header: "Роль",
       cell: ({ row }) => {
-        if (row.original.is_admin) return "Адмін";
+        if (row.original.person?.person_role?.is_admin) return "Адмін";
         if (row.original.is_manager) return "Менеджер";
         return "Користувач";
       },

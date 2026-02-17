@@ -9,6 +9,6 @@ export const registerTenderEvents = (socket: Socket) => {
   });
 
   socket.on("user_typing", (data) => {
-    console.log(`${data.username} пише...`);
+   
   });
 };
