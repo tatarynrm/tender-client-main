@@ -37,6 +37,11 @@ export interface UserPerson {
   address_register: string | null;
   address_residential: string | null;
 }
+export interface UserCompany {
+  id: number;
+  company_name: string;
+  edrpou:string;
+}
 
 /**
  * Основний об'єкт користувача (System User)
@@ -45,6 +50,7 @@ export interface IUserAccount {
   id: number;
   email: string;
   person: UserPerson;
+  company: UserCompany;
   verified: boolean;
   id_person: number;
   created_at: string;

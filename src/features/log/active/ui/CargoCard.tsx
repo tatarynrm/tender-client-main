@@ -483,8 +483,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                   stat.color,
                 )}
               >
-                <stat.icon size={config.icon - 4} />
-                <span className={cn("font-bold", config.main)}>{stat.val}</span>
+                <stat.icon size={config.icon - 2} />
+                <span className={cn("font-bold", config.main + 2)}>{stat.val}</span>
               </div>
             ))}
           </div>

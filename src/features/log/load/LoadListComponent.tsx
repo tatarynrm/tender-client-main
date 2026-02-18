@@ -155,75 +155,73 @@ export default function LoadListComponent({ active, archive }: Props) {
   return (
     <div className="space-y-4 pb-40">
       {/* Стікі-хедер з фільтрами та налаштуваннями */}
-<div className="sticky top-[-20px] z-30 pt-4 pb-3 backdrop-blur-md bg-background/80 -mx-4 px-4 border-b transition-all">
-  <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      
-      {/* ЛІВА ЧАСТИНА: Головний фільтр */}
-      <div className="flex items-center">
-        <LoadFiltersSheet
-          filters={filters}
-          setFilters={setFilters}
-          apply={() => updateUrl({ ...filters, page: 1 })}
-          reset={handleReset}
-          dropdowns={loadFilters}
-          add_data={add_data}
-        />
+      <div className="sticky top-[-20px] z-30 pt-4 pb-3 backdrop-blur-md bg-background/80 -mx-4 px-4 border-b transition-all">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            {/* ЛІВА ЧАСТИНА: Головний фільтр */}
+            <div className="flex items-center">
+              <LoadFiltersSheet
+                filters={filters}
+                setFilters={setFilters}
+                apply={() => updateUrl({ ...filters, page: 1 })}
+                reset={handleReset}
+                dropdowns={loadFilters}
+                add_data={add_data}
+              />
+            </div>
+
+            {/* ЦЕНТР: Segmented Control (Швидкі фільтри) */}
+            <div className="flex flex-wrap items-center p-1 bg-muted/50 rounded-2xl border border-border/50 shadow-sm transition-all hover:bg-muted/80">
+              {/* Кнопка Усі */}
+              <QuickFilterBtn
+                label="Усі"
+                count={add_data?.count_all}
+                isActive={!currentParams.transit}
+                onClick={() => {
+                  const { transit, ...newParams } = currentParams;
+                  updateUrl({ ...newParams, page: 1 });
+                }}
+              />
+
+              <div className="w-px h-4 bg-border/60 mx-1 " />
+
+              {[
+                { id: "E", label: "Екс", count: add_data?.count_exp },
+                { id: "I", label: "Імп", count: add_data?.count_imp },
+                { id: "R", label: "Рег", count: add_data?.count_reg },
+                { id: "T", label: "Транзит", count: add_data?.count_tr },
+                { id: "M", label: "Міжн", count: add_data?.count_mn },
+              ].map((btn) => (
+                <QuickFilterBtn
+                  key={btn.id}
+                  label={btn.label}
+                  count={btn.count}
+                  isActive={currentParams.transit === btn.id}
+                  onClick={() => toggleTransit(btn.id)}
+                />
+              ))}
+            </div>
+
+            {/* ПРАВА ЧАСТИНА: Налаштування вигляду */}
+            <div className="flex items-center gap-2 bg-background/50 p-1 rounded-xl border border-border shadow-sm">
+              <GridColumnSelector
+                gridCols={gridCols}
+                setGridCols={setGridCols}
+                columnOptions={columnOptions}
+              />
+              <div className="w-px h-4 bg-border" />
+              <ItemsPerPage
+                options={[10, 20, 50, 100, 200]}
+                defaultValue={currentParams.limit}
+                onChange={(newLimit) => {
+                  localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
+                  updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* ЦЕНТР: Segmented Control (Швидкі фільтри) */}
-      <div className="flex flex-wrap items-center p-1 bg-muted/50 rounded-2xl border border-border/50 shadow-sm transition-all hover:bg-muted/80">
-        {/* Кнопка Усі */}
-        <QuickFilterBtn
-          label="Усі"
-          count={add_data?.count_all}
-          isActive={!currentParams.transit}
-          onClick={() => {
-            const { transit, ...newParams } = currentParams;
-            updateUrl({ ...newParams, page: 1 });
-          }}
-        />
-
-        <div className="w-px h-4 bg-border/60 mx-1 " />
-
-        {[
-          { id: "E", label: "Екс", count: add_data?.count_exp },
-          { id: "I", label: "Імп", count: add_data?.count_imp },
-          { id: "R", label: "Рег", count: add_data?.count_reg },
-          { id: "T", label: "Транзит", count: add_data?.count_tr },
-          { id: "M", label: "Міжн", count: add_data?.count_mn },
-        ].map((btn) => (
-          <QuickFilterBtn
-            key={btn.id}
-            label={btn.label}
-            count={btn.count}
-            isActive={currentParams.transit === btn.id}
-            onClick={() => toggleTransit(btn.id)}
-          />
-        ))}
-      </div>
-
-      {/* ПРАВА ЧАСТИНА: Налаштування вигляду */}
-      <div className="flex items-center gap-2 bg-background/50 p-1 rounded-xl border border-border shadow-sm">
-        <GridColumnSelector
-          gridCols={gridCols}
-          setGridCols={setGridCols}
-          columnOptions={columnOptions}
-        />
-        <div className="w-px h-4 bg-border" />
-        <ItemsPerPage
-          options={[10, 20, 50, 100, 200]}
-          defaultValue={currentParams.limit}
-          onChange={(newLimit) => {
-            localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
-            updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-          }}
-        />
-      </div>
-
-    </div>
-  </div>
-</div>
 
       {/* Список активних фільтрів (бейджи) */}
       <LoadActiveFilters

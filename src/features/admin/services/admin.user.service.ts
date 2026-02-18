@@ -8,8 +8,8 @@ export const adminUserService = {
     return res.data;
   },
   getOneUser: async (id: number) => {
-    const res = await api.get(`/admin/user/${id}`);
-    return res.data;
+    const res = await api.get(`/admin/user/one/${id}`);
+    return res.data.content;
   },
   createUser: async (data: any) => {
     const res = await api.post("/admin/user/create", data);
