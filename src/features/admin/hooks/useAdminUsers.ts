@@ -117,7 +117,7 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
   });
 
   // 5. Мутація створення
-  const { mutateAsync: createUser, isPending: isCreating } = useMutation({
+  const { mutateAsync: saveUser, isPending: isSaving } = useMutation({
     mutationFn: adminUserService.createUser,
     onSuccess: (res) => {
       // res зазвичай повертає створений об'єкт або { status: 'ok', content: {...} }
@@ -136,20 +136,7 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
   });
 
   // 6. Мутація оновлення
-  const { mutateAsync: updateUser, isPending: isUpdating } = useMutation({
-    mutationFn: adminUserService.updateUser,
-    onSuccess: (res) => {
-      const updatedUser = res?.content || res;
-      toast.success("Дані оновлено");
-      updateLocalCache(updatedUser);
-    },
-    onError: (err: any) => {
-      const msg = axios.isAxiosError(err)
-        ? err.response?.data?.message
-        : err.message;
-      toast.error(msg || "Помилка при оновленні");
-    },
-  });
+
 
   // 7. Обробка сокетів
   useEffect(() => {
@@ -175,12 +162,12 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
     users: data?.content ?? [],
     pagination: data?.props?.pagination,
     isLoading,
-    isCreating,
-    isUpdating,
+    isSaving,
+  
     error,
     refetch,
-    createUser,
-    updateUser,
+    saveUser,
+   
     queryKey,
   };
 };

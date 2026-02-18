@@ -12,11 +12,8 @@ export const adminUserService = {
     return res.data.content;
   },
   createUser: async (data: any) => {
-    const res = await api.post("/admin/user/create", data);
+    const res = await api.post("/admin/user/save", data);
     return res.data;
   },
-  updateUser: async (data: any) => {
-    const res = await api.post("/admin/user/update", data);
-    return res.data;
-  },
+
 };

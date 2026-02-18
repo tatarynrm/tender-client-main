@@ -1,141 +1,124 @@
 "use client";
 
-import { Company } from "@/app/admin/companies/page";
 import { Button, Card } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 import {
   Building2,
   MapPin,
   Fingerprint,
-  MoreVertical,
   Truck,
   UserCircle,
   Briefcase,
   Star,
-  GripVertical,
+  ExternalLink,
+  ShieldAlert,
+  ShieldCheck,
+  Ban,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ICompany } from "../../types/company.types";
+import { useMemo } from "react";
 
 interface CompanyCardProps {
-  company: Company;
+  company: ICompany;
 }
 
 export function CompanyCard({ company }: CompanyCardProps) {
-  const getRatingStars = (rating: number | string | null | undefined) => {
-    const r = Number(rating || 0);
+  const router = useRouter();
+
+  const stars = useMemo(() => {
+    const r = Number(company.rating || 0);
     if (r === 2) return 5;
     if (r === 1) return 3;
     return 1;
+  }, [company.rating]);
+
+  const statusConfig = {
+    blacklisted: { color: "bg-red-500", text: "text-red-500", label: "Blacklist", icon: <ShieldAlert className="h-3 w-3" /> },
+    blocked: { color: "bg-orange-500", text: "text-orange-500", label: "Blocked", icon: <Ban className="h-3 w-3" /> },
+    active: { color: "bg-emerald-500", text: "text-emerald-500", label: "Active", icon: <ShieldCheck className="h-3 w-3" /> },
   };
 
-  const stars = getRatingStars(company.rating);
+  const status = company.black_list ? statusConfig.blacklisted : company.is_blocked ? statusConfig.blocked : statusConfig.active;
 
   return (
-    <Card className="group relative flex items-center gap-4 rounded-xl border border-border bg-card p-3 transition-all  hover:shadow-md dark:hover:bg-accent/20">
-      {/* 🔹 Статуси-індикатори */}
-      <div className="flex flex-col gap-1.5 shrink-0 pl-1">
-        {company.black_list ? (
-          <div
-            className="h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-            title="Blacklist"
-          />
-        ) : company.is_blocked ? (
-          <div
-            className="h-2 w-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-            title="Blocked"
-          />
-        ) : (
-          <div
-            className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-            title="Active"
-          />
-        )}
-      </div>
+    <Card 
+      onClick={() => router.push(`/admin/companies/edit/${company.id}`)}
+      className="group relative flex items-stretch rounded-xl border border-border bg-card transition-all hover:ring-1 hover:ring-primary/30 hover:shadow-lg cursor-pointer active:scale-[0.98] overflow-hidden"
+    >
+      {/* 🔹 Кольоровий статус (лінія) */}
+      <div className={cn("w-1.5 shrink-0", status.color)} />
 
-      {/* 🔹 Основна інформація */}
-      <div className="grid flex-1 grid-cols-1 md:grid-cols-[1.5fr_1fr_1.5fr_1fr] items-center gap-4 overflow-hidden">
-        {/* Компанія + Назва */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors">
-            <Building2 className="h-5 w-5" />
+      <div className="flex flex-1 flex-col md:grid md:grid-cols-[1.2fr_180px_1.2fr_160px] md:items-center p-4 gap-y-4 md:gap-0">
+        
+        {/* 🔹 1. КОМПАНІЯ (Назва + Рейтинг) */}
+        <div className="flex items-center gap-4 min-w-0 md:pr-6">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted group-hover:bg-primary/10 transition-colors">
+            <Building2 className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
           </div>
-          <div className="min-w-0">
-            <h4 className="text-sm font-bold text-foreground truncate tracking-tight">
+          <div className="flex flex-col min-w-0">
+            <h4 className="text-[15px] font-bold text-foreground leading-snug truncate group-hover:text-primary transition-colors">
               {company.company_name}
             </h4>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="flex shrink-0">
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">
                 {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={cn(
-                      "h-2.5 w-2.5",
-                      i < stars
-                        ? "fill-amber-400 text-amber-400"
-                        : "fill-muted/20 text-muted"
-                    )}
-                  />
+                  <Star key={i} className={cn("h-2.5 w-2.5", i < stars ? "fill-amber-400 text-amber-400" : "fill-transparent text-muted-foreground/20")} />
                 ))}
               </div>
-              <span className="text-[10px] text-muted-foreground font-medium truncate uppercase tracking-tighter">
-                ID: {company.id}
-              </span>
+              <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 rounded">ID:{company.id}</span>
             </div>
           </div>
         </div>
 
-        {/* ЄДРПОУ */}
-        <div className="hidden md:flex items-center gap-2">
-          <Fingerprint className="h-3.5 w-3.5 text-muted-foreground/50" />
-          <span className="text-xs font-mono font-medium text-foreground/80 tracking-wider">
-            {company.edrpou}
+        {/* 🔹 2. ІДЕНТИФІКАЦІЯ (ЄДРПОУ + Бадж) */}
+        <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-center px-0 md:px-6 md:border-l border-border/40 gap-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Fingerprint className="h-3.5 w-3.5 opacity-70" />
+            <span className="text-[13px] font-bold font-mono tracking-tight text-foreground">{company.edrpou}</span>
+          </div>
+          <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight bg-background", status.text, "border-current")}>
+            {status.icon} {status.label}
+          </div>
+        </div>
+
+        {/* 🔹 3. ЛОКАЦІЯ (Адреса) */}
+        <div className="flex items-start gap-2 px-0 md:px-6 md:border-l border-border/40 min-w-0 overflow-hidden">
+          <MapPin className="h-4 w-4 shrink-0 text-muted-foreground/30 mt-0.5" />
+          <span className="text-[12px] leading-[1.4] text-muted-foreground/80 line-clamp-2 italic font-medium">
+            {company.address || "Адреса не вказана"}
           </span>
         </div>
 
-        {/* Адреса */}
-        <div className="hidden lg:flex items-center gap-2 text-muted-foreground min-w-0">
-          <MapPin className="h-3.5 w-3.5 shrink-0 opacity-50" />
-          <span className="text-xs truncate italic font-light tracking-tight group-hover:text-foreground/70 transition-colors">
-            {company.address}
-          </span>
+        {/* 🔹 4. РОЛІ ТА ДІЯ */}
+        <div className="flex items-center justify-between md:justify-end gap-4 pl-0 md:pl-6 md:border-l border-border/40 mt-2 md:mt-0">
+          <div className="flex -space-x-1.5">
+            {company.is_carrier && <RoleBadge icon={<Truck size={14} />} color="bg-blue-600" title="Перевізник" />}
+            {company.is_client && <RoleBadge icon={<UserCircle size={14} />} color="bg-emerald-600" title="Клієнт" />}
+            {company.is_expedition && <RoleBadge icon={<Briefcase size={14} />} color="bg-purple-600" title="Експедиція" />}
+          </div>
+          
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+            <ExternalLink size={16} />
+          </div>
         </div>
 
-        {/* Ролі (Компактні баджі) */}
-        <div className="flex items-center justify-end gap-1.5 pr-2">
-          {company.is_carrier && (
-            <div
-              className="p-1.5 rounded-md bg-blue-500/10 text-blue-500 border border-blue-500/20"
-              title="Перевізник"
-            >
-              <Truck className="h-3.5 w-3.5" />
-            </div>
-          )}
-          {company.is_client && (
-            <div
-              className="p-1.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-              title="Клієнт"
-            >
-              <UserCircle className="h-3.5 w-3.5" />
-            </div>
-          )}
-          {company.is_expedition && (
-            <div
-              className="p-1.5 rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20"
-              title="Експедиція"
-            >
-              <Briefcase className="h-3.5 w-3.5" />
-            </div>
-          )}
-        </div>
       </div>
-
-      {/* 🔹 Кнопка дій */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-      >
-        <GripVertical className="h-4 w-4" />
-      </Button>
     </Card>
+  );
+}
+
+// Допоміжний компонент баджа ролі для чистоти коду
+function RoleBadge({ icon, color, title }: { icon: React.ReactNode; color: string; title: string }) {
+  return (
+    <div 
+      title={title}
+      className={cn(
+        "h-8 w-8 rounded-full border-2 border-card flex items-center justify-center text-white shadow-sm ring-1 ring-black/5 transition-transform hover:scale-110 hover:z-10",
+        color
+      )}
+    >
+      {icon}
+    </div>
   );
 }
