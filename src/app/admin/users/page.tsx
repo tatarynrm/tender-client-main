@@ -21,10 +21,9 @@ const userFilterSchema = z.object({
   limit: z.number(),
 });
 
- type UserFilterValues = z.infer<typeof userFilterSchema>;
+type UserFilterValues = z.infer<typeof userFilterSchema>;
 
 export default function UsersPage() {
-
   const router = useRouter();
   const [filters, setFilters] = useState<UserFilterValues>({
     email: "",
@@ -126,7 +125,7 @@ export default function UsersPage() {
         </h2>
         <LinkButton
           title="Додати користувача"
-          href="/admin/users/create"
+          href="/admin/users/save"
           icon={<UserIcon size={18} />}
         />
       </div>

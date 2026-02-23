@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useTenderManagersFormData } from "@/features/log/hooks/useTenderManagersFormData";
 import { Loader2 } from "lucide-react";
-import api from "@/shared/api/instance.api";
+import { useUpdateTenderStatus } from "@/features/log/hooks/useUpdateTenderStatus"; // <-- Імпорт нового хука
 
 export const StatusPickerModal = ({
   tenderId,
@@ -16,10 +16,11 @@ export const StatusPickerModal = ({
 }) => {
   const [mounted, setMounted] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<any>(null);
-  const [isPending, setIsPending] = useState(false);
 
   const { tenderFilters } = useTenderManagersFormData();
-  // id, ids_status
+  
+  // Використовуємо наш новий хук
+  const { mutateAsync: updateStatus, isPending } = useUpdateTenderStatus();
 
   useEffect(() => {
     setMounted(true);
@@ -31,35 +32,23 @@ export const StatusPickerModal = ({
 
   if (!mounted) return null;
 
-  const tenderSetStatus = async (tenderId: string, statusId: string) => {
-    try {
-      const data = await api.post("/tender/set-status", {
-        id: tenderId,
-        ids_status: statusId,
-      });
-      console.log("Статус успішно оновлено:", data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const handleConfirm = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Важливо!
+  const handleConfirm = async (e: React.MouseEvent | React.PointerEvent) => {
+    e.stopPropagation();
     e.preventDefault();
-    if (!selectedStatus) return;
-
-    setIsPending(true);
+    if (!selectedStatus || isPending) return;
 
     try {
-      console.log(`API CALL: ${tenderId} -> ${selectedStatus.ids}`);
-      // Ваша логіка API
-      await tenderSetStatus(tenderId, selectedStatus.ids);
+      // Викликаємо мутацію
+      await updateStatus({
+        id: tenderId,
+        ids_status: selectedStatus.ids,
+      });
 
-      onClose(); // Закриваємо тільки після успіху
+      // Закриваємо модалку тільки після успішного виконання
+      onClose(); 
     } catch (error) {
+      // Помилка вже обробляється всередині onError в хуку (toast)
       console.error(error);
-    } finally {
-      setIsPending(false);
     }
   };
 
@@ -67,13 +56,12 @@ export const StatusPickerModal = ({
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => {
-        // Закриваємо модалку тільки якщо клікнули саме по фону, а не по контенту
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !isPending) onClose();
       }}
     >
       <div
         className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200"
-        onClick={(e) => e.stopPropagation()} // Зупиняємо пропливання кліку до фону
+        onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-xl font-bold mb-1 text-gray-900 text-center">
           Зміна статусу
@@ -84,17 +72,15 @@ export const StatusPickerModal = ({
 
         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300">
           {tenderFilters?.tender_status_dropdown?.map((status: any) => (
-            // Усередині map у StatusPickerModal.tsx
             <button
               key={status.ids}
               type="button"
-              // Зупиняємо всі можливі події, які змушують меню закриватися
+              disabled={isPending}
               onPointerDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log("Клік по статусу:", status.value);
                 setSelectedStatus(status);
               }}
               className={cn(
@@ -102,6 +88,7 @@ export const StatusPickerModal = ({
                 selectedStatus?.ids === status.ids
                   ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500"
                   : "border-gray-100 hover:border-gray-300 bg-white",
+                isPending && "opacity-50 cursor-not-allowed"
               )}
             >
               <span
@@ -125,15 +112,7 @@ export const StatusPickerModal = ({
           <button
             type="button"
             disabled={!selectedStatus || isPending}
-            // Міняємо onClick на onPointerDown
-            onPointerDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!selectedStatus || isPending) return;
-
-              // Викликаємо handleConfirm вручну
-              handleConfirm(e as any);
-            }}
+            onPointerDown={handleConfirm}
             className={cn(
               "w-full py-3 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2",
               selectedStatus && !isPending
@@ -150,11 +129,15 @@ export const StatusPickerModal = ({
 
           <button
             type="button"
+            disabled={isPending}
             onClick={(e) => {
               e.stopPropagation();
               onClose();
             }}
-            className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 font-semibold"
+            className={cn(
+              "w-full py-2 text-sm font-semibold transition-colors",
+              isPending ? "text-gray-300 cursor-not-allowed" : "text-gray-400 hover:text-gray-600"
+            )}
           >
             Скасувати
           </button>

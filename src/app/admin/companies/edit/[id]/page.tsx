@@ -5,7 +5,6 @@ import Loading from "@/shared/components/ui/Loading";
 import { useCompanyById } from "@/features/admin/hooks/useAdminCompanies";
 import SaveCompanyForm from "@/features/admin/companies/components/Companies/SaveCompanyForm";
 
-
 export default function EditCompanyPage() {
   const { id } = useParams();
 
@@ -29,15 +28,6 @@ export default function EditCompanyPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold italic uppercase tracking-tighter">
-          Редагування компанії
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Змініть дані компанії {data.company_name}
-        </p>
-      </div>
-      
       <SaveCompanyForm defaultValues={data} />
     </div>
   );

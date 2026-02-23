@@ -107,7 +107,7 @@ export default function CompaniesPage() {
           </div>
         </div>
         <LinkButton
-          href="/admin/companies/create"
+          href="/admin/companies/save"
           icon={<Building2 className="w-4 h-4" />}
           title="Додати компанію"
         />

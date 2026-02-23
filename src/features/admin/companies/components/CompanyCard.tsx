@@ -28,21 +28,41 @@ export function CompanyCard({ company }: CompanyCardProps) {
 
   const stars = useMemo(() => {
     const r = Number(company.rating || 0);
-    if (r === 2) return 5;
-    if (r === 1) return 3;
-    return 1;
+    if (r === 3) return 3;
+    if (r === 2) return 2;
+    if (r === 1) return 1;
+    return 0
   }, [company.rating]);
 
   const statusConfig = {
-    blacklisted: { color: "bg-red-500", text: "text-red-500", label: "Blacklist", icon: <ShieldAlert className="h-3 w-3" /> },
-    blocked: { color: "bg-orange-500", text: "text-orange-500", label: "Blocked", icon: <Ban className="h-3 w-3" /> },
-    active: { color: "bg-emerald-500", text: "text-emerald-500", label: "Active", icon: <ShieldCheck className="h-3 w-3" /> },
+    blacklisted: {
+      color: "bg-red-500",
+      text: "text-red-500",
+      label: "Blacklist",
+      icon: <ShieldAlert className="h-3 w-3" />,
+    },
+    blocked: {
+      color: "bg-orange-500",
+      text: "text-orange-500",
+      label: "Blocked",
+      icon: <Ban className="h-3 w-3" />,
+    },
+    active: {
+      color: "bg-emerald-500",
+      text: "text-emerald-500",
+      label: "Active",
+      icon: <ShieldCheck className="h-3 w-3" />,
+    },
   };
 
-  const status = company.black_list ? statusConfig.blacklisted : company.is_blocked ? statusConfig.blocked : statusConfig.active;
+  const status = company.black_list
+    ? statusConfig.blacklisted
+    : company.is_blocked
+      ? statusConfig.blocked
+      : statusConfig.active;
 
   return (
-    <Card 
+    <Card
       onClick={() => router.push(`/admin/companies/edit/${company.id}`)}
       className="group relative flex items-stretch rounded-xl border border-border bg-card transition-all hover:ring-1 hover:ring-primary/30 hover:shadow-lg cursor-pointer active:scale-[0.98] overflow-hidden"
     >
@@ -50,7 +70,6 @@ export function CompanyCard({ company }: CompanyCardProps) {
       <div className={cn("w-1.5 shrink-0", status.color)} />
 
       <div className="flex flex-1 flex-col md:grid md:grid-cols-[1.2fr_180px_1.2fr_160px] md:items-center p-4 gap-y-4 md:gap-0">
-        
         {/* 🔹 1. КОМПАНІЯ (Назва + Рейтинг) */}
         <div className="flex items-center gap-4 min-w-0 md:pr-6">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted group-hover:bg-primary/10 transition-colors">
@@ -62,11 +81,21 @@ export function CompanyCard({ company }: CompanyCardProps) {
             </h4>
             <div className="flex items-center gap-2 mt-1">
               <div className="flex bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={cn("h-2.5 w-2.5", i < stars ? "fill-amber-400 text-amber-400" : "fill-transparent text-muted-foreground/20")} />
+                {[...Array(3)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      "h-2.5 w-2.5",
+                      i < stars
+                        ? "fill-amber-400 text-amber-400"
+                        : "fill-transparent text-muted-foreground/20",
+                    )}
+                  />
                 ))}
               </div>
-              <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 rounded">ID:{company.id}</span>
+              <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1 rounded">
+                ID:{company.id}
+              </span>
             </div>
           </div>
         </div>
@@ -75,9 +104,17 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <div className="flex flex-row md:flex-col items-center md:items-start justify-between md:justify-center px-0 md:px-6 md:border-l border-border/40 gap-2">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Fingerprint className="h-3.5 w-3.5 opacity-70" />
-            <span className="text-[13px] font-bold font-mono tracking-tight text-foreground">{company.edrpou}</span>
+            <span className="text-[13px] font-bold font-mono tracking-tight text-foreground">
+              {company.edrpou}
+            </span>
           </div>
-          <div className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight bg-background", status.text, "border-current")}>
+          <div
+            className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-tight bg-background",
+              status.text,
+              "border-current",
+            )}
+          >
             {status.icon} {status.label}
           </div>
         </div>
@@ -93,29 +130,54 @@ export function CompanyCard({ company }: CompanyCardProps) {
         {/* 🔹 4. РОЛІ ТА ДІЯ */}
         <div className="flex items-center justify-between md:justify-end gap-4 pl-0 md:pl-6 md:border-l border-border/40 mt-2 md:mt-0">
           <div className="flex -space-x-1.5">
-            {company.is_carrier && <RoleBadge icon={<Truck size={14} />} color="bg-blue-600" title="Перевізник" />}
-            {company.is_client && <RoleBadge icon={<UserCircle size={14} />} color="bg-emerald-600" title="Клієнт" />}
-            {company.is_expedition && <RoleBadge icon={<Briefcase size={14} />} color="bg-purple-600" title="Експедиція" />}
+            {company.is_carrier && (
+              <RoleBadge
+                icon={<Truck size={14} />}
+                color="bg-blue-600"
+                title="Перевізник"
+              />
+            )}
+            {company.is_client && (
+              <RoleBadge
+                icon={<UserCircle size={14} />}
+                color="bg-emerald-600"
+                title="Клієнт"
+              />
+            )}
+            {company.is_expedition && (
+              <RoleBadge
+                icon={<Briefcase size={14} />}
+                color="bg-purple-600"
+                title="Експедиція"
+              />
+            )}
           </div>
-          
+
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
             <ExternalLink size={16} />
           </div>
         </div>
-
       </div>
     </Card>
   );
 }
 
 // Допоміжний компонент баджа ролі для чистоти коду
-function RoleBadge({ icon, color, title }: { icon: React.ReactNode; color: string; title: string }) {
+function RoleBadge({
+  icon,
+  color,
+  title,
+}: {
+  icon: React.ReactNode;
+  color: string;
+  title: string;
+}) {
   return (
-    <div 
+    <div
       title={title}
       className={cn(
         "h-8 w-8 rounded-full border-2 border-card flex items-center justify-center text-white shadow-sm ring-1 ring-black/5 transition-transform hover:scale-110 hover:z-10",
-        color
+        color,
       )}
     >
       {icon}

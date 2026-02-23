@@ -53,6 +53,7 @@ import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSe
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
 import { toast } from "sonner";
+import { useSaveTender } from "../../hooks/useSaveTender";
 
 // ---------- Schemas ----------
 const routeSchema = z.object({
@@ -184,6 +185,7 @@ export default function TenderSaveForm({
   defaultValues,
   isEdit,
 }: TenderFormProps) {
+  const { mutateAsync: saveTender, isPending } = useSaveTender();
   const router = useRouter();
   const [truckList, setTruckList] = useState<
     { label: string; value: string }[]
@@ -300,27 +302,27 @@ export default function TenderSaveForm({
     getTruckList();
   }, []);
 
-  const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
-    console.log(values, "VALUES");
+  // const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
+  //   console.log(values, "VALUES");
 
-    try {
-      const payload = { ...values };
-      if (defaultValues?.id) payload.id = defaultValues.id;
+  //   try {
+  //     const payload = { ...values };
+  //     if (defaultValues?.id) payload.id = defaultValues.id;
 
-      await api.post("/tender/save", payload);
+  //     await api.post("/tender/save", payload);
 
-      toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
-      tenderSocket?.emit("tender_updated"); // Бажано передати назву події
+  //     toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
+  //     tenderSocket?.emit("tender_updated"); // Бажано передати назву події
 
-      if (!isNextTender) {
-        router.back(); // Наприклад, перенаправлення
-      }
-      router.back(); // Наприклад, перенаправлення
-    } catch (err) {
-      console.error(err);
-      toast.error("Помилка при збереженні тендеру");
-    }
-  };
+  //     if (!isNextTender) {
+  //       router.back(); // Наприклад, перенаправлення
+  //     }
+  //     router.back(); // Наприклад, перенаправлення
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Помилка при збереженні тендеру");
+  //   }
+  // };
   useEffect(() => {
     if (defaultValues) {
       // Створюємо копію дефолтних значень з перетвореними датами
@@ -353,7 +355,7 @@ export default function TenderSaveForm({
     }
   }, [defaultValues, form.reset]);
 
-  console.log(errors, "ERRRORS");
+
 
   const tenderTrailer = watch("tender_trailer");
   const isOnlyRef =
@@ -365,7 +367,26 @@ export default function TenderSaveForm({
       setValue("ref_temperature_to", null);
     }
   }, [isOnlyRef, setValue]);
+const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
+    const payload = { ...values };
+    if (defaultValues?.id) payload.id = defaultValues.id;
 
+    // Викликаємо мутацію. try/catch тут потрібен лише для того, 
+    // щоб не робити router.back() у разі помилки.
+    try {
+      await saveTender(payload);
+      
+      // Роутинг залишаємо в компоненті, бо це UI логіка
+      if (!isNextTender) {
+        router.back();
+      } else {
+        router.back(); // У вашому оригінальному коді тут було два router.back()
+      }
+    } catch (error) {
+      // Помилку вже оброблено в onError у самій мутації (toast.error),
+      // тому тут можна нічого не робити, просто запобігаємо переходу
+    }
+  };
   return (
     <Card className="mx-auto shadow-lg border-t-4 border-t-blue-600">
       <div className="p-6 border-b">

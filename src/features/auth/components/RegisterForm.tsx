@@ -65,11 +65,13 @@ const RegisterForm = () => {
   const { register, isLoadingRegister } = userRegisterMutation();
 
   const onSubmit = (values: TypeRegisterSchema) => {
+    console.log(values, "VALUES");
+
     register(
       { values },
       {
         onSuccess: () => {
-          form.reset(); // Очищує всі поля форми до defaultValues
+          // form.reset(); // Очищує всі поля форми до defaultValues
           // Тут також можна додати toast.success("Реєстрація успішна!");
         },
       },

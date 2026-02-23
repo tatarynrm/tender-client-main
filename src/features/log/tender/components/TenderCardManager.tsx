@@ -23,11 +23,12 @@ import {
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
-import { ITender, ITenderRate } from "@/features/log/types/tender.type";
+import { IRateCompany, ITender } from "@/features/log/types/tender.type";
 import { TenderTimer } from "@/features/dashboard/tender/components/TenderTimer";
 import { TenderRatesList } from "./TenderRate";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import TenderActions from "./TenderActions/TenderActions";
+import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 
 export function TenderCardManagers({
   cargo,
@@ -38,7 +39,7 @@ export function TenderCardManagers({
 }) {
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
-
+  const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const displayPrice = cargo.price_proposed || cargo.price_start;
 
@@ -73,6 +74,32 @@ export function TenderCardManagers({
   const formatTemp = (temp: number | null | undefined) => {
     if (temp === null || temp === undefined) return "";
     return temp > 0 ? `+${temp}` : temp.toString();
+  };
+
+  const handleSetWinner = async (rate: IRateCompany, carCount: number) => {
+    if (!rate.id) return;
+    try {
+      await setWinner({
+        id_tender_rate: rate.id,
+        car_count: carCount, // Тепер передаємо обрану кількість!
+      });
+    } catch (e) {
+      // обробка помилки
+    }
+  };
+
+  // Функція для скасування переможця
+  const handleRemoveWinner = async (rate: IRateCompany) => {
+    if (!rate.id) return;
+
+    try {
+      await setWinner({
+        id_tender_rate: rate.id,
+        car_count: 0, // Передаємо 0, щоб скасувати
+      });
+    } catch (e) {
+      // Помилка вже оброблена в хуку
+    }
   };
   return (
     <Card className="w-full border-slate-200/60 dark:border-white/5 bg-white dark:bg-slate-900/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl overflow-hidden mb-2">
@@ -401,8 +428,9 @@ export function TenderCardManagers({
         {isRatesOpen && (
           <div className="border-t border-slate-100 dark:border-white/5 p-2 bg-slate-50/50 dark:bg-black/20">
             <TenderRatesList
-              rates={cargo.rate_company as unknown as ITenderRate[]}
-              currency={cargo.valut_name ?? "грн"}
+              onSetWinner={handleSetWinner}
+              onRemoveWinner={handleRemoveWinner}
+              cargo={cargo}
             />
           </div>
         )}

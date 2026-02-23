@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function TenderServerPage() {
-  return <ClientsTenderPage status={'CLOSED'} />;
+  return <ClientsTenderPage status={'CLOSED,ANALYZE'} />;
 }

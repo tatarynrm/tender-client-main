@@ -7,6 +7,15 @@ export interface IUserProfile {
   verified: boolean;
   department: IDepartment;
   is_blocked: boolean;
+  // Додаємо нове поле. Воно може бути null, якщо користувач ще не підключив бота
+  person_telegram: IPersonTelegram | null; 
+}
+
+// Створюємо новий інтерфейс для Telegram-даних
+export interface IPersonTelegram {
+  telegram_id: number; // Якщо в БД це BIGINT, іноді pg повертає його як string, тоді змініть на number | string
+  username: string | null; // В Telegram може не бути username
+  first_name: string | null;
 }
 
 export interface IUserRole {
@@ -18,7 +27,7 @@ export interface IUserRole {
 export interface IPerson {
   id: number;
   name: string;
-  ids_sex: 'M' | 'F' | string; // Використовуємо union type для статі
+  ids_sex: 'M' | 'F' | string;
   surname: string;
   birthday: string | null;
   last_name: string;
@@ -43,7 +52,7 @@ export interface ICompany {
 
 export interface IDepartment {
   id: number;
-  idnt: any | null; // Замінити на конкретний тип, якщо відома структура idnt
+  idnt: any | null;
   root_company: number;
   department_name: string;
 }

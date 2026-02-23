@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronUp, Settings2, LayoutGrid, List } from "lucide-react"; 
+import { ChevronUp, Settings2, LayoutGrid, List } from "lucide-react";
 
 import { ITender } from "@/features/log/types/tender.type";
 import { ErrorState } from "@/shared/components/Loaders/ErrorState";
@@ -31,16 +31,17 @@ import { TenderCardFour } from "./components/cards-examples/CardFour";
 import { TenderCardFive } from "./components/cards-examples/CardFive";
 import { cn } from "@/shared/utils";
 import { TenderCardSix } from "./components/cards-examples/CardSix";
+import { Item } from "@radix-ui/react-dropdown-menu";
 
 // Тип для доступних варіантів дизайну
-type CardVariant = "v1" | "v2" | "v3" | "v4" | "v5" | 'v6'
+type CardVariant = "v1" | "v2" | "v3" | "v4" | "v5" | "v6";
 
-export default function ClientsTenderPage({status}: Props) {
+export default function ClientsTenderPage({ status }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tenderFilters } = useTenderClientFormData();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
-  
+
   // 1. Стан для вибору варіанту картки (за замовчуванням v3)
   const [cardVariant, setCardVariant] = useState<CardVariant>("v3");
 
@@ -70,7 +71,8 @@ export default function ClientsTenderPage({status}: Props) {
     [currentParams, status],
   );
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { tenders, pagination, isLoading, error } = useTenderListClient(queryFilters);
+  const { tenders, pagination, isLoading, error } =
+    useTenderListClient(queryFilters);
 
   // 2. Функція рендеру вибраної картки
   const renderTenderCard = (item: ITender) => {
@@ -81,13 +83,20 @@ export default function ClientsTenderPage({status}: Props) {
     };
 
     switch (cardVariant) {
-      case "v1": return <TenderCardOne {...props} />;
-      case "v2": return <TenderCardTwo {...props} />;
-      case "v3": return <TenderCardThree {...props} />;
-      case "v4": return <TenderCardFour {...props} />;
-      case "v5": return <TenderCardFive {...props} />;
-      case "v6": return <TenderCardSix {...props} />;
-      default: return <TenderCardThree {...props} />;
+      case "v1":
+        return <TenderCardOne {...props} />;
+      case "v2":
+        return <TenderCardTwo {...props} />;
+      case "v3":
+        return <TenderCardThree {...props} />;
+      case "v4":
+        return <TenderCardFour {...props} />;
+      case "v5":
+        return <TenderCardFive {...props} />;
+      case "v6":
+        return <TenderCardSix {...props} />;
+      default:
+        return <TenderCardThree {...props} />;
     }
   };
 
@@ -95,7 +104,9 @@ export default function ClientsTenderPage({status}: Props) {
     const params = new URLSearchParams();
     Object.entries(newParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
-        const stringValue = Array.isArray(value) ? value.join(",") : String(value);
+        const stringValue = Array.isArray(value)
+          ? value.join(",")
+          : String(value);
         params.set(key, stringValue);
       }
     });
@@ -112,14 +123,20 @@ export default function ClientsTenderPage({status}: Props) {
     if (valueToRemove === "all") {
       newValue = undefined;
     } else {
-      const currentValue = String(currentParams[key as keyof typeof currentParams] || "");
-      newValue = currentValue.split(",").filter((v) => v !== valueToRemove).join(",") || undefined;
+      const currentValue = String(
+        currentParams[key as keyof typeof currentParams] || "",
+      );
+      newValue =
+        currentValue
+          .split(",")
+          .filter((v) => v !== valueToRemove)
+          .join(",") || undefined;
     }
     const newFilters = { ...filters, [key]: newValue };
     setFilters(newFilters);
     updateUrl({ ...newFilters, page: 1 });
   };
-
+  console.log(tenders, "ITEM");
   if (error) return <ErrorState />;
   if (isLoading) return <TenderLoader />;
 
@@ -140,20 +157,22 @@ export default function ClientsTenderPage({status}: Props) {
               reset={handleReset}
               dropdowns={tenderFilters}
             />
-            
+
             {/* ПЕРЕМИКАЧ ВИГЛЯДУ КАРТОК */}
             <div className="flex items-center border-l pl-2 gap-1 ml-2">
-              {(["v1", "v2", "v3", "v4", "v5",'v6'] as CardVariant[]).map((v) => (
-                <Button
-                  key={v}
-                  variant={cardVariant === v ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 w-8 p-0 text-[10px] font-bold"
-                  onClick={() => setCardVariant(v)}
-                >
-                  {v.toUpperCase()}
-                </Button>
-              ))}
+              {(["v1", "v2", "v3", "v4", "v5", "v6"] as CardVariant[]).map(
+                (v) => (
+                  <Button
+                    key={v}
+                    variant={cardVariant === v ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 w-8 p-0 text-[10px] font-bold"
+                    onClick={() => setCardVariant(v)}
+                  >
+                    {v.toUpperCase()}
+                  </Button>
+                ),
+              )}
             </div>
           </div>
 
@@ -178,11 +197,15 @@ export default function ClientsTenderPage({status}: Props) {
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-1 pb-20">
-          <div className={cn(
-            "grid gap-2",
-            // Можна додати зміну сітки залежно від варіанту, якщо потрібно
-            cardVariant === "v1" ? "grid-cols-1 lg:grid-cols-1" : "grid-cols-1"
-          )}>
+          <div
+            className={cn(
+              "grid gap-2",
+              // Можна додати зміну сітки залежно від варіанту, якщо потрібно
+              cardVariant === "v1"
+                ? "grid-cols-1 lg:grid-cols-1"
+                : "grid-cols-1",
+            )}
+          >
             {tenders.map((item) => renderTenderCard(item))}
           </div>
 

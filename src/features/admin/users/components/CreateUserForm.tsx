@@ -29,7 +29,7 @@ import { InputText } from "@/shared/components/Inputs/InputText";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useAdminUsers } from "../../hooks/useAdminUsers";
-import { id } from "date-fns/locale";
+import { de, id } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 
 /* =======================
@@ -57,6 +57,7 @@ const userSchema = z.object({
       is_admin: z.boolean({ message: "Вкажіть права адміністратора" }),
       is_manager: z.boolean({ message: "Вкажіть права менеджера" }),
     }),
+    id_company: z.number().nullable(),
 
     person_phone: z
       .array(
@@ -93,6 +94,8 @@ export default function UserForm({ defaultValues }: UserFormProps) {
   const router = useRouter();
   // Визначаємо, чи ми редагуємо, чи створюємо
   const isEditMode = !!defaultValues?.id;
+  console.log(defaultValues, "DEFAULT VALUES");
+
   // 1. Ініціалізація форми з використанням useMemo (як у CargoForm)
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
@@ -100,22 +103,31 @@ export default function UserForm({ defaultValues }: UserFormProps) {
     defaultValues: useMemo(
       () => ({
         email: "",
-        id_company: 0,
 
         person: {
           name: "",
           surname: "",
-          last_name: "",
+          last_name: defaultValues?.last_name || null, // Явно вказуємо null, якщо немає значення"",
           ids_sex: "M",
+          id_company: defaultValues?.company?.id || null,
           person_role: { is_admin: false, is_manager: false },
-          person_phone: [
-            {
-              phone: "",
-              is_viber: false,
-              is_telegram: false,
-              is_whatsapp: false,
-            },
-          ],
+          person_phone: defaultValues?.phone
+            ? [
+                {
+                  phone: defaultValues?.phone,
+                  is_viber: !!defaultValues?.is_viber,
+                  is_telegram: !!defaultValues?.is_telegram,
+                  is_whatsapp: !!defaultValues?.is_whatsapp,
+                },
+              ]
+            : [
+                {
+                  phone: "",
+                  is_viber: false,
+                  is_telegram: false,
+                  is_whatsapp: false,
+                },
+              ],
         },
         ...defaultValues,
       }),
@@ -133,25 +145,40 @@ export default function UserForm({ defaultValues }: UserFormProps) {
   // 2. Ефект для синхронізації (як у CargoForm)
   useEffect(() => {
     if (defaultValues) {
+      // Визначаємо, які телефони підставити
+      let initialPhones = [
+        { phone: "", is_viber: false, is_telegram: false, is_whatsapp: false },
+      ];
+
+      if (defaultValues.person?.person_phone?.length) {
+        initialPhones = defaultValues.person.person_phone;
+      } else if (defaultValues.phone) {
+        // Якщо в person немає телефонів, але в корені є phone (з pre-register)
+        initialPhones = [
+          {
+            phone: defaultValues.phone,
+            is_viber: !!defaultValues.is_viber,
+            is_telegram: !!defaultValues.is_telegram,
+            is_whatsapp: !!defaultValues.is_whatsapp,
+          },
+        ];
+      }
+
       reset({
         ...defaultValues,
-        // Явне приведення типів для вкладених об'єктів
+        id_company: defaultValues.company?.id || defaultValues.id_company,
         person: {
           ...defaultValues.person,
+          name: defaultValues.person?.name || defaultValues.name || "",
+          surname: defaultValues.person?.surname || defaultValues.surname || "",
+          id_company: defaultValues.company?.id || defaultValues.id_company,
+          last_name:
+            defaultValues.person?.last_name || defaultValues.last_name || "",
           person_role: {
             is_admin: !!defaultValues.person?.person_role?.is_admin,
             is_manager: !!defaultValues.person?.person_role?.is_manager,
           },
-          person_phone: defaultValues.person?.person_phone?.length
-            ? defaultValues.person.person_phone
-            : [
-                {
-                  phone: "",
-                  is_viber: false,
-                  is_telegram: false,
-                  is_whatsapp: false,
-                },
-              ],
+          person_phone: initialPhones,
         },
       });
     }
@@ -162,31 +189,25 @@ export default function UserForm({ defaultValues }: UserFormProps) {
       ...values,
       id_person: defaultValues?.person?.id || null,
       person: {
-        id: defaultValues?.person?.id || null,
         ...values.person,
+        id: defaultValues?.person?.id || null,
+        // Передаємо id_company з кореня форми всередину об'єкта person
+        id_company: values.id_company || defaultValues?.company?.id || null,
       },
       ...(isEditMode && { id: defaultValues.id }),
     };
 
-    // Викликаємо мутацію
     saveUser(payload, {
-      onSuccess: (data) => {
-        // 1. Логіка специфічна для цієї сторінки/форми
+      onSuccess: () => {
         toast.success(isEditMode ? "Оновлено!" : "Створено!");
-
-        if (!isEditMode) {
-          reset(); // Очистити форму тільки при створенні
-        }
-
-        router.push("/admin/users"); // Редірект
+        if (!isEditMode) reset();
+        router.push("/admin/users");
       },
       onError: (error) => {
-        // Специфічна обробка помилок форми (наприклад, встановити помилки в поля)
-        // setError('email', { message: 'Цей email вже зайнятий' });
+        console.error("Save error:", error);
       },
     });
   };
-
   useEffect(() => {
     if (formState.errors) {
       console.log("Form errors:", formState.errors);
@@ -211,7 +232,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
               control={control}
               label="Компанія"
               icon={Building2}
-              initialLabel={defaultValues.company.company_name}
+              initialLabel={defaultValues?.company?.company_name}
             />
 
             <InputText
@@ -327,12 +348,12 @@ export default function UserForm({ defaultValues }: UserFormProps) {
                     <InputSwitch
                       name={`person.person_phone.${index}.is_telegram`}
                       control={control}
-                      label="TG"
+                      label="Telegram"
                     />
                     <InputSwitch
                       name={`person.person_phone.${index}.is_whatsapp`}
                       control={control}
-                      label="WA"
+                      label="WhatsApp"
                     />
                   </div>
 

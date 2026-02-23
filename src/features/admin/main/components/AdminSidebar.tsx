@@ -44,7 +44,7 @@ const links: MenuItem[] = [
         icon: KeyRound,
       },
       { name: "Усі користувачі", href: "/admin/users", icon: Users },
-      { name: "Створити", href: "/admin/users/create", icon: UserRoundPlus },
+      { name: "Створити", href: "/admin/users/save", icon: UserRoundPlus },
     ],
   },
   {
@@ -52,7 +52,7 @@ const links: MenuItem[] = [
     icon: Building2,
     children: [
       { name: "Усі компанії", href: "/admin/companies", icon: Building2 },
-      { name: "Створити", href: "/admin/companies/create", icon: Pickaxe },
+      { name: "Створити", href: "/admin/companies/save", icon: Pickaxe },
     ],
   },
   { name: "Аналітика", href: "/admin/analytics", icon: BarChart },
@@ -96,12 +96,24 @@ export default function AdminSidebar({
   const toggleMenu = (name: string) =>
     setOpenMenus((prev) => ({ ...prev, [name]: !prev[name] }));
 
-  const isActive = (href?: string) => {
+  const isActive = (href?: string, hasChildren = false) => {
     if (!href) return false;
-    if (href === "/admin") return pathname === "/admin";
-    return pathname === href || pathname.startsWith(href + "/");
-  };
 
+    // Якщо ми на головній
+    if (href === "/admin") {
+      return pathname === "/admin";
+    }
+
+    // Якщо у пункту є діти (категорія), ми не підсвічуємо сам "батьківський" лінк
+    // Він буде підсвічений через activeParent у renderLink
+    if (hasChildren) {
+      return false;
+    }
+
+    // Для звичайних посилань: підсвічуємо ТІЛЬКИ якщо шлях збігається повністю
+    // АБО якщо це базовий шлях розділу (наприклад, перегляд списку)
+    return pathname === href;
+  };
   const renderLink = (link: MenuItem, isChild = false) => {
     const { name, href, icon: Icon, children, status, info } = link;
     const activeParent = children?.some((child) => isActive(child.href));

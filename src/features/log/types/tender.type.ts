@@ -169,13 +169,20 @@ export interface ITenderPermission {
   load_type_name: string;
 }
 export interface IRateCompany {
+  id: number;
+  email: string;
   author: string;
-  price_proposed: number | null;
-  redemption_price: string;
-}
-export interface ITenderRate {
-  author: string;
+  id_author: number;
+  id_company: number;
   company_name: string;
+  
+  // Бажано замінити any на конкретний інтерфейс, якщо він у вас вже є
+  person_phone: any[]; 
+  
   price_proposed: number;
   redemption_price: string;
+  
+  // Нові поля для кількості машин
+  car_count_winner: number;
+  car_count_proposed: number;
 }

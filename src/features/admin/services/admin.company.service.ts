@@ -9,5 +9,5 @@ export const adminCompanyService = {
     api.get(`/admin/company/one/${id}`).then(res => res.data),
     
   createCompany: (data: any) => 
-    api.post("/company/create", data).then(res => res.data),
+    api.post("/admin/company/save", data).then(res => res.data),
 };
