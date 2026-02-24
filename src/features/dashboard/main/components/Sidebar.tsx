@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -78,29 +77,28 @@ const links: MenuItem[] = [
     name: "Тендери",
     icon: LayoutList,
     href: "/dashboard/tender",
-    children:[
-            {
+    children: [
+      {
         name: "Заплановані",
         href: "/dashboard/tender/plan",
         icon: ArrowBigRight,
       },
-            {
+      {
         name: "Активні",
         href: "/dashboard/tender/active",
         icon: ShieldCheck,
       },
-            {
+      {
         name: "Завершені",
         href: "/dashboard/tender/closed",
         icon: Check,
       },
-            {
+      {
         name: "Архів",
         href: "/dashboard/tender/archive",
         icon: Archive,
       },
-    ]
-
+    ],
   },
   {
     name: "Персональні дані",
@@ -246,11 +244,14 @@ export default function Sidebar({
   };
 
   const footerLinks = [...defaultFooterLinks];
-  if (profile?.role.is_admin && profile.role.is_ict ) {
+  if (profile?.role.is_admin && profile.role.is_ict) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
-      { name: "CRM система", href: "/log", icon: FileStack }
+      { name: "CRM система", href: "/log", icon: FileStack },
     );
+  }
+  if (profile.role.is_ict) {
+    footerLinks.push({ name: "CRM система", href: "/log", icon: FileStack });
   }
 
   return (
