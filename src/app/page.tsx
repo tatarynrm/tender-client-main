@@ -129,6 +129,7 @@ import MainHeader from "@/features/home/main/components/MainHeader";
 import Footer from "@/shared/components/Footer/Footer";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import Link from "next/link";
+import DonwloadDesktopAppButtons from "@/shared/components/Download/DownloadDesktopApps/DonwloadDesktopAppButtons";
 
 export default function HomePage() {
   const { profile } = useAuth();
@@ -144,7 +145,7 @@ export default function HomePage() {
       <MainHeader profile={profile ?? undefined} />
 
       {/* HERO SECTION: МАЙБУТНЄ ТУТ */}
-      <section className="relative pt-32 pb-20 px-6">
+      <section className="relative pt-8 pb-20 px-6">
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-bold uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4">
             <Rocket size={14} /> Нова ера ICTender
@@ -185,6 +186,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        <DonwloadDesktopAppButtons />
       </section>
 
       {/* ВІЗІЯ: ТРИ СТОВПИ ЕКОСИСТЕМИ */}
