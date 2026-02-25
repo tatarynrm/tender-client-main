@@ -12,7 +12,7 @@ export const useRemoveCars = () => {
       return res.data;
     },
     onSuccess: (_, variables) => {
-      toast.success("Машини видалено 🗑️");
+      toast.success("Заявки видалено 🗑️");
 
       // Оновлюємо списки
       queryClient.invalidateQueries({

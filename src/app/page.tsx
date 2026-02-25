@@ -130,12 +130,15 @@ import Footer from "@/shared/components/Footer/Footer";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import Link from "next/link";
 import DonwloadDesktopAppButtons from "@/shared/components/Download/DownloadDesktopApps/DonwloadDesktopAppButtons";
+import VisualScene from "@/shared/components/3D-Card/VisualScene";
 
 export default function HomePage() {
   const { profile } = useAuth();
 
   return (
     <main className="relative min-h-screen bg-[#020617] text-white selection:bg-teal-500/30 overflow-hidden">
+     
+       
       {/* ФОНОВІ ЕФЕКТИ: Глибокий космос та туманності */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 blur-[120px]" />
@@ -145,7 +148,8 @@ export default function HomePage() {
       <MainHeader profile={profile ?? undefined} />
 
       {/* HERO SECTION: МАЙБУТНЄ ТУТ */}
-      <section className="relative pt-8 pb-20 px-6">
+      <section className="relative z-1 pt-8 pb-20 px-6">
+
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-bold uppercase tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-4">
             <Rocket size={14} /> Нова ера ICTender
