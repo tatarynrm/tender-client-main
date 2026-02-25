@@ -130,7 +130,7 @@ import Footer from "@/shared/components/Footer/Footer";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import Link from "next/link";
 import DonwloadDesktopAppButtons from "@/shared/components/Download/DownloadDesktopApps/DonwloadDesktopAppButtons";
-import VisualScene from "@/shared/components/3D-Card/VisualScene";
+
 
 export default function HomePage() {
   const { profile } = useAuth();

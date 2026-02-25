@@ -1,4 +1,4 @@
-import { Timeline } from "@/shared/components/ui/acternity-ui/timeline";
+
 import React from "react";
 
 export function AboutSection() {
@@ -117,7 +117,7 @@ const data = [
         
         {/* Обертаємо Timeline, щоб гарантувати темну стилістику всередині компонента */}
     
-          <Timeline data={data} />
+         
       
       </div>
     </section>
