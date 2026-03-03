@@ -1,76 +1,3 @@
-// // components/Tender/TenderMap.tsx
-// import React, { useEffect } from "react";
-// import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-// import L from "leaflet";
-// import "leaflet/dist/leaflet.css";
-// import "leaflet-routing-machine";
-// import { ITenderRoute } from "../../types/tender.type";
-
-// interface TenderMapProps {
-//   points: ITenderRoute[];
-//   captureId?: string;
-//   onReady?: () => void; // Додаємо цей проп
-// }
-
-// // Внутрішній компонент для оновлення стану самої карти Leaflet
-// function MapUpdater({ points }: { points: ITenderRoute[] }) {
-//   const map = useMap();
-
-//   useEffect(() => {
-//     if (!map || points.length === 0) return;
-
-//     // Сортуємо та фільтруємо точки
-//     const validPoints = points
-//       .filter((p) => p.lat && p.lon)
-//       .sort((a, b) => a.order_num - b.order_num);
-
-//     if (validPoints.length === 0) return;
-
-//     // 1. Оновлюємо центр карти по першій точці при зміні маршруту
-//     map.setView([validPoints[0].lat, validPoints[0].lon], map.getZoom());
-
-//     // 2. Ініціалізуємо маршрут
-//     const waypoints = validPoints.map((p) => L.latLng(p.lat, p.lon));
-//     const routingControl = (L as any).Routing.control({
-//       waypoints,
-//       lineOptions: { styles: [{ color: "#ea580c", weight: 5, opacity: 0.8 }] },
-//       addWaypoints: false,
-//       draggableWaypoints: false,
-//       fitSelectedRoutes: true,
-//       show: false,
-//       createMarker: () => null,
-//     }).addTo(map);
-
-//     return () => {
-//       if (map) map.removeControl(routingControl);
-//     };
-//   }, [map, points]);
-
-//   return null;
-// }
-
-// export const TenderMap = ({ points, captureId }: TenderMapProps) => {
-//   return (
-//     <div id={captureId} className="h-full w-full relative">
-//       <MapContainer
-//         center={[points[0]?.lat || 50, points[0]?.lon || 30]}
-//         zoom={6}
-//         className="h-full w-full"
-//       >
-//         <TileLayer
-//           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-//           crossOrigin="anonymous"
-//         />
-//         <MapUpdater points={points} />
-//         {points.map((p, idx) => (
-//           <Marker key={p.id} position={[p.lat, p.lon]}>
-//             <Popup>{p.city}</Popup>
-//           </Marker>
-//         ))}
-//       </MapContainer>
-//     </div>
-//   );
-// };
 "use client";
 import React, { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
@@ -79,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import { ITenderRoute } from "../../types/tender.type";
 
-// Фікс іконок Leaflet для Next.js (без цього маркери можуть зникати)
+// Фікс іконок Leaflet для Next.js
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
@@ -94,14 +21,19 @@ interface TenderMapProps {
   onReady?: (distance: number) => void;
 }
 
-function RoutingMachine({ points, onReady }: { points: ITenderRoute[], onReady?: (dist: number) => void }) {
+function RoutingMachine({
+  points,
+  onReady,
+}: {
+  points: ITenderRoute[];
+  onReady?: (dist: number) => void;
+}) {
   const map = useMap();
   const routingControlRef = useRef<any>(null);
 
   useEffect(() => {
     if (!map || points.length < 2) return;
 
-    // Сортуємо точки за порядком
     const validPoints = [...points]
       .filter((p) => p.lat && p.lon)
       .sort((a, b) => a.order_num - b.order_num);
@@ -110,42 +42,40 @@ function RoutingMachine({ points, onReady }: { points: ITenderRoute[], onReady?:
 
     const waypoints = validPoints.map((p) => L.latLng(p.lat, p.lon));
 
-    // Видаляємо старий контроль, якщо він був (важливо для React Strict Mode)
     if (routingControlRef.current) {
       map.removeControl(routingControlRef.current);
     }
 
-    // Створюємо новий контроль маршруту
+    // Створюємо контроль маршруту без візуального сміття
     const control = (L as any).Routing.control({
       waypoints,
       lineOptions: {
-        styles: [{ color: "#ea580c", weight: 5, opacity: 0.8 }],
+        styles: [{ color: "#0ea5e9", weight: 4, opacity: 0.8 }], // sky-500 для сучасного вигляду
         addWaypoints: false,
       },
       router: (L as any).Routing.osrmv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1", // Пряма адреса сервера
-        profile: 'driving', // Профіль для авто
+        serviceUrl: "https://router.project-osrm.org/route/v1",
+        profile: "driving",
       }),
-      show: false, // Приховуємо текстову панель з інструкціями
+      show: false, // Приховуємо панель
       addWaypoints: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
-      createMarker: () => null, // Не дублюємо маркери роутером
+      createMarker: () => null, // Забороняємо створювати дублюючі маркери по маршруту
     }).addTo(map);
+
+    // ЖОРСТКО ховаємо контейнер з інструкціями (оверлей поворотів), якщо він все ж відрендерився
+    const container = control.getContainer();
+    if (container) {
+      container.style.display = "none";
+    }
 
     routingControlRef.current = control;
 
-    // Слухаємо подію знаходження маршруту, щоб отримати кілометраж
-    control.on('routesfound', (e: any) => {
+    control.on("routesfound", (e: any) => {
       const routes = e.routes;
       const distanceInKm = routes[0].summary.totalDistance / 1000;
-      // console.log(`Дистанція: ${distanceInKm.toFixed(1)} км`);
       if (onReady) onReady(distanceInKm);
-    });
-
-    // Обробка помилок
-    control.on('routingerror', (e: any) => {
-      console.error("Помилка побудови маршруту:", e);
     });
 
     return () => {
@@ -153,32 +83,36 @@ function RoutingMachine({ points, onReady }: { points: ITenderRoute[], onReady?:
         map.removeControl(routingControlRef.current);
       }
     };
-  }, [map, points]);
+  }, [map, points, onReady]);
 
   return null;
 }
 
 export const TenderMap = ({ points, captureId, onReady }: TenderMapProps) => {
-  if (!points || points.length === 0) return <div className="h-full w-full bg-gray-100 flex items-center justify-center">Немає координат</div>;
+  if (!points || points.length === 0)
+    return (
+      <div className="h-full w-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 text-xs uppercase font-bold">
+        Немає координат
+      </div>
+    );
 
   return (
-    <div id={captureId} className="h-full w-full relative">
+    <div id={captureId} className="h-full w-full relative z-0">
       <MapContainer
         center={[points[0].lat, points[0].lon]}
         zoom={6}
         className="h-full w-full"
+        zoomControl={false}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" // Сучасна світла карта CartoDB
           crossOrigin="anonymous"
-          attribution='&copy; OpenStreetMap'
+          attribution='&copy; <a href="https://carto.com/">Carto</a>'
         />
-
         <RoutingMachine points={points} onReady={onReady} />
-
         {points.map((p) => (
           <Marker key={p.id} position={[p.lat, p.lon]}>
-            <Popup>{p.city}</Popup>
+            <Popup className="text-[10px] font-bold uppercase">{p.city}</Popup>
           </Marker>
         ))}
       </MapContainer>

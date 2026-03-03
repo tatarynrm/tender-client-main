@@ -26,7 +26,8 @@ import {
 import NativeSelect from "@/shared/components/Select/NativeSelect";
 import { cn } from "@/shared/utils";
 import { Dropdowns } from "../../types/load.type";
-import { ILoadAddData } from "@/shared/api/api.type";
+import { ILoadData } from "@/shared/api/api.type";
+
 
 interface TenderFiltersProps<T extends Filters> {
   filters: T;
@@ -34,7 +35,7 @@ interface TenderFiltersProps<T extends Filters> {
   apply: () => void;
   reset: () => void;
   dropdowns?: Dropdowns;
-  add_data?: ILoadAddData;
+  add_data?: ILoadData;
 }
 
 export const LoadFiltersSheet = <T extends Filters>({

@@ -148,6 +148,9 @@ export default function LoadListComponent({ active, archive }: Props) {
       updateUrl({ ...currentParams, transit: value, page: 1 });
     }
   };
+
+  console.log(add_data, "ADDDD DATA");
+
   // 6. Рендер станів завантаження/помилки
   if (isLoading) return <Loader />;
   if (error) return <ErrorState />;
@@ -175,7 +178,8 @@ export default function LoadListComponent({ active, archive }: Props) {
               {/* Кнопка Усі */}
               <QuickFilterBtn
                 label="Усі"
-                count={add_data?.count_all}
+                count={add_data?.car_count_all.all}
+                countFilter={add_data?.car_count_filter.all}
                 isActive={!currentParams.transit}
                 onClick={() => {
                   const { transit, ...newParams } = currentParams;
@@ -186,16 +190,43 @@ export default function LoadListComponent({ active, archive }: Props) {
               <div className="w-px h-4 bg-border/60 mx-1 " />
 
               {[
-                { id: "E", label: "Екс", count: add_data?.count_exp },
-                { id: "I", label: "Імп", count: add_data?.count_imp },
-                { id: "R", label: "Рег", count: add_data?.count_reg },
-                { id: "T", label: "Транзит", count: add_data?.count_tr },
-                { id: "M", label: "Міжн", count: add_data?.count_mn },
+                {
+                  id: "E",
+                  label: "Екс",
+                  count: add_data?.car_count_all.exp,
+                  count_filter: add_data?.car_count_filter.exp,
+                },
+                {
+                  id: "I",
+                  label: "Імп",
+                  count: add_data?.car_count_all.imp,
+                  count_filter: add_data?.car_count_filter.imp,
+                },
+                {
+                  id: "R",
+                  label: "Рег",
+                  count: add_data?.car_count_all.reg,
+                  count_filter: add_data?.car_count_filter.reg,
+                },
+                {
+                  id: "T",
+                  label: "Транзит",
+                  count: add_data?.car_count_all.tr,
+
+                  count_filter: add_data?.car_count_filter.tr,
+                },
+                {
+                  id: "M",
+                  label: "Міжн",
+                  count: add_data?.car_count_all.mn,
+                  count_filter: add_data?.car_count_filter.mn,
+                },
               ].map((btn) => (
                 <QuickFilterBtn
                   key={btn.id}
                   label={btn.label}
                   count={btn.count}
+                  countFilter={btn.count_filter}
                   isActive={currentParams.transit === btn.id}
                   onClick={() => toggleTransit(btn.id)}
                 />

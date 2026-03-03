@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  ReactNode,
-  useEffect,
-  useState,
-  useRef,
-} from "react";
+import { createContext, useContext, ReactNode, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAuth } from "./AuthCheckProvider";
 import { useSocketEvents } from "../hooks/useSocketEvenets";
 
 export type Namespace = "chat" | "tender" | "user" | "load";
-type Sockets = Record<Namespace, Socket | null>;
+export type Sockets = Record<Namespace, Socket | null>;
 
 const SocketContext = createContext<Sockets | null>(null);
 
@@ -28,89 +21,64 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     load: null,
   });
 
-  // Використовуємо ref для стабільного доступу до поточних сокетів без зайвих ререндерів
-  const socketsRef = useRef<Sockets>(activeSockets);
-
   useEffect(() => {
-    // Функція для повного очищення сокетів
-    const cleanupSockets = () => {
-      Object.entries(socketsRef.current).forEach(([ns, socket]) => {
-        if (socket) {
-          // console.log(`🔌 Disconnecting from ${ns}...`);
-          socket.removeAllListeners();
-          socket.disconnect();
-        }
-      });
-      const empty = { chat: null, tender: null, user: null, load: null };
-      socketsRef.current = empty;
-      setActiveSockets(empty);
-    };
-
-    // 1. Якщо юзера немає (Logout) — чистимо все
+    // 1. Якщо юзера немає — обнуляємо стейт і виходимо
     if (!currentProfile?.person.id) {
-      cleanupSockets();
+      setActiveSockets({ chat: null, tender: null, user: null, load: null });
       return;
     }
 
-    // 2. Якщо юзер зайшов (Login) — ТЕЖ спочатку чистимо все старе,
-    // щоб уникнути дублів та "завислих" з'єднань від попереднього сеансу
-    cleanupSockets();
+    const userId = currentProfile.person.id;
+    const isIct = currentProfile.role.is_ict;
 
-    // console.log(
-    //   `🚀 Initializing sockets for user: ${currentProfile.person.id}`,
-    // );
-
+    // 2. Визначаємо потрібні неймспейси
     const namespaces: Namespace[] = ["chat", "tender", "user"];
-    if (currentProfile.role.is_ict) namespaces.push("load");
+    if (isIct) namespaces.push("load");
 
-    const newBatch: Sockets = {
-      chat: null,
-      tender: null,
-      user: null,
-      load: null,
-    };
+    // Створюємо локальний об'єкт для нових з'єднань
+    const newSockets: Partial<Sockets> = {};
 
+    // 3. Ініціалізуємо сокети
     namespaces.forEach((ns) => {
       const socket = io(`${process.env.NEXT_PUBLIC_SERVER_URL}/${ns}`, {
         transports: ["websocket"],
-        auth: { userId: currentProfile.person.id },
+        auth: { userId },
+        // Залишаємо стандартну логіку Socket.io для перепідключення.
+        // Прибрано: forceNew, multiplex, та timestamp з query, 
+        // оскільки вони ламали кешування з'єднань при ререндері.
         reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 1000,
-
-        forceNew: true, // Примусово створювати нове з'єднання
-        multiplex: false, // Вимкнути спільне використання з'єднання для різних інстансів
-        query: {
-          uId: currentProfile.person.id, // Додатковий ідентифікатор у query
-          time: Date.now(), // Робить URL унікальним для браузера
-        },
       });
 
       socket.on("connect", () => {
-        // console.log(`✅ Connected to ${ns} (ID: ${currentProfile.person.id})`);
+        // console.log(`✅ Connected to ${ns}`);
       });
 
       socket.on("connect_error", (err) => {
         console.error(`❌ Connection error on ${ns}:`, err.message);
       });
 
-      newBatch[ns] = socket;
+      newSockets[ns] = socket;
     });
 
-    socketsRef.current = newBatch;
-    setActiveSockets(newBatch);
+    // Оновлюємо стейт новими сокетами
+    setActiveSockets((prev) => ({ ...prev, ...newSockets }) as Sockets);
 
-    // 3. Cleanup при розмонтуванні компонента
+    // 4. ПРАВИЛЬНИЙ CLEANUP (Життєво необхідно для React 18 Strict Mode)
     return () => {
-      // Тут можна не викликати cleanupSockets(), щоб не розривати зв'язок при React-ререндері,
-      // але оскільки ми залежимо від [currentProfile?.id], цей ефект сам все підчистить при зміні юзера.
+      namespaces.forEach((ns) => {
+        const socket = newSockets[ns];
+        if (socket) {
+          // console.log(`🔌 Disconnecting from ${ns}...`);
+          socket.removeAllListeners();
+          socket.disconnect();
+        }
+      });
     };
-  }, [currentProfile?.person.id, currentProfile?.role.is_ict]);
+  }, [currentProfile?.person.id, currentProfile?.role.is_ict]); // Залежності чіткі та правильні
 
   return (
     <SocketContext.Provider value={activeSockets}>
       {children}
-      {/* Менеджер івентів має бути всередині провайдера */}
       <SocketEventsManager />
     </SocketContext.Provider>
   );

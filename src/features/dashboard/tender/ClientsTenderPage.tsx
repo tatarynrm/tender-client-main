@@ -75,30 +75,30 @@ export default function ClientsTenderPage({ status }: Props) {
     useTenderListClient(queryFilters);
 
   // 2. Функція рендеру вибраної картки
-  const renderTenderCard = (item: ITender) => {
-    const props = {
-      key: item.id,
-      cargo: item,
-      onOpenDetails: () => setSelectedTender(item),
-    };
+  // const renderTenderCard = (item: ITender) => {
+  //   const props = {
+  //     key: item.id,
+  //     cargo: item,
+  //     onOpenDetails: () => setSelectedTender(item),
+  //   };
 
-    switch (cardVariant) {
-      case "v1":
-        return <TenderCardOne {...props} />;
-      case "v2":
-        return <TenderCardTwo {...props} />;
-      case "v3":
-        return <TenderCardThree {...props} />;
-      case "v4":
-        return <TenderCardFour {...props} />;
-      case "v5":
-        return <TenderCardFive {...props} />;
-      case "v6":
-        return <TenderCardSix {...props} />;
-      default:
-        return <TenderCardThree {...props} />;
-    }
-  };
+  //   switch (cardVariant) {
+  //     case "v1":
+  //       return <TenderCardOne {...props} />;
+  //     case "v2":
+  //       return <TenderCardTwo {...props} />;
+  //     case "v3":
+  //       return <TenderCardThree {...props} />;
+  //     case "v4":
+  //       return <TenderCardFour {...props} />;
+  //     case "v5":
+  //       return <TenderCardFive {...props} />;
+  //     case "v6":
+  //       return <TenderCardSix {...props} />;
+  //     default:
+  //       return <TenderCardThree {...props} />;
+  //   }
+  // };
 
   const updateUrl = (newParams: Record<string, any>) => {
     const params = new URLSearchParams();
@@ -159,7 +159,7 @@ export default function ClientsTenderPage({ status }: Props) {
             />
 
             {/* ПЕРЕМИКАЧ ВИГЛЯДУ КАРТОК */}
-            <div className="flex items-center border-l pl-2 gap-1 ml-2">
+            {/* <div className="flex items-center border-l pl-2 gap-1 ml-2">
               {(["v1", "v2", "v3", "v4", "v5", "v6"] as CardVariant[]).map(
                 (v) => (
                   <Button
@@ -173,7 +173,7 @@ export default function ClientsTenderPage({ status }: Props) {
                   </Button>
                 ),
               )}
-            </div>
+            </div> */}
           </div>
 
           <ItemsPerPage
@@ -206,7 +206,8 @@ export default function ClientsTenderPage({ status }: Props) {
                 : "grid-cols-1",
             )}
           >
-            {tenders.map((item) => renderTenderCard(item))}
+            {/* {tenders.map((item) => renderTenderCard(item))} */}
+            {tenders.map((item) => <TenderCardThree key={item.id} cargo={item} onOpenDetails={() => setSelectedTender(item)} />)}
           </div>
 
           {pagination && pagination.page_count > 1 && (

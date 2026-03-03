@@ -24,7 +24,7 @@ export interface TenderListFilters {
 export const useTenderListManagers = (filters: TenderListFilters) => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
-  const { tender } = useSockets();
+  const { tender, load } = useSockets();
 
   // Формуємо URLSearchParams для запиту на сервер
   const params = useMemo(() => {
@@ -60,9 +60,12 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
 
   // Сокети для live-оновлення
   useEffect(() => {
-    // if (!profile?.id || !tender) return;
-    if (!tender?.connected) return;
+    // 1. ВИПРАВЛЕНО: Перевіряємо лише наявність об'єкта (не .connected)
+    // Якщо юзера немає або сокет `load` ще не ініціалізовано в провайдері — чекаємо
+    if (!profile?.person?.id || !load) return;
+
     const handleNewLoad = () => {
+      // console.log("Оновлюємо список тендерів...");
       queryClient.invalidateQueries({ queryKey });
     };
 
@@ -76,20 +79,21 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
           ),
         };
       });
+      // Також оновлюємо кеш конкретного тендера
       queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
     };
 
-    tender.on("new_tender", handleNewLoad);
-    tender.on("new_bid", handleNewBid);
-    // tender.on("saveTender", (data) => {
-    //   console.log("saveTender", data);
-    // });
+    // Підписуємось на неймспейс load
+    load.on("new_tender", handleNewLoad);
+    load.on("new_bid", handleNewBid);
 
+    // Відписуємось
     return () => {
-      tender.off("new_tender", handleNewLoad);
-      tender.off("new_bid", handleNewBid);
+      load.off("new_tender", handleNewLoad);
+      load.off("new_bid", handleNewBid);
     };
-  }, [profile?.id, queryClient, tender, queryKey]);
 
+    // 2. ВИПРАВЛЕНО: Додано load у залежності замість tender, і правильний ID юзера
+  }, [profile?.person?.id, queryClient, load, queryKey]);
   return { tenders, pagination, isLoading, error };
 };

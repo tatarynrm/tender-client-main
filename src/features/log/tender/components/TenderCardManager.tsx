@@ -149,11 +149,11 @@ export function TenderCardManagers({
           {cargo.time_start && (
             <TenderTimer
               targetDate={cargo.time_start}
-              label=""
+              label="До початку"
               variant="blue"
             />
           )}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-200 dark:bg-slate-800 border border-slate-200 dark:border-white/10">
             <Calendar size={icon - 2} className="text-slate-400" />
             <span
               className={cn(
@@ -163,6 +163,19 @@ export function TenderCardManagers({
             >
               {cargo.time_start
                 ? format(new Date(cargo.time_start), "dd.MM HH:mm")
+                : "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-red-200 dark:bg-slate-800 border border-slate-200 dark:border-white/10">
+            <Calendar size={icon - 2} className="text-slate-400" />
+            <span
+              className={cn(
+                "font-mono font-bold text-slate-600 dark:text-slate-300",
+                label,
+              )}
+            >
+              {cargo.time_end
+                ? format(new Date(cargo.time_end), "dd.MM HH:mm")
                 : "—"}
             </span>
           </div>
@@ -182,7 +195,7 @@ export function TenderCardManagers({
                     label,
                   )}
                 >
-                  Відправка
+                  Завантаження
                 </p>
                 {fromPoints.map((p) => (
                   <div
@@ -207,14 +220,7 @@ export function TenderCardManagers({
               </div>
 
               <div className="border-x border-dashed border-slate-200 dark:border-white/10 px-2 min-w-0">
-                <p
-                  className={cn(
-                    "text-[10px] font-black uppercase text-amber-500 mb-1",
-                    label,
-                  )}
-                >
-                  Транзит
-                </p>
+
                 {transitPoints.length > 0 ? (
                   transitPoints.map((p) => (
                     <div
@@ -253,7 +259,7 @@ export function TenderCardManagers({
                     label,
                   )}
                 >
-                  Прибуття
+                  Розвантаження
                 </p>
                 {toPoints.map((p) => (
                   <div
@@ -280,7 +286,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 2. ТЕХНІЧНІ ДАНІ - В один ряд для економії місця */}
-          <div className="lg:col-span-4 p-3 flex flex-col justify-center bg-slate-50/30 dark:bg-transparent gap-2">
+          <div className="lg:col-span-4  p-3 flex flex-col justify-center bg-slate-50/30 dark:bg-transparent gap-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 <Truck size={icon} className="text-blue-500" />
@@ -359,12 +365,20 @@ export function TenderCardManagers({
               >
                 {cargo.cargo}
               </span>
+              <span
+                className={cn(
+                  "ml-auto font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
+                  label,
+                )}
+              >
+                {cargo.notes}
+              </span>
             </div>
           </div>
 
           {/* 3. ЦІНА ТА ДІЇ - Компактний блок */}
           <div className="lg:col-span-3 p-2 flex flex-col justify-center gap-1.5 bg-blue-50/10 dark:bg-blue-500/[0.02]">
-            <div className="text-right px-1">
+            <div className="text-right px-1 flex flex-col gap-1">
               <div
                 className={cn(
                   "font-black tracking-tighter text-lg leading-none",
@@ -389,6 +403,16 @@ export function TenderCardManagers({
                   Без ПДВ
                 </span>
               )}
+              <div>
+                {cargo.price_redemption ? (
+                  <span className="text-blue-800 font-bold">
+                    Ціна викупу:{" "}
+                    <span className="text-red-800">
+                      {cargo.price_redemption}
+                    </span>
+                  </span>
+                ) : null}
+              </div>
             </div>
 
             <div className="flex gap-1">

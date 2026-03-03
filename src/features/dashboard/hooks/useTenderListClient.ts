@@ -62,10 +62,17 @@ export const useTenderListClient = (filters: TenderListFilters) => {
     queryClient.invalidateQueries({ queryKey });
   };
   // Сокети для live-оновлення
+// Сокети для live-оновлення
   useEffect(() => {
-    if (!profile?.id || !tender) return;
+    // 1. ВИПРАВЛЕНО: Звертаємось до profile?.person?.id
+    if (!profile?.person?.id || !tender) return;
 
-
+    // 2. ВИПРАВЛЕНО: Переносимо handleRefresh всередину ефекту, 
+    // щоб уникнути проблем із застарілими посиланнями (stale closures)
+    const handleRefresh = () => {
+      console.log("Отримано нову подію, оновлюємо список...");
+      queryClient.invalidateQueries({ queryKey });
+    };
 
     const handleNewBid = (updatedTender: ITender) => {
       queryClient.setQueryData<IApiResponse<ITender[]>>(queryKey, (old) => {
@@ -77,20 +84,20 @@ export const useTenderListClient = (filters: TenderListFilters) => {
           ),
         };
       });
+      // Також оновлюємо кеш конкретного тендера
       queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
     };
 
+    // Підписуємось
     tender.on("new_tender", handleRefresh);
     tender.on("new_bid", handleNewBid);
-    tender.on("saveTender", (data) => {
-      console.log("saveTender", data);
-    });
 
+    // Відписуємось
     return () => {
       tender.off("new_tender", handleRefresh);
       tender.off("new_bid", handleNewBid);
     };
-  }, [profile?.id, queryClient, tender, queryKey]);
-
+  // 3. ВИПРАВЛЕНО: Оновлено масив залежностей
+  }, [profile?.person?.id, queryClient, tender, queryKey]);
   return { tenders, pagination, isLoading, error };
 };

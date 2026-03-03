@@ -77,8 +77,8 @@ export interface ITender {
   ids_status: "WAITING" | string;
   ids_valut: "UAH" | "USD" | "EUR" | string;
 
-  time_start: string | null;
-  time_end: string | null;
+  time_start: string | Date | null;
+  time_end: string |Date | null;
 
   price_start: number | null;
   price_next: number | null;
