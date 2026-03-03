@@ -421,7 +421,7 @@ export function TenderCardThree({
                       {isActive && (
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_4px_rgba(16,185,129,0.8)]"></span>
                       )}
-                      Краща
+                      Наступна ціна:
                     </span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-black text-lg md:text-base leading-none">
                       {cargo.price_next || "—"}{" "}

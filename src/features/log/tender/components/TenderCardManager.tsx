@@ -29,6 +29,7 @@ import { TenderRatesList } from "./TenderRate";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
+import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
 
 export function TenderCardManagers({
   cargo,
@@ -40,6 +41,7 @@ export function TenderCardManagers({
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
   const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
+  const { mutateAsync: delWinner,   isPending:isDelWinner } = useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const displayPrice = cargo.price_proposed || cargo.price_start;
 
@@ -93,7 +95,7 @@ export function TenderCardManagers({
     if (!rate.id) return;
 
     try {
-      await setWinner({
+      await delWinner({
         id_tender_rate: rate.id,
         car_count: 0, // Передаємо 0, щоб скасувати
       });

@@ -26,8 +26,6 @@ export function TenderRatesList({
   const [editingRateId, setEditingRateId] = useState<number | null>(null);
   const [carCount, setCarCount] = useState<number>(1);
 
-
-  
   // Витягуємо дані безпосередньо з cargo
   const rates = cargo.rate_company;
   const currency = cargo.valut_name || "—";
@@ -44,11 +42,7 @@ export function TenderRatesList({
 
   const isAnalyze = cargo.ids_status === "ANALYZE";
 
-
-
-
-console.log(cargo,'TENDER 5- line tender rate.ts');
-
+  console.log(cargo, "TENDER 5- line tender rate.ts");
 
   return (
     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar pb-2">
@@ -260,10 +254,19 @@ console.log(cargo,'TENDER 5- line tender rate.ts');
                       <input
                         type="number"
                         min={1}
-                        value={carCount}
-                        onChange={(e) =>
-                          setCarCount(Math.max(1, Number(e.target.value)))
-                        }
+                        // Якщо стан дорівнює 0, показуємо порожнє поле, щоб візуально воно було чистим
+                        value={carCount === 0 ? "" : carCount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          // Якщо стерли, передаємо 0 (число). Інакше передаємо введене число.
+                          setCarCount(val === "" ? 0 : Number(val));
+                        }}
+                        onBlur={() => {
+                          // TypeScript тепер задоволений, бо carCount - це завжди число.
+                          if (carCount < 1) {
+                            setCarCount(1);
+                          }
+                        }}
                         className="w-12 h-7 px-1 text-center text-[12px] font-bold border border-slate-200 rounded-md dark:bg-slate-800 dark:border-slate-700 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                       />
                       <button

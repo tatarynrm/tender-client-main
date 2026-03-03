@@ -211,7 +211,7 @@ function SortableRouteItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 50 : 1,
+    ...(isDragging ? { zIndex: 50 } : {}), // Встановлюємо z-index ТІЛЬКИ при перетягуванні
   };
 
   const pointType = watch(`tender_route.${index}.ids_point`);
