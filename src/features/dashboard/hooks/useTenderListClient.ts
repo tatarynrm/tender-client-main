@@ -91,11 +91,13 @@ export const useTenderListClient = (filters: TenderListFilters) => {
     // Підписуємось
     tender.on("new_tender", handleRefresh);
     tender.on("new_bid", handleNewBid);
+    tender.on("tender_status_updated", handleRefresh);
 
     // Відписуємось
     return () => {
       tender.off("new_tender", handleRefresh);
       tender.off("new_bid", handleNewBid);
+      tender.off("tender_status_updated", handleRefresh);
     };
   // 3. ВИПРАВЛЕНО: Оновлено масив залежностей
   }, [profile?.person?.id, queryClient, tender, queryKey]);

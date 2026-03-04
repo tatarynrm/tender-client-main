@@ -25,6 +25,7 @@ import {
   Check,
   ShieldCheck,
   ArrowBigRight,
+  Crown,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -92,6 +93,11 @@ const links: MenuItem[] = [
         name: "Завершені",
         href: "/dashboard/tender/closed",
         icon: Check,
+      },
+      {
+        name: "Виграні",
+        href: "/dashboard/tender/win",
+        icon: Crown,
       },
       {
         name: "Архів",

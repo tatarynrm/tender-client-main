@@ -44,7 +44,7 @@ const RegistrationPage = () => {
   });
 
   const onSubmit = (data: FormValues) => {
-    console.log("Відправка форми:", data);
+  
     // Дані прийдуть у форматі:
     // bookingPeriod: { from: "2024-05-10...", to: "2024-05-15..." }
     // reset();

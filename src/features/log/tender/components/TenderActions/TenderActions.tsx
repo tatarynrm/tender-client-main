@@ -10,6 +10,8 @@ import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import { DraftActions } from "./DraftActions";
 import { ActiveActions } from "./ActiveActions";
 import { PlanActions } from "./PlanActions";
+import { AnalyzeActions } from "./AnalyzeActions";
+
 
 interface TenderActionsProps {
   tender: any;
@@ -101,6 +103,15 @@ export default function TenderActions({
         )}
         {tender.ids_status === "PLAN" && (
           <PlanActions
+            tender={tender}
+            itemClass={itemClass}
+            textClass={textClass}
+            config={config}
+            onClose={handleClose}
+          />
+        )}
+        {tender.ids_status === "ANALYZE" && (
+          <AnalyzeActions
             tender={tender}
             itemClass={itemClass}
             textClass={textClass}

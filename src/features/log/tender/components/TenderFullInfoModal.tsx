@@ -106,7 +106,7 @@ export default function TenderFullInfoModal({
             onClick={onClose}
             className="flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors"
           >
-            <ArrowLeft size={16} />
+            <X size={16} />
           </button>
 
           <div className="flex flex-col">

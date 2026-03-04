@@ -5,6 +5,7 @@ import { DateTimeWidget } from "./DateTimeWidget";
 import { WeatherWidget } from "./WeatherWidget";
 import { CurrencyWidget } from "./CurrencyWidget";
 import { AirAlarmWidget } from "./AirAlarmWidget";
+import { FuelWidget } from "./FuelWidget";
 
 export const HeaderWidgetContainer = () => {
   return (
@@ -23,10 +24,11 @@ export const HeaderWidgetContainer = () => {
       <div className="w-full lg:w-auto">
         <CurrencyWidget />
       </div>
+      {/* <div className="w-full lg:w-auto">
+        <FuelWidget />
+      </div> */}
 
-     
-        <AirAlarmWidget />
-     
+      <AirAlarmWidget />
     </div>
   );
 };

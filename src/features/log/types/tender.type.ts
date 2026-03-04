@@ -78,7 +78,7 @@ export interface ITender {
   ids_valut: "UAH" | "USD" | "EUR" | string;
 
   time_start: string | Date | null;
-  time_end: string |Date | null;
+  time_end: string | Date | null;
 
   price_start: number | null;
   price_next: number | null;
@@ -96,6 +96,8 @@ export interface ITender {
   car_count_canceled: number;
 
   company_name: string;
+
+  company_winner_car_count: number;
 
   cost_start: number;
 
@@ -175,13 +177,13 @@ export interface IRateCompany {
   id_author: number;
   id_company: number;
   company_name: string;
-  
+
   // Бажано замінити any на конкретний інтерфейс, якщо він у вас вже є
-  person_phone: any[]; 
-  
+  person_phone: any[];
+
   price_proposed: number;
   redemption_price: string;
-  
+
   // Нові поля для кількості машин
   car_count_winner: number;
   car_count_proposed: number;

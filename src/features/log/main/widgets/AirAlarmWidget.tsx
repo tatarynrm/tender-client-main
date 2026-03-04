@@ -8,17 +8,20 @@ export const AirAlarmWidget = () => {
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       {/* Кнопка в хедері */}
       <button
         onClick={() => setIsMapOpen(true)}
         className={cn(
-          "flex items-center gap-2.5 px-3 py-0.5 rounded-xl border transition-all active:scale-95 shadow-sm",
-          "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-red-400 dark:hover:border-red-500 group"
+          "flex w-full items-center gap-2.5 px-3 py-0.5 rounded-xl border transition-all active:scale-95 shadow-sm",
+          "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-red-400 dark:hover:border-red-500 group",
         )}
       >
         <div className="p-1 bg-red-50 dark:bg-red-500/10 rounded-lg group-hover:bg-red-500 group-hover:text-white transition-colors">
-          <ShieldAlert size={14} className="text-red-500 group-hover:text-white" />
+          <ShieldAlert
+            size={14}
+            className="text-red-500 group-hover:text-white"
+          />
         </div>
 
         <div className="flex flex-col items-start leading-none">
@@ -30,17 +33,20 @@ export const AirAlarmWidget = () => {
           </span>
         </div>
 
-        <Map size={12} className="ml-1 opacity-30 group-hover:opacity-100 transition-opacity" />
+        <Map
+          size={12}
+          className="ml-1 opacity-30 group-hover:opacity-100 transition-opacity"
+        />
       </button>
 
       {/* Модальне вікно (рендер на весь екран) */}
       {isMapOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
-          <div 
-            className="absolute inset-0 cursor-zoom-out" 
-            onClick={() => setIsMapOpen(false)} 
+          <div
+            className="absolute inset-0 cursor-zoom-out"
+            onClick={() => setIsMapOpen(false)}
           />
-          
+
           <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
             {/* Header модалки */}
             <div className="p-4 flex justify-between items-center border-b border-slate-100 dark:border-white/5">

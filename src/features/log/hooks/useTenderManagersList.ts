@@ -68,7 +68,10 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
       // console.log("Оновлюємо список тендерів...");
       queryClient.invalidateQueries({ queryKey });
     };
-
+    const handleRefresh = () => {
+      console.log("Отримано нову подію, оновлюємо список...");
+      queryClient.invalidateQueries({ queryKey });
+    };
     const handleNewBid = (updatedTender: ITender) => {
       queryClient.setQueryData<IApiResponse<ITender[]>>(queryKey, (old) => {
         if (!old) return old;

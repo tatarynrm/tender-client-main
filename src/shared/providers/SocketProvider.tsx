@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAuth } from "./AuthCheckProvider";
@@ -44,7 +50,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         transports: ["websocket"],
         auth: { userId },
         // Залишаємо стандартну логіку Socket.io для перепідключення.
-        // Прибрано: forceNew, multiplex, та timestamp з query, 
+        // Прибрано: forceNew, multiplex, та timestamp з query,
         // оскільки вони ламали кешування з'єднань при ререндері.
         reconnection: true,
       });

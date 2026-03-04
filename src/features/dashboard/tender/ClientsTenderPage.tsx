@@ -21,6 +21,8 @@ import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
 interface Props {
   status?: string;
+  participate_company?: boolean;
+  winner_company?:boolean
 }
 
 // Імпорт всіх варіантів карток
@@ -36,7 +38,11 @@ import { Item } from "@radix-ui/react-dropdown-menu";
 // Тип для доступних варіантів дизайну
 type CardVariant = "v1" | "v2" | "v3" | "v4" | "v5" | "v6";
 
-export default function ClientsTenderPage({ status }: Props) {
+export default function ClientsTenderPage({
+  status,
+  participate_company,
+  winner_company
+}: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { tenderFilters } = useTenderClientFormData();
@@ -58,8 +64,10 @@ export default function ClientsTenderPage({ status }: Props) {
       tender_type: searchParams.get("tender_type") || "",
       page: Number(searchParams.get("page") || 1),
       participate: searchParams.get("participate") || "",
-      participate_company: searchParams.get("participate_company") || "",
+      participate_company:
+        searchParams.get("participate_company") || participate_company || "",
       limit: Number(searchParams.get("limit") || 10),
+      winner_company: searchParams.get("winner_company") || winner_company || "",
     }),
     [searchParams],
   );
@@ -207,7 +215,13 @@ export default function ClientsTenderPage({ status }: Props) {
             )}
           >
             {/* {tenders.map((item) => renderTenderCard(item))} */}
-            {tenders.map((item) => <TenderCardThree key={item.id} cargo={item} onOpenDetails={() => setSelectedTender(item)} />)}
+            {tenders.map((item) => (
+              <TenderCardThree
+                key={item.id}
+                cargo={item}
+                onOpenDetails={() => setSelectedTender(item)}
+              />
+            ))}
           </div>
 
           {pagination && pagination.page_count > 1 && (

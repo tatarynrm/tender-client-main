@@ -1,9 +1,15 @@
 "use client";
 
-import { Columns2, Menu, PanelRight, ShieldCheck } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react"; // 👈 Додали хуки
+import {
+  Columns2,
+  Menu,
+  PanelRight,
+  LayoutGrid, // 👈 Додали іконку для віджетів
+} from "lucide-react";
 import { ToggleTheme } from "@/shared/components/ui";
 import { IUserProfile } from "@/shared/types/user.types";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"; // 👈 Додали AnimatePresence для плавного меню
 import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMenu";
 import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 import { cn } from "@/shared/utils";
@@ -13,6 +19,14 @@ import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
 import UpdatesList from "@/shared/noris-components/UpdateList";
 import { FeedbackButton } from "@/shared/components/Modals/FeedbackButton/FeedbackGoogleFormModal";
+import { FuelWidget } from "../widgets/FuelWidget";
+import { WeatherWidget } from "../widgets/WeatherWidget";
+import { AirAlarmWidget } from "../widgets/AirAlarmWidget";
+import { CurrencyWidget } from "../widgets/CurrencyWidget";
+
+// Уявімо, що ви вже імпортували ваші віджети:
+// import { FuelWidget } from "../widgets/FuelWidget";
+// import { WeatherWidget } from "../widgets/WeatherWidget";
 
 export default function LogHeader({
   onMenuClick,
@@ -25,18 +39,30 @@ export default function LogHeader({
   closeSidebarState?: boolean;
   profile?: IUserProfile;
 }) {
-  // Ці дані будуть надходити з вашого Context, Redux, Zustand або з сервера
-
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
-  // 2. Будуємо шлях, тільки якщо є аватар у профілі
-  // Також перевіряємо, щоб не було подвійного слеша //
+  // --- Стейт та логіка для меню віджетів ---
+  const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
+  const widgetsRef = useRef<HTMLDivElement>(null);
+
+  // Закриття меню при кліку поза ним
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        widgetsRef.current &&
+        !widgetsRef.current.contains(event.target as Node)
+      ) {
+        setIsWidgetsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
       {/* Ліва частина: Управління та Профіль */}
       <div className="flex items-center gap-6 relative">
-        {/* Кнопка мобільного меню */}
         <button
           onClick={onMenuClick}
           className="md:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -44,7 +70,6 @@ export default function LogHeader({
           <Menu className="text-slate-600 dark:text-slate-300 w-6 h-6" />
         </button>
 
-        {/* Перемикач сайдбару (Десктоп) */}
         <div className="hidden md:flex items-center relative">
           {closeSidebarState ? (
             <motion.div
@@ -74,6 +99,7 @@ export default function LogHeader({
             </motion.div>
           )}
         </div>
+
         <div className="hidden sm:block">
           <DateTimeWidget />
         </div>
@@ -81,10 +107,10 @@ export default function LogHeader({
 
       {/* Права частина: Налаштування та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Група системних кнопок */}
+        {/* КНОПКА ТА МЕНЮ ВІДЖЕТІВ */}
+
         <FeedbackButton />
         <GlobalSettings />
-
         <ToggleTheme />
 
         {/* Меню профілю */}
