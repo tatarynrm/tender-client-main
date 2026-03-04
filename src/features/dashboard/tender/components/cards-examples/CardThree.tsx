@@ -128,17 +128,7 @@ export function TenderCardThree({
   const isAnalyze = cargo.ids_status === "ANALYZE";
   const isPlan = cargo.ids_status === "PLAN";
   const isWinByCompany = cargo.company_winner_car_count > 0;
-  const [isVisible, setIsVisible] = useState(isWinByCompany);
 
-  useEffect(() => {
-    if (isWinByCompany) {
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 5000); // 5000 мс = 5 секунд
-
-      return () => clearTimeout(timer); // Очищення таймера при демонтажі
-    }
-  }, [isWinByCompany]);
   const isHalfPrice =
     !!cargo.price_proposed &&
     !!cargo.price_next &&
@@ -159,8 +149,8 @@ export function TenderCardThree({
             </span>
           </div>
         )}
-        {isVisible && (
-          <div className="animate-pulse absolute top-3 left-3 md:top-0 md:left-4 z-50 flex items-center gap-2 rounded-full bg-emerald-500/10 border border-blue-500/20 px-3 py-1 shadow-sm backdrop-blur-md">
+        {isWinByCompany && (
+          <div className="absolute top-3 left-3 md:top-0 md:left-4 z-50 flex items-center gap-2 rounded-full bg-emerald-500/10 border border-blue-500/20 px-3 py-1 shadow-sm backdrop-blur-md">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
