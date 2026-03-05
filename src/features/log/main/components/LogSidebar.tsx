@@ -19,6 +19,7 @@ import {
   RefreshCcw,
   ArchiveIcon,
   ActivitySquare,
+  MapPin,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -54,16 +55,19 @@ const links: MenuItem[] = [
   {
     name: "Документи",
     icon: FileStack,
-    status: "new",
+
     href: "/log/files",
-    info: "New",
+
   },
   // Додаємо Карта та Документи зі статусом inactive
   {
+
+
     name: "Карта",
-    icon: Globe,
-    status: "inactive",
-    info: "Coming Soon",
+    icon: MapPin,
+    status: "new",
+    href: "/log/map",
+    info: "New",
   },
 
 ];

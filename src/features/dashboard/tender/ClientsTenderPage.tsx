@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronUp, Settings2, LayoutGrid, List } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 import { ITender } from "@/features/log/types/tender.type";
 import { ErrorState } from "@/shared/components/Loaders/ErrorState";
@@ -13,43 +12,30 @@ import { useFilters } from "@/shared/hooks/useFilters";
 import { EmptyTenders } from "@/features/dashboard/tender/components/EmptyTenders";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
-import { Button } from "@/shared/components/ui/button";
 
 import TenderFullInfoModal from "@/features/log/tender/components/TenderFullInfoModal";
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
+import { TenderCardThree } from "./components/cards-examples/CardThree";
+
 interface Props {
   status?: string;
   participate_company?: boolean;
-  winner_company?: boolean
+  winner_company?: boolean;
 }
-
-// Імпорт всіх варіантів карток
-import { TenderCardOne } from "./components/cards-examples/CardOne";
-import { TenderCardTwo } from "./components/cards-examples/CardTwo";
-import { TenderCardThree } from "./components/cards-examples/CardThree";
-import { TenderCardFour } from "./components/cards-examples/CardFour";
-import { TenderCardFive } from "./components/cards-examples/CardFive";
-import { cn } from "@/shared/utils";
-import { TenderCardSix } from "./components/cards-examples/CardSix";
-import { Item } from "@radix-ui/react-dropdown-menu";
-
-// Тип для доступних варіантів дизайну
-type CardVariant = "v1" | "v2" | "v3" | "v4" | "v5" | "v6";
 
 export default function ClientsTenderPage({
   status,
   participate_company,
-  winner_company
+  winner_company,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const { tenderFilters } = useTenderClientFormData();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
-
-  // 1. Стан для вибору варіанту картки (за замовчуванням v3)
-  const [cardVariant, setCardVariant] = useState<CardVariant>("v3");
 
   const currentParams = useMemo(
     () => ({
@@ -64,13 +50,13 @@ export default function ClientsTenderPage({
       tender_type: searchParams.get("tender_type") || "",
       page: Number(searchParams.get("page") || 1),
       participate: searchParams.get("participate") || "",
-      participate_company:
-        searchParams.get("participate_company") || participate_company || "",
+      participate_company: searchParams.get("participate_company") || participate_company || "",
       limit: Number(searchParams.get("limit") || 10),
       winner_company: searchParams.get("winner_company") || winner_company || "",
     }),
-    [searchParams],
+    [searchParams, participate_company, winner_company],
   );
+
   const queryFilters = useMemo(
     () => ({
       ...currentParams,
@@ -78,73 +64,57 @@ export default function ClientsTenderPage({
     }),
     [currentParams, status],
   );
+
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { tenders, pagination, isLoading, error } =
-    useTenderListClient(queryFilters);
+  const { tenders, pagination, isLoading, error } = useTenderListClient(queryFilters);
 
-  // 2. Функція рендеру вибраної картки
-  // const renderTenderCard = (item: ITender) => {
-  //   const props = {
-  //     key: item.id,
-  //     cargo: item,
-  //     onOpenDetails: () => setSelectedTender(item),
-  //   };
-
-  //   switch (cardVariant) {
-  //     case "v1":
-  //       return <TenderCardOne {...props} />;
-  //     case "v2":
-  //       return <TenderCardTwo {...props} />;
-  //     case "v3":
-  //       return <TenderCardThree {...props} />;
-  //     case "v4":
-  //       return <TenderCardFour {...props} />;
-  //     case "v5":
-  //       return <TenderCardFive {...props} />;
-  //     case "v6":
-  //       return <TenderCardSix {...props} />;
-  //     default:
-  //       return <TenderCardThree {...props} />;
-  //   }
-  // };
-
-  const updateUrl = (newParams: Record<string, any>) => {
+  const updateUrl = useCallback((newParams: Record<string, any>) => {
     const params = new URLSearchParams();
     Object.entries(newParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {
-        const stringValue = Array.isArray(value)
-          ? value.join(",")
-          : String(value);
+        const stringValue = Array.isArray(value) ? value.join(",") : String(value);
         params.set(key, stringValue);
       }
     });
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [router, pathname]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     reset();
-    router.push(window.location.pathname, { scroll: false });
-  };
+    router.push(pathname, { scroll: false });
+  }, [reset, router, pathname]);
 
-  const handleRemoveFilter = (key: string, valueToRemove: string) => {
+  const handleRemoveFilter = useCallback((key: string, valueToRemove: string) => {
     let newValue: string | undefined;
     if (valueToRemove === "all") {
       newValue = undefined;
     } else {
-      const currentValue = String(
-        currentParams[key as keyof typeof currentParams] || "",
-      );
-      newValue =
-        currentValue
-          .split(",")
-          .filter((v) => v !== valueToRemove)
-          .join(",") || undefined;
+      const currentValue = String(currentParams[key as keyof typeof currentParams] || "");
+      newValue = currentValue
+        .split(",")
+        .filter((v) => v !== valueToRemove)
+        .join(",") || undefined;
     }
+
     const newFilters = { ...filters, [key]: newValue };
     setFilters(newFilters);
     updateUrl({ ...newFilters, page: 1 });
-  };
-  console.log(tenders, "ITEM");
+  }, [currentParams, filters, setFilters, updateUrl]);
+
+  const handleApplyFilters = useCallback(() => {
+    updateUrl({ ...filters, page: 1 });
+  }, [filters, updateUrl]);
+
+  const handleLimitChange = useCallback((newLimit: number) => {
+    updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+  }, [currentParams, updateUrl]);
+
+  const handlePageChange = useCallback((p: number) => {
+    updateUrl({ ...currentParams, page: p });
+  }, [currentParams, updateUrl]);
+
+  const handleCloseModal = useCallback(() => setSelectedTender(null), []);
+
   if (error) return <ErrorState />;
   if (isLoading) return <TenderLoader />;
 
@@ -152,7 +122,7 @@ export default function ClientsTenderPage({
     <div className="p-0 mx-auto space-y-2">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
-        onClose={() => setSelectedTender(null)}
+        onClose={handleCloseModal}
       />
 
       <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -161,20 +131,16 @@ export default function ClientsTenderPage({
             <TenderFiltersSheet
               filters={filters}
               setFilters={setFilters}
-              apply={() => updateUrl({ ...filters, page: 1 })}
+              apply={handleApplyFilters}
               reset={handleReset}
               dropdowns={tenderFilters}
             />
-
-
           </div>
 
           <ItemsPerPage
             options={[10, 20, 50, 100]}
             defaultValue={currentParams.limit}
-            onChange={(newLimit) => {
-              updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-            }}
+            onChange={handleLimitChange}
           />
         </div>
       </div>
@@ -190,16 +156,7 @@ export default function ClientsTenderPage({
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-1 pb-20">
-          <div
-            className={cn(
-              "grid gap-2",
-              // Можна додати зміну сітки залежно від варіанту, якщо потрібно
-              cardVariant === "v1"
-                ? "grid-cols-1 lg:grid-cols-1"
-                : "grid-cols-1",
-            )}
-          >
-            {/* {tenders.map((item) => renderTenderCard(item))} */}
+          <div className="grid gap-2 grid-cols-1">
             {tenders.map((item) => (
               <TenderCardThree
                 key={item.id}
@@ -213,7 +170,7 @@ export default function ClientsTenderPage({
             <Pagination
               page={currentParams.page}
               pageCount={pagination.page_count}
-              onChange={(p) => updateUrl({ ...currentParams, page: p })}
+              onChange={handlePageChange}
             />
           )}
         </div>
