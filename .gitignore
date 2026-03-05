@@ -21,6 +21,7 @@
 # /build
 /.next
 .next 
+.agent
 
 # misc
 .DS_Store

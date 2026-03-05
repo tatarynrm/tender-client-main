@@ -21,6 +21,7 @@ const labelMap: Record<string, string> = {
   trailer_type: "Тип причепу",
   load_type: "Завантаження",
   tender_type: "Тип тендеру",
+  winner_company: "Переможець",
 };
 
 export const ActiveFilters = ({
@@ -30,6 +31,8 @@ export const ActiveFilters = ({
   dropdowns,
 }: ActiveFiltersProps) => {
   const getDisplayValue = (key: string, value: string) => {
+    if (key === "winner_company") return "Переможець";
+    
     if (!dropdowns) return value;
     switch (key) {
       case "country_from":

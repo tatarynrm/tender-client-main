@@ -22,7 +22,7 @@ import TenderLoader from "@/shared/components/Loaders/TenderLoader";
 interface Props {
   status?: string;
   participate_company?: boolean;
-  winner_company?:boolean
+  winner_company?: boolean
 }
 
 // Імпорт всіх варіантів карток
@@ -166,22 +166,7 @@ export default function ClientsTenderPage({
               dropdowns={tenderFilters}
             />
 
-            {/* ПЕРЕМИКАЧ ВИГЛЯДУ КАРТОК */}
-            {/* <div className="flex items-center border-l pl-2 gap-1 ml-2">
-              {(["v1", "v2", "v3", "v4", "v5", "v6"] as CardVariant[]).map(
-                (v) => (
-                  <Button
-                    key={v}
-                    variant={cardVariant === v ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 w-8 p-0 text-[10px] font-bold"
-                    onClick={() => setCardVariant(v)}
-                  >
-                    {v.toUpperCase()}
-                  </Button>
-                ),
-              )}
-            </div> */}
+
           </div>
 
           <ItemsPerPage
