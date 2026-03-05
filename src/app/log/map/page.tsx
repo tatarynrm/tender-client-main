@@ -38,13 +38,16 @@ export default function MapPage() {
   const [calculatedTime, setCalculatedTime] = useState<number | undefined>();
 
   const handleRouteSubmit = (waypoints: WaypointItem[]) => {
-    // Convert to Leaflet LatLngs
     const leafletWaypoints = waypoints.map(w => L.latLng(w.lat!, w.lng!));
     setBuilderWaypoints(leafletWaypoints);
-    // Reset previous calculation
     setCalculatedDistance(undefined);
     setCalculatedTime(undefined);
   };
+
+  const handleRouteFound = useCallback((data: { totalDistance: number, totalTime: number }) => {
+    setCalculatedDistance((prev) => prev === data.totalDistance ? prev : data.totalDistance);
+    setCalculatedTime((prev) => prev === data.totalTime ? prev : data.totalTime);
+  }, []);
 
   // Отримуємо активні вантажі
   const queryFilters: TenderListFilters = useMemo(
@@ -82,7 +85,7 @@ export default function MapPage() {
   );
 
   return (
-    <main className="flex h-[84dvh] w-full bg-slate-50 overflow-hidden font-sans antialiased text-slate-900 animate-in fade-in duration-500">
+    <main className="flex h-[84dvh] w-full bg-slate-50 dark:bg-zinc-950 overflow-hidden font-sans antialiased text-slate-900 dark:text-slate-100 animate-in fade-in duration-500">
       {/* Мобільна кнопка меню */}
       <button
         onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -94,13 +97,13 @@ export default function MapPage() {
       {/* ЛІВИЙ САЙДБАР */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[98] w-full sm:w-80 lg:w-96 bg-white/95 backdrop-blur-xl border-r border-slate-200 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 shadow-2xl lg:shadow-none",
+          "fixed inset-y-0 left-0 z-[98] w-full sm:w-80 lg:w-96 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-zinc-800 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 shadow-2xl lg:shadow-none",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-zinc-50/50">
+          <div className="p-5 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
             <h1 className="text-xl font-black tracking-tight flex items-center gap-2">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white italic shadow-inner">
                 <MapPin size={18} />
@@ -109,7 +112,7 @@ export default function MapPage() {
               <span className="text-blue-600 font-extrabold">Map</span>
             </h1>
             <button
-              className="lg:hidden p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+              className="lg:hidden p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
               onClick={() => setSidebarOpen(false)}
             >
               <X size={20} />
@@ -123,8 +126,8 @@ export default function MapPage() {
               className={cn(
                 "flex-1 py-1.5 text-xs font-bold rounded-xl transition-all border",
                 activeTab === "loads"
-                  ? "bg-white text-blue-600 border-zinc-200 shadow-sm"
-                  : "bg-transparent text-zinc-500 border-transparent hover:bg-zinc-100 hover:text-zinc-700"
+                  ? "bg-white dark:bg-zinc-800 text-blue-600 border-zinc-200 dark:border-zinc-700 shadow-sm"
+                  : "bg-transparent text-zinc-500 dark:text-zinc-400 border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700"
               )}
             >
               Вантажі
@@ -134,8 +137,8 @@ export default function MapPage() {
               className={cn(
                 "flex-1 py-1.5 text-xs font-bold rounded-xl transition-all border",
                 activeTab === "builder"
-                  ? "bg-white text-blue-600 border-zinc-200 shadow-sm"
-                  : "bg-transparent text-zinc-500 border-transparent hover:bg-zinc-100 hover:text-zinc-700"
+                  ? "bg-white dark:bg-zinc-800 text-blue-600 border-zinc-200 dark:border-zinc-700 shadow-sm"
+                  : "bg-transparent text-zinc-500 dark:text-zinc-400 border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-700"
               )}
             >
               Маршрут
@@ -154,7 +157,7 @@ export default function MapPage() {
                   <input
                     type="text"
                     placeholder="Пошук за маршрутом або компанією..."
-                    className="w-full pl-10 pr-4 py-3 bg-zinc-100 border border-transparent rounded-xl text-sm focus:border-blue-500/30 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-zinc-800 placeholder:text-zinc-400 font-medium"
+                    className="w-full pl-10 pr-4 py-3 bg-zinc-100 dark:bg-zinc-800 border border-transparent rounded-xl text-sm focus:border-blue-500/30 focus:bg-white dark:focus:bg-zinc-800 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 font-medium"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -164,7 +167,7 @@ export default function MapPage() {
               {/* Список вантажів */}
               <div className="flex-1 overflow-y-auto px-4 custom-scrollbar pb-20 space-y-2">
                 <div className="flex justify-between items-center mb-3">
-                  <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">
+                  <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-1">
                     Активні завантаження
                   </h2>
                   <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
@@ -193,21 +196,21 @@ export default function MapPage() {
                         className={cn(
                           "group p-4 rounded-2xl cursor-pointer transition-all border",
                           isSelected
-                            ? "bg-blue-50 border-blue-200 shadow-md scale-[1.02]"
-                            : "bg-white border-zinc-100 hover:border-zinc-300 hover:shadow-sm"
+                            ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 shadow-md scale-[1.02]"
+                            : "bg-white dark:bg-zinc-800/60 border-zinc-100 dark:border-zinc-700/50 hover:border-zinc-300 dark:hover:border-zinc-600 hover:shadow-sm"
                         )}
                       >
                         <div className="flex items-start gap-3">
                           <div className={cn(
                             "p-2.5 rounded-xl shrink-0 transition-colors mt-0.5",
-                            isSelected ? "bg-blue-600 text-white shadow-inner" : "bg-indigo-50 text-indigo-600"
+                            isSelected ? "bg-blue-600 text-white shadow-inner" : "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400"
                           )}>
                             <Package size={18} />
                           </div>
 
                           <div className="min-w-0 flex-1">
                             <div className="flex justify-between items-start mb-1.5">
-                              <p className="font-bold text-sm text-slate-800 line-clamp-1 pr-2">
+                              <p className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1 pr-2">
                                 {load.company_name}
                               </p>
                               <ChevronRight
@@ -250,8 +253,8 @@ export default function MapPage() {
                               <span className={cn(
                                 "text-[10px] font-black px-1.5 py-0.5 rounded border",
                                 isSelected
-                                  ? "bg-white text-blue-600 border-blue-200"
-                                  : "bg-zinc-50 text-zinc-500 border-zinc-200"
+                                  ? "bg-white dark:bg-zinc-900 text-blue-600 border-blue-200"
+                                  : "bg-zinc-50 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-600"
                               )}>
                                 {load.car_count_actual} авто
                               </span>
@@ -290,14 +293,14 @@ export default function MapPage() {
       </aside>
 
       {/* ПРАВА ЧАСТИНА (КАРТА) */}
-      <section className="flex-1 relative flex flex-col h-full bg-slate-100">
+      <section className="flex-1 relative flex flex-col h-full bg-slate-100 dark:bg-zinc-900">
         {/* Floating Top Bar (Controls) */}
         <div className="absolute top-4 right-4 z-[98] flex gap-2 pointer-events-none">
           <div className="flex gap-2 pointer-events-auto">
             {selectedId && (
               <button
                 onClick={() => setSelectedId(null)}
-                className="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-4 py-2 font-bold text-xs rounded-xl shadow-lg shadow-red-500/10 transition-all flex items-center gap-2"
+                className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/50 px-4 py-2 font-bold text-xs rounded-xl shadow-lg shadow-red-500/10 transition-all flex items-center gap-2"
               >
                 <X size={14} /> Скинути маршрут
               </button>
@@ -316,10 +319,7 @@ export default function MapPage() {
               loads={filteredLoads}
               selectedId={selectedId}
               builderWaypoints={builderWaypoints}
-              onRouteFound={useCallback((data: { totalDistance: number, totalTime: number }) => {
-                setCalculatedDistance((prev) => prev === data.totalDistance ? prev : data.totalDistance);
-                setCalculatedTime((prev) => prev === data.totalTime ? prev : data.totalTime);
-              }, [])}
+              onRouteFound={handleRouteFound}
             />
           )}
         </div>

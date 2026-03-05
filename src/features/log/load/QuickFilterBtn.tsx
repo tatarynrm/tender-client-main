@@ -1,4 +1,12 @@
-import { AppButton } from "@/shared/components/Buttons/AppButton";
+import { cn } from "@/shared/utils";
+
+interface QuickFilterBtnProps {
+  label: string;
+  count?: number;
+  countFilter?: number;
+  isActive: boolean;
+  onClick: () => void;
+}
 
 export const QuickFilterBtn = ({
   label,
@@ -6,34 +14,36 @@ export const QuickFilterBtn = ({
   countFilter,
   isActive,
   onClick,
-}: any) => (
-  <AppButton
-    variant="ghost"
-    size="sm"
+}: QuickFilterBtnProps) => (
+  <button
     onClick={onClick}
-    className={`
-      relative h-8 px-3 rounded-xl transition-all duration-200 border-none
-      ${
-        isActive
-          ? "bg-background text-primary shadow-sm scale-105"
-          : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-      }
-    `}
+    className={cn(
+      "relative h-8 px-3 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 select-none outline-none",
+      isActive
+        ? "bg-background dark:bg-zinc-800 text-primary shadow-sm scale-[1.03] border border-border/50"
+        : "text-muted-foreground hover:text-foreground hover:bg-background/50 border border-transparent",
+    )}
   >
-    <span className="text-xs font-semibold">{label}</span>
+    <span>{label}</span>
     {count !== undefined && (
       <span
-        className={`
-        ml-2 px-1.5 py-0.5 rounded-lg text-[10px] font-bold transition-colors
-        ${
+        className={cn(
+          "inline-flex items-center px-1.5 py-0.5 rounded-lg text-[10px] font-bold transition-all duration-200",
           isActive
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/20"
-        }
-      `}
+            ? "bg-primary/10 text-primary"
+            : "bg-muted text-muted-foreground",
+        )}
       >
-        {countFilter}/ {count}
+        {countFilter !== undefined && countFilter !== count ? (
+          <>
+            <span className="text-primary font-black">{countFilter}</span>
+            <span className="opacity-40 mx-0.5">/</span>
+            <span>{count}</span>
+          </>
+        ) : (
+          count
+        )}
       </span>
     )}
-  </AppButton>
+  </button>
 );

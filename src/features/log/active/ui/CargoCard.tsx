@@ -188,9 +188,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     // Формуємо фінальне посилання
     // api=1 & origin=... & destination=... & waypoints=...
     const baseUrl = "https://www.google.com/maps/dir/?api=1";
-    const url = `${baseUrl}&origin=${origin}&destination=${destination}${
-      waypoints ? `&waypoints=${waypoints}` : ""
-    }&travelmode=driving`;
+    const url = `${baseUrl}&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""
+      }&travelmode=driving`;
 
     window.open(url, "_blank");
   };
@@ -225,11 +224,16 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
   const isShaking = !!lastEvent;
 
+  // ── Shared class tokens ────────────────────────────────────────────────────
+  const darkCard = "dark:bg-slate-900 dark:border-zinc-800";
+  const dateCellCls = "bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start";
+  const footerBtnCls = "p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 transition-colors";
+
   return (
     <>
       <div
         className={cn(
-          "group relative flex flex-col w-full bg-white dark:bg-slate-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md",
+          "group relative flex flex-col w-full bg-white dark:bg-slate-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden transition-all duration-200 shadow-sm hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700",
           isJustCreated && "animate-in fade-in slide-in-from-bottom-1",
           isShaking && "animate-shake border-blue-500",
         )}
@@ -341,10 +345,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
         {/* DATES BAR */}
         <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-800 font-bold">
-          <div className="bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start">
-            <span className={cn("text-zinc-400 uppercase", config.label)}>
-              Завантаження:
-            </span>
+          <div className={dateCellCls}>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>Завантаження:</span>
             <span
               className={cn(
                 "text-emerald-600 dark:text-emerald-500",
@@ -354,10 +356,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               {load.date_load ? format(new Date(load.date_load), "dd.MM") : "—"}
             </span>
           </div>
-          <div className="bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start">
-            <span className={cn("text-zinc-400 uppercase", config.label)}>
-              Розвантаження:
-            </span>
+          <div className={dateCellCls}>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>Розвантаження:</span>
             <span
               className={cn("text-blue-600 dark:text-blue-400", config.main)}
             >
@@ -399,8 +399,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               >
                 {load.crm_load_trailer?.length > 0
                   ? load.crm_load_trailer
-                      .map((t) => t.trailer_type_name)
-                      .join(", ")
+                    .map((t) => t.trailer_type_name)
+                    .join(", ")
                   : "ТЕНТ"}
               </div>
               <div
@@ -434,7 +434,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </div>
           </div>
 
-          <div className="hidden md:block w-px bg-zinc-100 dark:border-zinc-800" />
+          {/* column divider */}
+          <div className="hidden md:block w-px bg-zinc-100 dark:bg-zinc-800" />
 
           <div className="flex-1 flex flex-col min-w-0">
             <h3
@@ -447,7 +448,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </h3>
             <div
               className={cn(
-                "text-zinc-500 dark:text-zinc-400 leading-snug overflow-y-auto max-h-[160px] pr-1 scrollbar-thin  break-words whitespace-pre-wrap",
+                "text-zinc-500 dark:text-zinc-400 leading-snug overflow-y-auto max-h-[160px] pr-1 scrollbar-thin break-words whitespace-pre-wrap",
                 config.main,
               )}
             >
@@ -484,7 +485,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 )}
               >
                 <stat.icon size={config.icon - 2} />
-                <span className={cn("font-bold", config.main + 2)}>{stat.val}</span>
+                <span className={cn("font-bold", config.main)}>{stat.val}</span>
               </div>
             ))}
           </div>
@@ -520,17 +521,14 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                 key={i}
                 onClick={btn.onClick}
                 title={btn.title}
-                className={cn(
-                  "p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 transition-colors",
-                  btn.hover,
-                )}
+                className={cn(footerBtnCls, btn.hover)}
               >
                 <btn.icon size={config.icon - 2} />
               </button>
             ))}
             <button
               onClick={() => setChatCargo(load)}
-              className="relative p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full hover:bg-zinc-50 transition-colors"
+              className={cn(footerBtnCls, "relative hover:bg-zinc-50 dark:hover:bg-slate-700")}
             >
               <MessageCircle size={config.icon - 2} className="text-zinc-400" />
               {load.comment_count > 0 && (

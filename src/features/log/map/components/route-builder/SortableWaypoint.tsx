@@ -40,19 +40,19 @@ export function SortableWaypoint({
             ref={setNodeRef}
             style={style}
             className={`relative flex items-center gap-2 p-2 rounded-xl border transition-colors ${isDragging
-                    ? "bg-blue-50/80 border-blue-200 shadow-lg"
-                    : "bg-white border-zinc-200 hover:border-zinc-300"
+                ? "bg-blue-50/80 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 shadow-lg"
+                : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600"
                 }`}
         >
             <div
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-blue-500 p-1 rounded-md hover:bg-zinc-100 transition-colors"
+                className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-blue-500 p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
                 <GripVertical size={16} />
             </div>
 
-            <div className="flex-1 flex items-center gap-2 bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+            <div className="flex-1 flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-700 rounded-lg px-3 py-1.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-900/30 transition-all">
                 <MapPin
                     size={14}
                     className={index === 0 ? "text-emerald-500" : "text-blue-500"}
@@ -62,13 +62,13 @@ export function SortableWaypoint({
                     value={value}
                     onChange={(e) => onChange(id, e.target.value)}
                     placeholder={placeholder}
-                    className="w-full bg-transparent border-none outline-none text-sm text-zinc-800 font-medium placeholder:text-zinc-400 placeholder:font-normal"
+                    className="w-full bg-transparent border-none outline-none text-sm text-zinc-800 dark:text-zinc-100 font-medium placeholder:text-zinc-400 dark:placeholder:text-zinc-600 placeholder:font-normal"
                 />
             </div>
 
             <button
                 onClick={() => onRemove(id)}
-                className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                 title="Видалити точку"
             >
                 <X size={16} />

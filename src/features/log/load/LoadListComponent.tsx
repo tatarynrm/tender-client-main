@@ -11,7 +11,6 @@ import { Pagination } from "@/shared/components/Pagination/Pagination";
 
 import { useGridColumns } from "@/shared/hooks/useGridColumns";
 import { useFilters } from "@/shared/hooks/useFilters";
-import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl";
 
 import { CargoCard } from "@/features/log/active/ui/CargoCard";
 import { useLoads, TenderListFilters } from "@/features/log/hooks/useLoads";
@@ -22,8 +21,11 @@ import { LoadApiItem } from "../types/load.type";
 
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 import { EmptyLoads } from "./components/EmptyLoads";
-import { AppButton } from "@/shared/components/Buttons/AppButton";
 import { QuickFilterBtn } from "./QuickFilterBtn";
+
+// ─── Key for persisting filters in session storage ────────────────────────────
+const PERSIST_KEY = "active_load_filters_cache";
+const LIMIT_STORAGE_KEY = "load_list_limit";
 
 interface Props {
   active?: boolean;
@@ -33,21 +35,20 @@ interface Props {
 export default function LoadListComponent({ active, archive }: Props) {
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
-  const LIMIT_STORAGE_KEY = "load_list_limit";
 
   const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
     "loadListColumns",
     3,
   );
 
-  // 1. Отримуємо параметри з URL (тільки ті, що реально існують)
+  // ── 1. Parse URL params ───────────────────────────────────────────────────
   const currentParams = useMemo(() => {
     const getInitialLimit = () => {
       const urlLimit = searchParams.get("limit");
       if (urlLimit) return Number(urlLimit);
       if (typeof window !== "undefined") {
-        const storedLimit = localStorage.getItem(LIMIT_STORAGE_KEY);
-        if (storedLimit) return Number(storedLimit);
+        const stored = localStorage.getItem(LIMIT_STORAGE_KEY);
+        if (stored) return Number(stored);
       }
       return 10;
     };
@@ -57,23 +58,11 @@ export default function LoadListComponent({ active, archive }: Props) {
       limit: getInitialLimit(),
     };
 
-    // Збираємо фільтри, уникаючи порожніх рядків
     const filterKeys = [
-      "country_from",
-      "country_to",
-      "region_from",
-      "region_to",
-      "city_from",
-      "city_to",
-      "trailer_type",
-      "company",
-      "manager",
-      "transit",
-      "is_price_request",
-      "is_collective",
-      "participate",
-      "my",
-      "department",
+      "country_from", "country_to", "region_from", "region_to",
+      "city_from", "city_to", "trailer_type", "company",
+      "manager", "transit", "is_price_request", "is_collective",
+      "participate", "my", "department",
     ];
 
     filterKeys.forEach((key) => {
@@ -84,24 +73,21 @@ export default function LoadListComponent({ active, archive }: Props) {
     return params;
   }, [searchParams]);
 
-  // 2. Формуємо фінальний об'єкт для запиту
-  const queryFilters = useMemo((): TenderListFilters => {
-    return {
-      ...currentParams,
-      active,
-      archive,
-    };
-  }, [currentParams, active, archive]);
+  // ── 2. Build query object ─────────────────────────────────────────────────
+  const queryFilters = useMemo((): TenderListFilters => ({
+    ...currentParams,
+    active,
+    archive,
+  }), [currentParams, active, archive]);
 
-  // 3. Хуки даних (useLoads тепер має внутрішній enabled: !!active || !!archive)
-  const { loads, pagination, add_data, isLoading, error } =
-    useLoads(queryFilters);
+  // ── 3. Data hooks ─────────────────────────────────────────────────────────
+  const { loads, pagination, add_data, isLoading, error } = useLoads(queryFilters);
   const { loadFilters } = useGetLoadFilters();
 
-  // 4. Управління станом форми фільтрів (для Modal/Sheet)
+  // ── 4. Filter form state ──────────────────────────────────────────────────
   const { filters, setFilters, reset } = useFilters(currentParams);
 
-  // 5. Обробники подій
+  // ── 5. Event handlers ─────────────────────────────────────────────────────
   const handleRemoveFilter = useCallback(
     (key: string, valueToRemove: string) => {
       removeFilter(key, valueToRemove, currentParams);
@@ -112,116 +98,82 @@ export default function LoadListComponent({ active, archive }: Props) {
   const handleReset = useCallback(() => {
     reset();
     resetFilters();
-    sessionStorage.removeItem(PERSIST_KEY); // Видаляємо пам'ять про фільтри
-    updateUrl({ page: 1 }); // Очищуємо URL повністю
-  }, [reset, resetFilters]);
+    sessionStorage.removeItem(PERSIST_KEY);
+    updateUrl({ page: 1 });
+  }, [reset, resetFilters, updateUrl]);
 
-  // Константа для ключа (можна винести в конфіг)
-  const PERSIST_KEY = "active_load_filters_cache";
-
-  // Додайте цей ефект всередині компонента
+  // ── 6. Persist filters in session storage ─────────────────────────────────
   useEffect(() => {
-    // 1. Коли параметри в URL змінюються, зберігаємо їх у сесію (крім дефолтних)
     if (searchParams.toString()) {
       sessionStorage.setItem(PERSIST_KEY, searchParams.toString());
-    }
-    // 2. Якщо ми зайшли на сторінку з порожнім URL, але в сесії щось є — відновлюємо
-    else {
+    } else {
       const saved = sessionStorage.getItem(PERSIST_KEY);
       if (saved) {
-        // Використовуємо ваш updateUrl, щоб закинути старі фільтри в URL
         const params = Object.fromEntries(new URLSearchParams(saved));
         updateUrl(params);
       }
     }
   }, [searchParams, updateUrl]);
+
+  // ── 7. Transit quick filter ───────────────────────────────────────────────
   const transitValue = currentParams.transit;
 
-  const toggleTransit = (value: string) => {
+  const toggleTransit = useCallback((value: string) => {
     if (transitValue === value) {
-      // Якщо натиснули на вже активний — знімаємо фільтр
-      const newParams = { ...currentParams };
-      delete newParams.transit;
-      updateUrl({ ...newParams, page: 1 });
+      const { transit, ...rest } = currentParams;
+      updateUrl({ ...rest, page: 1 });
     } else {
-      // Встановлюємо нове значення
       updateUrl({ ...currentParams, transit: value, page: 1 });
     }
-  };
+  }, [transitValue, currentParams, updateUrl]);
 
-  console.log(add_data, "ADDDD DATA");
+  // ── Transit filter buttons config ─────────────────────────────────────────
+  const transitButtons = useMemo(() => [
+    { id: "E", label: "Екс", count: add_data?.car_count_all.exp, count_filter: add_data?.car_count_filter.exp },
+    { id: "I", label: "Імп", count: add_data?.car_count_all.imp, count_filter: add_data?.car_count_filter.imp },
+    { id: "R", label: "Рег", count: add_data?.car_count_all.reg, count_filter: add_data?.car_count_filter.reg },
+    { id: "T", label: "Транзит", count: add_data?.car_count_all.tr, count_filter: add_data?.car_count_filter.tr },
+    { id: "M", label: "Міжн", count: add_data?.car_count_all.mn, count_filter: add_data?.car_count_filter.mn },
+  ], [add_data]);
 
-  // 6. Рендер станів завантаження/помилки
+  // ── 8. Loading / error states ─────────────────────────────────────────────
   if (isLoading) return <Loader />;
   if (error) return <ErrorState />;
 
   return (
     <div className="space-y-4 pb-40">
-      {/* Стікі-хедер з фільтрами та налаштуваннями */}
-      <div className="sticky top-[-20px] z-30 pt-4 pb-3 backdrop-blur-md bg-background/80 -mx-4 px-4 border-b transition-all">
-        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* ЛІВА ЧАСТИНА: Головний фільтр */}
-            <div className="flex items-center">
-              <LoadFiltersSheet
-                filters={filters}
-                setFilters={setFilters}
-                apply={() => updateUrl({ ...filters, page: 1 })}
-                reset={handleReset}
-                dropdowns={loadFilters}
-                add_data={add_data}
-              />
-            </div>
 
-            {/* ЦЕНТР: Segmented Control (Швидкі фільтри) */}
-            <div className="flex flex-wrap items-center p-1 bg-muted/50 rounded-2xl border border-border/50 shadow-sm transition-all hover:bg-muted/80">
-              {/* Кнопка Усі */}
+      {/* ── Sticky header ─────────────────────────────────────────────────── */}
+      <div className="sticky top-[-20px] z-30 pt-4 pb-3 -mx-4 px-4 border-b border-border/60 backdrop-blur-md bg-background/80 transition-all">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+
+            {/* ── Left: Filter sheet ──────────────────────────────────────── */}
+            <LoadFiltersSheet
+              filters={filters}
+              setFilters={setFilters}
+              apply={() => updateUrl({ ...filters, page: 1 })}
+              reset={handleReset}
+              dropdowns={loadFilters}
+              add_data={add_data}
+            />
+
+            {/* ── Center: Segmented quick filters ─────────────────────────── */}
+            <div className="flex flex-wrap items-center p-1 bg-muted/40 rounded-2xl border border-border/40 shadow-sm gap-0.5">
               <QuickFilterBtn
                 label="Усі"
                 count={add_data?.car_count_all.all}
                 countFilter={add_data?.car_count_filter.all}
                 isActive={!currentParams.transit}
                 onClick={() => {
-                  const { transit, ...newParams } = currentParams;
-                  updateUrl({ ...newParams, page: 1 });
+                  const { transit, ...rest } = currentParams;
+                  updateUrl({ ...rest, page: 1 });
                 }}
               />
 
-              <div className="w-px h-4 bg-border/60 mx-1 " />
+              <div className="w-px h-4 bg-border/50 mx-0.5" />
 
-              {[
-                {
-                  id: "E",
-                  label: "Екс",
-                  count: add_data?.car_count_all.exp,
-                  count_filter: add_data?.car_count_filter.exp,
-                },
-                {
-                  id: "I",
-                  label: "Імп",
-                  count: add_data?.car_count_all.imp,
-                  count_filter: add_data?.car_count_filter.imp,
-                },
-                {
-                  id: "R",
-                  label: "Рег",
-                  count: add_data?.car_count_all.reg,
-                  count_filter: add_data?.car_count_filter.reg,
-                },
-                {
-                  id: "T",
-                  label: "Транзит",
-                  count: add_data?.car_count_all.tr,
-
-                  count_filter: add_data?.car_count_filter.tr,
-                },
-                {
-                  id: "M",
-                  label: "Міжн",
-                  count: add_data?.car_count_all.mn,
-                  count_filter: add_data?.car_count_filter.mn,
-                },
-              ].map((btn) => (
+              {transitButtons.map((btn) => (
                 <QuickFilterBtn
                   key={btn.id}
                   label={btn.label}
@@ -233,14 +185,14 @@ export default function LoadListComponent({ active, archive }: Props) {
               ))}
             </div>
 
-            {/* ПРАВА ЧАСТИНА: Налаштування вигляду */}
-            <div className="flex items-center gap-2 bg-background/50 p-1 rounded-xl border border-border shadow-sm">
+            {/* ── Right: Grid & limit selectors ───────────────────────────── */}
+            <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
               <GridColumnSelector
                 gridCols={gridCols}
                 setGridCols={setGridCols}
                 columnOptions={columnOptions}
               />
-              <div className="w-px h-4 bg-border" />
+              <div className="w-px h-4 bg-border/70" />
               <ItemsPerPage
                 options={[10, 20, 50, 100, 200]}
                 defaultValue={currentParams.limit}
@@ -250,11 +202,12 @@ export default function LoadListComponent({ active, archive }: Props) {
                 }}
               />
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Список активних фільтрів (бейджи) */}
+      {/* ── Active filter badges ──────────────────────────────────────────── */}
       <LoadActiveFilters
         currentParams={currentParams}
         onRemove={handleRemoveFilter}
@@ -262,7 +215,7 @@ export default function LoadListComponent({ active, archive }: Props) {
         dropdowns={loadFilters}
       />
 
-      {/* Основний контент */}
+      {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="space-y-6">
         {loads.length > 0 ? (
           <>
@@ -284,6 +237,7 @@ export default function LoadListComponent({ active, archive }: Props) {
           <EmptyLoads onReset={() => updateUrl({ page: 1 })} />
         )}
       </div>
+
     </div>
   );
 }

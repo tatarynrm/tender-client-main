@@ -120,11 +120,11 @@ export const RouteBuilderPanel = ({ onRouteSubmit, calculatedDistance, calculate
         <div className="flex flex-col h-full overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
 
             <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
-                <div className="mb-4 bg-blue-50/50 border border-blue-100 p-3 rounded-2xl">
-                    <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                <div className="mb-4 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 p-3 rounded-2xl">
+                    <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                         <RouteIcon size={14} /> Конструктор маршруту
                     </h3>
-                    <p className="text-[11px] font-medium text-blue-800/70">
+                    <p className="text-[11px] font-medium text-blue-800/70 dark:text-blue-300/70">
                         Додайте точки, перетягуйте їх для зміни порядку та розрахуйте оптимальний маршрут.
                     </p>
                 </div>
@@ -156,53 +156,50 @@ export const RouteBuilderPanel = ({ onRouteSubmit, calculatedDistance, calculate
 
                 <button
                     onClick={handleCreatePoint}
-                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-zinc-200 hover:border-blue-400 hover:bg-blue-50 text-zinc-500 hover:text-blue-600 rounded-2xl font-bold text-sm transition-all outline-none"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-zinc-200 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-zinc-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-2xl font-bold text-sm transition-all outline-none"
                 >
                     <Plus size={16} /> Додати точку
                 </button>
 
-                <div className="mt-6 mb-2">
-                    <div className="flex justify-between items-center mb-3">
-                        <h2 className="text-[11px] font-black text-slate-400 uppercase tracking-widest pl-1">
+                <div className="mt-4 mb-2">
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-1">
                             Тариф за км
                         </h2>
                     </div>
-                    <div className="flex items-center gap-2 bg-white border border-zinc-200 p-1.5 rounded-xl focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                        <div className="font-bold text-emerald-600 pl-3">₴</div>
+                    <div className="flex items-center gap-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-1.5 rounded-xl focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 dark:focus-within:ring-emerald-900/30 transition-all">
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400 pl-3">₴</div>
                         <input
                             type="number"
-                            // Якщо pricePerKm дорівнює 0, відображаємо порожній рядок
                             value={pricePerKm || ''}
-                            onChange={(e) => setPricePerKm(Number(e.target.value))}
-                            className="flex-1 bg-transparent border-none outline-none font-black text-zinc-800 text-sm py-1"
+                            onChange={(e) => setPricePerKm(e.target.value === "" ? "" : Number(e.target.value))}
+                            className="flex-1 bg-transparent border-none outline-none font-black text-zinc-800 dark:text-zinc-100 text-sm py-1"
                         />
-                        <div className="text-xs font-medium text-zinc-400 pr-3">грн / км</div>
+                        <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500 pr-3">грн / км</div>
                     </div>
                 </div>
 
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-100 lg:mb-0 mb-safe shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+            <div className="px-4 pb-4 pt-3 bg-white dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800">
 
                 {calculatedDistance ? (
-                    <div className="mb-4 p-4 rounded-2xl bg-zinc-900 text-white shadow-xl shadow-zinc-900/20 animate-in slide-in-from-bottom-2">
-                        <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Розрахунок рейсу</h4>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <div className="text-[10px] text-zinc-500 font-bold mb-1">Відстань</div>
-                                <div className="text-lg font-black">{distanceKm} <span className="text-sm font-medium text-zinc-400">км</span></div>
+                    <div className="mb-3 p-3 rounded-xl bg-zinc-900 dark:bg-zinc-800 text-white shadow-lg animate-in slide-in-from-bottom-2">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <div className="text-[10px] text-zinc-500 font-bold">Відстань</div>
+                                    <div className="text-sm font-black">{distanceKm} <span className="text-xs text-zinc-400">км</span></div>
+                                </div>
+                                <div className="w-px h-8 bg-white/10" />
+                                <div>
+                                    <div className="text-[10px] text-zinc-500 font-bold">Час</div>
+                                    <div className="text-sm font-black">{hours}<span className="text-xs text-zinc-400">г</span> {minutes}<span className="text-xs text-zinc-400">хв</span></div>
+                                </div>
                             </div>
-                            <div>
-                                <div className="text-[10px] text-zinc-500 font-bold mb-1">Час в дорозі</div>
-                                <div className="text-lg font-black">{hours}<span className="text-sm font-medium text-zinc-400">г</span> {minutes}<span className="text-sm font-medium text-zinc-400">хв</span></div>
-                            </div>
-                        </div>
-
-                        <div className="pt-3 border-t border-white/10 flex justify-between items-end">
-                            <div className="text-xs font-medium text-zinc-400">Орієнтовна вартість:</div>
-                            <div className="text-2xl font-black text-emerald-400 flex items-center gap-1.5">
-                                {estimatedCost} <span className="text-sm font-bold text-emerald-600/50">UAH</span>
+                            <div className="text-right">
+                                <div className="text-[10px] text-zinc-500 font-bold">Вартість</div>
+                                <div className="text-base font-black text-emerald-400">{estimatedCost} <span className="text-xs text-emerald-600/60">UAH</span></div>
                             </div>
                         </div>
                     </div>
