@@ -15,7 +15,7 @@ interface TrainingVideo {
 const trainingData: TrainingVideo[] = [
   {
     id: 1,
-    title: "Відео №1: Відгуки пропозиції, Штучний інтелект, Тендери",
+    title: "Відео №1 Драган Тарас та Татарин Роман: Відгуки пропозиції, Штучний інтелект, Тендери",
     description: "Дізнайтеся, як максимально ефективно використовувати нашу платформу для пошуку та створення тендерів за допомогою ШІ.",
     videoUrl: "https://www.youtube.com/embed/BgdLG5RqsZc",
     previewUrl: "/images/learn/training_video_preview_1.png",

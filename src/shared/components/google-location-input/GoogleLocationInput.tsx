@@ -179,61 +179,45 @@ export const GoogleLocationInput = ({
                 <li
                   key={r.place_id}
                   className="group flex items-start gap-3 px-4 py-2.5 cursor-pointer rounded-xl transition-all mb-0.5 hover:bg-teal-50 dark:hover:bg-teal-500/10"
-                  onClick={async () => {
-                    try {
-                      setIsLoading(true);
-interface Term {
-  offset: number;
-  value: string;
-}
+                    onClick={async () => {
+                      try {
+                        setIsLoading(true);
 
-const terms: Term[] = r.terms || [];
+                        const { data: location } = await api.post(
+                          "/location/resolve",
+                          {
+                            placeId: r.place_id,
+                            displayName: r.description,
+                          },
+                        );
 
-// спробуємо знайти поштовий код (формат XX-XXX або цифри)
-const postalCodeTerm = terms.find(t => /^\d{2,5}(-\d{2,4})?$/.test(t.value));
-const cityTerm = terms.find(t => t?.value && !postalCodeTerm?.value?.includes(t.value));
-const countryTerm = terms[2]?.value; // можна залишити як fallback
+                        // Спроба отримати чисту назву міста з Google secondary_text
+                        const googleSecondaryCity = r.structured_formatting?.secondary_text?.split(",")[0]?.trim();
+                        
+                        // Пріоритет: чистий резолв -> перший токен secondary_text -> fallback
+                        const displayCity = 
+                          location.city || 
+                          location.town || 
+                          location.village || 
+                          googleSecondaryCity || 
+                          r.description;
 
-const isUkraine = /україна/i.test(countryTerm || "");
+                        // Гарантуємо, що об'єкт location містить правильну назву міста для батьківського компонента
+                        const fixedLocation = {
+                          ...location,
+                          city: displayCity
+                        };
 
-// формуємо displayName
-let displayName = "";
-
-if (cityTerm?.value) {
-  displayName = cityTerm.value.trim();
-
-  if (!isUkraine && postalCodeTerm?.value) {
-    displayName = `${cityTerm.value.trim()} ${postalCodeTerm.value.trim()}`;
-  }
-} else if (postalCodeTerm?.value) {
-  displayName = postalCodeTerm.value.trim();
-}
-
-
-
-                      const { data: location } = await api.post(
-                        "/location/resolve",
-                        {
-                          placeId: r.place_id,
-                          displayName,
-                        },
-                      );
-
-                      const displayValue =
-                        displayName ||
-                        mainText ||
-                        location.city ||
-                        location.country;
-                      onChange(location);
-                      setQuery(displayValue);
-                      setSelected(displayValue);
-                      setResults([]);
-                    } catch (err) {
-                      console.error(err);
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
+                        onChange(fixedLocation);
+                        setQuery(displayCity);
+                        setSelected(displayCity);
+                        setResults([]);
+                      } catch (err) {
+                        console.error(err);
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
                 >
                   <div className="mt-1">
                     <Navigation

@@ -67,22 +67,30 @@ export const RoutePoint = ({ point, isMain = false }: RoutePointProps) => {
               )}
             />
 
-            <span
-              className={cn(
-                "font-black truncate tracking-tight flex items-baseline gap-1",
-                isMain
-                  ? "text-[16px] text-zinc-800 dark:text-zinc-100"
-                  : "text-[14px] text-zinc-700 dark:text-zinc-100 font-bold"
-              )}
-            >
-              {point.city}
-              
-              {point.country && (
-                <span className="text-[10px] font-bold opacity-60 uppercase">
-                  ({point.country})
+            <div className="flex flex-col min-w-0">
+              <span
+                className={cn(
+                  "font-black truncate tracking-tight flex items-baseline gap-1",
+                  isMain
+                    ? "text-[16px] text-zinc-800 dark:text-zinc-100"
+                    : "text-[14px] text-zinc-700 dark:text-zinc-100 font-bold"
+                )}
+              >
+                {point.city}
+
+                {point.country && (
+                  <span className="text-[10px] font-bold opacity-60 uppercase">
+                    ({point.country})
+                  </span>
+                )}
+              </span>
+              {(point.street || point.house) && (
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium leading-tight truncate">
+                  {point.street}
+                  {point.house ? `, ${point.house}` : ""}
                 </span>
               )}
-            </span>
+            </div>
           </div>
         </TooltipTrigger>
 

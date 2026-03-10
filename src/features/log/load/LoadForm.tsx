@@ -83,6 +83,7 @@ import { SelectFinance } from "@/shared/components/Select/SelectFinance";
 import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
 import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
+import { InputText } from "@/shared/components/Inputs/InputText";
 import { InputDate } from "@/shared/components/Inputs/InputDate";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
@@ -149,6 +150,275 @@ const SortableRouteItem = ({
   );
 };
 
+const LoadPreviewCard = ({
+  data,
+  onApply,
+  onSave,
+  onDelete,
+  onPin,
+  isPinned,
+  isSelected,
+  onSelect,
+  isDraft = false,
+  isActive,
+}: {
+  data: any;
+  onApply: () => void;
+  onSave?: () => void;
+  onDelete?: () => void;
+  onPin?: () => void;
+  isPinned?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  isDraft?: boolean;
+  isActive?: boolean;
+}) => {
+  const origins = data.origins || [];
+  const destinations = data.destinations || [];
+
+  return (
+    <div
+      className={cn(
+        "group relative flex flex-col gap-4 overflow-hidden rounded-[2rem] border-2 p-5 transition-all duration-300",
+        isActive
+          ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-lg"
+          : isPinned
+            ? "border-amber-200 bg-amber-50/30 shadow-amber-100/50 dark:border-amber-500/20 dark:bg-amber-500/5"
+            : isSelected
+              ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10"
+              : "border-slate-100 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md dark:border-white/5 dark:bg-slate-900/40 dark:hover:border-indigo-500/20",
+      )}
+    >
+      {/* Top Section: Badges & Info */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-1 flex-wrap gap-1.5">
+          {data.cargoName && (
+            <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+              {data.cargoName}
+            </span>
+          )}
+          {data.isCollective && (
+            <span className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[10px] font-bold uppercase text-violet-600 dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400">
+              Збірний
+            </span>
+          )}
+          {data.weight && (
+            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase text-slate-600 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300">
+              {data.weight} т
+            </span>
+          )}
+          {data.volume && (
+            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase text-slate-600 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300">
+              {data.volume} м³
+            </span>
+          )}
+          {data.truckTypes &&
+            data.truckTypes.map((t: string, i: number) => (
+              <span
+                key={i}
+                className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[10px] font-bold uppercase text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+              >
+                {t}
+              </span>
+            ))}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          {onPin && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPin();
+              }}
+              className={cn(
+                "rounded-xl p-2 transition-all",
+                isPinned
+                  ? "bg-amber-100 text-amber-600"
+                  : "text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5",
+              )}
+            >
+              <Pin size={16} fill={isPinned ? "currentColor" : "none"} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="rounded-xl p-2 text-slate-300 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+          {!isDraft && onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="rounded-xl p-2 text-slate-300 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content: Route */}
+      <div className="flex flex-col gap-4">
+        <div className="relative pl-10 pr-2">
+          {/* Connector Line */}
+          <div className="absolute bottom-[14px] left-[20px] top-[14px] w-[2px] border-l-2 border-dashed border-slate-200 dark:border-white/10" />
+
+          {/* Origin */}
+          <div className="relative mb-6">
+            <div className="absolute -left-[28px] top-1/2 z-10 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full border-2 border-indigo-500 bg-white dark:bg-slate-900">
+              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            </div>
+            <div className="flex flex-col">
+              <span className="mb-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-400">
+                Звідки
+              </span>
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col">
+                  {origins.length > 0 ? (
+                    origins.map((o: any, idx: number) => (
+                      <div key={idx} className="mb-1 flex flex-col last:mb-0">
+                        <span className="text-[13px] font-bold text-slate-800 dark:text-white">
+                          {o.city || o.address}
+                        </span>
+                        {(o.street || o.house) && (
+                          <span className="text-[10px] leading-tight text-slate-400 dark:text-slate-500">
+                            {o.street}
+                            {o.house ? `, ${o.house}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-[13px] font-bold text-slate-800 dark:text-white">
+                      —
+                    </span>
+                  )}
+                </div>
+                {data.dateLoad && (
+                  <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-500 dark:bg-indigo-500/10">
+                    {new Date(data.dateLoad).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Destination */}
+          <div className="relative">
+            <div className="absolute -left-[28px] top-1/2 z-10 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full border-2 border-emerald-500 bg-white dark:bg-slate-900">
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            </div>
+            <div className="flex flex-col">
+              <span className="mb-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-400">
+                Куди
+              </span>
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col">
+                  {destinations.length > 0 ? (
+                    destinations.map((d: any, idx: number) => (
+                      <div key={idx} className="mb-1 flex flex-col last:mb-0">
+                        <span className="text-[13px] font-bold text-slate-800 dark:text-white">
+                          {d.city || d.address}
+                        </span>
+                        {(d.street || d.house) && (
+                          <span className="text-[10px] leading-tight text-slate-400 dark:text-slate-500">
+                            {d.street}
+                            {d.house ? `, ${d.house}` : ""}
+                          </span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-[13px] font-bold text-slate-800 dark:text-white">
+                      —
+                    </span>
+                  )}
+                </div>
+                {data.dateUnload && (
+                  <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:bg-emerald-500/10">
+                    {new Date(data.dateUnload).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FooterSection: Company & Price & Actions */}
+      <div className="mt-2 flex flex-col items-start justify-between gap-4 border-t border-slate-100 pt-4 dark:border-white/5 sm:flex-row sm:items-center">
+        <div className="flex flex-col">
+          {data.companyName && (
+            <div className="mb-1 flex items-center gap-1.5 text-slate-400">
+              <Truck size={12} />
+              <span className="max-w-[150px] truncate text-[10px] font-bold">
+                {data.companyName}
+              </span>
+            </div>
+          )}
+          <div className="flex items-baseline gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+              Ціна:
+            </span>
+            <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+              {data.price
+                ? `${data.price} ${data.currency || "UAH"}`
+                : "Запит"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          {onSave && (
+            <button
+              onClick={onSave}
+              className="shrink-0 rounded-2xl bg-slate-50 p-3 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 dark:bg-white/5 dark:hover:bg-indigo-500/10"
+            >
+              <Save size={18} />
+            </button>
+          )}
+          <AppButton
+            onClick={onApply}
+            size="sm"
+            className={cn(
+              "!rounded-2xl px-6 text-[11px] font-black uppercase tracking-wider flex-1 sm:flex-none",
+              isDraft
+                ? "bg-slate-900 dark:bg-slate-800"
+                : "bg-indigo-600 shadow-indigo-200",
+            )}
+            rightIcon={<ChevronRight size={14} />}
+          >
+            {isDraft ? "Вставити" : "Вибрати"}
+          </AppButton>
+        </div>
+      </div>
+
+      {/* Selection Overlay for Drafts */}
+      {onSelect && (
+        <div
+          onClick={onSelect}
+          className={cn(
+            "absolute left-4 top-4 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 transition-all",
+            isSelected
+              ? "border-indigo-500 bg-indigo-500 text-white"
+              : "border-slate-200 bg-white opacity-0 group-hover:opacity-100 dark:border-white/10 dark:bg-slate-800",
+          )}
+        >
+          {isSelected && <Check size={14} strokeWidth={4} />}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const STORAGE_KEY = "load_from_draft_v2";
 
 const toLocalDateString = (date: Date | null) => {
@@ -159,14 +429,20 @@ const toLocalDateString = (date: Date | null) => {
   return `${year}-${month}-${day}`;
 };
 
+const numFix = (val: any): number | undefined => {
+  if (val === null || val === "" || val === undefined) return undefined;
+  const n = Number(val);
+  return isNaN(n) ? undefined : n;
+};
+
 const routeSchema = z.object({
-  id: z.number().optional(),
-  lat: z.number().optional(),
-  lon: z.number().optional(),
+  id: z.number().optional().nullable(),
+  lat: z.number().optional().nullable(),
+  lon: z.number().optional().nullable(),
   address: z.string().min(1, "Будь ласка, вкажіть адресу"),
   ids_route_type: z.enum(["LOAD_FROM", "LOAD_TO"]),
-  country: z.string().optional(),
-  city: z.string().optional(),
+  country: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
   order_num: z.number(),
   ids_region: z.string().nullable().optional(),
   street: z.string().optional().nullable(),
@@ -176,6 +452,7 @@ const routeSchema = z.object({
 
 const cargoServerSchema = z
   .object({
+    id: z.number().optional().nullable(),
     price: z
       .number()
       .max(99999999.99, "Ціна занадто велика")
@@ -221,6 +498,51 @@ const cargoServerSchema = z
   );
 
 export type CargoServerFormValues = z.infer<typeof cargoServerSchema>;
+
+const sanitizeCargoData = (data: any): Partial<CargoServerFormValues> => {
+  if (!data) return {};
+  const sanitizeRoute = (r: any) => ({
+    ...r,
+    id: r.id ? Number(r.id) : undefined,
+    lat: r.lat ? Number(r.lat) : undefined,
+    lon: r.lon ? Number(r.lon) : undefined,
+    order_num: r.order_num ? Number(r.order_num) : 0,
+    address: r.city || r.address || "",
+  });
+
+  return {
+    ...data,
+    id: data.id ? Number(data.id) : undefined,
+    price: data.price ? Number(data.price) : undefined,
+    id_client: data.id_client || data.client?.id ? Number(data.id_client || data.client?.id) : undefined,
+    car_count_begin: data.car_count_begin ? Number(data.car_count_begin) : 1,
+    date_load: data.date_load
+      ? (data.date_load instanceof Date ? toLocalDateString(data.date_load) : String(data.date_load))
+      : undefined,
+    date_unload: data.date_unload
+      ? (data.date_unload instanceof Date ? toLocalDateString(data.date_unload) : String(data.date_unload))
+      : undefined,
+    crm_load_route_from: data.crm_load_route_from?.map(sanitizeRoute),
+    crm_load_route_to: data.crm_load_route_to?.map(sanitizeRoute),
+    crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
+      ids_trailer_type: t.ids_trailer_type || t.trailer_type_id,
+    })) || [],
+  };
+};
+
+const getCompanyName = (data: any) => {
+  if (!data) return "";
+  return (
+    data.company_name ||
+    data.companyName ||
+    data.client?.company_name ||
+    data.client?.companyName ||
+    data.id_client_info?.company_name ||
+    data.id_client_info?.name ||
+    data.client?.name ||
+    ""
+  );
+};
 
 interface LoadFormProps {
   defaultValues?: any;
@@ -323,42 +645,41 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
   // 2. Data Synchronization (Edit / Copy / Draft)
   useEffect(() => {
-    if (defaultValues) {
-      const name =
-        defaultValues.company_name || defaultValues.client?.company_name || "";
-      setCompanyLabel(name);
-      reset({
-        ...defaultValues,
-        id_client: defaultValues.id_client ?? defaultValues.client?.id ?? null,
-      });
+    if (defaultValues && Object.keys(defaultValues).length > 0) {
+      const sanitized = sanitizeCargoData(defaultValues);
+      setCompanyLabel(getCompanyName(defaultValues));
+      reset(sanitized);
     } else if (copyData) {
-      const clientData =
-        (copyData as any).id_client_info || (copyData as any).client;
-      setCompanyLabel(clientData?.company_name || "");
+      const sanitized = sanitizeCargoData(copyData);
+      setCompanyLabel(getCompanyName(copyData));
 
-      const prepareCopy = (data: any) => ({
-        ...data,
+      reset({
+        ...sanitized,
         id: undefined,
-        crm_load_route_from: data.crm_load_route_from?.map((r: any) => ({
+        crm_load_route_from: sanitized.crm_load_route_from?.map((r) => ({
           ...r,
           id: undefined,
         })),
-        crm_load_route_to: data.crm_load_route_to?.map((r: any) => ({
+        crm_load_route_to: sanitized.crm_load_route_to?.map((r) => ({
           ...r,
           id: undefined,
         })),
-        crm_load_trailer: data.crm_load_trailer?.map((t: any) => ({
+        crm_load_trailer: sanitized.crm_load_trailer?.map((t: any) => ({
           ...t,
           id: undefined,
         })),
+        date_load: toLocalDateString(new Date()) || "",
       });
-      reset(prepareCopy(copyData));
     } else {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        setCompanyLabel(parsed.companyLabel || "");
-        reset(parsed.values);
+        try {
+          const parsed = JSON.parse(saved);
+          setCompanyLabel(parsed.companyLabel || "");
+          reset(parsed.values);
+        } catch (e) {
+          console.error("Failed to parse draft", e);
+        }
       }
     }
   }, [defaultValues, copyData, reset]);
@@ -409,7 +730,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       setIsLoading(true);
       await saveCargo({
         ...values,
-        id: defaultValues?.id,
+        id: values.id || defaultValues?.id,
       });
 
       if (activeDraftId) {
@@ -683,7 +1004,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     // Якщо це просто назва знайдена AI (без ID), то в інпут не вставляємо,
     // щоб менеджер вибрав компанію з бази вручну.
     if (result.id_client) {
-      setCompanyLabel(result.companyName || "");
+      setCompanyLabel(getCompanyName(result));
     } else {
       setCompanyLabel("");
     }
@@ -846,20 +1167,20 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     toast.success("Збережено в чернетки");
   };
 
-  const togglePinDraft = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+   const togglePinDraft = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setDrafts(prev => prev.map(d => d.id === id ? { ...d, isPinned: !d.isPinned } : d));
   };
 
-  const toggleSelectDraft = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleSelectDraft = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setSelectedDraftIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  const handleDeleteDraft = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteDraft = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setConfirmDialog({
       open: true,
       title: "Видалити чернетку?",
@@ -1201,56 +1522,29 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
               {/* Found results list - sticky/scrollable */}
               {aiResults.length > 0 && (
                 <div className="space-y-4 animate-in slide-in-from-left-4 duration-500">
-                  <div className="flex items-center gap-2 px-2">
-                    <BrainCircuit className="text-indigo-500 w-4 h-4" />
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Знайдені ({aiResults.length})</h4>
+                  <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2">
+                      <BrainCircuit className="text-indigo-500 w-4 h-4" />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Знайдені ({aiResults.length})</h4>
+                    </div>
+                    {aiResults.length > 1 && (
+                      <button
+                        onClick={handleBulkSaveAiToDrafts}
+                        className="text-[9px] font-black text-indigo-500 uppercase hover:underline"
+                      >
+                        Зберегти всі
+                      </button>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
                     {aiResults.map((res, i) => (
-                      <div key={i} className="bg-white dark:bg-slate-900 border-2 border-indigo-100 dark:border-indigo-500/20 rounded-[2rem] p-5 shadow-sm hover:border-indigo-500 transition-all group relative">
-                        <button
-                          onClick={() => setAiResults(prev => prev.filter(r => r !== res))}
-                          className="absolute top-4 right-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={16} />
-                        </button>
-                        <div className="flex justify-between items-start mb-1">
-                          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">{res.cargoName || "Вантаж"}</p>
-                          {res.companyName && (
-                            <span className="text-[9px] font-bold bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-500/20">
-                              {res.companyName}
-                            </span>
-                          )}
-                        </div>
-                        <h5 className="font-bold text-slate-800 dark:text-white mb-4 pr-6">
-                          {[...(res.origins || []), ...(res.destinations || [])].map(loc => loc.city || loc.address).join(", ")}
-                        </h5>
-                        <div className="grid grid-cols-2 gap-3 mb-4 text-[11px] font-bold">
-                          <div className="p-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
-                            <p className="text-slate-400 uppercase text-[8px] mb-0.5">Вага</p>
-                            <p className="text-slate-700 dark:text-slate-200">{res.weight}т</p>
-                          </div>
-                          <div className="p-2 bg-indigo-50/50 dark:bg-indigo-500/5 rounded-xl border border-indigo-100 dark:border-indigo-500/10">
-                            <p className="text-indigo-400 uppercase text-[8px] mb-0.5">Ціна</p>
-                            <p className="text-indigo-600 dark:text-indigo-400">{res.price ? `${res.price} ${res.currency}` : "Запит"}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <AppButton
-                            onClick={() => applyAiResult(res)}
-                            className="flex-[2] bg-slate-900 dark:bg-slate-800 py-3 text-xs !rounded-xl"
-                            rightIcon={<ChevronRight size={14} />}
-                          >
-                            Заповнити
-                          </AppButton>
-                          <AppButton
-                            onClick={() => saveToDrafts(res)}
-                            className="flex-1 bg-white dark:bg-indigo-500 border border-indigo-100 dark:border-none text-indigo-500 dark:text-white py-3 text-xs !rounded-xl"
-                          >
-                            <Save size={16} />
-                          </AppButton>
-                        </div>
-                      </div>
+                      <LoadPreviewCard
+                        key={i}
+                        data={res}
+                        onApply={() => applyAiResult(res)}
+                        onSave={() => saveToDrafts(res)}
+                        onDelete={() => setAiResults((prev) => prev.filter((r) => r !== res))}
+                      />
                     ))}
                   </div>
                 </div>
@@ -1302,60 +1596,24 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   </div>
 
                   <div className="space-y-3 h-[450px] overflow-y-auto pr-1 custom-scrollbar">
-                    {filteredDrafts.length > 0 ? filteredDrafts.map((draft) => (
-                      <div key={draft.id} className={cn(
-                        "p-4 rounded-2xl border-2 transition-all group relative",
-                        activeDraftId === draft.id
-                          ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-sm"
-                          : "border-slate-50 dark:border-white/5 bg-slate-50/30 dark:bg-white/5 hover:border-slate-200",
-                        selectedDraftIds.includes(draft.id) && "ring-2 ring-indigo-500 ring-offset-2",
-                        draft.isPinned && "border-amber-200 bg-amber-50/20 dark:bg-amber-500/5"
-                      )}>
-                        <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                          <button
-                            onClick={(e) => togglePinDraft(draft.id, e)}
-                            className={cn(
-                              "p-1.5 rounded-lg transition-colors",
-                              draft.isPinned ? "text-amber-500 bg-amber-100" : "text-slate-300 hover:text-amber-500 hover:bg-amber-50"
-                            )}
-                          >
-                            <Pin size={12} fill={draft.isPinned ? "currentColor" : "none"} />
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteDraft(draft.id, e)}
-                            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={(e) => toggleSelectDraft(draft.id, e)}
-                          className={cn(
-                            "absolute top-3 left-3 w-4 h-4 rounded border flex items-center justify-center transition-all",
-                            selectedDraftIds.includes(draft.id)
-                              ? "bg-indigo-500 border-indigo-500 text-white"
-                              : "bg-white border-slate-200 opacity-0 group-hover:opacity-100"
-                          )}
-                        >
-                          {selectedDraftIds.includes(draft.id) && <Check size={10} strokeWidth={4} />}
-                        </button>
-
-                        <div className="pl-6">
-                          <div className="flex items-center gap-2 mb-1">
-                            {draft.isPinned && <Pin size={10} className="text-amber-500 fill-amber-500" />}
-                            <p className="text-[9px] font-black text-indigo-500 uppercase">{draft.data?.cargoName || "Без назви"}</p>
-                          </div>
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3 line-clamp-2">{draft.title}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] text-slate-400">{new Date(draft.createdAt).toLocaleDateString()}</span>
-                            <button onClick={() => applyAiResult(draft.data, draft.id)} className="text-[10px] font-bold text-indigo-500 hover:underline">Використати</button>
-                          </div>
-                        </div>
-                      </div>
-                    )) : (
+                    {filteredDrafts.length > 0 ? (
+                      filteredDrafts.map((draft) => (
+                        <LoadPreviewCard
+                          key={draft.id}
+                          data={draft.data}
+                          isDraft
+                          isActive={activeDraftId === draft.id}
+                          isPinned={draft.isPinned}
+                          isSelected={selectedDraftIds.includes(draft.id)}
+                          onApply={() => applyAiResult(draft.data, draft.id)}
+                          onDelete={() => handleDeleteDraft(draft.id)}
+                          onPin={() => togglePinDraft(draft.id)}
+                          onSelect={() => toggleSelectDraft(draft.id)}
+                        />
+                      ))
+                    ) : (
                       <div className="py-10 text-center opacity-40">
-                        <ClipboardList className="w-8 h-8 mx-auto mb-2" />
+                        <ClipboardList className="mx-auto mb-2 h-8 w-8" />
                         <p className="text-xs font-bold">Чернеток немає</p>
                       </div>
                     )}
@@ -1492,9 +1750,24 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                       }}
                                     />
                                   </FormControl>
-                                  {renderLocationDetails(
-                                    formValues.crm_load_route_from?.[idx],
-                                  )}
+                                    {(watch(`crm_load_route_from.${idx}.street`) || watch(`crm_load_route_from.${idx}.house`)) && (
+                                      <div className="grid grid-cols-12 gap-2 mt-2">
+                                        <div className="col-span-8">
+                                          <InputText
+                                            name={`crm_load_route_from.${idx}.street`}
+                                            control={control}
+                                            label="Вулиця"
+                                          />
+                                        </div>
+                                        <div className="col-span-4">
+                                          <InputText
+                                            name={`crm_load_route_from.${idx}.house`}
+                                            control={control}
+                                            label="Буд."
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
                                   <FormMessage className="text-[10px] uppercase font-bold" />
                                 </FormItem>
                               )}
@@ -1555,6 +1828,10 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                           lon: loc.lng,
                                           country: loc.countryCode,
                                           city: loc.city,
+                                          ids_region: loc.regionCode,
+                                          street: loc.street,
+                                          house: loc.house,
+                                          post_code: loc.postCode,
                                           order_num: idx + 1,
                                           ids_route_type: "LOAD_TO",
                                         };
@@ -1570,8 +1847,23 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                       }}
                                     />
                                   </FormControl>
-                                  {renderLocationDetails(
-                                    formValues.crm_load_route_to?.[idx],
+                                  {(watch(`crm_load_route_to.${idx}.street`) || watch(`crm_load_route_to.${idx}.house`)) && (
+                                    <div className="grid grid-cols-12 gap-2 mt-2">
+                                      <div className="col-span-8">
+                                        <InputText
+                                          name={`crm_load_route_to.${idx}.street`}
+                                          control={control}
+                                          label="Вулиця"
+                                        />
+                                      </div>
+                                      <div className="col-span-4">
+                                        <InputText
+                                          name={`crm_load_route_to.${idx}.house`}
+                                          control={control}
+                                          label="Буд."
+                                        />
+                                      </div>
+                                    </div>
                                   )}
                                   <FormMessage />
                                 </FormItem>
