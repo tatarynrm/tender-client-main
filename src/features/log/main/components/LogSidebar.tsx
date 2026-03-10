@@ -20,6 +20,7 @@ import {
   ArchiveIcon,
   ActivitySquare,
   MapPin,
+  Gavel,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -45,13 +46,21 @@ const links: MenuItem[] = [
       { name: "Архів", icon: Archive, href: "/log/load/archive" },
     ],
   },
-  // {
-  //   name: "Оновлення!",
-  //   icon: RefreshCcw,
-  //   status: "new",
-  //   href: "/log/updates",
-  //   info: "New",
-  // },
+  {
+    name: "Тендери",
+    icon: LayoutList,
+    // href: "/log/tender",
+    info: "New",
+    status: "new",
+    children: [
+      { name: "Чернетки", icon: ShieldCheck, href: "/log/tender/draft" },
+      { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
+      { name: "Активні", icon: ActivitySquare, href: "/log/tender/active" },
+      { name: "Аналіз", icon: BarChart, href: "/log/tender/analyze" },
+      { name: "Завершені", icon: Gavel, href: "/log/tender/closed" },
+      { name: "Архів", icon: ArchiveIcon, href: "/log/tender/archive" },
+    ],
+  },
   {
     name: "Документи",
     icon: FileStack,
@@ -105,21 +114,6 @@ export default function LogSidebar({
     return pathname === href || pathname.startsWith(href + "/");
   };
 
-  if (profile?.role.is_admin) {
-    mainLinks.splice(2, 0, {
-      name: "Тендери",
-      icon: LayoutList,
-      // href: "/log/tender",
-      children: [
-        { name: "Чернетки", icon: ShieldCheck, href: "/log/tender/draft" },
-        { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
-        { name: "Активні", icon: ActivitySquare, href: "/log/tender/active" },
-        { name: "Аналіз", icon: BarChart, href: "/log/tender/analyze" },
-        { name: "Завершені", icon: BarChart, href: "/log/tender/closed" },
-        { name: "Архів", icon: ArchiveIcon, href: "/log/tender/archive" },
-      ],
-    });
-  }
 
   const renderLink = (link: MenuItem, isChild = false) => {
     const { name, href, icon: Icon, children, status, info } = link;
@@ -198,13 +192,13 @@ export default function LogSidebar({
           onClick={() => toggleMenu(name)}
           className={cn(
             commonClasses,
-            "w-full justify-between",
+            "w-full justify-between group",
             active
               ? "bg-slate-50/80 dark:bg-white/5 text-blue-600 dark:text-blue-400 border-slate-100 dark:border-white/10"
               : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent",
           )}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             {Icon && (
               <Icon
                 className={cn(
@@ -216,6 +210,16 @@ export default function LogSidebar({
               />
             )}
             <span className="font-semibold">{name}</span>
+
+            {/* Анімація NEW для пунктів з підпунктами */}
+            {isNew && (
+              <span className="flex h-4 w-8 shrink-0 ml-1 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-md bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-md bg-red-500 px-1 text-[9px] font-bold text-white items-center justify-center">
+                  NEW
+                </span>
+              </span>
+            )}
           </div>
           {openMenus[name] ? (
             <ChevronDown className="w-4 h-4 opacity-50" />

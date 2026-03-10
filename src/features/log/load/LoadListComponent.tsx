@@ -144,7 +144,7 @@ export default function LoadListComponent({ active, archive }: Props) {
     <div className="space-y-4 pb-40">
 
       {/* ── Sticky header ─────────────────────────────────────────────────── */}
-      <div className="sticky top-[-20px] z-30 pt-4 pb-3 -mx-4 px-4 border-b border-border/60 backdrop-blur-md bg-background/80 transition-all">
+      <div className="sticky top-[-20px] z-30 pt-4 pb-3 -mx-4 px-4 border-b border-border/60 backdrop-blur-md  transition-all">
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="flex flex-wrap items-center justify-between gap-3">
 

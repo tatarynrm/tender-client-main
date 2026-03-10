@@ -187,17 +187,15 @@ export default function Sidebar({
           key={name}
           href={href!}
           onClick={onSelect}
-          className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${
-            active
-              ? "bg-blue-50/50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20 shadow-sm"
-              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
-          } ${isChild ? "ml-4" : ""}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${active
+            ? "bg-blue-50/50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20 shadow-sm"
+            : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
+            } ${isChild ? "ml-4" : ""}`}
         >
           {Icon && (
             <Icon
-              className={`w-5 h-5 transition-colors ${
-                active ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
-              }`}
+              className={`w-5 h-5 transition-colors ${active ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
+                }`}
             />
           )}
           <span className={active ? "font-semibold" : "font-medium"}>
@@ -211,20 +209,18 @@ export default function Sidebar({
       <div key={name}>
         <button
           onClick={() => toggleMenu(name)}
-          className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${
-            active
-              ? "bg-slate-50/80 dark:bg-white/5 text-blue-600 dark:text-blue-400 border-slate-100 dark:border-white/10"
-              : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
-          }`}
+          className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-sm transition-all duration-300 border ${active
+            ? "bg-slate-50/80 dark:bg-white/5 text-blue-600 dark:text-blue-400 border-slate-100 dark:border-white/10"
+            : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 border-transparent"
+            }`}
         >
           <div className="flex items-center gap-3">
             {Icon && (
               <Icon
-                className={`w-5 h-5 transition-colors ${
-                  active
-                    ? "text-blue-500"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
+                className={`w-5 h-5 transition-colors ${active
+                  ? "text-blue-500"
+                  : "text-slate-400 dark:text-slate-500"
+                  }`}
               />
             )}
             <span className="font-semibold">{name}</span>
@@ -237,11 +233,10 @@ export default function Sidebar({
         </button>
 
         <div
-          className={`ml-6 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out ${
-            openMenus[name]
-              ? "max-h-60 opacity-100"
-              : "max-h-0 opacity-0 pointer-events-none"
-          }`}
+          className={`ml-6 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out ${openMenus[name]
+            ? "max-h-60 opacity-100"
+            : "max-h-0 opacity-0 pointer-events-none"
+            }`}
         >
           {children.map((child) => renderLink(child, true))}
         </div>
@@ -253,7 +248,7 @@ export default function Sidebar({
   if (profile?.role.is_admin && profile?.role.is_ict) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
-    
+
     );
   }
   if (profile.role.is_ict) {
