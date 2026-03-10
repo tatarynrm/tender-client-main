@@ -17,8 +17,8 @@ import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
-import UpdatesList from "@/shared/noris-components/UpdateList";
 import { FeedbackButton } from "@/shared/components/Modals/FeedbackButton/FeedbackGoogleFormModal";
+import { TrainingButton } from "@/shared/components/Modals/Training/TrainingButton";
 import { FuelWidget } from "../widgets/FuelWidget";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { AirAlarmWidget } from "../widgets/AirAlarmWidget";
@@ -109,6 +109,7 @@ export default function LogHeader({
       <div className="flex items-center gap-2 sm:gap-4">
         {/* КНОПКА ТА МЕНЮ ВІДЖЕТІВ */}
 
+        <TrainingButton />
         <FeedbackButton className="new-feature" />
         <GlobalSettings />
         <ToggleTheme />
