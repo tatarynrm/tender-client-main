@@ -62,11 +62,11 @@ export function UserAvatarMenu() {
       <details ref={detailsRef} className="relative list-none group">
         <summary className="list-none cursor-pointer outline-none">
           <div className="h-9 w-9 rounded-md border border-zinc-200 dark:border-white/10 overflow-hidden transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center bg-white dark:bg-slate-900">
-  
-              <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
-                {avatarFallback}
-              </span>
-        
+
+            <span className="text-zinc-600 dark:text-zinc-300 font-bold text-sm tracking-tighter">
+              {avatarFallback}
+            </span>
+
           </div>
         </summary>
 
@@ -78,6 +78,13 @@ export function UserAvatarMenu() {
             </p>
             <p className="text-[11px] text-zinc-500 truncate mt-0.5">
               {profile.email}
+            </p>
+            <p className="text-[11px] text-zinc-500 truncate mt-0.5">
+              USER ID:{profile.id}
+            </p>
+
+            <p className="text-[11px] text-zinc-500 truncate mt-0.5">
+              PROFILE ID:{profile.person.id}
             </p>
           </div>
 

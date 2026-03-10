@@ -246,7 +246,13 @@ export default function LogSidebar({
   if (profile?.role.is_admin) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
-      { name: "Основна платформа", href: "/dashboard", icon: FileStack },
+      { name: "Платформа для перевізників", href: "/dashboard", icon: FileStack },
+    );
+  }
+  if (profile?.role.is_ict && !profile.role.is_admin) {
+    footerLinks.push(
+
+      { name: "Платформа для перевізників", href: "/dashboard", icon: FileStack },
     );
   }
 

@@ -5,7 +5,7 @@ import React from "react";
 const CargoActivePage = () => {
   return (
     <div>
-      <GoBackButton/>
+      <GoBackButton />
       <LoadForm />
     </div>
   );

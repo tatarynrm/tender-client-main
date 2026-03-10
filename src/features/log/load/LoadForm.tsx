@@ -15,6 +15,12 @@ import {
   Truck,
   Wallet,
   X,
+  Sparkles,
+  UploadCloud,
+  FileImage,
+  Zap,
+  CheckCircle2,
+  BrainCircuit,
 } from "lucide-react";
 
 // Shared UI & Components
@@ -336,8 +342,117 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     }
   };
 
+  // ---------- AI Assistant Logic ----------
+  const [aiText, setAiText] = useState("");
+  const [aiFiles, setAiFiles] = useState<File[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+
+  const handleAiAnalyze = async () => {
+    if (!aiText.trim() && aiFiles.length === 0) {
+      toast.error("Введіть текст або додайте фото для аналізу");
+      return;
+    }
+
+    try {
+      setIsAnalyzing(true);
+      const formData = new FormData();
+      formData.append("text", aiText);
+      aiFiles.forEach((file) => formData.append("images", file));
+
+      const { data } = await api.post("/ai/logistics/parse-cargo", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (data) {
+        setAiResult(data);
+        toast.success("AI успішно проаналізував дані!");
+      } else {
+        toast.error("AI не зміг знайти дані у вашому запиті");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Помилка під час AI аналізу");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const applyAiResult = () => {
+    if (!aiResult) return;
+
+    if (aiResult.origin) {
+      setValue("crm_load_route_from.0.address", aiResult.origin);
+    }
+    if (aiResult.destination) {
+      setValue("crm_load_route_to.0.address", aiResult.destination);
+    }
+    if (aiResult.price) {
+      setValue("price", aiResult.price);
+    }
+    if (aiResult.currency) {
+      const cur = aiResult.currency.toUpperCase();
+      const validCurrencies = valutList.map(v => v.value);
+      if (validCurrencies.includes(cur)) {
+        setValue("ids_valut", cur);
+      }
+    }
+    if (aiResult.truckCount) {
+      setValue("car_count_begin", aiResult.truckCount);
+    }
+    if (aiResult.isCollective !== undefined) {
+      setValue("is_collective", aiResult.isCollective);
+    }
+    if (aiResult.isPriceRequest !== undefined) {
+      setValue("is_price_request", aiResult.isPriceRequest);
+    } else if (!aiResult.price) {
+      // Якщо ціни немає, логічно увімкнути "Запит ціни"
+      setValue("is_price_request", true);
+    }
+    if (aiResult.dateLoad) {
+      setValue("date_load", aiResult.dateLoad);
+    }
+    if (aiResult.dateUnload) {
+      setValue("date_unload", aiResult.dateUnload);
+    }
+
+    // Трейлери (Truck Types)
+    if (aiResult.truckTypes && aiResult.truckTypes.length > 0) {
+      const mappedTrailers = aiResult.truckTypes
+        .map((name: string) => {
+          const found = truckList.find(t => t.label.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(t.label.toLowerCase()));
+          return found ? { ids_trailer_type: found.value } : null;
+        })
+        .filter(Boolean) as { ids_trailer_type: string }[];
+
+      if (mappedTrailers.length > 0) {
+        setValue("crm_load_trailer", mappedTrailers);
+      }
+    }
+
+    // Збираємо текстову інформацію про вантаж
+    const currentInfo = watch("load_info") || "";
+    const infoParts = [];
+    if (aiResult.cargoName) infoParts.push(`Вантаж: ${aiResult.cargoName}`);
+    if (aiResult.weight) infoParts.push(`Вага: ${aiResult.weight}т`);
+    if (aiResult.volume) infoParts.push(`Об'єм: ${aiResult.volume}м3`);
+    if (aiResult.description) infoParts.push(aiResult.description);
+
+    const newInfo = infoParts.join(". ");
+    if (newInfo) {
+      setValue("load_info", currentInfo ? `${currentInfo}\n${newInfo}` : newInfo);
+    }
+
+    setAiResult(null);
+    setAiText("");
+    setAiFiles([]);
+    toast.success("Дані застосовано до форми!");
+  };
+
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div className="max-w-4xl mx-auto pb-20 space-y-6">
+
+
       <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-6 rounded-[1.5rem] shadow-sm">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
