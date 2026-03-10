@@ -109,7 +109,7 @@ export default function LogHeader({
       <div className="flex items-center gap-2 sm:gap-4">
         {/* КНОПКА ТА МЕНЮ ВІДЖЕТІВ */}
 
-        <FeedbackButton />
+        <FeedbackButton className="new-feature" />
         <GlobalSettings />
         <ToggleTheme />
 
