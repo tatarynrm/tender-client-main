@@ -7,12 +7,12 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { suggestionService } from "@/shared/services/suggestion.service";
 import { toast } from "sonner";
 import { useModal } from "@/shared/hooks/useGlobalModal";
-import { 
-  Loader2, 
-  Send, 
-  MessageSquare, 
-  Lightbulb, 
-  Bug, 
+import {
+  Loader2,
+  Send,
+  MessageSquare,
+  Lightbulb,
+  Bug,
   Heart,
   Sparkles
 } from "lucide-react";
@@ -57,7 +57,7 @@ export const ModernSuggestionForm = () => {
 
   if (isSuccess) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center justify-center py-12 text-center"
@@ -71,7 +71,7 @@ export const ModernSuggestionForm = () => {
           >
             <Sparkles className="text-white w-10 h-10" />
           </motion.div>
-          <motion.div 
+          <motion.div
             animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="absolute inset-0 bg-green-500 rounded-full -z-10 blur-xl"
@@ -114,23 +114,23 @@ export const ModernSuggestionForm = () => {
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-1/4 left-1/3 w-64 h-64 bg-cyan-400/10 rounded-full blur-[80px]"
         />
-        
+
         {/* Floating Particles */}
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
-            initial={{ 
-              x: Math.random() * 400, 
+            initial={{
+              x: Math.random() * 400,
               y: Math.random() * 500,
-              opacity: 0 
+              opacity: 0
             }}
-            animate={{ 
+            animate={{
               y: [null, Math.random() * -100 - 50],
               opacity: [0, 0.8, 0],
               scale: [0, 1, 0]
             }}
-            transition={{ 
-              duration: Math.random() * 5 + 5, 
+            transition={{
+              duration: Math.random() * 5 + 5,
               repeat: Infinity,
               delay: Math.random() * 5
             }}
@@ -167,8 +167,8 @@ export const ModernSuggestionForm = () => {
                     onClick={() => setCategory(cat.id)}
                     className={cn(
                       "flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300",
-                      active 
-                        ? cn("bg-white dark:bg-zinc-800 shadow-xl ring-2 ring-indigo-500/20", cat.border) 
+                      active
+                        ? cn("bg-white dark:bg-zinc-800 shadow-xl ring-2 ring-indigo-500/20", cat.border)
                         : "bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
                     )}
                   >
@@ -205,13 +205,13 @@ export const ModernSuggestionForm = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
           <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-[200px] text-center sm:text-left flex items-center gap-1.5 leading-tight">
             <Sparkles className="w-3 h-3 text-indigo-400" />
             Ваші ідеї допомагають нам ставати кращими кожного дня.
           </p>
-          
+
           <div className="flex gap-3 w-full sm:w-auto">
             <Button
               type="button"
@@ -222,8 +222,8 @@ export const ModernSuggestionForm = () => {
             >
               Пізніше
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading || !notes.trim()}
               className="flex-1 sm:flex-none bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white gap-2 px-8 py-6 rounded-xl shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >

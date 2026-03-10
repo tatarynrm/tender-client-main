@@ -47,7 +47,7 @@ export const SuggestionForm = () => {
           disabled={isLoading}
         />
       </div>
-      
+
       <div className="flex justify-end gap-3 mt-2">
         <Button
           type="button"
@@ -58,8 +58,8 @@ export const SuggestionForm = () => {
         >
           Скасувати
         </Button>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={isLoading || !notes.trim()}
           className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 min-w-[120px] shadow-lg shadow-indigo-500/20"
         >

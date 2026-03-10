@@ -1,4 +1,4 @@
-import { MessageSquarePlus, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui";
 import { useModal } from "@/shared/hooks/useGlobalModal";
 import { ModernSuggestionForm } from "./ModernSuggestionForm";

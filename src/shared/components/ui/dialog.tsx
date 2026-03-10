@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-99 bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 fixed inset-0 z-99 bg-black/50 transition-all duration-300",
         className,
       )}
       {...props}
@@ -68,18 +68,25 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          `dark:bg-slate-900 bg-white/90 data-[state=open]:animate-in data-[state=closed]:animate-out fixed top-[50%] left-[50%] z-99 grid w-full ${widthClass} max-h-[90vh] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border shadow-lg p-6 overflow-auto duration-200`,
+          "dark:bg-slate-900 bg-white/90 fixed top-[50%] left-[50%] z-99 grid w-full max-h-[95vh] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-3xl border shadow-2xl overflow-hidden transition-all duration-300",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
+          "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
+          widthClass,
           className,
         )}
         {...props}
       >
-        {children}
+        <div className="overflow-y-auto max-h-[95vh] w-full custom-scrollbar">
+          {children}
+        </div>
+
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute top-4 right-4 z-[100] rounded-full p-2 bg-white/20 dark:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/10 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-all shadow-lg hover:rotate-90 duration-300"
           >
-            <XIcon />
+            <XIcon className="w-5 h-5" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
