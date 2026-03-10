@@ -115,11 +115,12 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
   };
 
   useEffect(() => {
-    if (!field.value) {
+    // Очищаємо лише якщо дійсно немає ні значення, ні вхідного лейбла
+    if (!field.value && !initialLabel) {
       setLocalDisplayValue("");
       setSearchTerm("");
     }
-  }, [field.value]);
+  }, [field.value, initialLabel]);
 
   // ОНОВЛЕНО: Синхронізація з пропсом initialLabel
   useEffect(() => {
@@ -191,7 +192,7 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
             "left-10 top-1/2 -translate-y-1/2 text-zinc-400 text-[12px] font-medium",
-            (field.value || open) &&
+            (field.value || localDisplayValue || open) &&
               "-top-2.5 left-3 text-[10px] font-bold translate-y-0 text-teal-600 dark:text-teal-500",
             error && "text-red-500",
           )}

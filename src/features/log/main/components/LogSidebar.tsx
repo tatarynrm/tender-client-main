@@ -5,18 +5,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Settings,
+
   ChevronRight,
   ChevronDown,
   BarChart,
   LayoutList,
   ScreenShare,
-  Globe,
+
   FileStack,
   ShieldCheck,
   Archive,
-  FileCode2Icon,
-  RefreshCcw,
+
   ArchiveIcon,
   ActivitySquare,
   MapPin,
