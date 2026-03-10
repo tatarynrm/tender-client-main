@@ -775,7 +775,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   };
 
   const handleBulkSaveAiToDrafts = () => {
-    aiResults.forEach((res) => {
+    const newDrafts = aiResults.map((res) => {
       const draftData = {
         origins: res.origins,
         destinations: res.destinations,
@@ -792,14 +792,20 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         truckTypes: res.truckTypes,
       };
 
-      const newDraft = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: [...(res.origins || []), ...(res.destinations || [])].map(loc => loc.city || loc.address).join(", "),
+      return {
+        id: Math.random().toString(36).substring(2, 9),
+        title: [
+          ...(res.origins || []),
+          ...(res.destinations || []),
+        ]
+          .map((loc) => loc.city || loc.address)
+          .join(", "),
         data: draftData,
         createdAt: new Date().toISOString(),
       };
-      setDrafts((prev) => [newDraft, ...prev]);
     });
+
+    setDrafts((prev) => [...newDrafts, ...prev].slice(0, 20));
 
     setAiResults([]);
     setShowAiWarning(false);
@@ -835,7 +841,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       createdAt: new Date().toISOString(),
       isPinned: false,
     };
-    setDrafts((prev) => [newDraft, ...prev]);
+    setDrafts((prev) => [newDraft, ...prev].slice(0, 20));
     setAiResults((prev) => prev.filter((r) => r !== result));
     toast.success("Збережено в чернетки");
   };
@@ -935,7 +941,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     };
 
     saveToDrafts(draftData);
-    handleManualReset(); // Очищаємо форму після збереження в чернетку
+    // handleManualReset(); // Очищаємо форму після збереження в чернетку
   };
 
   const sensors = useSensors(
@@ -1295,7 +1301,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     />
                   </div>
 
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-3 h-[450px] overflow-y-auto pr-1 custom-scrollbar">
                     {filteredDrafts.length > 0 ? filteredDrafts.map((draft) => (
                       <div key={draft.id} className={cn(
                         "p-4 rounded-2xl border-2 transition-all group relative",
