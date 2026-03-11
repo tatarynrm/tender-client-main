@@ -93,6 +93,80 @@ import { useLoadById, useLoads } from "../hooks/useLoads";
 import { renderLocationDetails } from "./LocationDetails";
 import axios from "axios";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { Play, Pause, Volume2 } from "lucide-react";
+
+// ---------- Visualizer Component ----------
+const VoiceVisualizer = ({ stream }: { stream: MediaStream | null }) => {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const animationRef = React.useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!stream || !canvasRef.current) return;
+
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    const draw = () => {
+      if (!ctx || !canvas) return;
+      animationRef.current = requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const barWidth = (canvas.width / (bufferLength / 2)) * 2;
+      let barHeight;
+      let x = 0;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#818cf8'); // indigo-400
+      gradient.addColorStop(1, '#6366f1'); // indigo-500
+
+      for (let i = 0; i < bufferLength / 2; i++) {
+        barHeight = (dataArray[i] / 255) * canvas.height;
+        
+        ctx.fillStyle = gradient;
+        
+        const centerY = canvas.height / 2;
+        const h = Math.max(2, barHeight);
+        
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            // @ts-ignore
+            ctx.roundRect(x, centerY - h/2, barWidth - 1, h, [2]);
+        } else {
+            ctx.rect(x, centerY - h/2, barWidth - 1, h);
+        }
+        ctx.fill();
+
+        x += barWidth;
+      }
+    };
+
+    draw();
+
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      audioContext.close();
+    };
+  }, [stream]);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      width={200} 
+      height={40} 
+      className="w-full h-10 opacity-80"
+    />
+  );
+};
 
 // ---------- Helpers & Schemas ----------
 
@@ -790,6 +864,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -852,6 +929,15 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   }, [drafts]);
 
   useEffect(() => {
+    // Якщо аудіо-блоб змінився або видалився - скидаємо плейер
+    if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+        setIsPlaying(false);
+    }
+  }, [audioBlob]);
+
+  useEffect(() => {
     let interval: any;
     if (isRecording) {
       interval = setInterval(() => {
@@ -866,6 +952,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setAudioStream(stream);
       const recorder = new MediaRecorder(stream);
       const chunks: BlobPart[] = [];
 
@@ -873,6 +960,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: "audio/webm" });
         setAudioBlob(blob);
+        setAudioStream(null);
       };
 
       recorder.start();
@@ -978,6 +1066,18 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const applyAiResult = (result: any, draftId?: string) => {
     if (!result) return;
 
+    // Спершу очищаємо всі поля вантажу, щоб дані не змішувалися зі старими
+    setValue("load_info", "");
+    setValue("price", null);
+    setValue("id_client", null);
+    setCompanyLabel("");
+    setValue("crm_load_trailer", []);
+    setValue("is_collective", false);
+    setValue("is_price_request", true);
+    setValue("car_count_begin", 1);
+    setValue("ids_valut", "UAH");
+    // Не очищаємо id, щоб зберегти прив'язку якщо ми редагуємо існуючу заявку
+    
     if (result.origins && result.origins.length > 0) {
       const newFrom = result.origins.map((loc: any, idx: number) => ({
         ...loc,
@@ -986,7 +1086,10 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         order_num: idx + 1,
       }));
       setValue("crm_load_route_from", newFrom as any);
+    } else {
+      setValue("crm_load_route_from", [{ address: "", ids_route_type: "LOAD_FROM", order_num: 1 }]);
     }
+
     if (result.destinations && result.destinations.length > 0) {
       const newTo = result.destinations.map((loc: any, idx: number) => ({
         ...loc,
@@ -995,19 +1098,26 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         order_num: idx + 1,
       }));
       setValue("crm_load_route_to", newTo as any);
+    } else {
+      setValue("crm_load_route_to", [{ address: "", ids_route_type: "LOAD_TO", order_num: 1 }]);
     }
+
     if (result.price) {
       setValue("price", result.price);
+      if (!result.isPriceRequest) {
+        setValue("is_price_request", false);
+      }
     }
+    
     setValue("id_client", result.id_client || null);
     // Якщо є реальний ID клієнта (з чернетки), то ставимо лейбл.
-    // Якщо це просто назва знайдена AI (без ID), то в інпут не вставляємо,
-    // щоб менеджер вибрав компанію з бази вручну.
     if (result.id_client) {
       setCompanyLabel(getCompanyName(result));
-    } else {
-      setCompanyLabel("");
+    } else if (result.companyName) {
+      // Якщо є просто назва - можна підказати її менеджеру в info або залишити порожньою для ручного вибору
+      // setCompanyLabel(result.companyName); // Можна розкоментувати, якщо хочемо підставляти назву без ID
     }
+
     if (result.currency) {
       const cur = result.currency.toUpperCase();
       const validCurrencies = valutList.map((v) => v.value);
@@ -1015,17 +1125,19 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         setValue("ids_valut", cur);
       }
     }
+
     if (result.truckCount) {
       setValue("car_count_begin", result.truckCount);
     }
+
     if (result.isCollective !== undefined) {
       setValue("is_collective", result.isCollective);
     }
+
     if (result.isPriceRequest !== undefined) {
       setValue("is_price_request", result.isPriceRequest);
-    } else if (!result.price) {
-      setValue("is_price_request", true);
     }
+
     if (isValidDate(result.dateLoad)) {
       setValue("date_load", result.dateLoad);
     }
@@ -1072,13 +1184,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
     const newInfo = infoParts.join(". ");
     if (newInfo) {
-      const currentInfo = watch("load_info") || "";
-      if (!currentInfo.includes(newInfo)) {
-        setValue(
-          "load_info",
-          currentInfo ? `${currentInfo}\n${newInfo}` : newInfo,
-        );
-      }
+      // Тепер просто вставляємо, бо поле вже очищене на початку методу
+      setValue("load_info", newInfo);
     }
 
     if (draftId) {
@@ -1086,6 +1193,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     } else {
       setActiveDraftId(null);
     }
+
 
     setAiResults((prev) => prev.filter((r) => r !== result));
     if (aiResults.length <= 1) {
@@ -1477,28 +1585,57 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       )}
                     >
                       {isRecording ? (
-                        <>
-                          <Square size={20} className="mb-1 animate-pulse" />
-                          <span className="text-[10px] font-bold uppercase">
-                            {Math.floor(recordingDuration / 60)}:
-                            {String(recordingDuration % 60).padStart(2, '0')}
-                          </span>
-                          <div className="absolute bottom-0 left-0 h-1 bg-red-500 animate-progress-linear w-full" />
-                        </>
+                        <div className="flex flex-col items-center justify-center w-full">
+                          <VoiceVisualizer stream={audioStream} />
+                          <div className="flex items-center gap-2 mt-1">
+                            <Square size={14} className="animate-pulse" />
+                            <span className="text-[10px] font-bold uppercase">
+                              {Math.floor(recordingDuration / 60)}:
+                              {String(recordingDuration % 60).padStart(2, '0')}
+                            </span>
+                          </div>
+                        </div>
                       ) : audioBlob ? (
-                        <>
-                          <Check size={20} className="mb-1" />
-                          <span className="text-[10px] font-bold uppercase truncate w-full px-1">Голос записано</span>
+                        <div className="flex flex-col items-center justify-center w-full">
+                          <div className="flex items-center gap-2 mb-1">
+                             <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isPlaying) {
+                                    audioRef.current?.pause();
+                                    setIsPlaying(false);
+                                  } else {
+                                    if (!audioRef.current) {
+                                        audioRef.current = new Audio(URL.createObjectURL(audioBlob));
+                                        audioRef.current.onended = () => setIsPlaying(false);
+                                    }
+                                    audioRef.current.play();
+                                    setIsPlaying(true);
+                                  }
+                                }}
+                                className="p-1.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                             >
+                                {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                             </button>
+                             <Volume2 size={12} className="text-slate-400" />
+                             <span className="text-[10px] font-bold uppercase truncate max-w-[60px]">Аудіо</span>
+                          </div>
+                          
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setAudioBlob(null);
+                              if (audioRef.current) {
+                                  audioRef.current.pause();
+                                  audioRef.current = null;
+                              }
+                              setIsPlaying(false);
                             }}
-                            className="absolute top-1 right-1 p-0.5 bg-red-500 text-white rounded-full scale-75"
+                            className="text-[9px] font-bold text-red-500 uppercase hover:underline"
                           >
-                            <X size={12} />
+                            Видалити
                           </button>
-                        </>
+                        </div>
                       ) : (
                         <>
                           <Mic size={20} className="mb-1" />

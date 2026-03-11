@@ -16,6 +16,7 @@ import {
   KeyRound,
   UserRoundPlus,
   Users2Icon,
+  MessageSquare,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -71,6 +72,11 @@ const links: MenuItem[] = [
         icon: SiTelegram,
       },
     ],
+  },
+  {
+    name: "Відгуки та ідеї",
+    href: "/admin/suggestions",
+    icon: MessageSquare,
   },
 ];
 
