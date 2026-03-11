@@ -30,7 +30,7 @@ export const TrainingButton = ({ className }: TrainingButtonProps) => {
         handleOpenModal();
       }}
       className={cn(
-        "group relative z-10 flex items-center gap-2 px-4 py-5 rounded-xl transition-all duration-300 border-indigo-200/50 bg-indigo-50/30 hover:bg-indigo-100/80 dark:bg-indigo-900/10 dark:border-indigo-900/20",
+        "group relative z-10 flex items-center gap-2 px-3 py-2 md:px-4 md:py-5 rounded-xl transition-all duration-300 border-indigo-200/50 bg-indigo-50/30 hover:bg-indigo-100/80 dark:bg-indigo-900/10 dark:border-indigo-900/20",
         className
       )}
       title="Навчання та інструкції"
@@ -42,7 +42,7 @@ export const TrainingButton = ({ className }: TrainingButtonProps) => {
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500 border-2 border-white dark:border-slate-900"></span>
         </span>
       </div>
-      <span className="text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide pointer-events-none">Навчання</span>
+      <span className="hidden md:inline text-xs font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide pointer-events-none">Навчання</span>
     </Button>
   );
 };

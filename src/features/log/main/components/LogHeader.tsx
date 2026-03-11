@@ -60,9 +60,9 @@ export default function LogHeader({
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
+    <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
       {/* Ліва частина: Управління та Профіль */}
-      <div className="flex items-center gap-6 relative">
+      <div className="flex items-center gap-3 sm:gap-6 relative">
         <button
           onClick={onMenuClick}
           className="md:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
@@ -106,19 +106,24 @@ export default function LogHeader({
       </div>
 
       {/* Права частина: Налаштування та Дії */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* КНОПКА ТА МЕНЮ ВІДЖЕТІВ */}
-
-        <TrainingButton />
-        <FeedbackButton className="new-feature" />
-        <GlobalSettings />
-        <ToggleTheme />
-
-        {/* Меню профілю */}
-        <div className="relative pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
-          <DynamicHeaderMenu />
+      <div className="flex items-center gap-1.5 sm:gap-4">
+        {/* Додаткові інструменти (зменшені на мобілці) */}
+        <div className="flex items-center gap-1.5 mr-1 sm:mr-2">
+          <TrainingButton />
+          <FeedbackButton className="new-feature" />
         </div>
-        <UserAvatarMenu />
+
+        {/* Налаштування (можна було б сховати на дуже малих екранах, але поки залишимо) */}
+        <div className="hidden sm:flex items-center gap-1.5">
+          <GlobalSettings />
+          <ToggleTheme />
+        </div>
+
+        {/* Головні дії: Додати та Профіль */}
+        <div className="flex items-center gap-2 pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
+          <DynamicHeaderMenu />
+          <UserAvatarMenu />
+        </div>
       </div>
     </header>
   );
