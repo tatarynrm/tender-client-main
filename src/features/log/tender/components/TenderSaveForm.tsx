@@ -76,6 +76,7 @@ import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime"
 import { cn } from "@/shared/utils";
 import api from "@/shared/api/instance.api";
 import { useSaveTender } from "../../hooks/useSaveTender";
+import { currencyStringTransform } from "@/shared/helpers/currency-formatter";
 
 // ==========================================
 // SCHEMAS
@@ -176,6 +177,7 @@ const tenderFormSchema = z
       });
     }
   });
+console.log();
 
 export type TenderFormValues = z.infer<typeof tenderFormSchema>;
 
@@ -227,7 +229,7 @@ function SortableRouteItem({
       className={cn(
         "flex flex-col sm:flex-row items-stretch gap-3 p-3 rounded-xl border border-slate-200 transition-all relative group",
         isDragging &&
-          "opacity-90 ring-2 ring-blue-500 shadow-xl scale-[1.01] border-blue-200",
+        "opacity-90 ring-2 ring-blue-500 shadow-xl scale-[1.01] border-blue-200",
         !isDragging && "shadow-sm hover:border-slate-300 hover:shadow-md",
       )}
     >
@@ -300,7 +302,7 @@ function SortableRouteItem({
                       className={cn(
                         "h-10",
                         isBorderOrCustoms &&
-                          "bg-amber-50/50 border-amber-200 text-amber-700",
+                        "bg-amber-50/50 border-amber-200 text-amber-700",
                       )}
                     >
                       <SelectValue />
@@ -495,16 +497,16 @@ export default function TenderSaveForm({
       // SENIOR FIX: Примусово сортуємо маршрути по order_num при ініціалізації
       const sortedRoutes = defaultValues.tender_route
         ? [...defaultValues.tender_route].sort(
-            (a, b) => (a.order_num || 0) - (b.order_num || 0),
-          )
+          (a, b) => (a.order_num || 0) - (b.order_num || 0),
+        )
         : [
-            {
-              address: "",
-              ids_point: "LOAD_FROM",
-              order_num: 1,
-              customs: false,
-            },
-          ];
+          {
+            address: "",
+            ids_point: "LOAD_FROM",
+            order_num: 1,
+            customs: false,
+          },
+        ];
 
       reset({
         ...defaultValues,
@@ -585,6 +587,8 @@ export default function TenderSaveForm({
     }
   };
 
+  const currencyWatch = watch('ids_valut')
+  const currencySign = currencyStringTransform(currencyWatch ?? 'UAH')
   return (
     <Card className="max-w-5xl mx-auto shadow-2xl border-0 overflow-hidden bg-white">
       {/* Header */}
@@ -868,39 +872,44 @@ export default function TenderSaveForm({
             {/* --- SECTION: FINANCES --- */}
             {(typeValue === "REDUCTION" ||
               typeValue === "REDUCTION_WITH_REDEMPTION") && (
-              <section className="p-6 bg-gradient-to-br from-red-50 to-rose-50/50 rounded-2xl border border-red-100">
-                <h3 className="font-black flex items-center gap-2 text-red-700 text-lg mb-6">
-                  <DollarSign className="w-5 h-5 bg-red-100 rounded-full p-0.5" />{" "}
-                  Бюджет тендеру
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  <InputFinance
-                    name="price_start"
-                    control={control}
-                    label="Стартова ціна"
-                  />
-                  <SelectFinance
-                    name="ids_valut"
-                    control={control}
-                    label="Валюта"
-                    options={valut.slice(0, 4)}
-                  />
-                  <InputFinance
-                    name="price_step"
-                    control={control}
-                    label="Крок ставки"
-                  />
-                  {typeValue === "REDUCTION_WITH_REDEMPTION" && (
+                <section className="p-6 bg-gradient-to-br from-red-50 to-rose-50/50 rounded-2xl border border-red-100">
+                  <h3 className="font-black flex items-center gap-2 text-red-700 text-lg mb-6">
+                    <DollarSign className="w-5 h-5 bg-red-100 rounded-full p-0.5" />{" "}
+                    Бюджет тендеру
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <InputFinance
-                      name="price_redemption"
+                      name="price_start"
                       control={control}
-                      label="Ціна викупу (Бліц)"
-                      required
+                      label="Стартова ціна"
+                      currency={currencySign}
                     />
-                  )}
-                </div>
-              </section>
-            )}
+                    <SelectFinance
+
+                      name="ids_valut"
+                      control={control}
+                      label="Валюта"
+                      options={valut.slice(0, 4)}
+
+                    />
+                    <InputFinance
+                      currency={currencySign}
+                      name="price_step"
+                      control={control}
+                      label="Крок ставки"
+                    />
+                    {typeValue === "REDUCTION_WITH_REDEMPTION" && (
+                      <InputFinance
+                        currency={currencySign}
+                        name="price_redemption"
+                        control={control}
+                        label="Ціна викупу (Бліц)"
+                        required
+                      />
+                    )}
+                  </div>
+                </section>
+              )}
 
             <div className="flex items-center gap-4 py-4 px-2 border-t">
               <InputSwitch

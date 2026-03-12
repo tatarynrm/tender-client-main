@@ -442,6 +442,7 @@ export function TenderCardThree({
           title="Підтвердження ставки"
           description={`Ви впевнені, що хочете зробити ставку: ${cargo.price_next} ${currencySymbol}?`}
           onConfirm={onConfirmReduction}
+          variant="default"
         />
       )}
 
@@ -461,6 +462,8 @@ export function TenderCardThree({
           title="Підтвердження викупу"
           description={`Ви впевнені, що хочете викупити рейс за ${cargo.price_redemption} ${currencySymbol}?`}
           onConfirm={onBuyout}
+          variant="success"
+          confirmText="Викупити зараз"
         />
       )}
     </>
