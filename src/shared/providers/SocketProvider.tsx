@@ -96,7 +96,19 @@ export const useSockets = () => {
   return ctx;
 };
 
+import { useAdminNotificationStore } from "../stores/useAdminNotificationStore";
+import { AdminNotificationModal } from "../components/Modals/AdminNotificationModal";
+
 const SocketEventsManager = () => {
   useSocketEvents();
-  return null;
+  const { isOpen, message, type, closeNotification } = useAdminNotificationStore();
+
+  return (
+    <AdminNotificationModal 
+      isOpen={isOpen}
+      onClose={closeNotification}
+      message={message}
+      type={type}
+    />
+  );
 };

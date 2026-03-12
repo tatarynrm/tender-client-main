@@ -17,6 +17,7 @@ import {
   UserRoundPlus,
   Users2Icon,
   MessageSquare,
+  Bell
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -77,6 +78,11 @@ const links: MenuItem[] = [
     name: "Відгуки та ідеї",
     href: "/admin/suggestions",
     icon: MessageSquare,
+  },
+  {
+    name: "Сповіщення",
+    href: "/admin/notifications",
+    icon: Bell,
   },
 ];
 
