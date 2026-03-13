@@ -12,15 +12,15 @@ export const GlobalModalContainer = ({ type, props, close }: any) => {
   if (!Component) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[99999] flex  ">
       {/* Backdrop - тепер без onClick */}
       <div
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
-        // onClick={close}  <-- Цей рядок видалено
+      // onClick={close}  <-- Цей рядок видалено
       />
 
       {/* Контейнер для контенту */}
-      <div className="relative z-[100000] w-full max-w-sm animate-in zoom-in-95 duration-300">
+      <div className="relative z-[100000]  max-w-sm animate-in zoom-in-95 duration-300">
         {/* Передаємо функцію close всередину компонента */}
         <Component {...props} close={close} />
       </div>

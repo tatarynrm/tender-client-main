@@ -6,13 +6,8 @@ import { AppButton } from "../../Buttons/AppButton";
 
 export const WorkEndModal = ({ close }: { close: () => void }) => {
   return (
-    <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl p-8 text-center border border-zinc-100 dark:border-white/5">
-      <button
-        onClick={close}
-        className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
-      >
-        <X size={20} />
-      </button>
+    <div className="relative   bg-white dark:bg-slate-900  shadow-2xl p-8 text-center border border-zinc-100 dark:border-white/5">
+
 
       {/* Іконка з нічним ефектом */}
       <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500">

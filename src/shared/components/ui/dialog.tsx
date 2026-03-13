@@ -77,7 +77,7 @@ function DialogContent({
         )}
         {...props}
       >
-        <div className="overflow-y-auto max-h-[95vh] w-full custom-scrollbar">
+        <div className=" custom-scrollbar">
           {children}
         </div>
 
