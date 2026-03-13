@@ -1,27 +1,26 @@
 "use client";
 
-import { useModal } from "@/shared/providers/GlobalModalProvider";
+import { useModalStore } from "@/shared/stores/useModalStore";
 import { useEffect } from "react";
+import { RestModal } from "../RestModal";
+import { WorkEndModal } from "../WorkEndModal";
 
 export const RestTimerTracker = () => {
-  const { openModal } = useModal();
+  const { openModal, closeModal } = useModalStore();
 
   useEffect(() => {
     const checkTime = () => {
       const now = new Date();
       const hours = now.getHours();
-      const minutes = now.getMinutes();
       const today = now.toDateString();
-
-      // Наприклад, зараз 23:45. 
-      // Якщо ви ставите 23:36 і зараз вже 23:45 — модалка не відкриється через strict equality (===).
-      // Краще використовувати таку логіку:
       
       // 1. ОБІД (з 13:00 до 14:00)
       if (hours === 13) {
         const lastRest = localStorage.getItem("lastRestShown");
         if (lastRest !== today) {
-          openModal("rest");
+          openModal(<RestModal close={closeModal} />, { 
+            className: "p-0 border-none bg-transparent shadow-none sm:max-w-sm",
+          });
           localStorage.setItem("lastRestShown", today);
         }
       }
@@ -30,18 +29,19 @@ export const RestTimerTracker = () => {
       if (hours >= 18) {
         const lastWorkEnd = localStorage.getItem("lastWorkEndShown");
         if (lastWorkEnd !== today) {
-          openModal("workEnd");
+          openModal(<WorkEndModal close={closeModal} />, { 
+            className: "p-0 border-none bg-transparent shadow-none sm:max-w-sm",
+          });
           localStorage.setItem("lastWorkEndShown", today);
         }
       }
     };
 
-    // Перевіряємо раз на 30 секунд
     const interval = setInterval(checkTime, 30000);
-    checkTime(); // Важливо: викликаємо відразу при завантаженні сторінки!
+    checkTime();
 
     return () => clearInterval(interval);
-  }, [openModal]);
+  }, [openModal, closeModal]);
 
   return null;
 };

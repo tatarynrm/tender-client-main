@@ -13,11 +13,13 @@ import { EmptyTenders } from "@/features/dashboard/tender/components/EmptyTender
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
-import TenderFullInfoModal from "@/features/log/tender/components/TenderFullInfoModal";
+import { useModalStore } from "@/shared/stores/useModalStore";
+import TenderFullInfoModal from "@/features/dashboard/tender/components/TenderFullInfoModal";
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
-import { TenderCardThree } from "./components/cards-examples/CardThree";
+import { TenderCardClients } from "./components/TenderCardClients";
+
 
 interface Props {
   status?: string;
@@ -34,8 +36,8 @@ export default function ClientsTenderPage({
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  const { openModal } = useModalStore();
   const { tenderFilters } = useTenderClientFormData();
-  const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
 
   const currentParams = useMemo(
     () => ({
@@ -113,17 +115,21 @@ export default function ClientsTenderPage({
     updateUrl({ ...currentParams, page: p });
   }, [currentParams, updateUrl]);
 
-  const handleCloseModal = useCallback(() => setSelectedTender(null), []);
+  const handleOpenDetails = useCallback((tender: ITender) => {
+    openModal(
+      <TenderFullInfoModal tenderId={tender.id} />,
+      {
+        size: "full",
+        className: "p-0 overflow-hidden"
+      }
+    );
+  }, [openModal]);
 
   if (error) return <ErrorState />;
   if (isLoading) return <TenderLoader />;
 
   return (
     <div className="p-0 mx-auto space-y-2">
-      <TenderFullInfoModal
-        tenderId={selectedTender?.id}
-        onClose={handleCloseModal}
-      />
 
       <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="flex justify-between items-center bg-white dark:bg-white/5 p-2 rounded-lg border border-zinc-200 dark:border-white/10">
@@ -158,10 +164,10 @@ export default function ClientsTenderPage({
         <div className="space-y-1 pb-20">
           <div className="grid gap-2 grid-cols-1">
             {tenders.map((item) => (
-              <TenderCardThree
+              <TenderCardClients
                 key={item.id}
                 cargo={item}
-                onOpenDetails={() => setSelectedTender(item)}
+                onOpenDetails={() => handleOpenDetails(item)}
               />
             ))}
           </div>

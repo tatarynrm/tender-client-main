@@ -3,7 +3,7 @@ import LoadListComponent from "@/features/log/load/LoadListComponent";
 
 // Визначаємо метадані для сторінки
 export const metadata: Metadata = {
-  title: "Логістика | Список вантажів",
+  title: "Логістика | Архів вантажів",
   description:
     "Керування списком вантажів, моніторинг статусів та логістичних операцій у системі CRM.",
   keywords: [

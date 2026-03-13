@@ -346,7 +346,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         {/* DATES BAR */}
         <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-800 font-bold">
           <div className={dateCellCls}>
-            <span className={cn("text-zinc-400 uppercase", config.label)}>Завантаження:</span>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>Зав.:</span>
             <span
               className={cn(
                 "text-emerald-600 dark:text-emerald-500",
@@ -354,15 +354,21 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               )}
             >
               {load.date_load ? format(new Date(load.date_load), "dd.MM") : "—"}
+              {load.date_load2 && (
+                <>
+                  <span className="mx-1 text-zinc-300">—</span>
+                  {format(new Date(load.date_load2), "dd.MM")}
+                </>
+              )}
             </span>
           </div>
           <div className={dateCellCls}>
-            <span className={cn("text-zinc-400 uppercase", config.label)}>Розвантаження:</span>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>Розв.:</span>
             <span
               className={cn("text-blue-600 dark:text-blue-400", config.main)}
             >
               {load.date_unload
-                ? format(new Date(load.date_unload), "dd.MM HH:mm")
+                ? format(new Date(load.date_unload), "dd.MM")
                 : "—"}
             </span>
           </div>

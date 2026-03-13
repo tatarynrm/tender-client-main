@@ -7,8 +7,6 @@ import { ChevronUp, Settings2 } from "lucide-react";
 import { useFilters } from "@/shared/hooks/useFilters";
 import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl";
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
-import { useModal } from "@/shared/providers/GlobalModalProvider";
-
 import { ITender } from "../types/tender.type";
 import { useTenderListManagers } from "../hooks/useTenderManagersList";
 import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
@@ -37,7 +35,6 @@ export default function ManagersTenderPage({ status }: Props) {
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
   const { tenderFilters } = useTenderManagersFormData();
-  const { openModal } = useModal();
   const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
 
   const { isVisible, toggle } = useVisibilityControl("tender_list");

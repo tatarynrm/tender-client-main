@@ -86,7 +86,7 @@ export const ModernSuggestionForm = () => {
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-1/4 left-1/3 w-64 h-64 bg-cyan-400/10 rounded-full blur-[80px]"
         />
-        
+
         {/* Floating Particles */}
         {[...Array(6)].map((_, i) => (
           <motion.div
@@ -113,7 +113,7 @@ export const ModernSuggestionForm = () => {
 
       <AnimatePresence mode="wait">
         {isSuccess ? (
-          <motion.div 
+          <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -129,7 +129,7 @@ export const ModernSuggestionForm = () => {
               >
                 <Sparkles className="text-white w-12 h-12" />
               </motion.div>
-              <motion.div 
+              <motion.div
                 animate={{ scale: [1, 1.8, 1], opacity: [0.3, 0, 0.3] }}
                 transition={{ duration: 2, repeat: Infinity }}
                 className="absolute inset-0 bg-green-500 rounded-full -z-10 blur-2xl"
@@ -141,17 +141,17 @@ export const ModernSuggestionForm = () => {
             </p>
           </motion.div>
         ) : (
-          <motion.form 
+          <motion.form
             key="form"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            onSubmit={handleSubmit} 
+            onSubmit={handleSubmit}
             className="flex flex-col gap-6 p-8 flex-grow relative z-10 w-full"
           >
             <div className="flex flex-col gap-1 mb-2">
               <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-fuchsia-600 dark:from-indigo-400 dark:to-fuchsia-400">
-                Ваш відгук та ідеї
+                Ваш відгуки та ідеї
               </h2>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Ми цінуємо кожну думку, яка допомагає нам ставати кращими.
@@ -214,13 +214,13 @@ export const ModernSuggestionForm = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <p className="text-[11px] text-zinc-400 dark:text-zinc-500 max-w-[200px] text-center sm:text-left flex items-center gap-1.5 leading-tight">
                 <Sparkles className="w-3 h-3 text-indigo-400" />
                 Ваші ідеї допомагають нам ставати кращими кожного дня.
               </p>
-              
+
               <div className="flex gap-3 w-full sm:w-auto">
                 <Button
                   type="button"

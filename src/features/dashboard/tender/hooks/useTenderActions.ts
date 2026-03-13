@@ -1,20 +1,15 @@
-import { useState } from "react";
 import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
+import { useModalStore } from "@/shared/stores/useModalStore";
 
 export function useTenderActions(
   tenderId: number,
   nextPrice: number | null,
-  price_redemption: number | null // Дозволяємо null тут також
+  price_redemption: number | null
 ) {
-  const [activeModal, setActiveModal] = useState<
-    "confirm" | "manual" | "buyout" | null
-  >(null);
-
-  const closeModal = () => setActiveModal(null);
+  const { confirm, closeModal } = useModalStore();
 
   const handleAction = async (payload: any) => {
-    // Перевірка ціни (крім ручного введення, де ціна приходить з форми)
     if (payload.ids_redemption_price !== "offer" && !payload.price_proposed) {
       toast.error("Помилка", { description: "Ціна не визначена" });
       return;
@@ -27,9 +22,8 @@ export function useTenderActions(
       });
       toast.success("Дію виконано успішно");
       closeModal();
-      // Тут можна додати refresh логіку
     } catch (error) {
-      // Axios interceptor обробить помилку
+      // Axios interceptor handles errors
     }
   };
 
@@ -67,9 +61,6 @@ export function useTenderActions(
   };
 
   return {
-    activeModal,
-    setActiveModal,
-    closeModal,
     onConfirmReduction,
     onManualPrice,
     onBuyout,

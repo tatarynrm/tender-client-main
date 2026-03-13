@@ -53,6 +53,7 @@ export type LoadApiItem = {
   comment_read_time: string | null;
   id_usr: number;
   date_load: string | Date;
+  date_load2?: string | Date;
   date_unload: string | Date;
   id_author?: number;
 };

@@ -120,7 +120,7 @@ const VoiceVisualizer = ({ stream }: { stream: MediaStream | null }) => {
       analyser.getByteFrequencyData(dataArray);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       const barWidth = (canvas.width / (bufferLength / 2)) * 2;
       let barHeight;
       let x = 0;
@@ -131,18 +131,18 @@ const VoiceVisualizer = ({ stream }: { stream: MediaStream | null }) => {
 
       for (let i = 0; i < bufferLength / 2; i++) {
         barHeight = (dataArray[i] / 255) * canvas.height;
-        
+
         ctx.fillStyle = gradient;
-        
+
         const centerY = canvas.height / 2;
         const h = Math.max(2, barHeight);
-        
+
         ctx.beginPath();
         if (ctx.roundRect) {
-            // @ts-ignore
-            ctx.roundRect(x, centerY - h/2, barWidth - 1, h, [2]);
+          // @ts-ignore
+          ctx.roundRect(x, centerY - h / 2, barWidth - 1, h, [2]);
         } else {
-            ctx.rect(x, centerY - h/2, barWidth - 1, h);
+          ctx.rect(x, centerY - h / 2, barWidth - 1, h);
         }
         ctx.fill();
 
@@ -159,10 +159,10 @@ const VoiceVisualizer = ({ stream }: { stream: MediaStream | null }) => {
   }, [stream]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
-      width={200} 
-      height={40} 
+    <canvas
+      ref={canvasRef}
+      width={200}
+      height={40}
       className="w-full h-10 opacity-80"
     />
   );
@@ -515,7 +515,7 @@ const routeSchema = z.object({
   lon: z.number().optional().nullable(),
   address: z.string().min(1, "Будь ласка, вкажіть адресу"),
   ids_route_type: z.enum(["LOAD_FROM", "LOAD_TO"]),
-  country: z.string().optional().nullable(),
+  ids_country: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   order_num: z.number(),
   ids_region: z.string().nullable().optional(),
@@ -553,6 +553,7 @@ const cargoServerSchema = z
     date_load: z
       .string({ message: "Дата завантаження є обов'язковою" })
       .min(1, "Дата завантаження є обов'язковою"),
+    date_load2: z.string().nullable().optional(),
     date_unload: z.string().nullable().optional(),
   })
   .refine(
@@ -592,6 +593,9 @@ const sanitizeCargoData = (data: any): Partial<CargoServerFormValues> => {
     car_count_begin: data.car_count_begin ? Number(data.car_count_begin) : 1,
     date_load: data.date_load
       ? (data.date_load instanceof Date ? toLocalDateString(data.date_load) : String(data.date_load))
+      : undefined,
+    date_load2: data.date_load2
+      ? (data.date_load2 instanceof Date ? toLocalDateString(data.date_load2) : String(data.date_load2))
       : undefined,
     date_unload: data.date_unload
       ? (data.date_unload instanceof Date ? toLocalDateString(data.date_unload) : String(data.date_unload))
@@ -931,9 +935,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   useEffect(() => {
     // Якщо аудіо-блоб змінився або видалився - скидаємо плейер
     if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-        setIsPlaying(false);
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsPlaying(false);
     }
   }, [audioBlob]);
 
@@ -1077,7 +1081,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     setValue("car_count_begin", 1);
     setValue("ids_valut", "UAH");
     // Не очищаємо id, щоб зберегти прив'язку якщо ми редагуємо існуючу заявку
-    
+
     if (result.origins && result.origins.length > 0) {
       const newFrom = result.origins.map((loc: any, idx: number) => ({
         ...loc,
@@ -1108,7 +1112,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         setValue("is_price_request", false);
       }
     }
-    
+
     setValue("id_client", result.id_client || null);
     // Якщо є реальний ID клієнта (з чернетки), то ставимо лейбл.
     if (result.id_client) {
@@ -1140,6 +1144,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
     if (isValidDate(result.dateLoad)) {
       setValue("date_load", result.dateLoad);
+    }
+    if (isValidDate(result.dateLoad2)) {
+      setValue("date_load2", result.dateLoad2);
     }
     if (isValidDate(result.dateUnload)) {
       setValue("date_unload", result.dateUnload);
@@ -1275,7 +1282,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     toast.success("Збережено в чернетки");
   };
 
-   const togglePinDraft = (id: string, e?: React.MouseEvent) => {
+  const togglePinDraft = (id: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setDrafts(prev => prev.map(d => d.id === id ? { ...d, isPinned: !d.isPinned } : d));
   };
@@ -1598,36 +1605,36 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       ) : audioBlob ? (
                         <div className="flex flex-col items-center justify-center w-full">
                           <div className="flex items-center gap-2 mb-1">
-                             <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (isPlaying) {
-                                    audioRef.current?.pause();
-                                    setIsPlaying(false);
-                                  } else {
-                                    if (!audioRef.current) {
-                                        audioRef.current = new Audio(URL.createObjectURL(audioBlob));
-                                        audioRef.current.onended = () => setIsPlaying(false);
-                                    }
-                                    audioRef.current.play();
-                                    setIsPlaying(true);
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isPlaying) {
+                                  audioRef.current?.pause();
+                                  setIsPlaying(false);
+                                } else {
+                                  if (!audioRef.current) {
+                                    audioRef.current = new Audio(URL.createObjectURL(audioBlob));
+                                    audioRef.current.onended = () => setIsPlaying(false);
                                   }
-                                }}
-                                className="p-1.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-                             >
-                                {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-                             </button>
-                             <Volume2 size={12} className="text-slate-400" />
-                             <span className="text-[10px] font-bold uppercase truncate max-w-[60px]">Аудіо</span>
+                                  audioRef.current.play();
+                                  setIsPlaying(true);
+                                }
+                              }}
+                              className="p-1.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                            >
+                              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                            </button>
+                            <Volume2 size={12} className="text-slate-400" />
+                            <span className="text-[10px] font-bold uppercase truncate max-w-[60px]">Аудіо</span>
                           </div>
-                          
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setAudioBlob(null);
                               if (audioRef.current) {
-                                  audioRef.current.pause();
-                                  audioRef.current = null;
+                                audioRef.current.pause();
+                                audioRef.current = null;
                               }
                               setIsPlaying(false);
                             }}
@@ -1817,12 +1824,17 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
             <Form {...form}>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 {/* Dates Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <InputDate
                     name="date_load"
                     control={control}
-                    label="Дата завантаження"
+                    label="Дата завантаження (з)"
                     required
+                  />
+                  <InputDate
+                    name="date_load2"
+                    control={control}
+                    label="Дата завантаження (по)"
                   />
                   <InputDate
                     name="date_unload"
@@ -1866,7 +1878,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                         const data = {
                                           lat: loc.lat,
                                           lon: loc.lng,
-                                          country: loc.countryCode,
+                                          ids_country: loc.countryCode,
                                           city: loc.city,
                                           ids_region: loc.regionCode,
                                           street: loc.street,
@@ -1887,24 +1899,24 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                       }}
                                     />
                                   </FormControl>
-                                    {(watch(`crm_load_route_from.${idx}.street`) || watch(`crm_load_route_from.${idx}.house`)) && (
-                                      <div className="grid grid-cols-12 gap-2 mt-2">
-                                        <div className="col-span-8">
-                                          <InputText
-                                            name={`crm_load_route_from.${idx}.street`}
-                                            control={control}
-                                            label="Вулиця"
-                                          />
-                                        </div>
-                                        <div className="col-span-4">
-                                          <InputText
-                                            name={`crm_load_route_from.${idx}.house`}
-                                            control={control}
-                                            label="Буд."
-                                          />
-                                        </div>
+                                  {(watch(`crm_load_route_from.${idx}.street`) || watch(`crm_load_route_from.${idx}.house`)) && (
+                                    <div className="grid grid-cols-12 gap-2 mt-2">
+                                      <div className="col-span-8">
+                                        <InputText
+                                          name={`crm_load_route_from.${idx}.street`}
+                                          control={control}
+                                          label="Вулиця"
+                                        />
                                       </div>
-                                    )}
+                                      <div className="col-span-4">
+                                        <InputText
+                                          name={`crm_load_route_from.${idx}.house`}
+                                          control={control}
+                                          label="Буд."
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
                                   <FormMessage className="text-[10px] uppercase font-bold" />
                                 </FormItem>
                               )}
@@ -1963,7 +1975,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                         const data = {
                                           lat: loc.lat,
                                           lon: loc.lng,
-                                          country: loc.countryCode,
+                                          ids_country: loc.countryCode,
                                           city: loc.city,
                                           ids_region: loc.regionCode,
                                           street: loc.street,
