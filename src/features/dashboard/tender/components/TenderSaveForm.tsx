@@ -32,6 +32,8 @@ import { useRouter } from "next/navigation";
 import DateTimePicker from "@/shared/components/Inputs/DatePicker";
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
 import { useSockets } from "@/shared/providers/SocketProvider";
+import { UniqueFileUploader } from "@/shared/ict_components/UniqueFileUploader/UniqueFileUploader";
+
 
 // ---------- Schemas ----------
 const routeSchema = z.object({
@@ -222,6 +224,8 @@ export default function TenderSaveForm({
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const [isNextTender, setIsNextTender] = useState(false);
   const { tender: tenderSocket } = useSockets();
+  const [files, setFiles] = useState<(File | any)[]>([]); // New and existing files combined
+
   const form = useForm<TenderFormValues>({
     resolver: zodResolver(tenderFormSchema),
     defaultValues: {
@@ -315,6 +319,24 @@ export default function TenderSaveForm({
     getTruckList();
   }, []);
 
+  // Fetch existing files if editing
+  useEffect(() => {
+    if (isEdit && defaultValues?.id) {
+      const fetchFiles = async () => {
+        try {
+          const { data } = await api.get(`/tender/files/${defaultValues.id}`);
+          if (data.status === 'ok') {
+            setFiles(data.content || []);
+          }
+        } catch (err) {
+          console.error("Failed to fetch tender files", err);
+        }
+      };
+      fetchFiles();
+    }
+  }, [isEdit, defaultValues?.id]);
+
+
   const loadOptionsFromApi = (url: string) => async (inputValue: string) => {
     if (!inputValue) return [];
     try {
@@ -336,19 +358,47 @@ export default function TenderSaveForm({
     try {
       const payload = { ...values };
       if (defaultValues?.id) payload.id = defaultValues.id;
-      await api.post("/tender/save", payload);
+      
+      // Separate existing files (have ID) and new files (File objects)
+      const current_file_ids = files
+        .filter(f => f.id)
+        .map(f => f.id);
+      
+      const newFiles = files.filter(f => f instanceof File);
+
+      // Create FormData
+      const formData = new FormData();
+      
+      // We send the JSON data as a string in the 'dto' field 
+      // as our backend controller expects 'dto' or parses the body
+      formData.append('dto', JSON.stringify({
+        ...payload,
+        current_file_ids
+      }));
+
+      // Append new files
+      newFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      await api.post("/tender/save", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
       tenderSocket?.emit("");
       if (!isNextTender) {
         // form.reset();
-      } else {
-        // router.push("/log/tender/active");
+        setFiles([]);
       }
     } catch (err) {
       console.error(err);
       toast.error("Помилка при збереженні тендеру");
     }
   };
+
 
   return (
     <Card className="max-w-3xl mx-auto p-3 mb-20">
@@ -994,6 +1044,18 @@ export default function TenderSaveForm({
               </>
             )}
           </div>
+
+          {/* Files Section */}
+          <div className="py-4 border-t border-gray-100">
+            <UniqueFileUploader
+              files={files}
+              onChange={setFiles}
+              maxFiles={10}
+              label="Документи до тендеру"
+              description="Завантажте специфікації, фото вантажу або інші документи"
+            />
+          </div>
+
 
           {/* Submit */}
           <div className="flex justify-between items-center">

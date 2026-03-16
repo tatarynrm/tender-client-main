@@ -51,8 +51,8 @@ export const ModalProvider = () => {
   if (type === 'sheet') {
     return (
       <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-        <SheetContent 
-          side={config.side || 'right'} 
+        <SheetContent
+          side={config.side || 'right'}
           className={cn("p-0 overflow-y-auto", getWidthClass(config.size), config.className)}
           onPointerDownOutside={onPointerDownOutside}
         >
@@ -85,8 +85,8 @@ export const ModalProvider = () => {
 
     return (
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-        <DialogContent 
-          className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-[#09090b] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] dark:shadow-[0_32px_128px_-16px_rgba(0,0,0,1)] rounded-[2.5rem]"
+        <DialogContent
+          className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-[#09090b] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] dark:shadow-[0_32px_128px_-16px_rgba(0,0,0,1)] rounded-[2.5rem] я"
           onPointerDownOutside={onPointerDownOutside}
         >
           <div className="relative pt-12 pb-8 px-8 flex flex-col items-center text-center overflow-hidden">
@@ -98,7 +98,7 @@ export const ModalProvider = () => {
               config.variant === "warning" && "bg-amber-500",
               config.variant === "default" && "bg-indigo-500"
             )} />
-            
+
             <div className={cn(
               "w-24 h-24 rounded-[2.5rem] flex items-center justify-center mb-8 relative z-10",
               config.variant === "danger" && "bg-rose-50 dark:bg-rose-500/10",
@@ -122,8 +122,8 @@ export const ModalProvider = () => {
           </div>
 
           <div className="bg-zinc-50 dark:bg-white/[0.02] p-8 flex flex-col sm:flex-row gap-4 border-t border-zinc-100 dark:border-zinc-800/50 relative z-20">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 config.onCancel?.();
                 closeModal();
@@ -155,7 +155,7 @@ export const ModalProvider = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent 
+      <DialogContent
         className={cn(getWidthClass(config.size), "p-0 overflow-hidden", config.className)}
         onPointerDownOutside={onPointerDownOutside}
       >

@@ -18,6 +18,7 @@ import {
   ThermometerSnowflake,
   ThermometerSun,
   Snowflake,
+  Paperclip,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -30,6 +31,7 @@ import { useFontSize } from "@/shared/providers/FontSizeProvider";
 import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
+import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 
 export function TenderCardManagers({
   cargo,
@@ -43,6 +45,7 @@ export function TenderCardManagers({
   const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
   const { mutateAsync: delWinner,   isPending:isDelWinner } = useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
+  const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const displayPrice = cargo.price_proposed || cargo.price_start;
 
   const fromPoints = cargo.tender_route.filter(
@@ -182,7 +185,9 @@ export function TenderCardManagers({
             </span>
           </div>
         </div>
-        <TenderActions tender={cargo} />
+        <div className="flex items-center gap-1">
+          <TenderActions tender={cargo} />
+        </div>
       </div>
 
       <CardContent className="p-0">
@@ -367,14 +372,29 @@ export function TenderCardManagers({
               >
                 {cargo.cargo}
               </span>
-              <span
-                className={cn(
-                  "ml-auto font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
-                  label,
+              <div className="ml-auto flex items-center gap-1">
+                <span
+                  className={cn(
+                    "font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
+                    label,
+                  )}
+                >
+                  {cargo.notes}
+                </span>
+                {cargo.files && cargo.files.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsFilesModalOpen(true);
+                    }}
+                  >
+                    <Paperclip size={icon - 2} />
+                  </Button>
                 )}
-              >
-                {cargo.notes}
-              </span>
+              </div>
             </div>
           </div>
 
@@ -461,6 +481,13 @@ export function TenderCardManagers({
           </div>
         )}
       </CardContent>
+
+      <FilesPreviewModal 
+        isOpen={isFilesModalOpen}
+        onClose={() => setIsFilesModalOpen(false)}
+        files={cargo.files || []}
+        title={`Документи тендеру #${cargo.id}`}
+      />
     </Card>
   );
 }

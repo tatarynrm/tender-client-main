@@ -42,7 +42,6 @@ export function TenderRatesList({
 
   const isAnalyze = cargo.ids_status === "ANALYZE";
 
-  console.log(cargo, "TENDER 5- line tender rate.ts");
 
   return (
     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar pb-2">

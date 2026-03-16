@@ -6,7 +6,7 @@ import { toast } from "sonner";
 // Описуємо тип payload (можете розширити під ваші потреби)
 export interface SaveTenderPayload {
   id?: number | string;
-  [key: string]: any; 
+  [key: string]: any;
 }
 
 export const useSaveTender = () => {
@@ -22,10 +22,11 @@ export const useSaveTender = () => {
     },
     // Виконується при успішному запиті
     onSuccess: (data, variables) => {
+
       const isEdit = !!variables.id;
-      
-      toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
-      
+
+      toast.success(isEdit ? "Успішно" : "Успішно");
+
       // Відправляємо сокет-подію
       if (tender?.connected) {
         tender.emit("tender_updated");

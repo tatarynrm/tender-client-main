@@ -118,6 +118,7 @@ export interface ITender {
   tender_route: ITenderRoute[];
   tender_trailer: ITenderTrailer[];
   tender_permission: ITenderPermission[];
+  files?: any[];
 }
 export interface ITenderLoad {
   id: number;

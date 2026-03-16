@@ -11,6 +11,11 @@ import { ITender } from "@/features/log/types/tender.type";
 import { useModalStore } from "@/shared/stores/useModalStore";
 import { useTenderActions } from "../hooks/useTenderActions";
 
+import {
+  ClipboardList,
+  Paperclip,
+} from "lucide-react";
+import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { TenderTimer } from "./TenderTimer";
 import { ManualPriceDialog } from "./ManualPriceDialog";
 
@@ -63,6 +68,7 @@ export function TenderCardClients({
     onManualPrice,
     onBuyout,
   } = useTenderActions(cargo.id, cargo.price_next, cargo.price_redemption);
+  const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
 
   const currencySymbol = getCurrencySymbol(cargo.valut_name);
 
@@ -196,11 +202,14 @@ export function TenderCardClients({
               {cargo.id}
             </span>
           </div>
-          {cargo.tender_type && (
-            <span className="text-[9px] lg:text-[8px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/20 px-1.5 py-0.5 rounded border border-transparent dark:border-sky-500/20">
-              {cargo.tender_type}
-            </span>
-          )}
+
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {cargo.tender_type && (
+              <span className="text-[9px] lg:text-[8px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/20 px-1.5 py-0.5 rounded border border-transparent dark:border-sky-500/20">
+                {cargo.tender_type}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* 2. Завантаження */}
@@ -299,9 +308,23 @@ export function TenderCardClients({
         {/* 8. Додаткова інформація */}
         <div className="col-span-12 lg:col-span-1 border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-zinc-800 p-1.5 lg:p-2 flex flex-col items-center justify-center">
           <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 uppercase tracking-widest text-center w-full block mb-1">Додаткова інформація</span>
-          <span className="text-[9.5px] lg:text-[10px] text-zinc-500 font-medium text-center leading-snug line-clamp-1 lg:line-clamp-none max-w-[280px] lg:max-w-[200px] mx-auto">
-            {cargo.notes || "—"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[9.5px] lg:text-[10px] text-zinc-500 font-medium text-center leading-snug line-clamp-1 lg:line-clamp-none max-w-[280px] lg:max-w-[200px] mx-auto">
+              {cargo.notes || "—"}
+            </span>
+            {cargo.files && cargo.files.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFilesModalOpen(true);
+                }}
+                className="p-1 rounded-md text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
+                title={`Документи (${cargo.files.length})`}
+              >
+                <Paperclip size={14} strokeWidth={3} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 9. Інформація по тендеру */}
@@ -382,6 +405,13 @@ export function TenderCardClients({
           </div>
         </div>
       </div>
+
+      <FilesPreviewModal 
+        isOpen={isFilesModalOpen}
+        onClose={() => setIsFilesModalOpen(false)}
+        files={cargo.files || []}
+        title={`Документи тендеру #${cargo.id}`}
+      />
     </div>
   );
 }

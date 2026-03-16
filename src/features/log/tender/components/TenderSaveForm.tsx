@@ -75,7 +75,9 @@ import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
+import { UniqueFileUploader } from "@/shared/ict_components/UniqueFileUploader/UniqueFileUploader";
 import { cn } from "@/shared/utils";
+
 import api from "@/shared/api/instance.api";
 import { useSaveTender } from "../../hooks/useSaveTender";
 import { currencyStringTransform } from "@/shared/helpers/currency-formatter";
@@ -117,7 +119,7 @@ const tenderFormSchema = z
     price_redemption: z.number().optional(),
     ids_type: z.enum(["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"]),
     ids_carrier_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
-    request_price: z.boolean(),
+
     without_vat: z.boolean(),
     tender_route: z.array(routeSchema).min(1, "Додайте хоча б одну точку"),
     tender_trailer: z.array(trailerSchema).min(1, "Вкажіть тип транспорту"),
@@ -355,6 +357,8 @@ export default function TenderSaveForm({
 
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const [isNextTender, setIsNextTender] = useState(false);
+  const [files, setFiles] = useState<(File | any)[]>([]); // Combines existing and new files
+
 
   const form = useForm<TenderFormValues>({
     resolver: zodResolver(tenderFormSchema),
@@ -365,7 +369,7 @@ export default function TenderSaveForm({
       car_count: 1,
       ids_type: "AUCTION",
       ids_carrier_rating: "MAIN",
-      request_price: false,
+
       without_vat: true,
       tender_route: [
         { address: "", ids_point: "LOAD_FROM", order_num: 1, customs: false },
@@ -423,11 +427,17 @@ export default function TenderSaveForm({
     getTruckList();
   }, []);
 
+  // --- INITIALIZE FORM & FILES ---
   useEffect(() => {
     if (defaultValues) {
       const sortedRoutes = defaultValues.tender_route
         ? [...defaultValues.tender_route].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
         : [{ address: "", ids_point: "LOAD_FROM", order_num: 1, customs: false }];
+
+      // Universally set files if they exist in the incoming data
+      if ((defaultValues as any).files) {
+        setFiles((defaultValues as any).files);
+      }
 
       reset({
         ...defaultValues,
@@ -441,6 +451,7 @@ export default function TenderSaveForm({
       if (defaultValues.company_name) setCompanyLabel(defaultValues.company_name);
     }
   }, [defaultValues, reset]);
+
 
   useEffect(() => {
     if (!isOnlyRef) {
@@ -463,13 +474,45 @@ export default function TenderSaveForm({
       tender_route: values.tender_route.map((route, idx) => ({ ...route, order_num: idx + 1 })),
     };
     if (defaultValues?.id) payload.id = defaultValues.id;
+
+    // Separate existing files (have ID) and new files (File objects)
+    const current_file_ids = files
+      .filter(f => f.id)
+      .map(f => f.id);
+
+    // Sometimes files are just regular objects with metadata if they come from certain sources
+    // or if they are already wrapped. Let's make the check more robust.
+    const newFiles = files.filter(f => f instanceof File || (f.size && f.name && !f.id));
+
+
+    // Create FormData
+    const formData = new FormData();
+
+    // We send the JSON data as a string in the 'dto' field 
+    // This matches what we did for the other form and what the server expect
+    formData.append('dto', JSON.stringify({
+      ...payload,
+      current_file_ids
+    }));
+
+    // Append new files
+    newFiles.forEach(file => {
+      formData.append('files', file);
+    });
+
     try {
-      await saveTender(payload);
-      if (!isNextTender) router.back();
+      await saveTender(formData as any); // cast to any because hook expects object
+      if (!isNextTender) {
+        router.back();
+      } else {
+        setFiles([]);
+        reset();
+      }
     } catch (error) {
       console.error(error);
     }
   };
+
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -487,6 +530,9 @@ export default function TenderSaveForm({
 
   const currencyWatch = watch("ids_valut");
   const currencySign = currencyStringTransform(currencyWatch ?? "UAH");
+
+
+
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 font-sans min-h-screen">
@@ -589,7 +635,7 @@ export default function TenderSaveForm({
                   </div>
 
                   {/* Transport */}
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-4 relative z-[20]">
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-4 relative z-[999]">
                     <InputMultiSelect name="tender_trailer" control={control} label="Транспорт" options={truckList} required />
                     <InputMultiSelect name="tender_load" control={control} label="Завантаження" options={loadList} valueKey="ids_load_type" required />
                   </div>
@@ -711,6 +757,20 @@ export default function TenderSaveForm({
 
                     </div>
                     <InputTextarea name="notes" control={control} label="Примітки та коментарі для водія" icon={Notebook} />
+                  </div>
+
+                  {/* 📎 ATTACHMENTS */}
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl space-y-5">
+                    <h2 className="flex items-center gap-3 text-teal-600">
+                      <Plus className="w-5 h-5" />
+                      <span className="text-xs font-black uppercase tracking-[0.2em]">Документи</span>
+                    </h2>
+                    <UniqueFileUploader
+                      files={files}
+                      onChange={setFiles}
+                      maxFiles={10}
+                      description="Завантажте специфікації або фото"
+                    />
                   </div>
                 </aside>
 

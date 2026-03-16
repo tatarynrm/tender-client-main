@@ -265,7 +265,6 @@ export default function TenderAddForm({
         ...values,
         ...(defaultValues?.id ? { id: defaultValues.id } : {}), // додаємо id, якщо він є
       };
-      console.log(payload, "PAYLOAD");
 
       const { data } = await api.post("/crm/load/save", payload);
 
@@ -732,7 +731,6 @@ export default function TenderAddForm({
                           ?.slice(0, 4)
                           .map(
                             (item: any, idx: React.Key | null | undefined) => {
-                              console.log(item, "ITEM");
 
                               return (
                                 <SelectItem
