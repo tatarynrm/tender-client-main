@@ -1043,12 +1043,9 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         formData.append("audio", audioBlob, "voice_command.webm");
       }
 
-      const { data } = await api.post("/ai/logistics/parse-cargo", formData,
-        //    {
-        //   headers: { "Content-Type": "multipart/form-data" },
-        // }
-
-      );
+      console.log('--- SENDING AI ANALYZE REQUEST ---', formData);
+      
+      const { data } = await api.post("/ai/logistics/parse-cargo", formData);
 
       if (data && data.loads && data.loads.length > 0) {
         setAiResults(data.loads);

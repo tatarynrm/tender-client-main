@@ -358,7 +358,8 @@ export default function TenderSaveForm({
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const [isNextTender, setIsNextTender] = useState(false);
   const [files, setFiles] = useState<(File | any)[]>([]); // Combines existing and new files
-
+  const STORAGE_KEY = "tender_log_form_draft";
+  const [isLoadedDraft, setIsLoadedDraft] = useState(false);
 
   const form = useForm<TenderFormValues>({
     resolver: zodResolver(tenderFormSchema),
@@ -398,6 +399,47 @@ export default function TenderSaveForm({
     formState: { isSubmitting },
     reset,
   } = form;
+
+  const watchedValues = watch();
+
+  // Load draft on mount
+  useEffect(() => {
+    if (!isEdit) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const { values, companyLabel: savedLabel } = JSON.parse(saved);
+          // Convert date strings back to Date objects
+          if (values.time_start) values.time_start = new Date(values.time_start);
+          if (values.time_end) values.time_end = new Date(values.time_end);
+          if (values.date_load) values.date_load = new Date(values.date_load);
+          if (values.date_load2) values.date_load2 = new Date(values.date_load2);
+          if (values.date_unload) values.date_unload = new Date(values.date_unload);
+          
+          Object.keys(values).forEach((key: any) => {
+            setValue(key, values[key]);
+          });
+          if (savedLabel) setCompanyLabel(savedLabel);
+          setIsLoadedDraft(true);
+        } catch (e) {
+          console.error("Failed to load tender draft", e);
+        }
+      }
+    }
+  }, [isEdit, setValue]);
+
+  // Save draft on changes
+  useEffect(() => {
+    if (!isEdit) {
+      const timer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          values: watchedValues,
+          companyLabel
+        }));
+      }, 1000); // Debounce save
+      return () => clearTimeout(timer);
+    }
+  }, [watchedValues, companyLabel, isEdit]);
 
   const {
     fields: routeFields,
@@ -501,7 +543,8 @@ export default function TenderSaveForm({
     });
 
     try {
-      await saveTender(formData as any); // cast to any because hook expects object
+      await saveTender(formData); 
+      localStorage.removeItem(STORAGE_KEY);
       if (!isNextTender) {
         router.back();
       } else {

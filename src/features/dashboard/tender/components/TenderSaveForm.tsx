@@ -225,6 +225,7 @@ export default function TenderSaveForm({
   const [isNextTender, setIsNextTender] = useState(false);
   const { tender: tenderSocket } = useSockets();
   const [files, setFiles] = useState<(File | any)[]>([]); // New and existing files combined
+  const STORAGE_KEY = "tender_form_draft";
 
   const form = useForm<TenderFormValues>({
     resolver: zodResolver(tenderFormSchema),
@@ -257,8 +258,46 @@ export default function TenderSaveForm({
     setValue,
     clearErrors,
     watch,
+    reset,
     formState: { errors },
   } = form;
+
+  const watchedValues = watch();
+
+  // Load draft on mount
+  useEffect(() => {
+    if (!isEdit) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const { values, companyLabel: savedLabel } = JSON.parse(saved);
+          // Convert date strings back to Date objects
+          if (values.time_start) values.time_start = new Date(values.time_start);
+          if (values.end_date) values.end_date = new Date(values.end_date);
+          
+          Object.keys(values).forEach((key: any) => {
+            setValue(key, values[key]);
+          });
+          if (savedLabel) setCompanyLabel(savedLabel);
+        } catch (e) {
+          console.error("Failed to load tender draft", e);
+        }
+      }
+    }
+  }, [isEdit, setValue]);
+
+  // Save draft on changes
+  useEffect(() => {
+    if (!isEdit) {
+      const timer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          values: watchedValues,
+          companyLabel
+        }));
+      }, 1000); // Debounce save
+      return () => clearTimeout(timer);
+    }
+  }, [watchedValues, companyLabel, isEdit]);
 
   const {
     fields: routeFields,
@@ -381,13 +420,11 @@ export default function TenderSaveForm({
         formData.append('files', file);
       });
 
-      await api.post("/tender/save", formData, {
-        // headers: {
-        //   'Content-Type': 'multipart/form-data'
-        // }
-      });
+      console.log('--- SENDING TENDER SAVE REQUEST ---');
+      await api.post("/tender/save", formData);
 
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
+      localStorage.removeItem(STORAGE_KEY);
       tenderSocket?.emit("");
       if (!isNextTender) {
         // form.reset();
