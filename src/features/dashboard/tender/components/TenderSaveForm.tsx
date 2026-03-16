@@ -358,17 +358,17 @@ export default function TenderSaveForm({
     try {
       const payload = { ...values };
       if (defaultValues?.id) payload.id = defaultValues.id;
-      
+
       // Separate existing files (have ID) and new files (File objects)
       const current_file_ids = files
         .filter(f => f.id)
         .map(f => f.id);
-      
+
       const newFiles = files.filter(f => f instanceof File);
 
       // Create FormData
       const formData = new FormData();
-      
+
       // We send the JSON data as a string in the 'dto' field 
       // as our backend controller expects 'dto' or parses the body
       formData.append('dto', JSON.stringify({
@@ -382,11 +382,11 @@ export default function TenderSaveForm({
       });
 
       await api.post("/tender/save", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        // headers: {
+        //   'Content-Type': 'multipart/form-data'
+        // }
       });
-      
+
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
       tenderSocket?.emit("");
       if (!isNextTender) {
@@ -600,9 +600,8 @@ export default function TenderSaveForm({
 
                             // формуємо addr для input
                             const addr = location.street
-                              ? `${location.street}${
-                                  location.house ? `, ${location.house}` : ""
-                                }`
+                              ? `${location.street}${location.house ? `, ${location.house}` : ""
+                              }`
                               : location.city || "";
 
                             // оновлюємо input field
@@ -661,29 +660,29 @@ export default function TenderSaveForm({
                 {["LOAD_FROM", "LOAD_TO"].includes(
                   watch(`tender_route.${idx}.ids_point`)
                 ) && (
-                  <>
-                    <FormField
-                      control={control}
-                      name={`tender_route.${idx}.customs`}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <Switch
-                            id={`tender_route.${idx}.customs`}
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                          <FormLabel htmlFor={`tender_route.${idx}.customs`}>
-                            На місці ?
-                          </FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <MyTooltip
-                      text="Вказувати якщо замитнення або розмитнення по місцях"
-                      important
-                    />
-                  </>
-                )}
+                    <>
+                      <FormField
+                        control={control}
+                        name={`tender_route.${idx}.customs`}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center gap-2">
+                            <Switch
+                              id={`tender_route.${idx}.customs`}
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                            <FormLabel htmlFor={`tender_route.${idx}.customs`}>
+                              На місці ?
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                      <MyTooltip
+                        text="Вказувати якщо замитнення або розмитнення по місцях"
+                        important
+                      />
+                    </>
+                  )}
 
                 {idx > 0 && (
                   <Button
@@ -733,8 +732,8 @@ export default function TenderSaveForm({
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                              ids_trailer_type: o.value,
-                            }))
+                            ids_trailer_type: o.value,
+                          }))
                           : []
                       )
                     }
@@ -765,8 +764,8 @@ export default function TenderSaveForm({
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                              ids_load_type: o.value,
-                            }))
+                            ids_load_type: o.value,
+                          }))
                           : []
                       )
                     }
@@ -799,8 +798,8 @@ export default function TenderSaveForm({
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                              ids_permission_type: o.value,
-                            }))
+                            ids_permission_type: o.value,
+                          }))
                           : []
                       )
                     }
