@@ -144,7 +144,7 @@ export const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-[100] w-full mt-1.5 p-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 origin-top">
+        <div className="absolute z-1000 w-full mt-1.5 p-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 origin-top">
           {showSearch && (
             <div className="relative mb-1 px-1 pt-1">
               <div className="relative flex items-center">

@@ -621,7 +621,7 @@ export default function TenderSaveForm({
                             <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
                               <SelectValue placeholder="Оберіть тип" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl z-[110]">
+                            <SelectContent className="rounded-2xl">
                               {tenderType.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -639,7 +639,7 @@ export default function TenderSaveForm({
                             <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
                               <SelectValue placeholder="Оберіть рейтинг" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl z-[110]">
+                            <SelectContent className="rounded-2xl">
                               {rating.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                             </SelectContent>
                           </Select>
