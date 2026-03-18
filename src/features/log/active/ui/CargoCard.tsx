@@ -188,8 +188,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     // Формуємо фінальне посилання
     // api=1 & origin=... & destination=... & waypoints=...
     const baseUrl = "https://www.google.com/maps/dir/?api=1";
-    const url = `${baseUrl}&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""
-      }&travelmode=driving`;
+    const url = `${baseUrl}&origin=${origin}&destination=${destination}${
+      waypoints ? `&waypoints=${waypoints}` : ""
+    }&travelmode=driving`;
 
     window.open(url, "_blank");
   };
@@ -226,8 +227,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
   // ── Shared class tokens ────────────────────────────────────────────────────
   const darkCard = "dark:bg-slate-900 dark:border-zinc-800";
-  const dateCellCls = "bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start";
-  const footerBtnCls = "p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 transition-colors";
+  const dateCellCls =
+    "bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start";
+  const footerBtnCls =
+    "p-2 bg-white dark:bg-slate-800 border border-zinc-200 dark:border-zinc-700 rounded-full text-zinc-400 transition-colors";
 
   return (
     <>
@@ -346,7 +349,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         {/* DATES BAR */}
         <div className="grid grid-cols-2 gap-px bg-zinc-100 dark:bg-zinc-800 font-bold">
           <div className={dateCellCls}>
-            <span className={cn("text-zinc-400 uppercase", config.label)}>Зав.:</span>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>
+              Зав.:
+            </span>
             <span
               className={cn(
                 "text-emerald-600 dark:text-emerald-500",
@@ -363,7 +368,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             </span>
           </div>
           <div className={dateCellCls}>
-            <span className={cn("text-zinc-400 uppercase", config.label)}>Розв.:</span>
+            <span className={cn("text-zinc-400 uppercase", config.label)}>
+              Розв.:
+            </span>
             <span
               className={cn("text-blue-600 dark:text-blue-400", config.main)}
             >
@@ -405,8 +412,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               >
                 {load.crm_load_trailer?.length > 0
                   ? load.crm_load_trailer
-                    .map((t) => t.trailer_type_name)
-                    .join(", ")
+                      .map((t) => t.trailer_type_name)
+                      .join(", ")
                   : "ТЕНТ"}
               </div>
               <div
@@ -534,7 +541,10 @@ export function CargoCard({ load, filters }: CargoCardProps) {
             ))}
             <button
               onClick={() => setChatCargo(load)}
-              className={cn(footerBtnCls, "relative hover:bg-zinc-50 dark:hover:bg-slate-700")}
+              className={cn(
+                footerBtnCls,
+                "relative hover:bg-zinc-50 dark:hover:bg-slate-700",
+              )}
             >
               <MessageCircle size={config.icon - 2} className="text-zinc-400" />
               {load.comment_count > 0 && (

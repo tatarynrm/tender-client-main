@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ColumnDef } from "@tanstack/react-table";
-import { User as UserIcon, Edit, Search, X } from "lucide-react";
+import { User as UserIcon, Search, X } from "lucide-react";
+import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
+import { UserCard } from "@/features/admin/users/components/UserCard";
 
-import { DataTable } from "@/shared/components/DataTable/DataTable";
 import { Button, Input } from "@/shared/components/ui";
 import LinkButton from "@/shared/components/Buttons/LinkButton";
 import { useAdminUsers } from "@/features/admin/hooks/useAdminUsers";
@@ -25,21 +25,28 @@ type UserFilterValues = z.infer<typeof userFilterSchema>;
 
 export default function UsersPage() {
   const router = useRouter();
-  const [filters, setFilters] = useState<UserFilterValues>({
-    email: "",
-    company: "",
-    page: 1,
-    limit: 20,
+
+  const [filters, setFilters] = useState<UserFilterValues>(() => {
+    let savedLimit = 20;
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("admin_users_per_page");
+      if (stored) savedLimit = parseInt(stored, 10);
+    }
+    return {
+      email: "",
+      company: "",
+      page: 1,
+      limit: savedLimit,
+    };
   });
 
   const { register, watch, setValue, reset } = useForm<UserFilterValues>({
-    // Використання 'as any' тут вирішує проблему несумісності ResolverOptions
     resolver: zodResolver(userFilterSchema) as any,
     defaultValues: {
       email: "",
       company: "",
       page: 1,
-      limit: 20,
+      limit: filters.limit,
     },
   });
 
@@ -66,56 +73,26 @@ export default function UsersPage() {
   }, []);
 
   const handlePerPageChange = useCallback((newSize: number) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_users_per_page", newSize.toString());
+    }
     setFilters((prev) => ({ ...prev, page: 1, limit: newSize }));
   }, []);
 
   const clearFilters = () => {
-    const defaults = { email: "", company: "", page: 1, limit: 20 };
+    let savedLimit = 20;
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("admin_users_per_page");
+      if (stored) savedLimit = parseInt(stored, 10);
+    }
+    const defaults = { email: "", company: "", page: 1, limit: savedLimit };
     reset(defaults);
     setFilters(defaults);
   };
 
-  const columns: ColumnDef<any>[] = [
-    {
-      header: "ПІБ",
-      accessorFn: (row) => {
-        const p = row.person;
-        return (
-          `${p?.surname || ""} ${p?.name || ""} ${p?.last_name || ""}`.trim() ||
-          "—"
-        );
-      },
-    },
-    {
-      header: "Компанія",
-      accessorFn: (row) =>
-        row.company?.company_name || row.migrate_company || "Немає",
-    },
-    { accessorKey: "email", header: "Email" },
-    {
-      header: "Роль",
-      cell: ({ row }) => {
-        const role = row.original.person?.person_role;
-        if (role?.is_admin)
-          return <span className="font-semibold text-red-600">Адмін</span>;
-        if (role?.is_manager)
-          return <span className="text-blue-600">Менеджер</span>;
-        return "Користувач";
-      },
-    },
-    {
-      header: "Дії",
-      cell: ({ row }) => (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => router.push(`/admin/users/edit/${row.original.id}`)}
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
-      ),
-    },
-  ];
+  const onlineUsers = useOnlineUsers();
+
+
 
   return (
     <div className="space-y-4 p-4 w-full">
@@ -177,18 +154,68 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <DataTable
-          columns={columns}
-          data={users || []}
-          isLoading={isLoading}
-          pageCount={pagination?.page_count || 1}
-          currentPage={filters.page}
-          pageSize={filters.limit}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePerPageChange}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
+        {isLoading ? (
+          Array.from({ length: filters.limit }).map((_, i) => (
+            <div key={i} className="h-[140px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
+          ))
+        ) : users?.length > 0 ? (
+          users.map((user: any) => (
+            <UserCard 
+              key={user.id} 
+              user={user} 
+              isOnline={onlineUsers.has(String(user.id))} 
+            />
+          ))
+        ) : (
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
+            <UserIcon className="w-12 h-12 text-zinc-300 mb-3" />
+            <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Немає користувачів</p>
+            <p className="text-sm">Спробуйте змінити параметри пошуку або додайте нового користувача.</p>
+          </div>
+        )}
       </div>
+
+      {pagination && (pagination.page_count > 1 || users?.length > 0) && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mt-6 shadow-sm">
+          <div className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+            <span>Відображати:</span>
+            <select
+              value={filters.limit}
+              onChange={(e) => handlePerPageChange(Number(e.target.value))}
+              className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-2.5 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-shadow cursor-pointer font-semibold"
+            >
+              {[10, 20, 50, 100].map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-semibold"
+              disabled={filters.page <= 1}
+              onClick={() => handlePageChange(filters.page - 1)}
+            >
+              Попередня
+            </Button>
+            <span className="text-sm font-semibold flex items-center justify-center min-w-[120px] text-zinc-700 dark:text-zinc-300">
+              Сторінка <span className="text-indigo-600 dark:text-indigo-400 mx-1.5">{filters.page}</span> з {pagination.page_count}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-semibold"
+              disabled={filters.page >= pagination.page_count}
+              onClick={() => handlePageChange(filters.page + 1)}
+            >
+              Наступна
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

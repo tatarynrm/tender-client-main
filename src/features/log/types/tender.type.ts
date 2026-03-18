@@ -175,7 +175,7 @@ export interface IRateCompany {
   id: number;
   email: string;
   author: string;
-  id_author: number;
+  id_author?: number;
   id_company: number;
   company_name: string;
 

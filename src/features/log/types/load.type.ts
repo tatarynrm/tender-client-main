@@ -108,7 +108,6 @@ export interface DropdownOption {
 export interface DepartmentDropdownOption {
   ids: string | number;
   value: string; // Для trailer_type_dropdown, company_dropdown
-
 }
 
 export interface Dropdowns {
