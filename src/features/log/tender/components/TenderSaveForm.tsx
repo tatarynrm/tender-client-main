@@ -105,7 +105,9 @@ const routeSchema = z.object({
 
 const trailerSchema = z.object({ ids_trailer_type: z.string() });
 const loadSchema = z.object({ ids_load_type: z.string() });
-const tenderPermissionSchema = z.object({ ids_permission_type: z.string() });
+const tenderPermissionSchema = z.object({
+  ids_permission_type: z.string().optional(),
+});
 
 const tenderFormSchema = z
   .object({
@@ -117,7 +119,9 @@ const tenderFormSchema = z
     price_start: z.number().optional(),
     price_step: z.number({ message: "Вкажіть крок ставки" }).optional(),
     price_redemption: z.number().optional(),
-    ids_type: z.enum(["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"]),
+    ids_type: z.enum(["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"], {
+      message: "Вкажіть тип тендеру",
+    }),
     ids_carrier_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
 
     without_vat: z.boolean(),
@@ -216,23 +220,25 @@ function SortableRouteItem({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    ...(isDragging ? { zIndex: 50, position: 'relative' as const } : {}),
+    ...(isDragging ? { zIndex: 50, position: "relative" as const } : {}),
   };
 
   const pointType = watch(`tender_route.${index}.ids_point`);
-  const isBorderOrCustoms =
-    ["CUSTOM_UP", "CUSTOM_DOWN", "BORDER"].includes(pointType);
+  const isBorderOrCustoms = ["CUSTOM_UP", "CUSTOM_DOWN", "BORDER"].includes(
+    pointType,
+  );
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-white/5 p-6 mb-4 relative group transition-all",
-        isDragging && "shadow-2xl ring-2 ring-indigo-500/20 scale-[1.01] z-50 bg-indigo-50/10"
+        "bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 p-4 mb-3 relative group transition-all",
+        isDragging &&
+          "shadow-2xl ring-2 ring-indigo-500/20 scale-[1.01] z-50 bg-indigo-50/10",
       )}
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
@@ -242,7 +248,9 @@ function SortableRouteItem({
             >
               <GripVertical className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">ТОЧКА #{index + 1}</span>
+            <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">
+              ТОЧКА #{index + 1}
+            </span>
           </div>
           {index > 1 && (
             <button
@@ -262,7 +270,9 @@ function SortableRouteItem({
               name={`tender_route.${index}.address`}
               render={({ field: f }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Локація</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
+                    Локація
+                  </FormLabel>
                   <FormControl>
                     <GoogleLocationInput
                       value={f.value ?? ""}
@@ -273,8 +283,14 @@ function SortableRouteItem({
                         f.onChange(addr);
                         setValue(`tender_route.${index}.lat`, location.lat);
                         setValue(`tender_route.${index}.lon`, location.lng);
-                        setValue(`tender_route.${index}.country`, location.countryCode || "");
-                        setValue(`tender_route.${index}.city`, location.city || "");
+                        setValue(
+                          `tender_route.${index}.country`,
+                          location.countryCode || "",
+                        );
+                        setValue(
+                          `tender_route.${index}.city`,
+                          location.city || "",
+                        );
                         clearErrors(`tender_route.${index}.address`);
                       }}
                     />
@@ -290,9 +306,16 @@ function SortableRouteItem({
               name={`tender_route.${index}.ids_point`}
               render={({ field: f }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Тип</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
+                    Тип
+                  </FormLabel>
                   <Select value={f.value} onValueChange={f.onChange}>
-                    <SelectTrigger className={cn("h-12 rounded-2xl bg-slate-50 border-none shadow-inner", isBorderOrCustoms && "bg-amber-50 text-amber-700")}>
+                    <SelectTrigger
+                      className={cn(
+                        "h-12 rounded-2xl bg-slate-50 border-none shadow-inner",
+                        isBorderOrCustoms && "bg-amber-50 text-amber-700",
+                      )}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,12 +338,20 @@ function SortableRouteItem({
                 name={`tender_route.${index}.customs`}
                 render={({ field }) => (
                   <FormItem className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 h-12 w-full">
-                    <Switch checked={field.value} onCheckedChange={field.onChange} className="scale-75" />
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Митн.</span>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="scale-75"
+                    />
+                    <span className="text-[10px] font-bold uppercase text-slate-500">
+                      Митн.
+                    </span>
                   </FormItem>
                 )}
               />
-            ) : <div className="h-12" />}
+            ) : (
+              <div className="h-12" />
+            )}
           </div>
         </div>
       </div>
@@ -329,8 +360,18 @@ function SortableRouteItem({
 }
 
 const X = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  <svg
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
   </svg>
 );
 
@@ -347,10 +388,18 @@ export default function TenderSaveForm({
   const { mutateAsync: saveTender, isPending } = useSaveTender();
   const router = useRouter();
 
-  const [truckList, setTruckList] = useState<{ label: string; value: string }[]>([]);
-  const [loadList, setLoadList] = useState<{ label: string; value: string }[]>([]);
-  const [tenderPermission, setTenderPermission] = useState<{ label: string; value: string }[]>([]);
-  const [tenderType, setTenderType] = useState<{ label: string; value: string }[]>([]);
+  const [truckList, setTruckList] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [loadList, setLoadList] = useState<{ label: string; value: string }[]>(
+    [],
+  );
+  const [tenderPermission, setTenderPermission] = useState<
+    { label: string; value: string }[]
+  >([]);
+  const [tenderType, setTenderType] = useState<
+    { label: string; value: string }[]
+  >([]);
   const [valut, setValut] = useState<{ label: string; value: string }[]>([]);
   const [rating, setRating] = useState<{ label: string; value: string }[]>([]);
 
@@ -409,11 +458,14 @@ export default function TenderSaveForm({
         try {
           const { values, companyLabel: savedLabel } = JSON.parse(saved);
           // Convert date strings back to Date objects
-          if (values.time_start) values.time_start = new Date(values.time_start);
+          if (values.time_start)
+            values.time_start = new Date(values.time_start);
           if (values.time_end) values.time_end = new Date(values.time_end);
           if (values.date_load) values.date_load = new Date(values.date_load);
-          if (values.date_load2) values.date_load2 = new Date(values.date_load2);
-          if (values.date_unload) values.date_unload = new Date(values.date_unload);
+          if (values.date_load2)
+            values.date_load2 = new Date(values.date_load2);
+          if (values.date_unload)
+            values.date_unload = new Date(values.date_unload);
 
           Object.keys(values).forEach((key: any) => {
             setValue(key, values[key]);
@@ -431,10 +483,13 @@ export default function TenderSaveForm({
   useEffect(() => {
     if (!isEdit) {
       const timer = setTimeout(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          values: watchedValues,
-          companyLabel
-        }));
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            values: watchedValues,
+            companyLabel,
+          }),
+        );
       }, 1000); // Debounce save
       return () => clearTimeout(timer);
     }
@@ -449,18 +504,51 @@ export default function TenderSaveForm({
 
   const typeValue = watch("ids_type");
   const tenderTrailer = watch("tender_trailer");
-  const isOnlyRef = tenderTrailer?.length === 1 && tenderTrailer[0].ids_trailer_type === "REF";
+  const isOnlyRef =
+    tenderTrailer?.length === 1 && tenderTrailer[0].ids_trailer_type === "REF";
 
   useEffect(() => {
     const getTruckList = async () => {
       try {
-        const { data } = await api.get("/tender/form-data/getCreateTenderFormData");
-        setTruckList(data.content.trailer_type_dropdown.map((t: any) => ({ value: t.ids, label: t.value })));
-        setLoadList(data.content.load_type_dropdown.map((t: any) => ({ value: t.ids, label: t.value })));
-        setTenderType(data.content.tender_type_dropdown.map((t: any) => ({ value: t.ids, label: t.value })));
-        setTenderPermission(data.content.load_permission_dropdown.map((t: any) => ({ value: t.ids, label: t.value })));
-        setValut(data.content.valut_dropdown.map((t: any) => ({ value: t.ids, label: t.ids })));
-        setRating(data.content.rating_dropdown.map((t: any) => ({ value: t.ids, label: t.value })));
+        const { data } = await api.get(
+          "/tender/form-data/getCreateTenderFormData",
+        );
+        setTruckList(
+          data.content.trailer_type_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
+        setLoadList(
+          data.content.load_type_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
+        setTenderType(
+          data.content.tender_type_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
+        setTenderPermission(
+          data.content.load_permission_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
+        setValut(
+          data.content.valut_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.ids,
+          })),
+        );
+        setRating(
+          data.content.rating_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
       } catch (err) {
         console.error(err);
       }
@@ -472,8 +560,17 @@ export default function TenderSaveForm({
   useEffect(() => {
     if (defaultValues) {
       const sortedRoutes = defaultValues.tender_route
-        ? [...defaultValues.tender_route].sort((a, b) => (a.order_num || 0) - (b.order_num || 0))
-        : [{ address: "", ids_point: "LOAD_FROM", order_num: 1, customs: false }];
+        ? [...defaultValues.tender_route].sort(
+            (a, b) => (a.order_num || 0) - (b.order_num || 0),
+          )
+        : [
+            {
+              address: "",
+              ids_point: "LOAD_FROM",
+              order_num: 1,
+              customs: false,
+            },
+          ];
 
       // Universally set files if they exist in the incoming data
       if ((defaultValues as any).files) {
@@ -483,16 +580,26 @@ export default function TenderSaveForm({
       reset({
         ...defaultValues,
         tender_route: sortedRoutes as any,
-        time_start: defaultValues.time_start ? new Date(defaultValues.time_start) : new Date(),
-        time_end: defaultValues.time_end ? new Date(defaultValues.time_end) : null,
-        date_load: defaultValues.date_load ? new Date(defaultValues.date_load) : null,
-        date_load2: defaultValues.date_load2 ? new Date(defaultValues.date_load2) : null,
-        date_unload: defaultValues.date_unload ? new Date(defaultValues.date_unload) : null,
+        time_start: defaultValues.time_start
+          ? new Date(defaultValues.time_start)
+          : new Date(),
+        time_end: defaultValues.time_end
+          ? new Date(defaultValues.time_end)
+          : null,
+        date_load: defaultValues.date_load
+          ? new Date(defaultValues.date_load)
+          : null,
+        date_load2: defaultValues.date_load2
+          ? new Date(defaultValues.date_load2)
+          : null,
+        date_unload: defaultValues.date_unload
+          ? new Date(defaultValues.date_unload)
+          : null,
       } as TenderFormValues);
-      if (defaultValues.company_name) setCompanyLabel(defaultValues.company_name);
+      if (defaultValues.company_name)
+        setCompanyLabel(defaultValues.company_name);
     }
   }, [defaultValues, reset]);
-
 
   useEffect(() => {
     if (!isOnlyRef) {
@@ -512,33 +619,41 @@ export default function TenderSaveForm({
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
     const payload = {
       ...values,
-      tender_route: values.tender_route.map((route, idx) => ({ ...route, order_num: idx + 1 })),
+      tender_permission: values.tender_permission?.filter(p => p && p.ids_permission_type) || [],
+      tender_trailer: values.tender_trailer?.filter(t => t && t.ids_trailer_type) || [],
+      tender_load: values.tender_load?.filter(l => l && l.ids_load_type) || [],
+      tender_route: values.tender_route.map((route, idx) => ({
+        ...route,
+        order_num: idx + 1,
+      })),
     };
     if (defaultValues?.id) payload.id = defaultValues.id;
 
     // Separate existing files (have ID) and new files (File objects)
-    const current_file_ids = files
-      .filter(f => f.id)
-      .map(f => f.id);
+    const current_file_ids = files.filter((f) => f.id).map((f) => f.id);
 
     // Sometimes files are just regular objects with metadata if they come from certain sources
     // or if they are already wrapped. Let's make the check more robust.
-    const newFiles = files.filter(f => f instanceof File || (f.size && f.name && !f.id));
-
+    const newFiles = files.filter(
+      (f) => f instanceof File || (f.size && f.name && !f.id),
+    );
 
     // Create FormData
     const formData = new FormData();
 
-    // We send the JSON data as a string in the 'dto' field 
+    // We send the JSON data as a string in the 'dto' field
     // This matches what we did for the other form and what the server expect
-    formData.append('dto', JSON.stringify({
-      ...payload,
-      current_file_ids
-    }));
+    formData.append(
+      "dto",
+      JSON.stringify({
+        ...payload,
+        current_file_ids,
+      }),
+    );
 
     // Append new files
-    newFiles.forEach(file => {
-      formData.append('files', file);
+    newFiles.forEach((file) => {
+      formData.append("files", file);
     });
 
     try {
@@ -555,10 +670,11 @@ export default function TenderSaveForm({
     }
   };
 
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -574,257 +690,377 @@ export default function TenderSaveForm({
   const currencySign = currencyStringTransform(currencyWatch ?? "UAH");
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] dark:bg-slate-950 font-sans min-h-screen">
+    <div className="gap-2 w-full overflow-x-hidden pb-40 scrollbar-thin">
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col">
-          <fieldset disabled={isSubmitting || isPending} className="flex-1 flex flex-col">
-
-            {/* 🟦 HEADER WITH GRADIENT */}
-            <header className="bg-gradient-to-r from-[#0051cc] to-[#3a8ef6] px-8 py-10 md:px-12 md:py-16 relative overflow-hidden shrink-0">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 blur-[80px] rounded-full -translate-x-1/2 translate-y-1/2" />
-
-              <div className="max-w-5xl mx-auto relative z-10">
-                <h1 className="text-2xl md:text-4xl font-black text-white mb-3 uppercase tracking-wider flex items-center gap-4">
-                  <span className="bg-white/20 p-2 rounded-2xl backdrop-blur-md">
-                    <LayoutDashboard size={28} />
-                  </span>
-                  {isEdit ? "Редагування Тендеру" : "Публікація Тендеру"}
-                </h1>
-                <p className="text-white/80 text-sm md:text-lg font-medium max-w-2xl">
-                  Створіть маршрут, вкажіть вантаж та оберіть формат проведення торгів.
-                </p>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full scrollbar-thin"
+        >
+          <fieldset
+            disabled={isSubmitting || isPending}
+            className="flex flex-col gap-2 min-w-0 w-full p-0 m-0 border-none scrollbar-thin"
+          >
+            {/* 📋 SECTION 1: ОСНОВНІ НАЛАШТУВАННЯ */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <FormField
+                  control={control}
+                  name="ids_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                        Тип тендеру
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
+                          <SelectValue placeholder="Оберіть тип" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl">
+                          {tenderType.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="ids_carrier_rating"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
+                        Рейтинг доступу
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
+                          <SelectValue placeholder="Оберіть рейтинг" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl">
+                          {rating.map((t) => (
+                            <SelectItem key={t.value} value={t.value}>
+                              {t.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            </header>
 
-            {/* 🛠 MAIN CONTENT - SINGLE COLUMN */}
-            <main className="flex-1 py-8 px-4 md:px-8 custom-scrollbar">
-              <div className="max-w-5xl mx-auto space-y-8 pb-32">
+              <div className="space-y-4">
+                <InputAsyncSelectCompany
+                  name="id_owner_company"
+                  control={control}
+                  label="КОМПАНІЯ ЗАМОВНИК"
+                  initialLabel={companyLabel}
+                  onEntityChange={(c) => setCompanyLabel(c?.name || "")}
+                />
+              </div>
 
-                {/* 📋 SECTION 1: ОСНОВНІ НАЛАШТУВАННЯ */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 p-8 md:p-10 space-y-8">
-                  <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-6">
-                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600">
-                      <Box size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">Основні налаштування</h2>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <FormField
+              {/* TIMING BOX */}
+              <div className="bg-[#f8fafc] dark:bg-white/5 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Torgi */}
+                <div className="space-y-4">
+                  <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-indigo-600 tracking-widest leading-none">
+                    <Calendar size={14} /> ТОРГИ
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InputDateWithTime
+                      name="time_start"
                       control={control}
-                      name="ids_type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Тип тендеру</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
-                              <SelectValue placeholder="Оберіть тип" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {tenderType.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="ПОЧАТОК"
                     />
-                    <FormField
+                    <InputDateWithTime
+                      name="time_end"
                       control={control}
-                      name="ids_carrier_rating"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Рейтинг доступу</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
-                              <SelectValue placeholder="Оберіть рейтинг" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {rating.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      label="КІНЕЦЬ"
                     />
-                  </div>
-
-                  <div className="space-y-4">
-                    <InputAsyncSelectCompany
-                      name="id_owner_company"
-                      control={control}
-                      label="КОМПАНІЯ ЗАМОВНИК"
-                      initialLabel={companyLabel}
-                      onEntityChange={c => setCompanyLabel(c?.name || "")}
-                    />
-                  </div>
-
-                  {/* TIMING BOX */}
-                  <div className="bg-[#f8fafc] dark:bg-white/5 rounded-[2rem] p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Torgi */}
-                    <div className="space-y-6">
-                      <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-indigo-600 tracking-widest leading-none">
-                        <Calendar size={14} /> ТОРГИ
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InputDateWithTime name="time_start" control={control} label="ПОЧАТОК" />
-                        <InputDateWithTime name="time_end" control={control} label="КІНЕЦЬ" />
-                      </div>
-                    </div>
-                    {/* Logistika */}
-                    <div className="space-y-6">
-                      <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-emerald-600 tracking-widest leading-none">
-                        <Truck size={14} /> ЛОГІСТИКА
-                      </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InputDateWithTime name="date_load" control={control} label="ЗАВАНТАЖЕННЯ" />
-                        <InputDateWithTime name="date_unload" control={control} label="РОЗВАНТАЖЕННЯ (ПЛАН)" />
-                      </div>
-                    </div>
                   </div>
                 </div>
-
-                {/* 📍 SECTION 2: МАРШРУТ ПЕРЕВЕЗЕННЯ */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 p-8 md:p-10 space-y-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-600">
-                      <MapPin size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">Маршрут перевезення</h2>
-                  </div>
-
-                  <div className="space-y-2">
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <SortableContext items={routeFields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                        {routeFields.map((field, idx) => (
-                          <SortableRouteItem key={field.id} id={field.id} index={idx} control={control} watch={watch} setValue={setValue} clearErrors={clearErrors} removeRoute={removeRoute} />
-                        ))}
-                      </SortableContext>
-                    </DndContext>
-                  </div>
-
-                  <div className="flex justify-between items-center border-b border-slate-50 dark:border-white/5 pb-6">
-                    <div className="flex items-center gap-4">
-
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl h-12 px-6 text-[11px] uppercase font-black border-orange-100 text-orange-600 hover:bg-orange-50 transition-all gap-2"
-                      onClick={() => appendRoute({ address: "", ids_point: "LOAD_TO", order_num: routeFields.length + 1, customs: false, city: "" })}
-                    >
-                      <Plus className="w-4 h-4" /> Додати точку
-                    </Button>
+                {/* Logistika */}
+                <div className="space-y-4">
+                  <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-emerald-600 tracking-widest leading-none">
+                    <Truck size={14} /> ЛОГІСТИКА
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InputDateWithTime
+                      name="date_load"
+                      control={control}
+                      label="ЗАВАНТАЖЕННЯ"
+                    />
+                    <InputDateWithTime
+                      name="date_unload"
+                      control={control}
+                      label="РОЗВАНТАЖЕННЯ (ПЛАН)"
+                    />
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* 📦 SECTION 3: ДЕТАЛІ ВАНТАЖУ */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 p-8 md:p-10 space-y-8">
-                  <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-6">
-                    <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
-                      <Boxes size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">Деталі вантажу</h2>
+            {/* 📍 SECTION 2: МАРШРУТ ПЕРЕВЕЗЕННЯ */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-600">
+                  <MapPin size={24} />
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                  Маршрут перевезення
+                </h2>
+              </div>
+
+              <div className="space-y-2">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={routeFields.map((f) => f.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {routeFields.map((field, idx) => (
+                      <SortableRouteItem
+                        key={field.id}
+                        id={field.id}
+                        index={idx}
+                        control={control}
+                        watch={watch}
+                        setValue={setValue}
+                        clearErrors={clearErrors}
+                        removeRoute={removeRoute}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+
+              <div className="flex justify-between items-center border-b border-slate-50 dark:border-white/5 pb-6">
+                <div className="flex items-center gap-4"></div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl h-12 px-6 text-[11px] uppercase font-black border-orange-100 text-orange-600 hover:bg-orange-50 transition-all gap-2"
+                  onClick={() =>
+                    appendRoute({
+                      address: "",
+                      ids_point: "LOAD_TO",
+                      order_num: routeFields.length + 1,
+                      customs: false,
+                      city: "",
+                    })
+                  }
+                >
+                  <Plus className="w-4 h-4" /> Додати точку
+                </Button>
+              </div>
+            </div>
+
+            {/* 📦 SECTION 3: ДЕТАЛІ ВАНТАЖУ */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-4">
+                <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
+                  <Boxes size={24} />
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                  Деталі вантажу
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-8 space-y-6">
+                  <InputText
+                    name="cargo"
+                    control={control}
+                    label="НОМЕНКЛАТУРА ВАНТАЖУ"
+                    icon={Box}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InputMultiSelect
+                      name="tender_trailer"
+                      control={control}
+                      label="Тип транспорту *"
+                      options={truckList}
+                      required
+                    />
+                    <InputMultiSelect
+                      name="tender_load"
+                      control={control}
+                      label="Тип завантаження *"
+                      options={loadList}
+                      valueKey="ids_load_type"
+                      required
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                    <div className="lg:col-span-8 space-y-8">
-                      <InputText name="cargo" control={control} label="НОМЕНКЛАТУРА ВАНТАЖУ" icon={Box} />
+                  <div className="space-y-6">
+                    <InputMultiSelect
+                      name="tender_permission"
+                      control={control}
+                      label="ДОЗВОЛИ ТА СЕРТИФІКАТИ"
+                      options={tenderPermission}
+                      valueKey="ids_permission_type"
+                    />
+                    <InputTextarea
+                      name="notes"
+                      control={control}
+                      label="ДОДАТКОВІ ІНСТРУКЦІЇ ВОДІЮ"
+                      icon={Notebook}
+                    />
+                  </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <InputMultiSelect name="tender_trailer" control={control} label="Тип транспорту *" options={truckList} required />
-                        <InputMultiSelect name="tender_load" control={control} label="Тип завантаження *" options={loadList} valueKey="ids_load_type" required />
+                  {isOnlyRef && (
+                    <div className="flex items-center gap-6 p-4 bg-blue-50/50 dark:bg-blue-500/5 rounded-2xl border border-blue-100 dark:border-blue-500/10 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-600">
+                        <ThermometerSnowflake size={20} />
                       </div>
-
-                      <div className="space-y-6">
-                        <FormField
+                      <div className="flex-1 grid grid-cols-2 gap-4">
+                        <InputNumber
                           control={control}
-                          name="tender_permission"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">ДОЗВОЛИ ТА СЕРТИФІКАТИ</FormLabel>
-                              <FormControl>
-                                <Select onValueChange={(val) => field.onChange([{ ids_permission_type: val }])} value={field.value?.[0]?.ids_permission_type}>
-                                  <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5">
-                                    <SelectValue placeholder="Оберіть зі списку" />
-                                  </SelectTrigger>
-                                  <SelectContent className="rounded-2xl">
-                                    {tenderPermission.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                            </FormItem>
-                          )}
+                          name="ref_temperature_from"
+                          label="ТЕМП. ВІД (°C)"
+                          placeholder="-18"
+                          minus={true}
                         />
-                        <InputTextarea name="notes" control={control} label="ДОДАТКОВІ ІНСТРУКЦІЇ ВОДІЮ" icon={Notebook} />
-                      </div>
-
-                      <div className="flex items-center gap-4 py-4 border-t border-slate-50 dark:border-white/5">
-                        <InputSwitch control={control} name="without_vat" label="Тариф без ПДВ" />
-                      </div>
-                    </div>
-
-                    <div className="lg:col-span-4">
-                      <div className="bg-[#f8fafc] dark:bg-white/5 rounded-[2rem] p-8 space-y-8 border border-slate-100 dark:border-white/5">
-                        <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">ГАБАРИТИ ТА ОБ'ЄМИ</h3>
-                        <div className="space-y-6">
-                          <InputNumber control={control} name="car_count" label="КІЛЬКІСТЬ АВТО" icon={Car} />
-                          <InputNumber control={control} name="weight" label="ВАГА (Т)" icon={Weight} />
-                          <InputNumber control={control} name="volume" label="ОБ'ЄМ (М³)" icon={Box} />
-                          <InputNumber control={control} name="palet_count" label="К-СТЬ ПАЛЕТ" icon={Boxes} />
-                        </div>
+                        <InputNumber
+                          control={control}
+                          name="ref_temperature_to"
+                          label="ТЕМП. ДО (°C)"
+                          placeholder="+5"
+                          minus={true}
+                        />
                       </div>
                     </div>
+                  )}
+
+                  <div className="flex items-center gap-4 py-4 border-t border-slate-50 dark:border-white/5">
+                    <InputSwitch
+                      control={control}
+                      name="without_vat"
+                      label="Тариф без ПДВ"
+                    />
                   </div>
                 </div>
 
-                {/* 💰 SECTION 4: ФІНАНСИ (Conditional) */}
-                {(typeValue === "REDUCTION" || typeValue === "REDUCTION_WITH_REDEMPTION") && (
-                  <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 p-8 md:p-10 space-y-8 border-l-4 border-l-rose-500">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-rose-50 dark:bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-600">
-                        <DollarSign size={24} />
-                      </div>
-                      <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">Фінансові умови</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-                      <div className="md:col-span-2">
-                        <InputFinance name="price_start" control={control} label="Ліміт бюджету" currency={currencySign} />
-                      </div>
-                      <SelectFinance name="ids_valut" control={control} label="Валюта" options={valut.slice(0, 4)} />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <InputFinance name="price_step" control={control} label="Крок пониження" currency={currencySign} />
-                      {typeValue === "REDUCTION_WITH_REDEMPTION" && (
-                        <InputFinance name="price_redemption" control={control} label="Ціна викупу" currency={currencySign} required />
-                      )}
+                <div className="lg:col-span-4">
+                  <div className="bg-[#f8fafc] dark:bg-white/5 rounded-2xl p-6 space-y-5 border border-slate-100 dark:border-white/5">
+                    <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">
+                      ГАБАРИТИ ТА ОБ'ЄМИ
+                    </h3>
+                    <div className="space-y-4">
+                      <InputNumber
+                        control={control}
+                        name="car_count"
+                        label="КІЛЬКІСТЬ АВТО"
+                        icon={Car}
+                      />
+                      <InputNumber
+                        control={control}
+                        name="weight"
+                        label="ВАГА (Т)"
+                        icon={Weight}
+                      />
+                      <InputNumber
+                        control={control}
+                        name="volume"
+                        label="ОБ'ЄМ (М³)"
+                        icon={Box}
+                      />
+                      <InputNumber
+                        control={control}
+                        name="palet_count"
+                        label="К-СТЬ ПАЛЕТ"
+                        icon={Boxes}
+                      />
                     </div>
                   </div>
-                )}
+                </div>
+              </div>
+            </div>
 
-                {/* 📎 SECTION 5: ДОКУМЕНТИ */}
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-white/5 p-8 md:p-10 space-y-8">
-                  <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-6">
-                    <div className="w-12 h-12 bg-teal-50 dark:bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-600">
-                      <Plus size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">Документи</h2>
+            {/* 💰 SECTION 4: ФІНАНСИ (Conditional) */}
+            {(typeValue === "REDUCTION" ||
+              typeValue === "REDUCTION_WITH_REDEMPTION") && (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6 border-l-4 border-l-rose-500">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-rose-50 dark:bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-600">
+                    <DollarSign size={24} />
                   </div>
-                  <UniqueFileUploader
-                    files={files}
-                    onChange={setFiles}
-                    maxFiles={10}
-                    description="Завантажте специфікації або фото"
+                  <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                    Бюджет тендеру
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
+                  <div className="md:col-span-2">
+                    <InputFinance
+                      name="price_start"
+                      control={control}
+                      label="Ліміт бюджету"
+                      currency={currencySign}
+                    />
+                  </div>
+                  <SelectFinance
+                    name="ids_valut"
+                    control={control}
+                    label="Валюта"
+                    options={valut.slice(0, 4)}
                   />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <InputFinance
+                    name="price_step"
+                    control={control}
+                    label="Крок пониження"
+                    currency={currencySign}
+                  />
+                  {typeValue === "REDUCTION_WITH_REDEMPTION" && (
+                    <InputFinance
+                      name="price_redemption"
+                      control={control}
+                      label="Ціна викупу"
+                      currency={currencySign}
+                      required
+                    />
+                  )}
+                </div>
               </div>
-            </main>
+            )}
+
+            {/* 📎 SECTION 5: ДОКУМЕНТИ */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-4">
+                <div className="w-12 h-12 bg-teal-50 dark:bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-600">
+                  <Plus size={24} />
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                  Документи
+                </h2>
+              </div>
+              <UniqueFileUploader
+                files={files}
+                onChange={setFiles}
+                maxFiles={10}
+                description="Завантажте специфікації або фото"
+              />
+            </div>
 
             {/* 🏁 ACTION BAR */}
-            <footer className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-8 py-6 z-[120] shadow-[0_-10px_50px_rgba(0,0,0,0.05)]">
+            <footer className="sticky bottom-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 z-[40] shadow-[0_-10px_50px_rgba(0,0,0,0.05)] mt-auto w-full">
               <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                 <div className="flex items-center gap-4 bg-slate-50 dark:bg-white/5 px-6 py-4 rounded-3xl border border-slate-100 dark:border-white/5 w-full md:w-auto">
                   <InputSwitch
@@ -866,6 +1102,10 @@ export default function TenderSaveForm({
       </Form>
 
       <style jsx global>{`
+        html,
+        body {
+          overflow: hidden !important;
+        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }
@@ -880,6 +1120,6 @@ export default function TenderSaveForm({
           background: #1e293b;
         }
       `}</style>
-    </div >
+    </div>
   );
 }

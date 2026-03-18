@@ -25,8 +25,6 @@ export default async function LogLayout({
       <CRMSocketActionProvider>
         <ModalProvider />
         <RestTimerTracker />
-
-
         {children}
       </CRMSocketActionProvider>
     </LogShell>

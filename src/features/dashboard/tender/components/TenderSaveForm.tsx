@@ -34,7 +34,6 @@ import { GoogleLocationInput } from "@/shared/components/google-location-input/G
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { UniqueFileUploader } from "@/shared/ict_components/UniqueFileUploader/UniqueFileUploader";
 
-
 // ---------- Schemas ----------
 const routeSchema = z.object({
   id: z.number().optional(),
@@ -61,7 +60,7 @@ const loadSchema = z.object({
   ids_load_type: z.string(),
 });
 const tenderPermissionSchema = z.object({
-  ids_permission_type: z.string(),
+  ids_permission_type: z.string().optional(),
 });
 
 const tenderFormSchema = z
@@ -180,7 +179,7 @@ const NominatimInput = ({
                 onChange(
                   r.display_name,
                   r.address.country_code,
-                  r.address.city
+                  r.address.city,
                 );
                 setQuery(r.display_name);
                 setSelected(r.display_name);
@@ -211,7 +210,7 @@ export default function TenderSaveForm({
     { label: string; value: string }[]
   >([]);
   const [loadList, setLoadList] = useState<{ label: string; value: string }[]>(
-    []
+    [],
   );
   const [tenderPermission, setTenderPermission] = useState<
     { label: string; value: string }[]
@@ -272,9 +271,10 @@ export default function TenderSaveForm({
         try {
           const { values, companyLabel: savedLabel } = JSON.parse(saved);
           // Convert date strings back to Date objects
-          if (values.time_start) values.time_start = new Date(values.time_start);
+          if (values.time_start)
+            values.time_start = new Date(values.time_start);
           if (values.end_date) values.end_date = new Date(values.end_date);
-          
+
           Object.keys(values).forEach((key: any) => {
             setValue(key, values[key]);
           });
@@ -290,10 +290,13 @@ export default function TenderSaveForm({
   useEffect(() => {
     if (!isEdit) {
       const timer = setTimeout(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          values: watchedValues,
-          companyLabel
-        }));
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            values: watchedValues,
+            companyLabel,
+          }),
+        );
       }, 1000); // Debounce save
       return () => clearTimeout(timer);
     }
@@ -313,43 +316,43 @@ export default function TenderSaveForm({
     const getTruckList = async () => {
       try {
         const { data } = await api.get(
-          "/tender/form-data/getCreateTenderFormData"
+          "/tender/form-data/getCreateTenderFormData",
         );
         setTruckList(
           data.content.trailer_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setLoadList(
           data.content.load_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setTenderType(
           data.content.tender_type_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setTenderPermission(
           data.content.load_permission_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
         setValut(
           data.content.valut_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.ids,
-          }))
+          })),
         );
         setRating(
           data.content.rating_dropdown.map((t: any) => ({
             value: t.ids,
             label: t.value,
-          }))
+          })),
         );
       } catch (err) {
         console.error(err);
@@ -364,7 +367,7 @@ export default function TenderSaveForm({
       const fetchFiles = async () => {
         try {
           const { data } = await api.get(`/tender/files/${defaultValues.id}`);
-          if (data.status === 'ok') {
+          if (data.status === "ok") {
             setFiles(data.content || []);
           }
         } catch (err) {
@@ -375,12 +378,11 @@ export default function TenderSaveForm({
     }
   }, [isEdit, defaultValues?.id]);
 
-
   const loadOptionsFromApi = (url: string) => async (inputValue: string) => {
     if (!inputValue) return [];
     try {
       const response = await api.get<any>(
-        `${url}/${encodeURIComponent(inputValue)}`
+        `${url}/${encodeURIComponent(inputValue)}`,
       );
       return response.data.map((company: any) => ({
         value: company.id,
@@ -395,32 +397,42 @@ export default function TenderSaveForm({
     console.log(values, "VALUES");
 
     try {
-      const payload = { ...values };
+      const payload = { 
+        ...values,
+        tender_permission: values.tender_permission?.filter(p => p && p.ids_permission_type) || [],
+        tender_trailer: values.tender_trailer?.filter(t => t && t.ids_trailer_type) || [],
+        tender_load: values.tender_load?.filter(l => l && l.ids_load_type) || [],
+        tender_route: values.tender_route.map((route, idx) => ({
+          ...route,
+          order_num: idx + 1,
+        })),
+      };
       if (defaultValues?.id) payload.id = defaultValues.id;
 
       // Separate existing files (have ID) and new files (File objects)
-      const current_file_ids = files
-        .filter(f => f.id)
-        .map(f => f.id);
+      const current_file_ids = files.filter((f) => f.id).map((f) => f.id);
 
-      const newFiles = files.filter(f => f instanceof File);
+      const newFiles = files.filter((f) => f instanceof File);
 
       // Create FormData
       const formData = new FormData();
 
-      // We send the JSON data as a string in the 'dto' field 
+      // We send the JSON data as a string in the 'dto' field
       // as our backend controller expects 'dto' or parses the body
-      formData.append('dto', JSON.stringify({
-        ...payload,
-        current_file_ids
-      }));
+      formData.append(
+        "dto",
+        JSON.stringify({
+          ...payload,
+          current_file_ids,
+        }),
+      );
 
       // Append new files
-      newFiles.forEach(file => {
-        formData.append('files', file);
+      newFiles.forEach((file) => {
+        formData.append("files", file);
       });
 
-      console.log('--- SENDING TENDER SAVE REQUEST ---');
+      console.log("--- SENDING TENDER SAVE REQUEST ---");
       await api.post("/tender/save", formData);
 
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
@@ -435,7 +447,6 @@ export default function TenderSaveForm({
       toast.error("Помилка при збереженні тендеру");
     }
   };
-
 
   return (
     <Card className="max-w-3xl mx-auto p-3 mb-20">
@@ -637,8 +648,9 @@ export default function TenderSaveForm({
 
                             // формуємо addr для input
                             const addr = location.street
-                              ? `${location.street}${location.house ? `, ${location.house}` : ""
-                              }`
+                              ? `${location.street}${
+                                  location.house ? `, ${location.house}` : ""
+                                }`
                               : location.city || "";
 
                             // оновлюємо input field
@@ -648,11 +660,11 @@ export default function TenderSaveForm({
                             // оновлюємо country/city в формі
                             setValue(
                               `tender_route.${idx}.country`,
-                              location.countryCode || ""
+                              location.countryCode || "",
                             );
                             setValue(
                               `tender_route.${idx}.city`,
-                              location.city || ""
+                              location.city || "",
                             );
 
                             // очищаємо помилки
@@ -695,31 +707,31 @@ export default function TenderSaveForm({
 
                 {/* показуємо тільки якщо тип — завантаження або розвантаження */}
                 {["LOAD_FROM", "LOAD_TO"].includes(
-                  watch(`tender_route.${idx}.ids_point`)
+                  watch(`tender_route.${idx}.ids_point`),
                 ) && (
-                    <>
-                      <FormField
-                        control={control}
-                        name={`tender_route.${idx}.customs`}
-                        render={({ field }) => (
-                          <FormItem className="flex items-center gap-2">
-                            <Switch
-                              id={`tender_route.${idx}.customs`}
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                            <FormLabel htmlFor={`tender_route.${idx}.customs`}>
-                              На місці ?
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      <MyTooltip
-                        text="Вказувати якщо замитнення або розмитнення по місцях"
-                        important
-                      />
-                    </>
-                  )}
+                  <>
+                    <FormField
+                      control={control}
+                      name={`tender_route.${idx}.customs`}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center gap-2">
+                          <Switch
+                            id={`tender_route.${idx}.customs`}
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                          <FormLabel htmlFor={`tender_route.${idx}.customs`}>
+                            На місці ?
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <MyTooltip
+                      text="Вказувати якщо замитнення або розмитнення по місцях"
+                      important
+                    />
+                  </>
+                )}
 
                 {idx > 0 && (
                   <Button
@@ -762,16 +774,16 @@ export default function TenderSaveForm({
                     options={truckList}
                     value={truckList.filter((t) =>
                       field.value.some(
-                        (v: any) => v.ids_trailer_type === t.value
-                      )
+                        (v: any) => v.ids_trailer_type === t.value,
+                      ),
                     )}
                     onChange={(options: any) =>
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                            ids_trailer_type: o.value,
-                          }))
-                          : []
+                              ids_trailer_type: o.value,
+                            }))
+                          : [],
                       )
                     }
                     placeholder="Оберіть тип транспорту"
@@ -795,15 +807,15 @@ export default function TenderSaveForm({
                     isMulti
                     options={loadList}
                     value={loadList.filter((t) =>
-                      field.value.some((v: any) => v.ids_load_type === t.value)
+                      field.value.some((v: any) => v.ids_load_type === t.value),
                     )}
                     onChange={(options: any) =>
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                            ids_load_type: o.value,
-                          }))
-                          : []
+                              ids_load_type: o.value,
+                            }))
+                          : [],
                       )
                     }
                     placeholder="Оберіть тип завантаження"
@@ -828,16 +840,16 @@ export default function TenderSaveForm({
                     options={tenderPermission}
                     value={tenderPermission.filter((t) =>
                       (field.value ?? []).some(
-                        (v: any) => v.ids_permission_type === t.value
-                      )
+                        (v: any) => v.ids_permission_type === t.value,
+                      ),
                     )}
                     onChange={(options: any) =>
                       field.onChange(
                         options
                           ? options.map((o: any) => ({
-                            ids_permission_type: o.value,
-                          }))
-                          : []
+                              ids_permission_type: o.value,
+                            }))
+                          : [],
                       )
                     }
                     placeholder="Оберіть дозволи"
@@ -907,7 +919,7 @@ export default function TenderSaveForm({
                       value={field.value ?? ""}
                       onChange={(e) =>
                         field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
                     />
@@ -929,7 +941,7 @@ export default function TenderSaveForm({
                       placeholder="22 Тон"
                       onChange={(e) =>
                         field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
                     />
@@ -952,7 +964,7 @@ export default function TenderSaveForm({
                       placeholder="86 Куб"
                       onChange={(e) =>
                         field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value)
+                          e.target.value === "" ? "" : Number(e.target.value),
                         )
                       }
                     />
@@ -980,7 +992,7 @@ export default function TenderSaveForm({
                             field.onChange(
                               e.target.value === ""
                                 ? ""
-                                : Number(e.target.value)
+                                : Number(e.target.value),
                             )
                           }
                         />
@@ -1010,7 +1022,7 @@ export default function TenderSaveForm({
                               .map(
                                 (
                                   item: any,
-                                  idx: React.Key | null | undefined
+                                  idx: React.Key | null | undefined,
                                 ) => {
                                   // console.log(item, "ITEM");
 
@@ -1022,7 +1034,7 @@ export default function TenderSaveForm({
                                       {item.label.toUpperCase()}
                                     </SelectItem>
                                   );
-                                }
+                                },
                               )}
                           </SelectContent>
                         </Select>
@@ -1045,7 +1057,7 @@ export default function TenderSaveForm({
                             field.onChange(
                               e.target.value === ""
                                 ? ""
-                                : Number(e.target.value)
+                                : Number(e.target.value),
                             )
                           }
                         />
@@ -1068,7 +1080,7 @@ export default function TenderSaveForm({
                             field.onChange(
                               e.target.value === ""
                                 ? ""
-                                : Number(e.target.value)
+                                : Number(e.target.value),
                             )
                           }
                         />
@@ -1091,7 +1103,6 @@ export default function TenderSaveForm({
               description="Завантажте специфікації, фото вантажу або інші документи"
             />
           </div>
-
 
           {/* Submit */}
           <div className="flex justify-between items-center">

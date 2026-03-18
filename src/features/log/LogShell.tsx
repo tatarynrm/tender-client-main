@@ -43,24 +43,22 @@ export default function LogShell({
       {/* Мобільний Overlay */}
       <div
         onClick={() => setSidebarOpen(false)}
-        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
-          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
+        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
       />
 
       {/* Сайдбар */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-99 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна поведінка */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           
           /* Десктопна поведінка */
-          ${
-            closeSidebar
-              ? "md:-translate-x-full md:fixed"
-              : "md:static md:translate-x-0 md:shadow-none"
+          ${closeSidebar
+            ? "md:-translate-x-full md:fixed"
+            : "md:static md:translate-x-0 md:shadow-none"
           }
         `}
       >
@@ -68,15 +66,15 @@ export default function LogShell({
       </aside>
 
       {/* Основний контент */}
-      <div className="flex flex-col flex-1 min-w-0 h-full ">
+      <div className="flex flex-col flex-1 min-w-0 min-h-0 h-screen overflow-hidden">
         <LogHeader
           onMenuClick={toggleSidebar}
           toggleSidebarState={toggleSidebarState}
           closeSidebarState={closeSidebar}
           profile={profile}
         />
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900 transition-colors duration-300 scrollbar-thin">
-          <div className="mx-auto w-full h-full">{children}</div>
+        <main className="flex-1 min-h-0 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900 transition-colors duration-300">
+          <div className="mx-auto w-full">{children}</div>
         </main>
       </div>
     </div>

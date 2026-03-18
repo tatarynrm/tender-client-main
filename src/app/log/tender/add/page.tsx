@@ -3,9 +3,11 @@ import React from "react";
 
 const CargoActivePage = () => {
   return (
-    <div className="pb-20">
+
+    <div className="max-w-7xl mx-auto scrollbar-thin">
       <TenderSaveForm />
     </div>
+
   );
 };
 
