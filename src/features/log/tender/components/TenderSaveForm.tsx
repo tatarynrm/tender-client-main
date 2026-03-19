@@ -619,9 +619,13 @@ export default function TenderSaveForm({
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
     const payload = {
       ...values,
-      tender_permission: values.tender_permission?.filter(p => p && p.ids_permission_type) || [],
-      tender_trailer: values.tender_trailer?.filter(t => t && t.ids_trailer_type) || [],
-      tender_load: values.tender_load?.filter(l => l && l.ids_load_type) || [],
+      tender_permission:
+        values.tender_permission?.filter((p) => p && p.ids_permission_type) ||
+        [],
+      tender_trailer:
+        values.tender_trailer?.filter((t) => t && t.ids_trailer_type) || [],
+      tender_load:
+        values.tender_load?.filter((l) => l && l.ids_load_type) || [],
       tender_route: values.tender_route.map((route, idx) => ({
         ...route,
         order_num: idx + 1,
@@ -774,7 +778,7 @@ export default function TenderSaveForm({
                 {/* Torgi */}
                 <div className="space-y-4">
                   <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-indigo-600 tracking-widest leading-none">
-                    <Calendar size={14} /> ТОРГИ
+                    <Calendar size={14} /> Час проведення тендеру
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputDateWithTime
@@ -798,12 +802,12 @@ export default function TenderSaveForm({
                     <InputDateWithTime
                       name="date_load"
                       control={control}
-                      label="ЗАВАНТАЖЕННЯ"
+                      label="ЗАВАНТАЖЕННЯ ПЛАН"
                     />
                     <InputDateWithTime
                       name="date_unload"
                       control={control}
-                      label="РОЗВАНТАЖЕННЯ (ПЛАН)"
+                      label="РОЗВАНТАЖЕННЯ ПЛАН"
                     />
                   </div>
                 </div>
@@ -884,7 +888,7 @@ export default function TenderSaveForm({
                   <InputText
                     name="cargo"
                     control={control}
-                    label="НОМЕНКЛАТУРА ВАНТАЖУ"
+                    label="Вантаж"
                     icon={Box}
                   />
 
@@ -892,14 +896,14 @@ export default function TenderSaveForm({
                     <InputMultiSelect
                       name="tender_trailer"
                       control={control}
-                      label="Тип транспорту *"
+                      label="Тип транспорту"
                       options={truckList}
                       required
                     />
                     <InputMultiSelect
                       name="tender_load"
                       control={control}
-                      label="Тип завантаження *"
+                      label="Тип завантаження"
                       options={loadList}
                       valueKey="ids_load_type"
                       required
@@ -910,7 +914,7 @@ export default function TenderSaveForm({
                     <InputMultiSelect
                       name="tender_permission"
                       control={control}
-                      label="ДОЗВОЛИ ТА СЕРТИФІКАТИ"
+                      label="Транспортні документи"
                       options={tenderPermission}
                       valueKey="ids_permission_type"
                     />
