@@ -325,17 +325,15 @@ export function CargoCard({ load, filters }: CargoCardProps) {
           </div>
 
           <div className="flex items-center gap-3 shrink-0 ml-auto">
-            {/* <div className="hidden md:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
+            <div className="hidden md:flex items-center gap-1.5 text-zinc-400 dark:text-zinc-500 whitespace-nowrap">
               <History size={config.icon - 4} strokeWidth={2.5} />
               <span className={cn("font-medium tabular-nums", config.label)}>
                 {load.created_at
                   ? format(new Date(load.created_at), "dd.MM HH:mm")
                   : "—"}
               </span>
-            </div> */}
-            <span className="font-thin">
-              {format(new Date(load.updated_at), "dd.MM HH:mm")}
-            </span>
+            </div>
+
             <div className="flex items-center border-l border-zinc-100 dark:border-zinc-800 pl-2">
               <CargoActions
                 load={load}
