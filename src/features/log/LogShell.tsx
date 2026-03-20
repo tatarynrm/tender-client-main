@@ -15,7 +15,6 @@ export default function LogShell({
   const [closeSidebar, setCloseSidebar] = useState(false); // Для десктопа (сховано/показано)
   const [mounted, setMounted] = useState(false);
 
-
   // 1. Гідрація та завантаження стану
   useEffect(() => {
     const savedState = localStorage.getItem("closeSidebar");
@@ -43,22 +42,24 @@ export default function LogShell({
       {/* Мобільний Overlay */}
       <div
         onClick={() => setSidebarOpen(false)}
-        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
-          }`}
+        className={`fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
       />
 
       {/* Сайдбар */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-99 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна поведінка */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           
           /* Десктопна поведінка */
-          ${closeSidebar
-            ? "md:-translate-x-full md:fixed"
-            : "md:static md:translate-x-0 md:shadow-none"
+          ${
+            closeSidebar
+              ? "md:-translate-x-full md:fixed"
+              : "md:static md:translate-x-0 md:shadow-none"
           }
         `}
       >

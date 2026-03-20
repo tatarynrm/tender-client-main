@@ -333,6 +333,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                   : "—"}
               </span>
             </div> */}
+            <span className="font-thin">
+              {format(new Date(load.updated_at), "dd.MM HH:mm")}
+            </span>
             <div className="flex items-center border-l border-zinc-100 dark:border-zinc-800 pl-2">
               <CargoActions
                 load={load}
