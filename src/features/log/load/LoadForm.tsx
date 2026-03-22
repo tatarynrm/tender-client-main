@@ -861,6 +861,18 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
   const [isAiExpanded, setIsAiExpanded] = useState(false);
   const [isDraftsExpanded, setIsDraftsExpanded] = useState(false);
+
+  const [isAiSectionVisible, setIsAiSectionVisible] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("load_show_ai_section_v2");
+      return saved !== null ? saved === "true" : true;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("load_show_ai_section_v2", String(isAiSectionVisible));
+  }, [isAiSectionVisible]);
   const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
   const [isAiDragging, setIsAiDragging] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -1422,10 +1434,23 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 w-full overflow-x-hidden custom-scrollbar">
+      {!defaultValues && !copyId && (
+        <div className="flex justify-end mb-4 pr-1">
+          <AppButton 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setIsAiSectionVisible(!isAiSectionVisible)}
+            className="text-indigo-500 font-bold uppercase tracking-widest text-[10px] bg-indigo-50/50 hover:bg-indigo-100"
+            leftIcon={<Sparkles size={14} />}
+          >
+            {isAiSectionVisible ? "Сховати ШІ та чернетки" : "Розгорнути ШІ та чернетки"}
+          </AppButton>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* LEFT COLUMN: AI ASSISTANT (4 cols) */}
-        {!defaultValues && !copyId && (
+        {!defaultValues && !copyId && isAiSectionVisible && (
           <div className="lg:col-span-4 space-y-4 order-1">
             {/* Mobile Header for AI */}
             <button
@@ -1771,8 +1796,8 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
 
         {/* MIDDLE COLUMN: MAIN FORM (5-8 cols) */}
         <div className={cn(
-          "space-y-6 order-3 lg:order-2",
-          (!defaultValues && !copyId) ? "lg:col-span-8" : "lg:col-span-12"
+          "space-y-6 order-3 lg:order-2 transition-all duration-300",
+          (!defaultValues && !copyId && isAiSectionVisible) ? "lg:col-span-8" : "lg:col-span-12"
         )}>
           <div className="bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-4 sm:p-8 rounded-[2.5rem] shadow-sm">
             {/* Header */}

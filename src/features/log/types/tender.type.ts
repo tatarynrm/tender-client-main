@@ -68,7 +68,8 @@ export interface ITender {
   cargo: string;
   email: string;
   notes: string | null;
-  author: string;
+  author?: string;
+  client_name?: string;
 
   volume: number | null;
   weight: number | null;
@@ -119,6 +120,9 @@ export interface ITender {
   tender_trailer: ITenderTrailer[];
   tender_permission: ITenderPermission[];
   files?: any[];
+  date_load?: string | null;
+  date_load2?: string | null;
+  date_unload?: string | null;
 }
 export interface ITenderLoad {
   id: number;

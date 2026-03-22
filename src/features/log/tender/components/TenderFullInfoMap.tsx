@@ -89,17 +89,19 @@ function RoutingMachine({
 }
 
 export const TenderMap = ({ points, captureId, onReady }: TenderMapProps) => {
-  if (!points || points.length === 0)
+  const validPoints = points?.filter((p) => p && typeof p.lat === "number" && typeof p.lon === "number") || [];
+
+  if (validPoints.length === 0)
     return (
-      <div className="h-full w-full bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center text-zinc-400 text-xs uppercase font-bold">
-        Немає координат
+      <div className="h-[300px] w-full bg-zinc-50 dark:bg-zinc-900 rounded-3xl flex items-center justify-center text-zinc-400 text-xs font-black uppercase tracking-widest border border-zinc-200 dark:border-white/5">
+        Координати маршруту відсутні
       </div>
     );
 
   return (
     <div id={captureId} className="h-full w-full relative z-0">
       <MapContainer
-        center={[points[0].lat, points[0].lon]}
+        center={[validPoints[0].lat, validPoints[0].lon]}
         zoom={6}
         className="h-full w-full"
         zoomControl={false}
@@ -109,10 +111,10 @@ export const TenderMap = ({ points, captureId, onReady }: TenderMapProps) => {
           crossOrigin="anonymous"
           attribution='&copy; <a href="https://carto.com/">Carto</a>'
         />
-        <RoutingMachine points={points} onReady={onReady} />
-        {points.map((p) => (
+        <RoutingMachine points={validPoints} onReady={onReady} />
+        {validPoints.map((p) => (
           <Marker key={p.id} position={[p.lat, p.lon]}>
-            <Popup className="text-[10px] font-bold uppercase">{p.city}</Popup>
+            <Popup className="text-[10px] font-bold uppercase">{p.city || p.address}</Popup>
           </Marker>
         ))}
       </MapContainer>

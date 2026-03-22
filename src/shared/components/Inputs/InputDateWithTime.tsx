@@ -89,11 +89,12 @@ export const InputDateWithTime = <T extends FieldValues>({
 
   const handleTimeChange = (type: "hours" | "minutes", val: number) => {
     const baseDate = selectedDate || new Date();
-    
+
     // ЛОГІКА TOGGLE: якщо клікаємо на вже обраний час — скидаємо в 0
-    const isCurrentlySelected = type === "hours" 
-      ? getHours(baseDate) === val 
-      : getMinutes(baseDate) === val;
+    const isCurrentlySelected =
+      type === "hours"
+        ? getHours(baseDate) === val
+        : getMinutes(baseDate) === val;
 
     const newValue = isCurrentlySelected ? 0 : val;
 
@@ -101,7 +102,7 @@ export const InputDateWithTime = <T extends FieldValues>({
       type === "hours"
         ? setHours(baseDate, newValue)
         : setMinutes(baseDate, newValue);
-        
+
     field.onChange(newDate);
   };
 
@@ -176,16 +177,14 @@ export const InputDateWithTime = <T extends FieldValues>({
               !field.value && "text-transparent",
             )}
           >
-            {field.value ? (
-              (() => {
-                const d = new Date(field.value);
-                // Якщо 00:00 — показуємо тільки дату
-                const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
-                return format(d, hasTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy");
-              })()
-            ) : (
-              "Обрати дату"
-            )}
+            {field.value
+              ? (() => {
+                  const d = new Date(field.value);
+                  // Якщо 00:00 — показуємо тільки дату
+                  const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+                  return format(d, hasTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy");
+                })()
+              : "Обрати дату"}
           </span>
 
           {field.value && (
@@ -205,7 +204,7 @@ export const InputDateWithTime = <T extends FieldValues>({
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-[14px] text-zinc-400 text-[12px] font-medium",
+            "left-10 top-[14px] text-zinc-400 text-[10px] font-medium",
             (field.value || isOpen) &&
               "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
             error && "text-red-500",

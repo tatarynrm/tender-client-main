@@ -20,7 +20,6 @@ import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
 import { TenderCardClients } from "./components/TenderCardClients";
 
-
 interface Props {
   status?: string;
   participate_company?: boolean;
@@ -52,9 +51,11 @@ export default function ClientsTenderPage({
       tender_type: searchParams.get("tender_type") || "",
       page: Number(searchParams.get("page") || 1),
       participate: searchParams.get("participate") || "",
-      participate_company: searchParams.get("participate_company") || participate_company || "",
+      participate_company:
+        searchParams.get("participate_company") || participate_company || "",
       limit: Number(searchParams.get("limit") || 10),
-      winner_company: searchParams.get("winner_company") || winner_company || "",
+      winner_company:
+        searchParams.get("winner_company") || winner_company || "",
     }),
     [searchParams, participate_company, winner_company],
   );
@@ -68,69 +69,86 @@ export default function ClientsTenderPage({
   );
 
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { tenders, pagination, isLoading, error } = useTenderListClient(queryFilters);
+  const { tenders, pagination, isLoading, error } =
+    useTenderListClient(queryFilters);
 
-  const updateUrl = useCallback((newParams: Record<string, any>) => {
-    const params = new URLSearchParams();
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        const stringValue = Array.isArray(value) ? value.join(",") : String(value);
-        params.set(key, stringValue);
-      }
-    });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [router, pathname]);
+  const updateUrl = useCallback(
+    (newParams: Record<string, any>) => {
+      const params = new URLSearchParams();
+      Object.entries(newParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          const stringValue = Array.isArray(value)
+            ? value.join(",")
+            : String(value);
+          params.set(key, stringValue);
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [router, pathname],
+  );
 
   const handleReset = useCallback(() => {
     reset();
     router.push(pathname, { scroll: false });
   }, [reset, router, pathname]);
 
-  const handleRemoveFilter = useCallback((key: string, valueToRemove: string) => {
-    let newValue: string | undefined;
-    if (valueToRemove === "all") {
-      newValue = undefined;
-    } else {
-      const currentValue = String(currentParams[key as keyof typeof currentParams] || "");
-      newValue = currentValue
-        .split(",")
-        .filter((v) => v !== valueToRemove)
-        .join(",") || undefined;
-    }
+  const handleRemoveFilter = useCallback(
+    (key: string, valueToRemove: string) => {
+      let newValue: string | undefined;
+      if (valueToRemove === "all") {
+        newValue = undefined;
+      } else {
+        const currentValue = String(
+          currentParams[key as keyof typeof currentParams] || "",
+        );
+        newValue =
+          currentValue
+            .split(",")
+            .filter((v) => v !== valueToRemove)
+            .join(",") || undefined;
+      }
 
-    const newFilters = { ...filters, [key]: newValue };
-    setFilters(newFilters);
-    updateUrl({ ...newFilters, page: 1 });
-  }, [currentParams, filters, setFilters, updateUrl]);
+      const newFilters = { ...filters, [key]: newValue };
+      setFilters(newFilters);
+      updateUrl({ ...newFilters, page: 1 });
+    },
+    [currentParams, filters, setFilters, updateUrl],
+  );
 
   const handleApplyFilters = useCallback(() => {
     updateUrl({ ...filters, page: 1 });
   }, [filters, updateUrl]);
 
-  const handleLimitChange = useCallback((newLimit: number) => {
-    updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-  }, [currentParams, updateUrl]);
+  const handleLimitChange = useCallback(
+    (newLimit: number) => {
+      updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+    },
+    [currentParams, updateUrl],
+  );
 
-  const handlePageChange = useCallback((p: number) => {
-    updateUrl({ ...currentParams, page: p });
-  }, [currentParams, updateUrl]);
+  const handlePageChange = useCallback(
+    (p: number) => {
+      updateUrl({ ...currentParams, page: p });
+    },
+    [currentParams, updateUrl],
+  );
 
-  const handleOpenDetails = useCallback((tender: ITender) => {
-    openModal(
-      <TenderFullInfoModal tenderId={tender.id} />,
-      {
+  const handleOpenDetails = useCallback(
+    (tender: ITender) => {
+      openModal(<TenderFullInfoModal tenderId={tender.id} />, {
         size: "full",
-        className: "p-0 overflow-hidden"
-      }
-    );
-  }, [openModal]);
+        className: "p-0 overflow-hidden",
+      });
+    },
+    [openModal],
+  );
 
   if (error) return <ErrorState />;
   if (isLoading) return <TenderLoader />;
 
   return (
     <div className="p-0 mx-auto space-y-2">
-
       <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="flex justify-between items-center bg-white dark:bg-white/5 p-2 rounded-lg border border-zinc-200 dark:border-white/10">
           <div className="flex items-center gap-2">
@@ -161,8 +179,52 @@ export default function ClientsTenderPage({
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
-        <div className="space-y-1 pb-20">
-          <div className="grid gap-2 grid-cols-1">
+        <div className="space-y-1 pb-20 relative">
+          {/* HEADER ROW extracted from TenderCardClients */}
+          <div className="sticky top-[-20px] z-20 hidden lg:grid grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-sm text-[10.5px]">
+            <div className="flex items-center justify-center p-2 text-[14px] font-black tracking-tighter text-zinc-400 dark:text-zinc-500">
+              №
+            </div>
+            <div className="flex items-center justify-center p-2">
+              Завантаження
+            </div>
+            <div className="flex items-center justify-center p-2">
+              Митне оформлення
+            </div>
+            <div className="flex items-center justify-center p-2">
+              Розвантаження
+            </div>
+            <div className="flex items-center justify-center p-2">Вантаж</div>
+            <div className="flex items-center justify-center p-2 text-center leading-tight">
+              Тип
+              <br />
+              транспорту
+            </div>
+            <div className="flex items-center justify-center p-2">Вага</div>
+            <div className="flex items-center justify-center p-2 text-center leading-tight">
+              Додаткова
+              <br />
+              інформація
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center justify-center py-1.5 border-b border-zinc-200/80 dark:border-zinc-800">
+                Інформація по тендеру
+              </div>
+              <div className="grid grid-cols-[1fr_1fr_1fr] divide-x divide-zinc-200/80 dark:divide-zinc-800 flex-1">
+                <div className="flex items-center justify-center text-[10px]">
+                  Ціна
+                </div>
+                <div className="flex items-center justify-center text-[10px]">
+                  Час тендера
+                </div>
+                <div className="flex items-center justify-center text-[10px]">
+                  Ставка
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1">
             {tenders.map((item) => (
               <TenderCardClients
                 key={item.id}
