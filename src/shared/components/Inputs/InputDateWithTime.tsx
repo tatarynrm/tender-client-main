@@ -28,6 +28,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { inputVariants } from "./styles/styles";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
 
 interface Props<T extends FieldValues> {
   name: Path<T>;
@@ -50,9 +55,7 @@ export const InputDateWithTime = <T extends FieldValues>({
   } = useController({ name, control });
 
   const [isOpen, setIsOpen] = useState(false);
-  const [openUp, setOpenUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const value = field.value as unknown;
 
@@ -65,14 +68,6 @@ export const InputDateWithTime = <T extends FieldValues>({
 
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
 
-  useLayoutEffect(() => {
-    if (isOpen && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const dropdownHeight = 400;
-      setOpenUp(spaceBelow < dropdownHeight && rect.top > dropdownHeight);
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -148,81 +143,81 @@ export const InputDateWithTime = <T extends FieldValues>({
       className={cn("flex flex-col w-full relative", className)}
       ref={containerRef}
     >
-      <div className="relative mt-1.5 group">
-        <div
-          className={cn(
-            "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
-            isOpen || field.value
-              ? "text-teal-600"
-              : "text-zinc-400 group-focus-within:text-teal-600",
-          )}
-        >
-          <CalendarClock size={18} strokeWidth={2.2} />
-        </div>
-
-        <div
-          onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            inputVariants.base,
-            "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
-            isOpen
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
-              : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
-            error ? "border-red-500 ring-red-500" : "",
-          )}
-        >
-          <span
-            className={cn(
-              "text-[13px] font-medium",
-              !field.value && "text-transparent",
-            )}
-          >
-            {field.value
-              ? (() => {
-                  const d = new Date(field.value);
-                  // Якщо 00:00 — показуємо тільки дату
-                  const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
-                  return format(d, hasTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy");
-                })()
-              : "Обрати дату"}
-          </span>
-
-          {field.value && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                field.onChange(null);
-              }}
-              className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <div className="relative mt-1.5 group">
+            <div
+              className={cn(
+                "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
+                isOpen || field.value
+                  ? "text-teal-600"
+                  : "text-zinc-400 group-focus-within:text-teal-600",
+              )}
             >
-              <X size={16} strokeWidth={2.5} />
-            </button>
-          )}
-        </div>
+              <CalendarClock size={18} strokeWidth={2.2} />
+            </div>
 
-        <label
-          className={cn(
-            "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-[14px] text-zinc-400 text-[10px] font-medium",
-            (field.value || isOpen) &&
-              "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
-            error && "text-red-500",
-          )}
-        >
-          {label} {required && "*"}
-        </label>
-      </div>
+            <div
+              className={cn(
+                inputVariants.base,
+                "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
+                isOpen
+                  ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
+                  : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
+                error ? "border-red-500 ring-red-500" : "",
+              )}
+            >
+              <span
+                className={cn(
+                  "text-[13px] font-medium",
+                  !field.value && "text-transparent",
+                )}
+              >
+                {field.value
+                  ? (() => {
+                      const d = new Date(field.value);
+                      const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+                      return format(
+                        d,
+                        hasTime ? "dd.MM.yyyy HH:mm" : "dd.MM.yyyy",
+                      );
+                    })()
+                  : "Обрати дату"}
+              </span>
 
-      {isOpen && (
-        <div
-          ref={dropdownRef}
-          className={cn(
-            "absolute left-0 z-[100] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-200",
-            openUp
-              ? "bottom-[calc(100%+8px)] origin-bottom slide-in-from-bottom-2"
-              : "top-[calc(100%+8px)] origin-top slide-in-from-top-2",
-          )}
+              {field.value && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    field.onChange(null);
+                  }}
+                  className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+                >
+                  <X size={16} strokeWidth={2.5} />
+                </button>
+              )}
+            </div>
+
+            <label
+              className={cn(
+                "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
+                "left-10 top-[14px] text-zinc-400 text-[10px] font-medium",
+                (field.value || isOpen) &&
+                  "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
+                error && "text-red-500",
+              )}
+            >
+              {label} {required && "*"}
+            </label>
+          </div>
+        </PopoverTrigger>
+
+        <PopoverContent
+          side="bottom"
+          align="start"
+          sideOffset={8}
+          className="z-[1000] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
         >
           <div className="flex divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
             <div className="p-4">
@@ -313,8 +308,8 @@ export const InputDateWithTime = <T extends FieldValues>({
               Підтвердити
             </button>
           </div>
-        </div>
-      )}
+        </PopoverContent>
+      </Popover>
 
       {error && (
         <p className="mt-1.5 ml-3 text-[10px] uppercase text-red-500 font-bold tracking-wider animate-in fade-in">
