@@ -1937,7 +1937,7 @@ export default function TenderSaveForm({
                       <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest leading-none">
                         <Truck size={14} /> ЛОГІСТИКА
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                         <InputDateWithTime
                           name="date_load"
                           control={control}

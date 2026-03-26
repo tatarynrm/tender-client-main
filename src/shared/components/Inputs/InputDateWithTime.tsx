@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
+import React, { useState } from "react";
 import { useController, Control, FieldValues, Path } from "react-hook-form";
 import {
   format,
@@ -55,8 +55,6 @@ export const InputDateWithTime = <T extends FieldValues>({
   } = useController({ name, control });
 
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
   const value = field.value as unknown;
 
   const selectedDate =
@@ -67,20 +65,6 @@ export const InputDateWithTime = <T extends FieldValues>({
         : null;
 
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
-
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const handleTimeChange = (type: "hours" | "minutes", val: number) => {
     const baseDate = selectedDate || new Date();
@@ -141,7 +125,6 @@ export const InputDateWithTime = <T extends FieldValues>({
   return (
     <div
       className={cn("flex flex-col w-full relative", className)}
-      ref={containerRef}
     >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
