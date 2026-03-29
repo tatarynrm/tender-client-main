@@ -338,7 +338,7 @@ export function TenderCardClients({
                   Ваша ціна
                 </span>
                 <span className="text-[16px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                  {cargo.price_proposed || 0}
+                  {cargo.price_proposed || null}
                   <span className="text-[12px] ml-[1px]">{currencySymbol}</span>
                 </span>
               </div>
@@ -360,7 +360,7 @@ export function TenderCardClients({
                     Ваша ціна
                   </span>
                   <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                    {cargo.price_proposed || 0}
+                    {cargo.price_proposed || null}
                     <span className="text-[11px] ml-[1px]">
                       {currencySymbol}
                     </span>
@@ -415,7 +415,7 @@ export function TenderCardClients({
                   <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
                     {cargo.price_proposed
                       ? `${cargo.price_proposed} ${currencySymbol}`
-                      : "0"}
+                      : ""}
                   </span>
                 </div>
                 <div className="mt-5 w-full">
