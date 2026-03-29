@@ -348,7 +348,7 @@ export function RHFFileInput({
                     ) : (
                       <>
                         <div
-                          className="flex-1 cursor-pointer group-hover/name:bg-slate-100 dark:group-hover/name:bg-white/5 rounded-lg px-2 py-1 transition-colors overflow-hidden"
+                          className="flex-1 cursor-pointer group-hover/name:bg-slate-100 dark:group-hover/name:bg-white/5 rounded-xl px-2 py-1 transition-colors overflow-hidden"
                           onClick={() => setEditingIndex(originalIndex)}
                         >
                           <p className="text-[10px] font-black uppercase tracking-tighter text-slate-500 dark:text-slate-400 truncate">

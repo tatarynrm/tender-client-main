@@ -25,7 +25,7 @@ export const AppButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
       <button
@@ -35,7 +35,7 @@ export const AppButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           buttonVariants.base,
           buttonVariants.variants[variant],
           buttonVariants.sizes[size],
-          className
+          className,
         )}
         {...props}
       >
@@ -72,12 +72,12 @@ export const AppButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <span className={cn(isLoading && "opacity-0 invisible")}>
           {children}
         </span>
-        
+
         {/* Додатковий шар для тексту під час завантаження, щоб кнопка не міняла розмір */}
         {isLoading && (
-            <span className="absolute inset-0 flex items-center justify-center">
-                {/* Тут можна додати текст "Завантаження..." за бажанням */}
-            </span>
+          <span className="absolute inset-0 flex items-center justify-center">
+            {/* Тут можна додати текст "Завантаження..." за бажанням */}
+          </span>
         )}
 
         {/* Іконка справа */}
@@ -86,7 +86,7 @@ export const AppButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </button>
     );
-  }
+  },
 );
 
 AppButton.displayName = "Button";

@@ -76,7 +76,7 @@ export const InputNumber = <T extends FieldValues>({
         <div className="relative flex items-center">
           {/* ICON */}
           {Icon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 z-30 pointer-events-none">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 z-30 pointer-events-none">
               <Icon size={18} strokeWidth={2.5} />
             </div>
           )}
@@ -101,7 +101,7 @@ export const InputNumber = <T extends FieldValues>({
               Icon ? "!pl-12" : "pl-4",
               hasError
                 ? "border-red-500 ring-[0.5px] ring-red-500"
-                : "border-zinc-200 hover:border-zinc-300 focus:border-teal-600 focus:ring-[0.5px] focus:ring-teal-600",
+                : "border-slate-200 hover:border-slate-200 focus:border-indigo-600 focus:ring-[0.5px] focus:ring-indigo-600",
               disabled && inputVariants.disabled,
             )}
           />
@@ -114,16 +114,16 @@ export const InputNumber = <T extends FieldValues>({
                 "absolute transition-all duration-200 pointer-events-none z-40",
                 "px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[12px] font-medium",
                 Icon ? "left-10" : "left-3",
-                "top-1/2 -translate-y-1/2 text-zinc-400",
+                "top-1/2 -translate-y-1/2 text-slate-400",
                 "peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0",
                 "peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:translate-y-0",
                 hasError
                   ? "text-red-500"
-                  : "peer-focus:text-teal-600 peer-[:not(:placeholder-shown)]:text-teal-600",
+                  : "peer-focus:text-indigo-600 peer-[:not(:placeholder-shown)]:text-indigo-600",
               )}
             >
               {label}
-              {required && <span className="ml-1 text-teal-600">*</span>}
+              {required && <span className="ml-1 text-indigo-600">*</span>}
             </label>
           )}
         </div>

@@ -87,6 +87,7 @@ export interface ITender {
   request_price: number | null;
   price_proposed: number | null;
   price_redemption: number | null;
+  price_client: number | null;
 
   without_vat: boolean;
   duration_continue: boolean;

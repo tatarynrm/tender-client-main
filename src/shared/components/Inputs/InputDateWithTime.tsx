@@ -107,13 +107,13 @@ export const InputDateWithTime = <T extends FieldValues>({
             field.onChange(combinedDate);
           }}
           className={cn(
-            "h-8 w-8 flex items-center justify-center text-[12px] rounded-lg cursor-pointer transition-all",
+            "h-8 w-8 flex items-center justify-center text-[12px] rounded-xl cursor-pointer transition-all",
             !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
             isCurrentMonth &&
-              "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5",
-            isToday && !isSelected && "text-teal-600 font-bold",
+              "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5",
+            isToday && !isSelected && "text-indigo-600 font-bold",
             isSelected &&
-              "bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-500/20",
+              "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20",
           )}
         >
           {format(day, "d")}
@@ -133,8 +133,8 @@ export const InputDateWithTime = <T extends FieldValues>({
               className={cn(
                 "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
                 isOpen || field.value
-                  ? "text-teal-600"
-                  : "text-zinc-400 group-focus-within:text-teal-600",
+                  ? "text-indigo-600"
+                  : "text-slate-400 group-focus-within:text-indigo-600",
               )}
             >
               <CalendarClock size={18} strokeWidth={2.2} />
@@ -145,8 +145,8 @@ export const InputDateWithTime = <T extends FieldValues>({
                 inputVariants.base,
                 "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
                 isOpen
-                  ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
-                  : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
+                  ? "border-indigo-600 ring-[0.5px] ring-indigo-600 shadow-lg shadow-indigo-500/5"
+                  : "border-slate-200 dark:border-white/10 hover:border-slate-200",
                 error ? "border-red-500 ring-red-500" : "",
               )}
             >
@@ -175,7 +175,7 @@ export const InputDateWithTime = <T extends FieldValues>({
                     e.stopPropagation();
                     field.onChange(null);
                   }}
-                  className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+                  className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-400 hover:text-red-500 transition-colors"
                 >
                   <X size={16} strokeWidth={2.5} />
                 </button>
@@ -185,9 +185,9 @@ export const InputDateWithTime = <T extends FieldValues>({
             <label
               className={cn(
                 "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-                "left-10 top-[14px] text-zinc-400 text-[10px] font-medium",
+                "left-10 top-[14px] text-slate-400 text-[10px] font-medium",
                 (field.value || isOpen) &&
-                  "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
+                  "-top-2.5 left-3 text-[10px] font-bold text-indigo-600",
                 error && "text-red-500",
               )}
             >
@@ -200,7 +200,7 @@ export const InputDateWithTime = <T extends FieldValues>({
           side="bottom"
           align="start"
           sideOffset={8}
-          className="z-[1000] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
+          className="z-[1000] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
         >
           <div className="flex divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
             <div className="p-4">
@@ -208,7 +208,7 @@ export const InputDateWithTime = <T extends FieldValues>({
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                  className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-500"
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-slate-500"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -218,7 +218,7 @@ export const InputDateWithTime = <T extends FieldValues>({
                 <button
                   type="button"
                   onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                  className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-500"
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-slate-500"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -228,7 +228,7 @@ export const InputDateWithTime = <T extends FieldValues>({
                 {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-[9px] font-bold text-zinc-400 uppercase"
+                    className="text-center text-[9px] font-bold text-slate-400 uppercase"
                   >
                     {d}
                   </div>
@@ -237,9 +237,9 @@ export const InputDateWithTime = <T extends FieldValues>({
               <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
             </div>
 
-            <div className="bg-zinc-50/50 dark:bg-white/5 flex flex-col w-[140px]">
+            <div className="bg-slate-50/50 dark:bg-white/5 flex flex-col w-[140px]">
               <div className="flex items-center justify-center h-10 border-b border-zinc-100 dark:border-zinc-800">
-                <Clock size={14} className="text-teal-600" />
+                <Clock size={14} className="text-indigo-600" />
               </div>
 
               <div className="flex h-[240px] overflow-hidden">
@@ -252,8 +252,8 @@ export const InputDateWithTime = <T extends FieldValues>({
                       className={cn(
                         "text-[12px] py-2 transition-all",
                         selectedDate && getHours(selectedDate) === i
-                          ? "bg-teal-600 text-white font-bold"
-                          : "text-zinc-500 hover:bg-teal-50 dark:hover:bg-teal-500/10",
+                          ? "bg-indigo-600 text-white font-bold"
+                          : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
                       )}
                     >
                       {i.toString().padStart(2, "0")}
@@ -270,8 +270,8 @@ export const InputDateWithTime = <T extends FieldValues>({
                       className={cn(
                         "text-[12px] py-2 transition-all",
                         selectedDate && getMinutes(selectedDate) === m
-                          ? "bg-teal-600 text-white font-bold"
-                          : "text-zinc-500 hover:bg-teal-50 dark:hover:bg-teal-500/10",
+                          ? "bg-indigo-600 text-white font-bold"
+                          : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
                       )}
                     >
                       {m.toString().padStart(2, "0")}
@@ -286,7 +286,7 @@ export const InputDateWithTime = <T extends FieldValues>({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-full py-2.5 bg-teal-600 text-white rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20"
+              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
             >
               Підтвердити
             </button>

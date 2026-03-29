@@ -48,7 +48,7 @@ export const InputSwitch = <T extends FieldValues>({
         checked={isChecked ?? false}
         onCheckedChange={handleChange}
         className={cn(
-          "data-[state=checked]:bg-teal-600 dark:data-[state=checked]:bg-teal-500",
+          "data-[state=checked]:bg-indigo-600 dark:data-[state=checked]:bg-indigo-500",
           "transition-colors"
         )}
       />
@@ -61,8 +61,8 @@ export const InputSwitch = <T extends FieldValues>({
             "uppercase tracking-widest text-[11px] font-bold transition-colors",
             // Колір залежить від стану
             isChecked 
-              ? "text-teal-600 dark:text-teal-500" 
-              : "text-zinc-500 dark:text-zinc-400",
+              ? "text-indigo-600 dark:text-indigo-500" 
+              : "text-slate-500 dark:text-slate-400",
             labelClassName
           )}
         >
@@ -73,7 +73,7 @@ export const InputSwitch = <T extends FieldValues>({
               strokeWidth={2.5} 
               className={cn(
                 "transition-colors",
-                isChecked ? "text-teal-600" : "text-zinc-400"
+                isChecked ? "text-indigo-600" : "text-slate-400"
               )} 
             />
           )}

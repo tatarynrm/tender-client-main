@@ -12,10 +12,10 @@ interface BackButtonProps {
   variant?: "ghost" | "primary" | "secondary" | "outline"; // залежить від ваших buttonVariants
 }
 
-export const GoBackButton = ({ 
-  className, 
-  label = "Повернутись назад", 
-  variant = "ghost" 
+export const GoBackButton = ({
+  className,
+  label = "Повернутись назад",
+  variant = "ghost",
 }: BackButtonProps) => {
   const router = useRouter();
 
@@ -26,8 +26,8 @@ export const GoBackButton = ({
       leftIcon={<ArrowLeft size={16} />}
       onClick={() => router.back()}
       className={cn(
-        "cursor-pointer gap-2 text-teal-500 hover:text-teal-300   transition-colors",
-        className
+        "cursor-pointer gap-2 text-blue-500 hover:text-blue-300   transition-colors",
+        className,
       )}
     >
       {label}

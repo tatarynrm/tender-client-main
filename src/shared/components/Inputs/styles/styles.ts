@@ -7,12 +7,12 @@ export const inputVariants = {
     outline-none focus:ring-0
   `,
   default: `
-    border-zinc-200 dark:border-zinc-800
-    focus:border-teal-500 dark:focus:border-teal-500
+    border-slate-200 dark:border-zinc-800
+    focus:border-indigo-500 dark:focus:border-indigo-500
   `,
   error: `
     border-red-500
     focus:border-red-600
   `,
-  disabled: "opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900",
+  disabled: "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-zinc-900",
 };

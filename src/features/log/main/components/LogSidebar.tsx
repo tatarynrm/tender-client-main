@@ -5,17 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-
   ChevronRight,
   ChevronDown,
   BarChart,
   LayoutList,
   ScreenShare,
-
   FileStack,
   ShieldCheck,
   Archive,
-
   ArchiveIcon,
   ActivitySquare,
   MapPin,
@@ -65,19 +62,15 @@ const links: MenuItem[] = [
     icon: FileStack,
 
     href: "/log/files",
-
   },
   // Додаємо Карта та Документи зі статусом inactive
   {
-
-
     name: "Карта",
     icon: MapPin,
     status: "new",
     href: "/log/map",
     info: "New",
   },
-
 ];
 
 const defaultFooterLinks: MenuItem[] = [
@@ -112,7 +105,6 @@ export default function LogSidebar({
     if (href === "/log") return pathname === "/log";
     return pathname === href || pathname.startsWith(href + "/");
   };
-
 
   const renderLink = (link: MenuItem, isChild = false) => {
     const { name, href, icon: Icon, children, status, info } = link;
@@ -245,14 +237,19 @@ export default function LogSidebar({
   if (profile?.role.is_admin) {
     footerLinks.push(
       { name: "Адмін панель", href: "/admin", icon: BarChart },
-      { name: "Платформа для перевізників", href: "/dashboard", icon: FileStack },
+      {
+        name: "Платформа для перевізників",
+        href: "/dashboard/tender/active",
+        icon: FileStack,
+      },
     );
   }
   if (profile?.role.is_ict && !profile.role.is_admin) {
-    footerLinks.push(
-
-      { name: "Платформа для перевізників", href: "/dashboard", icon: FileStack },
-    );
+    footerLinks.push({
+      name: "Платформа для перевізників",
+      href: "/dashboard/tender/active",
+      icon: FileStack,
+    });
   }
 
   return (

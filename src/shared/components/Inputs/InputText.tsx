@@ -63,7 +63,7 @@ export const InputText = <T extends FieldValues>({
         <div className="relative flex items-center">
           {/* Іконка зліва */}
           {Icon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 transition-colors z-30 pointer-events-none">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors z-30 pointer-events-none">
               <Icon size={18} strokeWidth={2.5} />
             </div>
           )}
@@ -78,7 +78,7 @@ export const InputText = <T extends FieldValues>({
             onChange={handleInputChange}
             value={field.value ?? ""}
             className={cn(
-              "peer w-full h-11 rounded-md bg-white dark:bg-slate-900 relative z-20 border transition-all outline-none",
+              "peer w-full h-11 rounded-xl bg-white dark:bg-slate-900 relative z-20 border transition-all outline-none",
               "text-[14px] text-slate-900 dark:text-white",
               // Падінги залежно від наявності іконки та типу пароль
               Icon ? "pl-11" : "pl-3.5",
@@ -86,7 +86,7 @@ export const InputText = <T extends FieldValues>({
               // Кольори бордера
               hasError
                 ? "border-red-500"
-                : "border-zinc-200 dark:border-white/10 focus:border-teal-600",
+                : "border-slate-200 dark:border-white/10 focus:border-indigo-600",
               // Стилізація Autofill (щоб не було "жовтого" фону від Chrome)
               "autofill:shadow-[inset_0_0_0_1000px_#fff] dark:autofill:shadow-[inset_0_0_0_1000px_#0f172a]",
               disabled && "opacity-50 cursor-not-allowed",
@@ -98,20 +98,20 @@ export const InputText = <T extends FieldValues>({
               htmlFor={name}
               className={cn(
                 "absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900",
-                "uppercase tracking-widest text-[13px] text-zinc-400",
+                "uppercase tracking-widest text-[13px] text-slate-400",
                 "top-1/2 -translate-y-1/2",
                 Icon ? "left-10" : "left-3",
 
                 // 1. Стан Фокусу
-                "peer-focus:-top-2 peer-focus:left-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0 peer-focus:text-teal-600",
+                "peer-focus:-top-2 peer-focus:left-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0 peer-focus:text-indigo-600",
 
                 // 2. Стан, коли поле вже заповнене (ДОДАНО КОЛІР)
                 "peer-[:not(:placeholder-shown)]:-top-2 peer-[:not(:placeholder-shown)]:left-2 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:translate-y-0",
-                "peer-[:not(:placeholder-shown)]:text-teal-600 dark:peer-[:not(:placeholder-shown)]:text-teal-500 peer-[:not(:placeholder-shown)]:font-bold",
+                "peer-[:not(:placeholder-shown)]:text-indigo-600 dark:peer-[:not(:placeholder-shown)]:text-indigo-500 peer-[:not(:placeholder-shown)]:font-bold",
 
                 // 3. Стан АВТОЗАПОВНЕННЯ (Autofill)
                 "peer-autofill:-top-2 peer-autofill:left-2 peer-autofill:text-[10px] peer-autofill:translate-y-0",
-                "peer-autofill:text-teal-600 dark:peer-autofill:text-teal-500",
+                "peer-autofill:text-indigo-600 dark:peer-autofill:text-indigo-500",
 
                 // Стан помилки (має вищий пріоритет)
                 hasError &&
@@ -123,7 +123,7 @@ export const InputText = <T extends FieldValues>({
                 <span
                   className={cn(
                     "ml-1 font-bold",
-                    hasError ? "text-red-500" : "text-teal-600",
+                    hasError ? "text-red-500" : "text-indigo-600",
                   )}
                 >
                   *
@@ -137,7 +137,7 @@ export const InputText = <T extends FieldValues>({
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-teal-600 transition-colors z-30 focus:outline-none"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors z-30 focus:outline-none"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>

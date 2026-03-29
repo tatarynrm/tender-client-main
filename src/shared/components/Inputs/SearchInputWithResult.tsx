@@ -111,7 +111,7 @@ export function SearchInput<T extends Company>({
 
       {selectedCompany ? (
         // Карточка обраної компанії
-        <div className="flex flex-col p-2 bg-white rounded-lg shadow-md border border-gray-200 w-full max-w-sm">
+        <div className="flex flex-col p-2 bg-white rounded-xl shadow-md border border-gray-200 w-full max-w-sm">
           <div className="flex justify-between items-start">
             <div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -199,13 +199,13 @@ export function SearchInput<T extends Company>({
             </div>
           )}
           {results.length === 0 && query && !loading && (
-            <div className="absolute left-0 right-0 bg-white shadow-md mt-1 max-h-60 overflow-auto z-50 border border-gray-200 rounded-md p-3">
+            <div className="absolute left-0 right-0 bg-white shadow-md mt-1 max-h-60 overflow-auto z-50 border border-gray-200 rounded-xl p-3">
               Пошук не дав результатів
             </div>
           )}
 
           {results.length > 0 && (
-            <ul className="absolute left-0 right-0 bg-white shadow-md mt-1 max-h-60 overflow-auto z-50 border border-gray-200 rounded-md">
+            <ul className="absolute left-0 right-0 bg-white shadow-md mt-1 max-h-60 overflow-auto z-50 border border-gray-200 rounded-xl">
               {results.map((item: T, index) => (
                 <li
                   key={index}

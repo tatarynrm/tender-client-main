@@ -69,8 +69,8 @@ export const InputSelect = <T extends FieldValues>({
           className={cn(
             "absolute left-4 top-1/2 -translate-y-1/2 transition-colors z-30 pointer-events-none",
             open || field.value
-              ? "text-teal-600"
-              : "text-zinc-400 group-focus-within:text-teal-600",
+              ? "text-indigo-600"
+              : "text-slate-400 group-focus-within:text-indigo-600",
           )}
         >
           <Icon size={18} strokeWidth={2.2} />
@@ -82,10 +82,10 @@ export const InputSelect = <T extends FieldValues>({
           className={cn(
             inputVariants.base,
             "h-11 pl-12 pr-10 flex items-center cursor-pointer transition-all duration-200",
-            "bg-white dark:bg-slate-900 rounded-xl border-zinc-200 dark:border-white/10 shadow-sm",
+            "bg-white dark:bg-slate-900 rounded-xl border-slate-200 dark:border-white/10 shadow-sm",
             open
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
-              : "hover:border-zinc-300",
+              ? "border-indigo-600 ring-[0.5px] ring-indigo-600 shadow-lg shadow-indigo-500/5"
+              : "hover:border-slate-200",
             error ? "border-red-500 ring-red-500" : "",
           )}
         >
@@ -100,8 +100,8 @@ export const InputSelect = <T extends FieldValues>({
             <ChevronDown
               size={16}
               className={cn(
-                "text-zinc-400 transition-transform duration-200",
-                open && "rotate-180 text-teal-600",
+                "text-slate-400 transition-transform duration-200",
+                open && "rotate-180 text-indigo-600",
               )}
             />
           </div>
@@ -111,22 +111,22 @@ export const InputSelect = <T extends FieldValues>({
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-1/2 -translate-y-1/2 text-zinc-400 text-[12px] font-medium",
+            "left-10 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] font-medium",
             (field.value || open) &&
-              "-top-2.5 left-3 translate-y-0 text-[10px] font-bold text-teal-600 dark:text-teal-500",
+              "-top-2.5 left-3 translate-y-0 text-[10px] font-bold text-indigo-600 dark:text-indigo-500",
             error && "text-red-500",
           )}
         >
           {label}
           {required && (
-            <span className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}>*</span>
+            <span className={cn("ml-1", error ? "text-red-500" : "text-indigo-600")}>*</span>
           )}
         </label>
       </div>
 
       {/* DROPDOWN LIST */}
       {open && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="max-h-[250px] overflow-y-auto p-1.5 custom-scrollbar">
             {options.length > 0 ? (
               options.map((opt) => {
@@ -136,21 +136,21 @@ export const InputSelect = <T extends FieldValues>({
                     key={opt.value}
                     onClick={() => handleSelect(opt.value)}
                     className={cn(
-                      "flex items-center justify-between px-4 py-2.5 text-[13px] font-medium cursor-pointer rounded-lg transition-all mb-0.5",
+                      "flex items-center justify-between px-4 py-2.5 text-[13px] font-medium cursor-pointer rounded-xl transition-all mb-0.5",
                       isSelected
-                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-600"
-                        : "hover:bg-zinc-50 dark:hover:bg-white/5 text-zinc-600 dark:text-zinc-400",
+                        ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600"
+                        : "hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400",
                     )}
                   >
                     {opt.label}
                     {isSelected && (
-                      <Check size={14} strokeWidth={3} className="text-teal-600" />
+                      <Check size={14} strokeWidth={3} className="text-indigo-600" />
                     )}
                   </div>
                 );
               })
             ) : (
-              <div className="p-4 text-center text-zinc-400 text-[12px]">Список порожній</div>
+              <div className="p-4 text-center text-slate-400 text-[12px]">Список порожній</div>
             )}
           </div>
         </div>

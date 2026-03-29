@@ -137,9 +137,9 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
       ref={containerRef}
     >
       <div className="relative mt-1.5 group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 z-30 pointer-events-none">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 z-30 pointer-events-none">
           {loading ? (
-            <Loader2 size={18} className="animate-spin text-teal-600" />
+            <Loader2 size={18} className="animate-spin text-indigo-600" />
           ) : (
             <Icon size={18} strokeWidth={2.2} />
           )}
@@ -151,10 +151,10 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
             inputVariants.base,
             "min-h-[46px] pl-12 pr-10 flex items-center cursor-pointer transition-all duration-200",
             "bg-white dark:bg-slate-900 shadow-sm",
-            "rounded-2xl border-zinc-200 dark:border-white/10",
+            "rounded-2xl border-slate-200 dark:border-white/10",
             open
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-teal-500/10 shadow-lg"
-              : "hover:border-zinc-300 dark:hover:border-white/20",
+              ? "border-indigo-600 ring-[0.5px] ring-indigo-600 shadow-indigo-500/10 shadow-lg"
+              : "hover:border-slate-200 dark:hover:border-white/20",
             error ? "border-red-500 ring-red-500" : "",
           )}
         >
@@ -173,7 +173,7 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
             {field.value && (
               <button
                 onClick={clearSelection}
-                className="p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+                className="p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-400 hover:text-red-500 transition-colors"
               >
                 <X size={14} />
               </button>
@@ -181,8 +181,8 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
             <ChevronDown
               size={16}
               className={cn(
-                "text-zinc-400 transition-transform duration-200",
-                open && "rotate-180 text-teal-600",
+                "text-slate-400 transition-transform duration-200",
+                open && "rotate-180 text-indigo-600",
               )}
             />
           </div>
@@ -191,16 +191,16 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-1/2 -translate-y-1/2 text-zinc-400 text-[12px] font-medium",
+            "left-10 top-1/2 -translate-y-1/2 text-slate-400 text-[12px] font-medium",
             (field.value || localDisplayValue || open) &&
-              "-top-2.5 left-3 text-[10px] font-bold translate-y-0 text-teal-600 dark:text-teal-500",
+              "-top-2.5 left-3 text-[10px] font-bold translate-y-0 text-indigo-600 dark:text-indigo-500",
             error && "text-red-500",
           )}
         >
           {label}
           {required && (
             <span
-              className={cn("ml-1", error ? "text-red-500" : "text-teal-600")}
+              className={cn("ml-1", error ? "text-red-500" : "text-indigo-600")}
             >
               *
             </span>
@@ -212,15 +212,15 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
         <div
           className={cn(
             "absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-zinc-950",
-            "border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-[100]",
+            "border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-[100]",
             "overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200",
           )}
         >
-          <div className="p-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-white/5">
-            <Search size={16} className="text-teal-600" strokeWidth={2.5} />
+          <div className="p-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-slate-50/50 dark:bg-white/5">
+            <Search size={16} className="text-indigo-600" strokeWidth={2.5} />
             <input
               autoFocus
-              className="w-full bg-transparent border-none outline-none text-[13px] font-medium placeholder:text-zinc-400"
+              className="w-full bg-transparent border-none outline-none text-[13px] font-medium placeholder:text-slate-400"
               placeholder="Введіть назву компанії..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -236,10 +236,10 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
                     onClick={() => handleSelect(opt)}
                     className={cn(
                       "px-4 py-3 text-[13px] font-medium cursor-pointer transition-all",
-                      "hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-400",
+                      "hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400",
                       "border-b border-zinc-50 dark:border-zinc-900/50 last:border-none",
                       field.value === opt.value &&
-                        "bg-teal-50/50 dark:bg-teal-500/5 text-teal-600",
+                        "bg-indigo-50/50 dark:bg-indigo-500/5 text-indigo-600",
                     )}
                   >
                     {opt.label}
@@ -252,7 +252,7 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
                   size={24}
                   className="text-zinc-200 dark:text-zinc-800"
                 />
-                <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400">
+                <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-slate-400">
                   {searchTerm.length < 2
                     ? "Мінімум 2 символи"
                     : loading

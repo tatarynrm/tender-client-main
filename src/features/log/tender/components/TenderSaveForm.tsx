@@ -142,6 +142,7 @@ const tenderFormSchema = z
     price_start: z.number().optional(),
     price_step: z.number({ message: "Вкажіть крок ставки" }).optional(),
     price_redemption: z.number().optional(),
+    price_client: z.number().optional(),
     ids_type: z.enum(["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"], {
       message: "Вкажіть тип тендеру",
     }),
@@ -259,136 +260,131 @@ function SortableRouteItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 p-4 mb-3 relative group transition-all",
+        "rounded-2xl border border-slate-200 dark:border-white/5 p-4 mb-4 relative group transition-all",
+        isBorderOrCustoms ? "bg-amber-50/30" : "bg-white dark:bg-slate-900",
         isDragging &&
-          "shadow-2xl ring-2 ring-indigo-500/20 scale-[1.01] z-50 bg-indigo-50/10",
+          "shadow-2xl ring-2 ring-indigo-500/20 scale-[1.01] z-50 bg-indigo-50/50",
       )}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              {...attributes}
-              {...listeners}
-              className="p-2 -ml-2 text-slate-300 hover:text-indigo-500 cursor-grab active:cursor-grabbing transition-colors"
-            >
-              <GripVertical className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">
-              ТОЧКА #{index + 1}
-            </span>
-          </div>
-          {index > 1 && (
-            <button
-              type="button"
-              onClick={() => removeRoute(index)}
-              className="text-rose-500 hover:text-rose-600 p-2 -mr-2 bg-rose-50 dark:bg-rose-500/10 rounded-full transition-colors"
-            >
-              <Minus className="w-4 h-4" />
-            </button>
-          )}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div
+          {...attributes}
+          {...listeners}
+          className="text-slate-300 hover:text-[#6366f1] cursor-grab active:cursor-grabbing p-1 md:-ml-2 mt-1 md:mt-0 flex-shrink-0"
+        >
+          <GripVertical className="w-6 h-6" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <div className="md:col-span-6">
-            <FormField
-              control={control}
-              name={`tender_route.${index}.address`}
-              render={({ field: f }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                    Локація
-                  </FormLabel>
-                  <FormControl>
-                    <GoogleLocationInput
-                      value={f.value ?? ""}
-                      onChange={(location) => {
-                        const addr = location.street
-                          ? `${location.street}${location.house ? `, ${location.house}` : ""}`
-                          : location.city || "";
-                        f.onChange(addr);
-                        console.log(location, "LOCATION");
-
-                        setValue(`tender_route.${index}.lat`, location.lat);
-                        setValue(`tender_route.${index}.lon`, location.lng);
-                        setValue(
-                          `tender_route.${index}.country`,
-                          location.countryCode || "",
-                        );
-                        setValue(
-                          `tender_route.${index}.ids_country`,
-                          location.countryCode || "",
-                        );
-                        setValue(
-                          `tender_route.${index}.city`,
-                          location.city || "",
-                        );
-                        setValue(
-                          `tender_route.${index}.ids_region`,
-                          location.regionCode || "",
-                        );
-
-                        clearErrors(`tender_route.${index}.address`);
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+        <div className="flex-1 w-full space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[14px] font-medium text-[#6366f1]">
+              Точка №{index + 1}
+            </span>
+            {index > 1 && (
+              <button
+                type="button"
+                onClick={() => removeRoute(index)}
+                className="text-slate-400 hover:text-rose-500 transition-colors"
+                title="Видалити точку"
+              >
+                <LucideX className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          <div className="md:col-span-4">
-            <FormField
-              control={control}
-              name={`tender_route.${index}.ids_point`}
-              render={({ field: f }) => (
-                <FormItem>
-                  <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">
-                    Тип
-                  </FormLabel>
-                  <Select value={f.value} onValueChange={f.onChange}>
-                    <SelectTrigger
-                      className={cn(
-                        "h-12 rounded-2xl bg-slate-50 border-none shadow-inner",
-                        isBorderOrCustoms && "bg-amber-50 text-amber-700",
-                      )}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="LOAD_FROM">Завантаження</SelectItem>
-                      <SelectItem value="LOAD_TO">Розвантаження</SelectItem>
-                      <SelectItem value="CUSTOM_UP">Замитнення</SelectItem>
-                      <SelectItem value="CUSTOM_DOWN">Розмитнення</SelectItem>
-                      <SelectItem value="BORDER">Кордон</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="md:col-span-2 flex items-end pb-1">
-            {["LOAD_FROM", "LOAD_TO"].includes(pointType) ? (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-7">
               <FormField
                 control={control}
-                name={`tender_route.${index}.customs`}
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 h-12 w-full">
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="scale-75"
-                    />
-                    <span className="text-[10px] font-bold uppercase text-slate-500">
-                      Митниця
-                    </span>
+                name={`tender_route.${index}.address`}
+                render={({ field: f }) => (
+                  <FormItem>
+                    <FormControl>
+                      <GoogleLocationInput
+                        value={f.value ?? ""}
+                        onChange={(location) => {
+                          const addr = location.street
+                            ? `${location.street}${location.house ? `, ${location.house}` : ""}`
+                            : location.city || "";
+                          f.onChange(addr);
+                          setValue(`tender_route.${index}.lat`, location.lat);
+                          setValue(`tender_route.${index}.lon`, location.lng);
+                          setValue(
+                            `tender_route.${index}.country`,
+                            location.countryCode || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.ids_country`,
+                            location.countryCode || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.city`,
+                            location.city || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.ids_region`,
+                            location.regionCode || "",
+                          );
+                          clearErrors(`tender_route.${index}.address`);
+                        }}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
-            ) : (
-              <div className="h-12" />
-            )}
+            </div>
+
+            <div className="md:col-span-3">
+              <FormField
+                control={control}
+                name={`tender_route.${index}.ids_point`}
+                render={({ field: f }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1 select-none">
+                      ТИП
+                    </FormLabel>
+                    <Select value={f.value} onValueChange={f.onChange}>
+                      <SelectTrigger
+                        className={cn(
+                          "h-12 rounded-xl border border-slate-200 shadow-sm text-sm font-medium",
+                        )}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="LOAD_FROM">Завантаження</SelectItem>
+                        <SelectItem value="LOAD_TO">Розвантаження</SelectItem>
+                        <SelectItem value="CUSTOM_UP">Замитнення</SelectItem>
+                        <SelectItem value="CUSTOM_DOWN">Розмитнення</SelectItem>
+                        <SelectItem value="BORDER">Кордон</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="md:col-span-2 pb-1 flex justify-end md:justify-start">
+              {["LOAD_FROM", "LOAD_TO"].includes(pointType) ? (
+                <FormField
+                  control={control}
+                  name={`tender_route.${index}.customs`}
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-3 bg-slate-100/50 dark:bg-white/5 rounded-xl px-4 h-12 border border-slate-200">
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <span className="text-[13px] font-medium text-slate-500 whitespace-nowrap">
+                        Митниця
+                      </span>
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="h-12" />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1836,31 +1832,76 @@ export default function TenderSaveForm({
           <Form {...form}>
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="w-full scrollbar-thin"
+              className="w-full scrollbar-thin bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-6 lg:p-10"
             >
               <fieldset
                 disabled={isSubmitting || isPending}
-                className="flex flex-col gap-2 min-w-0 w-full p-0 m-0 border-none scrollbar-thin"
+                className="flex flex-col gap-6 min-w-0 w-full p-0 m-0 border-none scrollbar-thin"
               >
-                {/* 📋 SECTION 1: ОСНОВНІ НАЛАШТУВАННЯ */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* TOP HEADER BLOCK */}
+                <div className="flex items-center justify-between mb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => router.back()}
+                    className="text-slate-500 hover:text-slate-700 dark:text-slate-400 gap-2 font-medium"
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Назад
+                  </Button>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => reset()}
+                      className="border-indigo-100 text-indigo-500 hover:bg-indigo-50 bg-white"
+                    >
+                      Скинути
+                    </Button>
+                    <AppButton
+                      type="submit"
+                      disabled={isSubmitting || isPending}
+                      className="bg-[#6366f1] hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20 px-8"
+                    >
+                      Опублікувати
+                    </AppButton>
+                  </div>
+                </div>
+
+                {/* CARD 1: TITLE & BASIC INFO */}
+                <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                  <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-8">
+                    Створення Тендера
+                  </h1>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <FormField
                       control={control}
                       name="ids_type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
-                            Тип тендеру
+                          <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-1.5 block">
+                            ОСНОВНА ІНФОРМАЦІЯ
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
+                            <SelectTrigger className="h-12 rounded-xl border border-slate-200 shadow-sm bg-white font-medium text-slate-800">
                               <SelectValue placeholder="Оберіть тип" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
+                            <SelectContent className="rounded-xl">
                               {tenderType.map((t) => (
                                 <SelectItem key={t.value} value={t.value}>
                                   {t.label}
@@ -1877,17 +1918,17 @@ export default function TenderSaveForm({
                       name="ids_carrier_rating"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black text-slate-400 uppercase tracking-wider">
-                            Рейтинг доступу
+                          <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-1.5 block">
+                            РЕЙТИНГ ДОСТУПУ
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger className="bg-slate-50 dark:bg-white/5 h-12 rounded-2xl border-none shadow-inner mt-1.5 px-6">
+                            <SelectTrigger className="h-12 rounded-xl border border-slate-200 shadow-sm bg-white font-medium text-slate-800">
                               <SelectValue placeholder="Оберіть рейтинг" />
                             </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
+                            <SelectContent className="rounded-xl">
                               {rating.map((t) => (
                                 <SelectItem key={t.value} value={t.value}>
                                   {t.label}
@@ -1901,7 +1942,7 @@ export default function TenderSaveForm({
                     />
                   </div>
 
-                  <div className="space-y-4">
+                  <div>
                     <InputAsyncSelectCompany
                       name="id_owner_company"
                       control={control}
@@ -1910,66 +1951,89 @@ export default function TenderSaveForm({
                       onEntityChange={(c) => setCompanyLabel(c?.name || "")}
                     />
                   </div>
+                </div>
 
-                  {/* TIMING BOX */}
-                  <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Torgi */}
-                    <div className="flex-1 bg-indigo-50/50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 rounded-2xl p-5 space-y-4">
-                      <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-widest leading-none">
-                        <Calendar size={14} /> Час проведення тендеру
-                      </h3>
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        <InputDateWithTime
-                          name="time_start"
-                          control={control}
-                          label="ПОЧАТОК"
-                        />
-                        <InputDateWithTime
-                          name="time_end"
-                          control={control}
-                          label="КІНЕЦЬ"
-                        />
-                      </div>
+                {/* CARD 2 & 3: TIME & LOGISTICS */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  {/* TIME */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Clock className="w-5 h-5 text-slate-800 dark:text-white" />
+                      <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
+                        Час проведення тендеру
+                      </h2>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <InputDateWithTime
+                        name="time_start"
+                        control={control}
+                        label="ПОЧАТОК"
+                      />
+                      <InputDateWithTime
+                        name="time_end"
+                        control={control}
+                        label="КІНЕЦЬ"
+                      />
+                    </div>
+                  </div>
 
-                    {/* Logistika */}
-                    <div className="flex-[1.5] bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 rounded-2xl p-5 space-y-4">
-                      <h3 className="flex items-center gap-3 text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-widest leading-none">
-                        <Truck size={14} /> ЛОГІСТИКА
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                        <InputDateWithTime
-                          name="date_load"
-                          control={control}
-                          label="ПЛАН ЗАВАНТАЖЕННЯ (ВІД)"
-                        />
-                        <InputDateWithTime
-                          name="date_load2"
-                          control={control}
-                          label="ПЛАН ЗАВАНТАЖЕННЯ (ДО)"
-                        />
-                        <InputDateWithTime
-                          name="date_unload"
-                          control={control}
-                          label="ПЛАН РОЗВАНТАЖЕННЯ"
-                        />
-                      </div>
+                  {/* LOGISTICS */}
+                  <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Truck className="w-5 h-5 text-slate-800 dark:text-white" />
+                      <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
+                        Логістика
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <InputDateWithTime
+                        name="date_load"
+                        control={control}
+                        label="ЗАВАНТАЖЕННЯ ВІД"
+                      />
+                      <InputDateWithTime
+                        name="date_load2"
+                        control={control}
+                        label="ЗАВАНТАЖЕННЯ ДО"
+                      />
+                      <InputDateWithTime
+                        name="date_unload"
+                        control={control}
+                        label="РОЗВАНТАЖЕННЯ"
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* 📍 SECTION 2: МАРШРУТ ПЕРЕВЕЗЕННЯ */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center text-orange-600">
-                      <MapPin size={24} />
+                {/* 📍 CARD 4: МАРШРУТ ПЕРЕВЕЗЕННЯ */}
+                <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-slate-800 dark:text-white" />
+                      <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
+                        Маршрут перевезення
+                      </h2>
                     </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
-                      Маршрут перевезення
-                    </h2>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl h-10 px-4 text-[12px] uppercase font-bold border-indigo-100 text-[#6366f1] hover:bg-indigo-50 transition-all gap-2 bg-white"
+                      onClick={() =>
+                        appendRoute({
+                          address: "",
+                          ids_point: "LOAD_TO",
+                          order_num: routeFields.length + 1,
+                          customs: false,
+                          ids_country: "",
+                          city: "",
+                        })
+                      }
+                    >
+                      <Plus className="w-4 h-4" /> ДОДАТИ ТОЧКУ
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-0">
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
@@ -1994,46 +2058,23 @@ export default function TenderSaveForm({
                       </SortableContext>
                     </DndContext>
                   </div>
-
-                  <div className="flex justify-between items-center border-b border-slate-50 dark:border-white/5 pb-6">
-                    <div className="flex items-center gap-4"></div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl h-12 px-6 text-[11px] uppercase font-black border-orange-100 text-orange-600 hover:bg-orange-50 transition-all gap-2"
-                      onClick={() =>
-                        appendRoute({
-                          address: "",
-                          ids_point: "LOAD_TO",
-                          order_num: routeFields.length + 1,
-                          customs: false,
-                          ids_country: "",
-                          city: "",
-                        })
-                      }
-                    >
-                      <Plus className="w-4 h-4" /> Додати точку
-                    </Button>
-                  </div>
                 </div>
 
-                {/* 📦 SECTION 3: ДЕТАЛІ ВАНТАЖУ */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
-                  <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-4">
-                    <div className="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
-                      <Boxes size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                {/* 📦 CARD 5: ДЕТАЛІ ВАНТАЖУ & ГАБАРИТИ */}
+                <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                  <div className="flex items-center gap-3 mb-8">
+                    <Box size={20} className="text-slate-800 dark:text-white" />
+                    <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
                       Деталі вантажу
                     </h2>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                     <div className="lg:col-span-8 space-y-6">
                       <InputText
                         name="cargo"
                         control={control}
-                        label="Вантаж"
+                        label="ВАНТАЖ"
                         icon={Box}
                       />
 
@@ -2041,14 +2082,14 @@ export default function TenderSaveForm({
                         <InputMultiSelect
                           name="tender_trailer"
                           control={control}
-                          label="Тип транспорту"
+                          label="ТИП ТРАНСПОРТУ"
                           options={truckList}
                           required
                         />
                         <InputMultiSelect
                           name="tender_load"
                           control={control}
-                          label="Тип завантаження"
+                          label="ТИП ЗАВАНТАЖЕННЯ"
                           options={loadList}
                           valueKey="ids_load_type"
                           required
@@ -2059,7 +2100,7 @@ export default function TenderSaveForm({
                         <InputMultiSelect
                           name="tender_permission"
                           control={control}
-                          label="Транспортні документи"
+                          label="ТРАНСПОРТНІ ДОКУМЕНТИ"
                           options={tenderPermission}
                           valueKey="ids_permission_type"
                         />
@@ -2095,19 +2136,22 @@ export default function TenderSaveForm({
                         </div>
                       )}
 
-                      <div className="flex items-center gap-4 py-4 border-t border-slate-50 dark:border-white/5">
+                      <div className="flex items-center gap-3 py-2 border-t border-slate-100 dark:border-white/5 mt-4">
                         <InputSwitch
                           control={control}
                           name="without_vat"
                           label="Тариф без ПДВ"
                         />
+                        <span className="text-[12px] text-slate-400 mt-0.5">
+                          ставки учасників будуть без ПДВ
+                        </span>
                       </div>
                     </div>
 
                     <div className="lg:col-span-4">
-                      <div className="bg-[#f8fafc] dark:bg-white/5 rounded-2xl p-6 space-y-5 border border-slate-100 dark:border-white/5">
-                        <h3 className="text-[11px] font-black uppercase text-slate-400 tracking-widest">
-                          ГАБАРИТИ ТА ОБ'ЄМИ
+                      <div className="bg-[#f4f5f8] dark:bg-slate-800/40 rounded-2xl p-6 lg:p-8 space-y-6 h-full">
+                        <h3 className="text-[14px] font-bold text-slate-800 dark:text-white mb-2">
+                          Габарити та вага
                         </h3>
                         <div className="space-y-4">
                           <InputNumber
@@ -2140,66 +2184,72 @@ export default function TenderSaveForm({
                   </div>
                 </div>
 
-                {/* 💰 SECTION 4: ФІНАНСИ (Conditional) */}
+                {/* 💰 CARD 6: БЮДЖЕТ ТЕНДЕРУ (Conditional) */}
                 {(typeValue === "REDUCTION" ||
                   typeValue === "REDUCTION_WITH_REDEMPTION") && (
-                  <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6 border-l-4 border-l-rose-500">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-rose-50 dark:bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-600">
-                        <DollarSign size={24} />
+                  <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-3">
+                        <DollarSign
+                          size={20}
+                          className="text-slate-800 dark:text-white"
+                        />
+                        <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
+                          Бюджет тендеру
+                        </h2>
                       </div>
-                      <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
-                        Бюджет тендеру
-                      </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
-                      <div className="md:col-span-2">
-                        <InputFinance
-                          name="price_start"
+                      <div className="w-[120px]">
+                        <SelectFinance
+                          name="ids_valut"
                           control={control}
-                          label="Ліміт бюджету"
-                          currency={currencySign}
+                          label=""
+                          options={valut.slice(0, 4)}
                         />
                       </div>
-                      <SelectFinance
-                        name="ids_valut"
-                        control={control}
-                        label="Валюта"
-                        options={valut.slice(0, 4)}
-                      />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                      <InputFinance
+                        name="price_start"
+                        control={control}
+                        label="ЛІМІТ БЮДЖЕТУ"
+                        currency={currencySign}
+                      />
+                      <InputFinance
+                        name="price_client"
+                        control={control}
+                        label="ЦІНА ЗАМОВНИКА"
+                        currency={currencySign}
+                      />
                       <InputFinance
                         name="price_step"
                         control={control}
-                        label="Крок пониження"
+                        label="КРОК ПОНИЖЕННЯ"
                         currency={currencySign}
                       />
-                      {typeValue === "REDUCTION_WITH_REDEMPTION" && (
+                      {typeValue === "REDUCTION_WITH_REDEMPTION" ? (
                         <InputFinance
                           name="price_redemption"
                           control={control}
-                          label="Ціна викупу"
+                          label="ЦІНА ВИКУПУ"
                           currency={currencySign}
                           required
                         />
+                      ) : (
+                        <div />
                       )}
                     </div>
                   </div>
                 )}
 
-                {/* 📎 SECTION 5: ДОКУМЕНТИ */}
-                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8 space-y-6">
-                  <div className="flex items-center gap-4 border-b border-slate-50 dark:border-white/5 pb-4">
-                    <div className="w-12 h-12 bg-teal-50 dark:bg-teal-500/10 rounded-2xl flex items-center justify-center text-teal-600">
-                      <Plus size={24} />
-                    </div>
-                    <h2 className="text-lg font-black uppercase tracking-widest text-slate-800 dark:text-white">
+                {/* 📎 CARD 7: ДОКУМЕНТИ */}
+                <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-[16px] font-bold text-slate-800 dark:text-white">
                       Документи
                     </h2>
                   </div>
+
                   <UniqueFileUploader
                     files={files}
                     onChange={setFiles}
@@ -2208,44 +2258,31 @@ export default function TenderSaveForm({
                   />
                 </div>
 
-                {/* 🏁 ACTION BAR */}
-                <footer className="sticky bottom-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 py-4 z-[40] shadow-[0_-10px_50px_rgba(0,0,0,0.05)] mt-auto w-full">
-                  <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-4 bg-slate-50 dark:bg-white/5 px-6 py-4 rounded-3xl border border-slate-100 dark:border-white/5 w-full md:w-auto">
-                      <InputSwitch
-                        id="is_next"
-                        checked={isNextTender}
-                        onCheckedChange={setIsNextTender}
-                        label="створити наступний після збереження"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                      <Button
-                        variant="ghost"
-                        type="button"
-                        onClick={() => reset()}
-                        className="flex-1 md:flex-none uppercase font-black text-slate-400 h-14 px-10 tracking-widest hover:text-rose-500 hover:bg-rose-50 border border-transparent rounded-2xl transition-all"
-                      >
-                        Скинути
-                      </Button>
-                      <AppButton
-                        type="submit"
-                        disabled={isSubmitting || isPending}
-                        className="flex-[2] md:min-w-[280px] h-14 bg-[#0fb48c] hover:bg-[#0da07b] text-white shadow-xl shadow-[#0fb48c]/20 rounded-2xl text-sm uppercase font-black tracking-widest transition-all"
-                      >
-                        {isSubmitting || isPending ? (
-                          <div className="flex items-center gap-2">
-                            <Zap className="w-5 h-5 animate-spin" />
-                            <span>ОБРОБКА...</span>
-                          </div>
-                        ) : (
-                          <span>ЗБЕРЕГТИ ЗМІНИ</span>
-                        )}
-                      </AppButton>
-                    </div>
-                  </div>
-                </footer>
+                {/* 🏁 BOTTOM ACTION BAR */}
+                <div className="flex flex-col md:flex-row justify-center items-center gap-4 pt-6 pb-12 w-full">
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => reset()}
+                    className="w-full md:w-auto min-w-[140px] h-12 bg-[#f4f5f8] text-[#6366f1] border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium tracking-wide shadow-sm"
+                  >
+                    Скинути
+                  </Button>
+                  <AppButton
+                    type="submit"
+                    disabled={isSubmitting || isPending}
+                    className="w-full md:w-auto min-w-[140px] h-12 bg-[#6366f1] hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20 rounded-xl font-medium tracking-wide"
+                  >
+                    {isSubmitting || isPending ? (
+                      <div className="flex items-center gap-2 px-2">
+                        <Zap className="w-5 h-5 animate-spin" />
+                        <span>ОБРОБКА...</span>
+                      </div>
+                    ) : (
+                      <span className="px-2">Опублікувати</span>
+                    )}
+                  </AppButton>
+                </div>
               </fieldset>
             </form>
           </Form>

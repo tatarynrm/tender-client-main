@@ -86,19 +86,19 @@ export const InputDate = <T extends FieldValues>({
             }
           }}
           className={cn(
-            "h-8 w-8 flex items-center justify-center text-[12px] rounded-lg cursor-pointer transition-all relative",
+            "h-8 w-8 flex items-center justify-center text-[12px] rounded-xl cursor-pointer transition-all relative",
             !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
             isCurrentMonth &&
-              "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5",
-            isToday && !isSelected && "text-teal-600 font-bold",
+              "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5",
+            isToday && !isSelected && "text-indigo-600 font-bold",
             isSelected &&
-              "bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-500/20",
+              "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20",
             isDisabled && "opacity-20 cursor-not-allowed hover:bg-transparent",
           )}
         >
           {format(day, "d")}
           {isToday && !isSelected && (
-            <div className="absolute bottom-1 w-1 h-1 bg-teal-600 rounded-full" />
+            <div className="absolute bottom-1 w-1 h-1 bg-indigo-600 rounded-full" />
           )}
         </div>
       );
@@ -116,8 +116,8 @@ export const InputDate = <T extends FieldValues>({
           className={cn(
             "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
             isOpen
-              ? "text-teal-600"
-              : "text-zinc-400 group-focus-within:text-teal-600",
+              ? "text-indigo-600"
+              : "text-slate-400 group-focus-within:text-indigo-600",
           )}
         >
           <CalendarIcon size={18} strokeWidth={2.2} />
@@ -130,8 +130,8 @@ export const InputDate = <T extends FieldValues>({
             inputVariants.base,
             "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
             isOpen
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
-              : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
+              ? "border-indigo-600 ring-[0.5px] ring-indigo-600 shadow-lg shadow-indigo-500/5"
+              : "border-slate-200 dark:border-white/10 hover:border-slate-200",
             error ? "border-red-500 focus:border-red-600" : "",
           )}
         >
@@ -154,7 +154,7 @@ export const InputDate = <T extends FieldValues>({
                 e.stopPropagation();
                 field.onChange(null);
               }}
-              className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+              className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-400 hover:text-red-500 transition-colors"
             >
               <X size={16} strokeWidth={2.5} />
             </button>
@@ -165,9 +165,9 @@ export const InputDate = <T extends FieldValues>({
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-[14px] text-zinc-400 text-[12px] font-medium",
+            "left-10 top-[14px] text-slate-400 text-[12px] font-medium",
             (field.value || isOpen) &&
-              "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
+              "-top-2.5 left-3 text-[10px] font-bold text-indigo-600",
             error && "text-red-500",
           )}
         >
@@ -176,7 +176,7 @@ export const InputDate = <T extends FieldValues>({
             <span
               className={cn(
                 "ml-1 transition-colors",
-                error ? "text-red-500" : "text-teal-600",
+                error ? "text-red-500" : "text-indigo-600",
               )}
             >
               *
@@ -187,12 +187,12 @@ export const InputDate = <T extends FieldValues>({
 
       {/* КАЛЕНДАР */}
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] left-0 z-[100] w-[280px] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-[calc(100%+8px)] left-0 z-[100] w-[280px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between mb-4 px-1">
             <button
               type="button"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-500"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-slate-500"
             >
               <ChevronLeft size={18} />
             </button>
@@ -202,7 +202,7 @@ export const InputDate = <T extends FieldValues>({
             <button
               type="button"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-500"
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-slate-500"
             >
               <ChevronRight size={18} />
             </button>
@@ -212,7 +212,7 @@ export const InputDate = <T extends FieldValues>({
             {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
               <div
                 key={d}
-                className="text-center text-[10px] font-bold text-zinc-400 uppercase"
+                className="text-center text-[10px] font-bold text-slate-400 uppercase"
               >
                 {d}
               </div>

@@ -5,7 +5,7 @@ import Flag from "react-flagkit";
 import { format } from "date-fns";
 import {
   Truck,
-  User,
+  User as UserIcon,
   Calendar,
   Layers,
   Info,
@@ -19,6 +19,10 @@ import {
   ThermometerSun,
   Snowflake,
   Paperclip,
+  CheckCircle2,
+  Mail as MailIcon,
+  Phone as PhoneIcon,
+  Building2,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -32,6 +36,13 @@ import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
+import { getRegionName } from "@/shared/utils/region.utils";
+import {
+  formatTenderDate,
+  getTenderLoadDateString,
+} from "@/shared/utils/date.utils";
+import { getCurrencySymbol } from "@/shared/utils/currency.utils";
+import { FaMoneyBill } from "react-icons/fa";
 
 export function TenderCardManagers({
   cargo,
@@ -43,7 +54,8 @@ export function TenderCardManagers({
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
   const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
-  const { mutateAsync: delWinner,   isPending:isDelWinner } = useTenderDelWinner();
+  const { mutateAsync: delWinner, isPending: isDelWinner } =
+    useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const displayPrice = cargo.price_proposed || cargo.price_start;
@@ -106,9 +118,33 @@ export function TenderCardManagers({
       // Помилка вже оброблена в хуку
     }
   };
+  const currencySymbol = getCurrencySymbol(cargo.valut_name);
+  const trailers =
+    cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
+  const loadTypes =
+    cargo.tender_load?.map((l) => l.load_type_name).join(", ") || "";
+  const isPlan = cargo.ids_status === "PLAN";
+
+  // Generating all bids sorted by lowest price
+  const topBids = React.useMemo(() => {
+    if (!cargo.rate_company || cargo.rate_company.length === 0) return [];
+    return [...cargo.rate_company].sort(
+      (a, b) => a.price_proposed - b.price_proposed,
+    );
+  }, [cargo.rate_company]);
+
+  const bestBid = topBids[0] || null;
+
+  // Check if we have an active winner
+  const winningBid = cargo.rate_company?.find((r) => r.car_count_winner! > 0);
+
   return (
-    <Card className="w-full border-slate-200/60 dark:border-white/5 bg-white dark:bg-slate-900/90 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl overflow-hidden mb-2">
-      {/* Декоративні сніжинки для REF режиму */}
+    <div className="w-full relative mb-5 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
+      {/* Tender Actions Menu */}
+      <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
+        <TenderActions tender={cargo} />
+      </div>
+
       {isRef && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
           <Snowflake className="absolute -top-1 -right-1 text-blue-400/10 w-12 h-12 rotate-12" />
@@ -116,378 +152,490 @@ export function TenderCardManagers({
           <Snowflake className="absolute -bottom-2 right-10 text-blue-300/10 w-10 h-10 rotate-45" />
         </div>
       )}
-      {/* HEADER - Більш вузький */}
-      <div className="bg-slate-50 dark:bg-white/[0.03] px-3 py-1.5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <span
-            className={cn(
-              "font-black text-slate-400 dark:text-slate-500 tracking-tighter",
-              title,
-            )}
-          >
-            #{cargo.id}
-          </span>
-          <span
-            className={cn(
-              "font-bold text-blue-600 dark:text-blue-400 uppercase",
-              label,
-            )}
-          >
-            {cargo.tender_type}
-          </span>
-          <div className="flex items-center gap-0.5 ml-1">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  "h-2.5 w-2.5",
-                  i < stars
-                    ? "fill-amber-400 text-amber-400"
-                    : "text-slate-200 dark:text-slate-700",
-                )}
-              />
-            ))}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {cargo.time_start && (
-            <TenderTimer
-              targetDate={cargo.time_start}
-              label="До початку"
-              variant="blue"
-            />
-          )}
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-200 dark:bg-slate-800 border border-slate-200 dark:border-white/10">
-            <Calendar size={icon - 2} className="text-slate-400" />
+      {/* Main Grid Card */}
+      <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col border-b border-zinc-200/80">
+        <div className="flex flex-col lg:flex-row w-full min-h-[90px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10">
+          {/* 1. № */}
+          <div
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 transition-colors"
+            onClick={onOpenDetails}
+          >
             <span
               className={cn(
-                "font-mono font-bold text-slate-600 dark:text-slate-300",
-                label,
+                "text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none",
+                title,
               )}
             >
-              {cargo.time_start
-                ? format(new Date(cargo.time_start), "dd.MM HH:mm")
-                : "—"}
+              {cargo.id}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-red-200 dark:bg-slate-800 border border-slate-200 dark:border-white/10">
-            <Calendar size={icon - 2} className="text-slate-400" />
-            <span
-              className={cn(
-                "font-mono font-bold text-slate-600 dark:text-slate-300",
-                label,
+
+          {/* 2. Завантаження */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
+            {fromPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium">—</span>
+            )}
+            {fromPoints.map((pt, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
+              >
+                <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
+                  {pt.ids_country && (
+                    <Flag
+                      country={pt.ids_country}
+                      size={16}
+                      className="rounded-[2px] shadow-sm"
+                    />
+                  )}
+                  <span>
+                    {pt.ids_country ? `${pt.ids_country}-` : ""}
+                    {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                    {pt.city}
+                  </span>
+                </div>
+                {(pt as any).ids_region && (
+                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                    {getRegionName((pt as any).ids_region)}
+                  </span>
+                )}
+              </div>
+            ))}
+            {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
+              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
+              </span>
+            )}
+          </div>
+
+          {/* 3. Митне оформлення */}
+          <div className="flex-1 min-w-[150px] flex flex-col justify-center p-3 relative">
+            {transitPoints.map((pt, i) => (
+              <div
+                key={i}
+                className="flex flex-col text-left mb-1.5 last:mb-0 leading-tight"
+              >
+                <span
+                  className={cn(
+                    "text-[10px] uppercase font-bold tracking-tight mb-0.5",
+                    pt.ids_point === "CUSTOM_UP"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : pt.ids_point === "CUSTOM_DOWN"
+                        ? "text-indigo-500 dark:text-indigo-400"
+                        : "text-zinc-500",
+                  )}
+                >
+                  {pt.ids_point === "CUSTOM_UP"
+                    ? "Замитнення"
+                    : pt.ids_point === "CUSTOM_DOWN"
+                      ? "Розмитнення"
+                      : "Кордон"}
+                </span>
+                <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
+                  {pt.ids_country ? `${pt.ids_country}-` : ""}
+                  {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                  {pt.city}
+                </span>
+                {(pt as any).ids_region && (
+                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                    {getRegionName((pt as any).ids_region)}
+                  </span>
+                )}
+              </div>
+            ))}
+            {transitPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium text-center">—</span>
+            )}
+          </div>
+
+          {/* 4. Розвантаження */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
+            {toPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium">—</span>
+            )}
+            {toPoints.map((pt, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
+              >
+                <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
+                  {pt.ids_country && (
+                    <Flag
+                      country={pt.ids_country}
+                      size={16}
+                      className="rounded-[2px] shadow-sm"
+                    />
+                  )}
+                  <span>
+                    {pt.ids_country ? `${pt.ids_country}-` : ""}
+                    {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                    {pt.city}
+                  </span>
+                </div>
+                {(pt as any).ids_region && (
+                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                    {getRegionName((pt as any).ids_region)}
+                  </span>
+                )}
+              </div>
+            ))}
+            {formatTenderDate(cargo.date_unload) && (
+              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1">
+                {formatTenderDate(cargo.date_unload)}
+              </span>
+            )}
+          </div>
+
+          {/* 5. Вантаж */}
+          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+              {cargo.cargo || "ТНП"}
+            </span>
+          </div>
+
+          {/* 6. Тип транспорту */}
+          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
+              {trailers.split(", ").map((t, i) => (
+                <React.Fragment key={i}>
+                  {t}
+                  <br />
+                </React.Fragment>
+              ))}
+            </span>
+            {loadTypes && (
+              <span className="text-[11px] text-zinc-500">
+                {loadTypes.split(", ")[0]}
+              </span>
+            )}
+          </div>
+
+          {/* 7. Вага/Об'єм */}
+          <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+            {cargo.volume ? (
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                {cargo.volume} м³
+              </span>
+            ) : null}
+            {cargo.weight ? (
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px] mt-0.5">
+                {cargo.weight} т.
+              </span>
+            ) : null}
+            {!cargo.volume && !cargo.weight && (
+              <span className="text-zinc-500">—</span>
+            )}
+          </div>
+
+          {/* 8. Нотатки */}
+          <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
+            <div className="max-h-[80px] overflow-y-auto custom-scrollbar w-full">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight">
+                {cargo.notes || "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* 9. Ціни */}
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white overflow-hidden">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
+              <div className="flex items-center gap-[1px] font-black text-[15px] text-zinc-800 dark:text-white leading-none">
+                {cargo.price_start}
+                <span>{currencySymbol}</span>
+              </div>
+              {cargo.price_step && (
+                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium mt-1">
+                  крок {cargo.price_step}
+                </span>
               )}
-            >
-              {cargo.time_end
-                ? format(new Date(cargo.time_end), "dd.MM HH:mm")
-                : "—"}
-            </span>
+            </div>
+            <div className="h-[45px] flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80">
+              <span className="text-[10px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-0.5">
+                Ціна замовника
+              </span>
+              <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
+                {cargo.cost_start || 0}
+                <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1">
-          <TenderActions tender={cargo} />
+
+          {/* 10. Залишилось */}
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
+                Залишилось
+              </span>
+              <span className="font-bold text-[#e03131] dark:text-red-400 text-[14px] tracking-tight leading-none">
+                <TenderTimer
+                  label=""
+                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                />
+              </span>
+            </div>
+            {cargo.price_redemption ? (
+              <div className="h-[45px] w-full flex flex-col items-center justify-center border-t border-zinc-200/80">
+                <span className="text-[10px] text-zinc-500 font-medium mb-0.5">
+                  Викуп
+                </span>
+                <span className="text-[14px] font-black text-zinc-800 leading-none">
+                  {cargo.price_redemption}
+                  <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
+                </span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* 11. Краща Ставка */}
+          <div
+            className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-[#eef7ec] dark:bg-emerald-900/30 border-l lg:border-l-0 border-[#eef7ec] relative items-center justify-center p-3 hover:bg-[#e4f2df] transition-colors cursor-pointer"
+            onClick={() => setIsRatesOpen(!isRatesOpen)}
+          >
+            <div className="flex flex-col items-center justify-center w-full">
+              <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 uppercase mb-1">
+                Краща ставка
+              </span>
+              <span className="text-[16px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none mb-1">
+                {bestBid ? bestBid.price_proposed : cargo.price_start}
+                <span className="text-[12px] ml-[1px]">{currencySymbol}</span>
+              </span>
+              <span className="text-[10px] text-[#2c5f2d]/70 font-medium truncate max-w-full">
+                {bestBid ? bestBid.company_name : "Очікується"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <CardContent className="p-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch divide-y lg:divide-y-0 lg:divide-x divide-slate-100 dark:divide-white/5">
-          {/* 1. МАРШРУТ - Компактні колонки */}
-          <div className="lg:col-span-5 p-3">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="min-w-0">
-                <p
+      {/* 2. PROPOSAL / TOP BIDS HIGHLIGHT */}
+      {isRatesOpen && topBids.length > 0 && (
+        <div className="mx-2 mt-2 mb-2 flex flex-col gap-2 max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
+          {topBids.map((bid, index) => {
+            const isTop1 = index === 0;
+            const isTop2 = index === 1;
+            const isTop3 = index === 2;
+            const isWinner = winningBid?.id === bid.id;
+
+            // Створення динамічних пропсів для стилів
+            const cardBg = isTop1
+              ? "border-emerald-400/50 bg-emerald-50/40 dark:bg-emerald-500/10 dark:border-emerald-500/20"
+              : isTop2
+                ? "border-amber-400/50 bg-amber-50/40 dark:bg-amber-500/10 dark:border-amber-500/20"
+                : isTop3
+                  ? "border-red-400/50 bg-red-50/40 dark:bg-red-500/10 dark:border-red-500/20"
+                  : "border-slate-100 bg-white dark:bg-slate-800/40 dark:border-white/5";
+
+            const badgeBg = isTop1
+              ? "bg-emerald-500 shadow-emerald-500/20"
+              : isTop2
+                ? "bg-amber-500 shadow-amber-500/20"
+                : isTop3
+                  ? "bg-red-500 shadow-red-500/20"
+                  : "bg-slate-400 shadow-slate-400/20";
+
+            const badgeLabel = isTop1
+              ? "BEST PRICE"
+              : isTop2
+                ? "TOP 2"
+                : isTop3
+                  ? "TOP 3"
+                  : `TOP ${index + 1}`;
+
+            const iconColor = isTop1
+              ? "text-emerald-700"
+              : isTop2
+                ? "text-amber-700"
+                : isTop3
+                  ? "text-red-700"
+                  : "text-slate-500";
+
+            const dividerColor = isTop1
+              ? "bg-emerald-200"
+              : isTop2
+                ? "bg-amber-200"
+                : isTop3
+                  ? "bg-red-200"
+                  : "bg-slate-200";
+
+            const emailBtnColor = isTop1
+              ? "border-emerald-200 text-emerald-600"
+              : isTop2
+                ? "border-amber-200 text-amber-600"
+                : isTop3
+                  ? "border-red-200 text-red-600"
+                  : "border-slate-200 text-slate-500";
+
+            const labelTitleColor = isTop1
+              ? "text-emerald-600"
+              : isTop2
+                ? "text-amber-600"
+                : isTop3
+                  ? "text-red-500"
+                  : "text-slate-400";
+
+            const priceColor = isTop1
+              ? "text-[#0eb48c]"
+              : isTop2
+                ? "text-amber-600"
+                : isTop3
+                  ? "text-red-500"
+                  : "text-slate-700";
+
+            const actionBtnColor = isTop1
+              ? "border-emerald-400 text-emerald-600 hover:bg-emerald-50"
+              : isTop2
+                ? "border-amber-400 text-amber-600 hover:bg-amber-50"
+                : isTop3
+                  ? "border-red-400 text-red-600 hover:bg-red-50"
+                  : "border-slate-300 text-slate-600 hover:bg-slate-50";
+
+            return (
+              <div
+                key={bid.id}
+                className={cn(
+                  "relative border rounded-3xl p-4 flex flex-col lg:flex-row shadow-sm gap-4 items-center transition-all",
+                  cardBg,
+                )}
+              >
+                <div
                   className={cn(
-                    "text-[10px] font-black uppercase text-emerald-600 mb-1",
-                    label,
+                    "absolute -top-[9px] left-4 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest shadow-sm",
+                    badgeBg,
                   )}
                 >
-                  Завантаження
-                </p>
-                {fromPoints.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center gap-1.5 mb-1 last:mb-0"
-                  >
-                    <Flag
-                      country={p.ids_country ?? "UA"}
-                      size={12}
-                      className="shrink-0"
-                    />
-                    <span
-                      className={cn(
-                        "truncate font-bold text-slate-800 dark:text-slate-200",
-                        label,
-                      )}
-                    >
-                      {p.city}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  {badgeLabel}
+                </div>
 
-              <div className="border-x border-dashed border-slate-200 dark:border-white/10 px-2 min-w-0">
-
-                {transitPoints.length > 0 ? (
-                  transitPoints.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex flex-col mb-1 last:mb-0 leading-tight"
-                    >
-                      <span
-                        className={cn(
-                          "text-[9px] font-bold text-slate-400 uppercase",
-                          label,
-                        )}
-                      >
-                        {getPointLabel(p.ids_point)}
-                      </span>
-                      <span
-                        className={cn(
-                          "truncate font-medium text-slate-500",
-                          label,
-                        )}
-                      >
-                        {p.city}
+                {/* Left Info Box */}
+                <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-6 pl-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 size={16} className={iconColor} />
+                      <span className="font-bold text-zinc-800 text-sm whitespace-nowrap">
+                        {bid.company_name}
                       </span>
                     </div>
-                  ))
-                ) : (
-                  <span className={cn("text-slate-300 italic", label)}>
-                    Прямий
-                  </span>
-                )}
-              </div>
+                    <div className="flex items-center gap-2">
+                      <UserIcon size={16} className="text-zinc-400" />
+                      <span className="font-medium text-zinc-600 text-[11px] whitespace-nowrap">
+                        {bid.author}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="min-w-0">
-                <p
-                  className={cn(
-                    "text-[10px] font-black uppercase text-rose-600 mb-1",
-                    label,
-                  )}
-                >
-                  Розвантаження
-                </p>
-                {toPoints.map((p) => (
                   <div
-                    key={p.id}
-                    className="flex items-center gap-1.5 mb-1 last:mb-0"
-                  >
-                    <Flag
-                      country={p.ids_country ?? "UA"}
-                      size={12}
-                      className="shrink-0"
-                    />
-                    <span
+                    className={cn("hidden sm:block w-px h-10", dividerColor)}
+                  />
+
+                  <div className="flex items-center">
+                    <Button
+                      variant="outline"
                       className={cn(
-                        "truncate font-bold text-slate-800 dark:text-slate-200",
-                        label,
+                        "rounded-full bg-white h-8 px-4 text-[11px] font-medium opacity-80 pointer-events-none",
+                        emailBtnColor,
                       )}
                     >
-                      {p.city}
-                    </span>
+                      <MailIcon size={12} className="mr-2 opacity-50" />{" "}
+                      {bid.email || "email не вказано"}
+                    </Button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 2. ТЕХНІЧНІ ДАНІ - В один ряд для економії місця */}
-          <div className="lg:col-span-4  p-3 flex flex-col justify-center bg-slate-50/30 dark:bg-transparent gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Truck size={icon} className="text-blue-500" />
-                <span
-                  className={cn(
-                    "font-black text-slate-700 dark:text-slate-200",
-                    main,
-                  )}
-                >
-                  {cargo.car_count_actual || 1}
-                  <span className="text-[10px] ml-0.5 opacity-50">АВТ</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-slate-500">
-                  <Weight size={12} />
-                  <span className={cn("font-bold", label)}>
-                    {cargo.weight}т
-                  </span>
                 </div>
-                <div className="flex items-center gap-1 text-slate-500">
-                  <Box size={12} />
-                  <span className={cn("font-bold", label)}>
-                    {cargo.volume}м³
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            <div className="flex flex-wrap gap-1">
-              {cargo.tender_trailer?.map((t, i) => {
-                const isRef = t.ids_trailer_type === "REF";
-                const hasTemp =
-                  cargo?.ref_temperature_from !== undefined ||
-                  cargo?.ref_temperature_to !== undefined;
-
-                return (
-                  <div key={i} className="flex items-center gap-1">
-                    {/* Назва причепа */}
-                    <span
-                      className={cn(
-                        "px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border transition-colors",
-                        isRef
-                          ? "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
-                          : "bg-slate-100 border-slate-200 text-slate-600 dark:bg-white/5 dark:border-white/5 dark:text-slate-400",
-                        label,
-                      )}
-                    >
-                      {t.trailer_type_name}
-                    </span>
-
-                    {/* Температурний режим (тільки для REF) */}
-                    {isRef && hasTemp && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-full animate-in fade-in zoom-in duration-300">
-                        {/* Іконка: сніжинка якщо мінус, сонце якщо плюс */}
-                        {(cargo.ref_temperature_from ?? 0) < 0 ? (
-                          <ThermometerSnowflake className="w-3 h-3 text-blue-500 animate-pulse" />
-                        ) : (
-                          <ThermometerSun className="w-3 h-3 text-orange-500" />
-                        )}
-
-                        <span className="text-[10px] font-bold text-slate-700 dark:text-rose-300 tracking-tighter">
-                          {formatTemp(cargo.ref_temperature_from)}°..
-                          {formatTemp(cargo.ref_temperature_to)}°C
-                        </span>
-                      </div>
+                {/* Right Price Action */}
+                <div className="flex flex-col items-center sm:items-end justify-center pr-2 gap-1.5 w-full sm:w-auto">
+                  <span
+                    className={cn(
+                      "text-[9px] font-black uppercase tracking-widest",
+                      labelTitleColor,
                     )}
-                  </div>
-                );
-              })}
-              <span
-                className={cn(
-                  "ml-auto font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
-                  label,
-                )}
-              >
-                {cargo.cargo}
-              </span>
-              <div className="ml-auto flex items-center gap-1">
-                <span
-                  className={cn(
-                    "font-bold text-blue-600/70 dark:text-blue-400/70 truncate max-w-[100px]",
-                    label,
-                  )}
-                >
-                  {cargo.notes}
-                </span>
-                {cargo.files && cargo.files.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsFilesModalOpen(true);
-                    }}
                   >
-                    <Paperclip size={icon - 2} />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* 3. ЦІНА ТА ДІЇ - Компактний блок */}
-          <div className="lg:col-span-3 p-2 flex flex-col justify-center gap-1.5 bg-blue-50/10 dark:bg-blue-500/[0.02]">
-            <div className="text-right px-1 flex flex-col gap-1">
-              <div
-                className={cn(
-                  "font-black tracking-tighter text-lg leading-none",
-                  displayPrice
-                    ? "text-slate-900 dark:text-white"
-                    : "text-blue-500",
-                )}
-              >
-                {displayPrice ? (
-                  <>
-                    {displayPrice}{" "}
-                    <span className="text-[10px] text-slate-400">
-                      {cargo.valut_name}
-                    </span>
-                  </>
-                ) : (
-                  "Запит ціни"
-                )}
-              </div>
-              {cargo.without_vat && (
-                <span className="text-[9px] font-black text-rose-500 uppercase">
-                  Без ПДВ
-                </span>
-              )}
-              <div>
-                {cargo.price_redemption ? (
-                  <span className="text-blue-800 font-bold">
-                    Ціна викупу:{" "}
-                    <span className="text-red-800">
-                      {cargo.price_redemption}
-                    </span>
+                    ПРОПОЗИЦІЯ
                   </span>
-                ) : null}
+                  <span
+                    className={cn(
+                      "text-2xl font-black leading-none mb-1",
+                      priceColor,
+                    )}
+                  >
+                    {bid.price_proposed} {currencySymbol}
+                  </span>
+                  {isWinner ? (
+                    <Button
+                      disabled={isDelWinner}
+                      onClick={() => handleRemoveWinner(bid)}
+                      className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest shadow-md shadow-amber-500/20"
+                    >
+                      Скасувати вибір
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled={isPending || winningBid !== undefined}
+                      onClick={() => handleSetWinner(bid, 1)}
+                      className={cn(
+                        "w-full sm:w-auto bg-white border rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest",
+                        actionBtnColor,
+                      )}
+                    >
+                      ЗАПРОПОНОВАНА ЦІНА
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            );
+          })}
+        </div>
+      )}
 
-            <div className="flex gap-1">
-              <Button
-                variant="outline"
-                onClick={onOpenDetails}
-                className="flex-1 h-7 px-2 text-[10px] font-bold border-slate-200 dark:border-white/10"
-              >
-                ДЕТАЛІ
-              </Button>
-              <button
-                onClick={() => setIsRatesOpen(!isRatesOpen)}
-                disabled={!cargo.rate_company?.length}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 px-2 h-7 rounded-md border transition-all min-w-[70px]",
-                  isRatesOpen
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white dark:bg-slate-800 text-slate-600 border-slate-200 dark:border-white/10",
-                  !cargo.rate_company?.length && "opacity-30 grayscale",
-                )}
-              >
-                <Layers size={12} />
-                <span className="text-[10px] font-black">
-                  {cargo.rate_company?.length || 0}
-                </span>
-                {isRatesOpen ? (
-                  <ChevronUp size={10} />
-                ) : (
-                  <ChevronDown size={10} />
-                )}
-              </button>
-            </div>
+      {/* FOOTER */}
+      <div className="h-[34px] px-3 flex items-center justify-between bg-zinc-100/50 dark:bg-slate-800/30 text-[11px] mt-auto">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
+            <UserIcon size={14} className="text-zinc-500" />
+            <span>{cargo.author}</span>
           </div>
+          {cargo?.price_client && (
+            <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
+              <FaMoneyBill size={14} className="text-zinc-500" />
+              <span>{cargo?.price_client}</span>
+            </div>
+          )}
+
+          {(cargo as any).email && (
+            <div className="flex items-center gap-1.5 font-medium text-blue-600 hover:underline cursor-pointer">
+              <MailIcon size={14} className="text-blue-400" />
+              <span>{(cargo as any).email}</span>
+            </div>
+          )}
+          {(cargo as any).usr_phone && (
+            <div className="flex items-center gap-1.5 font-medium text-blue-600 hover:underline cursor-pointer">
+              <PhoneIcon size={14} className="text-blue-400" />
+              <span>{(cargo as any).usr_phone}</span>
+            </div>
+          )}
         </div>
 
-        {/* ПАНЕЛЬ СТАВОК */}
-        {isRatesOpen && (
-          <div className="border-t border-slate-100 dark:border-white/5 p-2 bg-slate-50/50 dark:bg-black/20">
-            <TenderRatesList
-              onSetWinner={handleSetWinner}
-              onRemoveWinner={handleRemoveWinner}
-              cargo={cargo}
-            />
-          </div>
+        {cargo.files && cargo.files.length > 0 && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsFilesModalOpen(true);
+            }}
+          >
+            <Paperclip size={16} />
+          </Button>
         )}
-      </CardContent>
+      </div>
 
-      <FilesPreviewModal 
+      <FilesPreviewModal
         isOpen={isFilesModalOpen}
         onClose={() => setIsFilesModalOpen(false)}
         files={cargo.files || []}
         title={`Документи тендеру #${cargo.id}`}
       />
-    </Card>
+    </div>
   );
 }

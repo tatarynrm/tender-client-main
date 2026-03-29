@@ -140,17 +140,17 @@ export const InputDateRange = <T extends FieldValues>({
             "h-10 sm:h-9 w-full flex items-center justify-center text-[12px] cursor-pointer transition-all relative z-10",
             !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
             isCurrentMonth &&
-              "text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5",
+              "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5",
             isInRange &&
               !isSelectedFrom &&
               !isSelectedTo &&
-              "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 rounded-none",
+              "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 rounded-none",
             isSelectedFrom &&
-              "bg-teal-600 text-white rounded-l-lg shadow-md z-20",
+              "bg-indigo-600 text-white rounded-l-lg shadow-md z-20",
             isSelectedTo &&
-              "bg-teal-600 text-white rounded-r-lg shadow-md z-20",
-            isSelectedFrom && isSelectedTo && "rounded-lg",
-            !tempRange.to && isSelectedFrom && "rounded-lg",
+              "bg-indigo-600 text-white rounded-r-lg shadow-md z-20",
+            isSelectedFrom && isSelectedTo && "rounded-xl",
+            !tempRange.to && isSelectedFrom && "rounded-xl",
           )}
         >
           {format(day, "d")}
@@ -173,8 +173,8 @@ export const InputDateRange = <T extends FieldValues>({
           className={cn(
             "absolute left-4 top-[14px] transition-colors z-30 pointer-events-none",
             isOpen
-              ? "text-teal-600"
-              : "text-zinc-400 group-focus-within:text-teal-600",
+              ? "text-indigo-600"
+              : "text-slate-400 group-focus-within:text-indigo-600",
           )}
         >
           <CalendarIcon size={18} strokeWidth={2.2} />
@@ -186,8 +186,8 @@ export const InputDateRange = <T extends FieldValues>({
             inputVariants.base,
             "min-h-[46px] pl-12 pr-10 py-3 cursor-pointer rounded-2xl flex items-center transition-all duration-200",
             isOpen
-              ? "border-teal-600 ring-[0.5px] ring-teal-600 shadow-lg shadow-teal-500/5"
-              : "border-zinc-200 dark:border-white/10 hover:border-zinc-300",
+              ? "border-indigo-600 ring-[0.5px] ring-indigo-600 shadow-lg shadow-indigo-500/5"
+              : "border-slate-200 dark:border-white/10 hover:border-slate-200",
             error ? "border-red-500" : "",
           )}
         >
@@ -198,7 +198,7 @@ export const InputDateRange = <T extends FieldValues>({
             )}
           >
             {displayFrom ? format(displayFrom, "dd.MM.yy") : "---"}
-            <ArrowRight size={14} className="text-zinc-400" />
+            <ArrowRight size={14} className="text-slate-400" />
             {displayTo ? format(displayTo, "dd.MM.yy") : "---"}
           </div>
 
@@ -210,7 +210,7 @@ export const InputDateRange = <T extends FieldValues>({
                 field.onChange({ from: null, to: null });
                 setTempRange({ from: null, to: null });
               }}
-              className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-zinc-400 hover:text-red-500 transition-colors"
+              className="absolute right-3 p-1 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full text-slate-400 hover:text-red-500 transition-colors"
             >
               <X size={16} strokeWidth={2.5} />
             </button>
@@ -220,9 +220,9 @@ export const InputDateRange = <T extends FieldValues>({
         <label
           className={cn(
             "absolute transition-all duration-200 pointer-events-none z-40 px-1.5 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest",
-            "left-10 top-[14px] text-zinc-400 text-[12px] font-medium",
+            "left-10 top-[14px] text-slate-400 text-[12px] font-medium",
             (displayFrom || isOpen) &&
-              "-top-2.5 left-3 text-[10px] font-bold text-teal-600",
+              "-top-2.5 left-3 text-[10px] font-bold text-indigo-600",
             error && "text-red-500",
           )}
         >
@@ -233,7 +233,7 @@ export const InputDateRange = <T extends FieldValues>({
       {isOpen && (
         <div
           className={cn(
-            "fixed inset-x-4 mx-auto z-[100] w-[calc(100%-32px)] bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-200",
+            "fixed inset-x-4 mx-auto z-[100] w-[calc(100%-32px)] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in duration-200",
             "sm:absolute sm:inset-x-auto sm:left-0 sm:w-[320px]",
             openUp
               ? "bottom-[calc(100%+8px)] origin-bottom slide-in-from-bottom-2"
@@ -246,9 +246,9 @@ export const InputDateRange = <T extends FieldValues>({
               <button
                 type="button"
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl"
               >
-                <ChevronLeft size={20} className="text-zinc-500" />
+                <ChevronLeft size={20} className="text-slate-500" />
               </button>
               <span className="text-[13px] font-bold uppercase tracking-tight text-zinc-700 dark:text-zinc-200">
                 {format(currentMonth, "LLLL yyyy", { locale: uk })}
@@ -256,9 +256,9 @@ export const InputDateRange = <T extends FieldValues>({
               <button
                 type="button"
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl"
               >
-                <ChevronRight size={20} className="text-zinc-500" />
+                <ChevronRight size={20} className="text-slate-500" />
               </button>
             </div>
 
@@ -266,7 +266,7 @@ export const InputDateRange = <T extends FieldValues>({
               {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
                 <div
                   key={d}
-                  className="text-center text-[10px] font-bold text-zinc-400 uppercase"
+                  className="text-center text-[10px] font-bold text-slate-400 uppercase"
                 >
                   {d}
                 </div>
@@ -279,7 +279,7 @@ export const InputDateRange = <T extends FieldValues>({
             <button
               type="button"
               onClick={handleConfirm}
-              className="w-full py-2.5 bg-teal-600 text-white rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20"
+              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] uppercase font-bold tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
             >
               Підтвердити
             </button>

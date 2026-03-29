@@ -45,7 +45,7 @@ export const InputTextarea = <T extends FieldValues>({
             <div
               className={cn(
                 "absolute left-4 top-4 transition-colors z-30 pointer-events-none",
-                "text-zinc-400 group-focus-within:text-teal-600",
+                "text-slate-400 group-focus-within:text-indigo-600",
               )}
             >
               <Icon size={18} strokeWidth={2.5} />
@@ -68,7 +68,7 @@ export const InputTextarea = <T extends FieldValues>({
               Icon ? "!pl-12" : "pl-4",
               hasError
                 ? "border-red-500 ring-[0.5px] ring-red-500 shadow-sm shadow-red-500/5"
-                : "border-zinc-200 dark:border-white/10 hover:border-zinc-300 focus:border-teal-600 focus:ring-[0.5px] focus:ring-teal-600 focus:shadow-lg focus:shadow-teal-500/5",
+                : "border-slate-200 dark:border-white/10 hover:border-slate-200 focus:border-indigo-600 focus:ring-[0.5px] focus:ring-indigo-600 focus:shadow-lg focus:shadow-indigo-500/5",
               disabled && inputVariants.disabled,
             )}
           />
@@ -83,7 +83,7 @@ export const InputTextarea = <T extends FieldValues>({
 
                 // Початкова позиція (як у InputNumber)
                 Icon ? "left-10" : "left-3",
-                "top-6 -translate-y-1/2 text-zinc-400",
+                "top-6 -translate-y-1/2 text-slate-400",
 
                 // Плаваючий ефект (ідентично до InputNumber)
                 "peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0",
@@ -93,9 +93,9 @@ export const InputTextarea = <T extends FieldValues>({
                 hasError
                   ? "text-red-500"
                   : cn(
-                      "text-zinc-400",
-                      "peer-focus:text-teal-600 dark:peer-focus:text-teal-500",
-                      "peer-[:not(:placeholder-shown)]:text-teal-600 dark:peer-[:not(:placeholder-shown)]:text-teal-500",
+                      "text-slate-400",
+                      "peer-focus:text-indigo-600 dark:peer-focus:text-indigo-500",
+                      "peer-[:not(:placeholder-shown)]:text-indigo-600 dark:peer-[:not(:placeholder-shown)]:text-indigo-500",
                     ),
               )}
             >
@@ -104,7 +104,7 @@ export const InputTextarea = <T extends FieldValues>({
                 <span
                   className={cn(
                     "ml-1",
-                    hasError ? "text-red-500" : "text-teal-600",
+                    hasError ? "text-red-500" : "text-indigo-600",
                   )}
                 >
                   *

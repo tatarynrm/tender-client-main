@@ -9,60 +9,23 @@ import { ITender } from "@/features/log/types/tender.type";
 import { useModalStore } from "@/shared/stores/useModalStore";
 import { useTenderActions } from "../hooks/useTenderActions";
 
-import { ClipboardList, Paperclip } from "lucide-react";
+import {
+  User as UserIcon,
+  Mail as MailIcon,
+  Phone as PhoneIcon,
+  Paperclip as PaperclipIcon,
+} from "lucide-react";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { TenderTimer } from "./TenderTimer";
 import { ManualPriceDialog } from "./ManualPriceDialog";
-
-// Допоміжні функції
-const formatTenderDate = (dateString?: string | null) => {
-  if (!dateString) return "—";
-  const d = new Date(dateString);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const h = d.getHours();
-  const m = d.getMinutes();
-
-  if (h === 0 && m === 0) {
-    return `${day}.${month}`;
-  }
-
-  const hours = String(h).padStart(2, "0");
-  const minutes = String(m).padStart(2, "0");
-  return `${day}.${month} (${hours}:${minutes})`;
-};
-
-const formatRouteDate = (dateString?: string | null) => {
-  if (!dateString) return;
-  const d = new Date(dateString);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const h = d.getHours();
-  const m = d.getMinutes();
-
-  if (h === 0 && m === 0) {
-    return `${day}.${month}`;
-  }
-
-  const hours = String(h).padStart(2, "0");
-  const minutes = String(m).padStart(2, "0");
-  return `${day}.${month} - ${hours}:${minutes}`;
-};
-
-const getCurrencySymbol = (currencyCode?: string) => {
-  switch (currencyCode) {
-    case "UAH":
-      return "₴";
-    case "USD":
-      return "$";
-    case "EUR":
-      return "€";
-    case "PLN":
-      return "zł";
-    default:
-      return currencyCode || "₴";
-  }
-};
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import TenderActions from "@/features/log/tender/components/TenderActions/TenderActions";
+import { getRegionName } from "@/shared/utils/region.utils";
+import {
+  formatTenderDate,
+  getTenderLoadDateString,
+} from "@/shared/utils/date.utils";
+import { getCurrencySymbol } from "@/shared/utils/currency.utils";
 
 export function TenderCardClients({
   cargo,
@@ -78,7 +41,7 @@ export function TenderCardClients({
     cargo.price_redemption,
   );
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
-
+  const { profile } = useAuth();
   const currencySymbol = getCurrencySymbol(cargo.valut_name);
 
   const handleConfirmBid = () => {
@@ -153,382 +116,416 @@ export function TenderCardClients({
   const isPlan = cargo.ids_status === "PLAN";
   const isWinByCompany = cargo.company_winner_car_count > 0;
 
+  console.log(profile);
   return (
-    <div className="w-full relative mb-4 md:mb-0 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-sm hover:shadow-lg hover:border-zinc-300 dark:hover:border-blue-500/40 transition-all duration-500 bg-white dark:bg-slate-900/60 backdrop-blur-xl group font-sans text-xs">
+    <div className="w-full relative mb-5 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card">
+      {/* Tender Actions Menu */}
+      <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
+        <TenderActions tender={cargo} />
+      </div>
+      {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
+          We will wrap the main content in a white card. */}
+
       {isAnalyze && !isWinByCompany && (
-        <div className="absolute -top-[1px] -left-[1px] z-50 flex items-center gap-1.5 rounded-br-lg bg-blue-50/90 dark:bg-blue-950/60 border-b border-r border-blue-200 dark:border-blue-500/30 px-2.5 py-1.5 backdrop-blur-md">
+        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-blue-50/90 border-b border-r border-blue-200 px-2.5 py-1.5 backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
           </span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
             Аналізуємо
           </span>
         </div>
       )}
       {isWinByCompany && (
-        <div className="absolute -top-[1px] -left-[1px] z-50 flex items-center gap-1.5 rounded-br-lg bg-emerald-50/90 dark:bg-emerald-950/60 border-b border-r border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1.5 backdrop-blur-md">
+        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-emerald-50/90 border-b border-r border-emerald-200 px-2.5 py-1.5 backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
             Ви виграли
           </span>
         </div>
       )}
 
-      {/* 2) DATA ROW */}
-      <div className="grid grid-cols-12 lg:grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] bg-white dark:bg-slate-900/30">
-        {/* 1. № */}
-        <div
-          className="col-span-12 lg:col-span-1 border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-white/10 p-2 lg:p-0 flex lg:flex-col items-center justify-between lg:justify-center gap-1.5 bg-zinc-50/50 dark:bg-slate-800/30 cursor-pointer lg:hover:bg-sky-50 dark:lg:hover:bg-sky-500/10 transition-colors group/num"
-          onClick={onOpenDetails}
-        >
-          <div className="flex items-center gap-2 lg:flex-col lg:gap-1.5">
-            <span className="lg:hidden text-[10px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest">
-              Замовлення:
-            </span>
-            <span className="text-[13px] lg:text-sm font-black text-zinc-800 dark:text-white group-hover/num:text-blue-600 dark:group-hover/num:text-blue-400 transition-colors leading-none">
+      {/* Main Grid Card */}
+      <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col">
+        {/* ROW 1: 11 Columns */}
+        <div className="flex flex-col lg:flex-row w-full min-h-[90px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10">
+          {/* 1. № */}
+          <div
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 transition-colors"
+            onClick={onOpenDetails}
+          >
+            <span className="text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none">
               {cargo.id}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
-            {cargo.tender_type && (
-              <span className="text-[9px] lg:text-[8px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/20 px-1.5 py-0.5 rounded border border-transparent dark:border-sky-500/20">
-                {cargo.tender_type}
+          {/* 2. Завантаження */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
+            {loadPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium">—</span>
+            )}
+            {loadPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
+                >
+                  <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={16}
+                        className="rounded-[2px] shadow-sm"
+                      />
+                    )}
+                    <span>
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
+                      {pt.city}
+                    </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
+              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
               </span>
             )}
           </div>
-        </div>
 
-        {/* 2. Завантаження */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center gap-1.5 dark:bg-emerald-500/[0.02]">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Завантаження
-          </span>
-          {loadPoints.length === 0 && (
-            <span className="text-zinc-400 dark:text-slate-400 font-medium text-[10px] lg:text-[11.5px] text-center w-full block">
-              —
-            </span>
-          )}
-          {loadPoints.map((pt, i) => {
-            const ptAny = pt as any;
-            const dStr = ptAny.date_time || ptAny.date_from || ptAny.date;
-            return (
-              <div
-                key={i}
-                className="flex flex-col items-center justify-center text-center"
-              >
-                <div className="flex items-center gap-1 lg:gap-1.5 font-bold text-zinc-800 dark:text-white text-[9px] lg:text-[11.5px]">
-                  {pt.ids_country && (
-                    <Flag
-                      country={pt.ids_country}
-                      size={12}
-                      className="rounded-[2px] shadow-sm lg:w-[14px] lg:h-[14px]"
-                    />
-                  )}
-                  <span className="truncate max-w-[50px] lg:max-w-none">
-                    {pt.ids_country ? `${pt.ids_country}-` : ""}
-                    {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
-                    {pt.city}
-                  </span>
-                </div>
-                {dStr && (
-                  <span className="text-[8.5px] lg:text-[10.5px] font-black text-emerald-600 dark:text-emerald-400 mt-0.5 lg:mt-1">
-                    {formatRouteDate(dStr)}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-          {cargo.date_load && (
-            <div className="flex flex-col items-center justify-center text-center mt-1 pt-1 border-t border-emerald-500/10 w-full">
-              <span className="text-[9px] lg:text-[11px] font-black text-zinc-800 dark:text-white bg-emerald-500/10 px-1.5 py-0.5 rounded-sm">
-                {formatRouteDate(cargo.date_load)}
-                {cargo.date_load2 && (
-                  <> — {formatRouteDate(cargo.date_load2)}</>
-                )}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* 3. Митне оформлення */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col justify-center gap-1.5 lg:gap-2.5 bg-zinc-50/30 dark:bg-slate-800/40">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Митниця
-          </span>
-          <div className="flex flex-col gap-1 lg:gap-2.5">
+          {/* 3. Митне оформлення */}
+          <div className="flex-1 min-w-[150px] flex flex-col justify-center p-3 relative">
             {transitPoints.map((pt, i) => (
               <div
                 key={i}
-                className="flex flex-col text-center lg:text-left leading-tight"
+                className="flex flex-col text-left mb-1.5 last:mb-0 leading-tight"
               >
-                <span className="text-[8px] lg:text-[8.5px] text-zinc-500 dark:text-slate-300 font-black mb-0.5 uppercase tracking-tighter">
+                <span
+                  className={cn(
+                    "text-[10px] uppercase font-bold tracking-tight mb-0.5",
+                    pt.ids_point === "CUSTOM_UP"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : pt.ids_point === "CUSTOM_DOWN"
+                        ? "text-indigo-500 dark:text-indigo-400"
+                        : "text-zinc-500",
+                  )}
+                >
                   {pt.ids_point === "CUSTOM_UP"
                     ? "Замитнення"
                     : pt.ids_point === "CUSTOM_DOWN"
                       ? "Розмитнення"
                       : "Кордон"}
                 </span>
-                <span className="font-bold text-[9px] lg:text-[11px] text-zinc-800 dark:text-white truncate max-w-[60px] lg:max-w-none mx-auto lg:mx-0">
+                <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
                   {pt.ids_country ? `${pt.ids_country}-` : ""}
                   {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
                   {pt.city}
                 </span>
-              </div>
-            ))}
-            {transitPoints.length === 0 && (
-              <span className="text-zinc-400 dark:text-slate-400 font-medium text-[10px] lg:text-[11.5px] text-center block">
-                —
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* 4. Розвантаження */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center gap-1.5 dark:bg-blue-500/[0.02]">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Розвантаження
-          </span>
-          {unloadPoints.length === 0 && (
-            <span className="text-zinc-400 dark:text-slate-400 font-medium text-[10px] lg:text-[11.5px] text-center w-full block">
-              —
-            </span>
-          )}
-          {unloadPoints.map((pt, i) => {
-            const ptAny = pt as any;
-            const dStr = ptAny.date_time || ptAny.date_to || ptAny.date;
-            return (
-              <div
-                key={i}
-                className="flex flex-col items-center justify-center text-center"
-              >
-                <div className="flex items-center gap-1 lg:gap-1.5 font-bold text-zinc-800 dark:text-white text-[9px] lg:text-[11.5px]">
-                  {pt.ids_country && (
-                    <Flag
-                      country={pt.ids_country}
-                      size={12}
-                      className="rounded-sm shadow-sm lg:w-[14px] lg:h-[14px]"
-                    />
-                  )}
-                  <span className="truncate max-w-[50px] lg:max-w-none">
-                    {pt.ids_country ? `${pt.ids_country}-` : ""}
-                    {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
-                    {pt.city}
-                  </span>
-                </div>
-                {dStr && (
-                  <span className="text-[8.5px] lg:text-[10.5px] font-black text-blue-600 dark:text-blue-400 mt-0.5 lg:mt-1">
-                    {formatRouteDate(dStr)}
+                {(pt as any).ids_region && (
+                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                    {getRegionName((pt as any).ids_region)}
                   </span>
                 )}
               </div>
-            );
-          })}
-          {cargo.date_unload && (
-            <div className="flex flex-col items-center justify-center text-center mt-1 pt-1 border-t border-blue-500/10 w-full">
-              <span className="text-[9px] lg:text-[11px] font-black text-zinc-800 dark:text-white bg-blue-500/10 px-1.5 py-0.5 rounded-sm">
-                {formatRouteDate(cargo.date_unload)}
-              </span>
-            </div>
-          )}
-        </div>
+            ))}
+            {transitPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium text-center">—</span>
+            )}
+          </div>
 
-        {/* 5. Вантаж */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-slate-800/20">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Вантаж
-          </span>
-          <span className="font-bold text-zinc-800 dark:text-white text-[10.5px] lg:text-[11px] text-center line-clamp-2">
-            {cargo.cargo || "ТНП"}
-          </span>
-        </div>
-
-        {/* 6. Тип транспорту */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Транспорт
-          </span>
-          <div className="flex flex-col items-center justify-center text-center">
-            <span className="font-semibold text-zinc-800 dark:text-white text-[10.5px] lg:text-[11px] line-clamp-2 leading-tight">
-              {trailers}
-            </span>
-            {loadTypes && (
-              <span className="font-medium text-[9px] text-zinc-500 dark:text-slate-300 mt-0.5 line-clamp-1">
-                {loadTypes}
+          {/* 4. Розвантаження */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
+            {unloadPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium">—</span>
+            )}
+            {unloadPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
+                >
+                  <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={16}
+                        className="rounded-[2px] shadow-sm"
+                      />
+                    )}
+                    <span>
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
+                      {pt.city}
+                    </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {formatTenderDate(cargo.date_unload) && (
+              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1">
+                {formatTenderDate(cargo.date_unload)}
               </span>
             )}
           </div>
-        </div>
 
-        {/* 7. Вага */}
-        <div className="col-span-4 lg:col-span-1 border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-slate-800/30">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-0.5">
-            Вага
-          </span>
-          <div className="flex flex-col items-center justify-center text-center font-bold text-zinc-800 dark:text-white text-[10.5px] lg:text-[11px] leading-tight">
-            {cargo.volume && <span>{cargo.volume} м³</span>}
+          {/* 5. Вантаж */}
+          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+              {cargo.cargo || "ТНП"}
+            </span>
+          </div>
+
+          {/* 6. Тип транспорту */}
+          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
+              {trailers.split(", ").map((t, i) => (
+                <React.Fragment key={i}>
+                  {t}
+                  <br />
+                </React.Fragment>
+              ))}
+            </span>
+          </div>
+
+          {/* 7. Вага/Об'єм */}
+          <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+            {cargo.volume && (
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                {cargo.volume} м³
+              </span>
+            )}
             {cargo.weight && (
-              <span className={cn(cargo.volume && "mt-0.5")}>
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px] mt-0.5">
                 {cargo.weight} т.
               </span>
             )}
             {!cargo.volume && !cargo.weight && (
-              <span className="text-zinc-500 dark:text-slate-300">—</span>
+              <span className="text-zinc-500">—</span>
+            )}
+          </div>
+
+          {/* 8. Нотатки */}
+          <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
+            <div className="max-h-[80px] overflow-y-auto custom-scrollbar w-full">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight">
+                {cargo.notes || "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* 9. Ціни */}
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white overflow-hidden">
+            {isAuction ? (
+              <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 border-l border-[#eef7ec]">
+                <span className="text-[11px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-1">
+                  Ваша ціна
+                </span>
+                <span className="text-[16px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
+                  {cargo.price_proposed || 0}
+                  <span className="text-[12px] ml-[1px]">{currencySymbol}</span>
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
+                  <div className="flex items-center gap-[1px] font-black text-[15px] text-zinc-800 dark:text-white leading-none">
+                    {cargo.price_start}
+                    <span>{currencySymbol}</span>
+                  </div>
+                  {cargo.price_step && (
+                    <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium mt-1">
+                      крок {cargo.price_step}
+                    </span>
+                  )}
+                </div>
+                <div className="h-[45px] flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80">
+                  <span className="text-[10px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-0.5">
+                    Ваша ціна
+                  </span>
+                  <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
+                    {cargo.price_proposed || 0}
+                    <span className="text-[11px] ml-[1px]">
+                      {currencySymbol}
+                    </span>
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* 10. Залишилось / Викуп */}
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
+                Залишилось
+              </span>
+              <span className="font-bold text-[#e03131] dark:text-red-400 text-[14px] tracking-tight leading-none">
+                <TenderTimer
+                  label=""
+                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                />
+              </span>
+            </div>
+            {isRedemption && cargo.price_redemption && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBuyoutConfirm();
+                }}
+                disabled={!isActive}
+                className="h-[45px] w-full flex flex-col items-center justify-center bg-[#fce8e8] hover:bg-[#fad1d1] transition-colors border-t border-zinc-200/80 group disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-[10px] text-[#a61e1e] font-medium mb-0.5">
+                  Викуп
+                </span>
+                <span className="text-[14px] font-black text-[#a61e1e] leading-none group-hover:scale-105 transition-transform">
+                  {cargo.price_redemption}
+                  <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* 11. Ставки / Action */}
+          <div className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l lg:border-l-0 border-zinc-200/80 relative">
+            {isAuction ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-3 relative h-full">
+                {/* Auction specific top absolute for "Ваша ціна" etc if we needed to stretch, but button is centered */}
+                <div className="absolute top-0 w-full h-[26px] bg-[#eef7ec] dark:bg-emerald-900/40 flex items-center justify-between px-2">
+                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
+                    Ваша ціна
+                  </span>
+                  <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
+                    {cargo.price_proposed
+                      ? `${cargo.price_proposed} ${currencySymbol}`
+                      : "0"}
+                  </span>
+                </div>
+                <div className="mt-5 w-full">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManualPrice();
+                    }}
+                    disabled={!canBid || !isActive}
+                    className="w-full h-[36px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] shadow-sm transition-all"
+                  >
+                    Зробити ставку
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col h-full border-l lg:border-l-0 border-zinc-200/80 z-10 w-full">
+                <div className="h-[26px] flex items-center justify-between px-2 bg-[#eef7ec] dark:bg-emerald-900/40">
+                  <span className="text-[9px] text-[#2c5f2d] dark:text-slate-400 font-medium">
+                    Ваша ставка
+                  </span>
+                  <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
+                    {cargo.price_proposed
+                      ? `${cargo.price_proposed}${currencySymbol}`
+                      : ""}
+                  </span>
+                </div>
+                <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 bg-white dark:bg-transparent overflow-hidden">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConfirmBid();
+                    }}
+                    disabled={!canBid || !isActive}
+                    className="w-full h-full min-h-[34px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] transition-all"
+                  >
+                    Зробити ставку
+                  </Button>
+                </div>
+                <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">
+                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
+                    Краща ставка
+                  </span>
+                  <span className="text-[11px] font-black text-[#e03131] dark:text-red-400">
+                    {cargo.price_next
+                      ? `${cargo.price_next}${currencySymbol}`
+                      : "—"}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* 8. Додаткова інформація */}
-        <div className="col-span-12 lg:col-span-1 border-b lg:border-b-0 lg:border-r border-zinc-200/80 dark:border-white/10 p-1.5 lg:p-2 flex flex-col items-center justify-center">
-          <span className="lg:hidden text-[8.5px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest text-center w-full block mb-1">
-            Додаткова інформація
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[9.5px] lg:text-[10px] text-zinc-500 dark:text-slate-300 font-medium text-center leading-snug line-clamp-1 lg:line-clamp-none max-w-[280px] lg:max-w-[200px] mx-auto">
-              {cargo.notes || "—"}
-            </span>
-            {cargo.files && cargo.files.length > 0 && (
+        {/* FOOTER */}
+        <div className="h-[34px] px-3 flex items-center justify-between border-t border-zinc-200/80 dark:border-white/10 bg-white dark:bg-slate-800/30 text-[11px]">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
+              <UserIcon
+                size={14}
+                className="text-zinc-500 dark:text-slate-400"
+              />
+              <span>{cargo?.author || "Менеджер"}</span>
+            </div>
+            {cargo?.email && (
+              <a
+                href={`mailto:${cargo?.email}`}
+                className="flex items-center gap-1.5 text-[#6366f1] dark:text-indigo-400 hover:underline transition-colors"
+              >
+                <MailIcon
+                  size={14}
+                  className="text-indigo-400 dark:text-indigo-500"
+                />
+                <span>{cargo?.email}</span>
+              </a>
+            )}
+            {cargo?.usr_phone && cargo.usr_phone.length > 0 && (
+              <a
+                href={`tel:${cargo.usr_phone[0]?.phone || "380987546702"}`}
+                className="flex items-center gap-1.5 text-[#6366f1] dark:text-indigo-400 hover:underline transition-colors"
+              >
+                <PhoneIcon
+                  size={14}
+                  className="text-indigo-400 dark:text-indigo-500"
+                />
+                <span>{cargo.usr_phone[0]?.phone || "380987546702"}</span>
+              </a>
+            )}
+          </div>
+          <div className="flex items-center">
+            {cargo?.files && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsFilesModalOpen(true);
                 }}
-                className="p-1 rounded-md text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
+                className="p-1 rounded text-[#6366f1] dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
                 title={`Документи (${cargo.files.length})`}
               >
-                <Paperclip size={14} strokeWidth={3} />
+                <PaperclipIcon
+                  size={15}
+                  className="-rotate-45"
+                  strokeWidth={2.5}
+                />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* 9. Інформація по тендеру */}
-        <div className="col-span-12 lg:col-span-1 grid grid-cols-3 divide-x divide-zinc-200/80 dark:divide-white/10 h-full">
-          {/* 9.1 Ціна */}
-          <div className="flex flex-col h-full bg-zinc-50/30 dark:bg-slate-800/30 min-h-[60px] lg:min-h-[80px]">
-            <div className="p-1.5 lg:p-1 flex-grow flex flex-col items-center justify-center w-full text-center">
-              <span className="lg:hidden text-[8px] font-bold text-zinc-400 dark:text-slate-400 uppercase tracking-widest mb-0.5 w-full text-center">
-                Ціна
-              </span>
-              {!isAuction ? (
-                <>
-                  <div className="flex items-center gap-0.5 justify-center font-black text-[13px] lg:text-[14px] text-zinc-800 dark:text-white">
-                    {cargo.price_next}
-                    <span>{currencySymbol}</span>
-                  </div>
-                  {(isReduction || isRedemption) && cargo.price_step && (
-                    <span className="text-[8px] lg:text-[9px] text-zinc-500 dark:text-slate-300 font-bold mt-0.5">
-                      крок {cargo.price_step} {currencySymbol}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <span className="text-zinc-400 dark:text-zinc-600 font-black text-[13px] lg:text-[14px]">
-                  —
-                </span>
-              )}
-            </div>
-
-            {isRedemption && cargo.price_redemption && (
-              <button
-                onClick={handleBuyoutConfirm}
-                disabled={!isActive}
-                className="w-full bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 py-1.5 transition-all flex flex-col items-center justify-center border-t border-emerald-100 dark:border-emerald-500/20 mt-auto px-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed group/buyout shadow-sm"
-              >
-                <span className="text-[8px] lg:text-[9px] text-emerald-700 dark:text-emerald-400 font-black mb-0 uppercase tracking-widest">
-                  Викуп
-                </span>
-                <div className="font-black text-[10.5px] lg:text-[12.5px] text-emerald-600 dark:text-emerald-300 leading-none group-hover/buyout:scale-110 transition-transform mt-0.5">
-                  {cargo.price_redemption}
-                  <span className="text-[9px] lg:text-[10px] ml-[1px]">
-                    {currencySymbol}
-                  </span>
-                </div>
-              </button>
-            )}
-          </div>
-
-          {/* 9.2 Час тендера */}
-          <div className="p-1.5 flex flex-col items-center justify-center bg-red-50/20 dark:bg-red-500/[0.05] text-center min-h-[60px] lg:min-h-[80px]">
-            <span className="text-[8.5px] lg:text-[9px] text-zinc-400 dark:text-slate-400 font-bold mb-1.5 leading-none uppercase tracking-tighter">
-              Залишилось
-            </span>
-            <span className="font-black text-red-500 dark:text-red-400 text-[11.5px] lg:text-[13.5px] tracking-tight leading-none drop-shadow-sm">
-              <TenderTimer
-                label=""
-                targetDate={isPlan ? cargo.time_start : cargo.time_end}
-              />
-            </span>
-          </div>
-
-          {/* 9.3 Ставка */}
-          <div className="p-1 lg:p-1.5 flex flex-col items-center justify-center bg-emerald-50/40 dark:bg-emerald-500/[0.05] w-full min-h-[60px] lg:min-h-[80px]">
-            <div className="flex flex-col items-center text-center w-full mb-1 lg:mb-2">
-              <span className="text-[8px] lg:text-[9px] text-zinc-500 dark:text-slate-400 font-bold mb-0.5 leading-none uppercase tracking-tighter">
-                Ваша ставка
-              </span>
-              <div className="font-black text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-[14px] h-[14px] lg:h-[18px] flex items-center leading-none">
-                {cargo.price_proposed ? (
-                  `${cargo.price_proposed} ${currencySymbol}`
-                ) : (
-                  <span className="opacity-0">—</span>
-                )}
-              </div>
-            </div>
-
-            <div className="w-full flex justify-center items-center flex-col gap-1.5 mt-auto pb-0.5 px-0.5 lg:px-0">
-              {!isAuction && (
-                <Button
-                  size="sm"
-                  className="w-full h-[24px] lg:h-[28px] bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-[8px] lg:text-[9.5px] font-black uppercase tracking-wider px-1 rounded-md shadow-lg shadow-indigo-500/20 dark:shadow-indigo-500/10 flex gap-0.5 items-center justify-center transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  onClick={handleConfirmBid}
-                  disabled={!canBid || !isActive}
-                >
-                  <span className="truncate">Підтвердити крок</span>
-                  {cargo.price_step && (
-                    <span className="whitespace-nowrap ml-0.5">
-                      {cargo.price_step}
-                    </span>
-                  )}
-                </Button>
-              )}
-
-              <button
-                onClick={handleManualPrice}
-                disabled={!canBid || !isActive}
-                className={cn(
-                  "w-full h-auto text-[9.5px] lg:text-[10px] font-bold text-zinc-500 dark:text-slate-300 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors py-0.5 disabled:opacity-50 disabled:cursor-not-allowed leading-none underline-offset-2 hover:underline",
-                  isAuction &&
-                    "h-[24px] lg:h-[28px] bg-indigo-600 dark:bg-indigo-500 text-white dark:text-white rounded-md !text-white no-underline",
-                )}
-              >
-                Своя ціна
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      {(cargo.author || cargo.client_name) && (
-        <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-200/80 dark:border-white/10 bg-zinc-50/50 dark:bg-slate-800/30 text-[10px]">
-          <div className="flex items-center gap-4">
-            {cargo.author && (
-              <span className="font-black tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
-                👤 {cargo.author}
-              </span>
-            )}
-            {cargo.client_name && (
-              <span className="font-black tracking-wider uppercase text-indigo-600 dark:text-indigo-400">
-                💼 КЛІЄНТ: {cargo.client_name}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
       <FilesPreviewModal
         isOpen={isFilesModalOpen}
         onClose={() => setIsFilesModalOpen(false)}

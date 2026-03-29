@@ -64,9 +64,9 @@ export function TenderRatesList({
                 : isTop1
                   ? "bg-emerald-50/60 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/40 shadow-sm"
                   : isTop2
-                    ? "bg-slate-50/80 border-slate-200 dark:bg-slate-800/60 dark:border-slate-700"
+                    ? "bg-amber-50/60 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/40 shadow-sm"
                     : isTop3
-                      ? "bg-orange-50/30 border-orange-100 dark:bg-orange-900/10 dark:border-orange-900/30"
+                      ? "bg-rose-50/60 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/40 shadow-sm"
                       : "bg-white dark:bg-slate-900/40 border-slate-100 dark:border-slate-800 hover:border-slate-200",
             )}
           >
@@ -80,15 +80,17 @@ export function TenderRatesList({
                     : isTop1
                       ? "bg-emerald-500"
                       : isTop2
-                        ? "bg-slate-400"
-                        : "bg-amber-600",
+                        ? "bg-amber-500"
+                        : "bg-rose-500",
                 )}
               >
                 {isWinner
                   ? `ПЕРЕМОЖЕЦЬ (${rate.car_count_winner} авто)`
                   : isTop1
                     ? "BEST PRICE"
-                    : `TOP ${idx + 1}`}
+                    : isTop2
+                      ? "TOP 2"
+                      : "TOP 3"}
               </div>
             )}
 

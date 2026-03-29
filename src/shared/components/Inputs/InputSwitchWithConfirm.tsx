@@ -56,7 +56,7 @@ export function InputSwitchWithConfirm({
             "bg-blue-50/40 dark:bg-blue-500/5 border-blue-100 dark:border-blue-500/20",
             "hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-300",
             field.value &&
-              "border-teal-500/40 bg-teal-50/30 dark:bg-teal-500/10",
+              "border-indigo-500/40 bg-indigo-50/30 dark:bg-indigo-500/10",
           )}
         >
           <div className="flex items-center gap-2.5">
@@ -64,9 +64,9 @@ export function InputSwitchWithConfirm({
             {Icon && (
               <div
                 className={cn(
-                  "p-1.5 rounded-lg transition-colors",
+                  "p-1.5 rounded-xl transition-colors",
                   field.value
-                    ? "bg-teal-500/20 text-teal-600"
+                    ? "bg-indigo-500/20 text-indigo-600"
                     : "bg-blue-500/20 text-blue-600",
                 )}
               >
@@ -81,7 +81,7 @@ export function InputSwitchWithConfirm({
           <div
             className={cn(
               "relative inline-flex h-4 w-7 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
-              field.value ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-700",
+              field.value ? "bg-indigo-600" : "bg-slate-300 dark:bg-slate-700",
             )}
           >
             <span
@@ -106,7 +106,7 @@ export function InputSwitchWithConfirm({
         onClick={handleChange}
         className={cn(
           "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
-          field.value ? "bg-teal-600" : "bg-slate-200 dark:bg-slate-700",
+          field.value ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-700",
         )}
       >
         <span
@@ -135,8 +135,8 @@ export function InputSwitchWithConfirm({
             <X size={18} />
           </button>
           <div className="flex flex-col items-center text-center">
-            <div className="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center mb-3">
-              <AlertCircle className="text-teal-600" size={24} />
+            <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-3">
+              <AlertCircle className="text-indigo-600" size={24} />
             </div>
             <h3 className="text-md font-bold mb-1">Підтвердіть дію</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
@@ -151,7 +151,7 @@ export function InputSwitchWithConfirm({
                 Відмінити
               </AppButton>
               <AppButton
-                className="flex-1 bg-teal-600 text-white text-xs"
+                className="flex-1 bg-indigo-600 text-white text-xs"
                 onClick={confirmEnable}
               >
                 Підтвердити

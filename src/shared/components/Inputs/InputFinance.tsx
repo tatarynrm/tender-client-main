@@ -56,7 +56,7 @@ export const InputFinance = <T extends FieldValues>({
         <div className="relative flex items-center">
           {/* ІКОНКА */}
           {Icon && (
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-teal-600 transition-colors z-30 pointer-events-none">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors z-30 pointer-events-none">
               <Icon size={18} strokeWidth={2.5} />
             </div>
           )}
@@ -75,7 +75,7 @@ export const InputFinance = <T extends FieldValues>({
             value={formatDisplayValue(field.value)}
             className={cn(
               inputVariants.base,
-              "peer rounded-md pr-12 bg-white dark:bg-slate-900 relative z-20",
+              "peer rounded-xl pr-12 bg-white dark:bg-slate-900 relative z-20",
               Icon ? "!pl-11" : "pl-3.5",
               hasError ? inputVariants.error : inputVariants.default,
               disabled && inputVariants.disabled,
@@ -93,7 +93,7 @@ export const InputFinance = <T extends FieldValues>({
 
                 // Базова позиція (всередині інпуту)
                 Icon ? "left-9" : "left-3",
-                "top-1/2 -translate-y-1/2 text-zinc-400 text-[12px] font-medium",
+                "top-1/2 -translate-y-1/2 text-slate-400 text-[12px] font-medium",
 
                 // Виїжджає вгору (якщо фокус АБО якщо не порожньо)
                 "peer-focus:-top-2 peer-focus:left-2 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0",
@@ -103,10 +103,10 @@ export const InputFinance = <T extends FieldValues>({
                 hasError
                   ? "text-red-500"
                   : cn(
-                      "text-zinc-400",
-                      "peer-focus:text-teal-600 dark:peer-focus:text-teal-500",
+                      "text-slate-400",
+                      "peer-focus:text-indigo-600 dark:peer-focus:text-indigo-500",
                       // Цей клас змушує лейбл бути кольоровим, коли поле заповнене
-                      "peer-[:not(:placeholder-shown)]:text-teal-600 dark:peer-[:not(:placeholder-shown)]:text-teal-500",
+                      "peer-[:not(:placeholder-shown)]:text-indigo-600 dark:peer-[:not(:placeholder-shown)]:text-indigo-500",
                     ),
               )}
             >
@@ -115,7 +115,7 @@ export const InputFinance = <T extends FieldValues>({
                 <span
                   className={cn(
                     "ml-1",
-                    hasError ? "text-red-500" : "text-teal-600",
+                    hasError ? "text-red-500" : "text-indigo-600",
                   )}
                 >
                   *
@@ -124,7 +124,7 @@ export const InputFinance = <T extends FieldValues>({
             </label>
           )}
           {/* ВАЛЮТА */}
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 font-black text-[11px] pointer-events-none uppercase z-40">
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-black text-[11px] pointer-events-none uppercase z-40">
             {currency}
           </div>
         </div>
