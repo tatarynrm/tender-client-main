@@ -577,7 +577,7 @@ export function TenderCardManagers({
                         actionBtnColor,
                       )}
                     >
-                      ЗАПРОПОНОВАНА ЦІНА
+                      Обрати переможцем
                     </Button>
                   )}
                 </div>
