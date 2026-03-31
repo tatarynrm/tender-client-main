@@ -161,7 +161,7 @@ const tenderFormSchema = z
       .number({ message: "Вкажіть кількість палет" })
       .optional()
       .nullable(),
-    ids_valut: z.string().optional(),
+    ids_valut: z.string({ message: "Валюта обов'язкова" }).min(1, "Валюта обов'язкова"),
     cost_redemption: z.number().optional(),
     ref_temperature_to: z.number().optional().nullable(),
     ref_temperature_from: z.number().optional().nullable(),
@@ -202,13 +202,6 @@ const tenderFormSchema = z
         code: z.ZodIssueCode.custom,
         message: "Ціна викупу обов'язкова",
         path: ["price_redemption"],
-      });
-    }
-    if (data.ids_type !== "AUCTION" && !data.ids_valut) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Валюта обов'язкова",
-        path: ["ids_valut"],
       });
     }
   });
@@ -1108,7 +1101,7 @@ export default function TenderSaveForm({
       time_start: new Date(),
       weight: 22,
       volume: 86,
-      ids_valut: "UAH",
+      ids_valut: "",
       ...defaultValues,
     },
   });
@@ -2173,8 +2166,7 @@ export default function TenderSaveForm({
                 </div>
 
                 {/* 💰 CARD 6: БЮДЖЕТ ТЕНДЕРУ (Conditional) */}
-                {(typeValue === "REDUCTION" ||
-                  typeValue === "REDUCTION_WITH_REDEMPTION") && (
+                {typeValue && (
                   <div className="bg-white dark:bg-slate-900 rounded-[20px] shadow-sm border border-slate-100 dark:border-white/5 p-6 md:p-8">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-3">
@@ -2190,41 +2182,52 @@ export default function TenderSaveForm({
                         <SelectFinance
                           name="ids_valut"
                           control={control}
-                          label=""
+                          label="Валюта"
                           options={valut.slice(0, 4)}
+                          placeholder="Оберіть"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                      <InputFinance
-                        name="price_start"
-                        control={control}
-                        label="СТАРТ"
-                        currency={currencySign}
-                      />
-                      <InputFinance
-                        name="price_client"
-                        control={control}
-                        label="ЦІНА ЗАМОВНИКА"
-                        currency={currencySign}
-                      />
-                      <InputFinance
-                        name="price_step"
-                        control={control}
-                        label="КРОК"
-                        currency={currencySign}
-                      />
-                      {typeValue === "REDUCTION_WITH_REDEMPTION" ? (
-                        <InputFinance
-                          name="price_redemption"
-                          control={control}
-                          label="ВИКУП"
-                          currency={currencySign}
-                          required
-                        />
-                      ) : (
-                        <div />
+                      {(typeValue === "REDUCTION" ||
+                        typeValue === "REDUCTION_WITH_REDEMPTION") && (
+                        <>
+                          <InputFinance
+                            name="price_start"
+                            control={control}
+                            label="СТАРТ"
+                            currency={currencySign}
+                          />
+                          <InputFinance
+                            name="price_client"
+                            control={control}
+                            label="ЦІНА ЗАМОВНИКА"
+                            currency={currencySign}
+                          />
+                          <InputFinance
+                            name="price_step"
+                            control={control}
+                            label="КРОК"
+                            currency={currencySign}
+                          />
+                          {typeValue === "REDUCTION_WITH_REDEMPTION" ? (
+                            <InputFinance
+                              name="price_redemption"
+                              control={control}
+                              label="ВИКУП"
+                              currency={currencySign}
+                              required
+                            />
+                          ) : (
+                            <div />
+                          )}
+                        </>
+                      )}
+                      {typeValue === "AUCTION" && (
+                        <div className="md:col-span-2 text-slate-400 text-xs italic">
+                          Оберіть валюту для проведення аукціону.
+                        </div>
                       )}
                     </div>
                   </div>
