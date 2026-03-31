@@ -278,7 +278,7 @@ function SortableRouteItem({
         <div className="flex-1 w-full space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-[14px] font-medium text-[#6366f1]">
-              Точка №{index + 1}
+              Пункт №{index + 1}
             </span>
             {index > 1 && (
               <button
@@ -1106,7 +1106,6 @@ export default function TenderSaveForm({
       company_name: "",
       load_info: "",
       time_start: new Date(),
-      palet_count: 32,
       weight: 22,
       volume: 86,
       ids_valut: "UAH",
@@ -2135,17 +2134,6 @@ export default function TenderSaveForm({
                           </div>
                         </div>
                       )}
-
-                      <div className="flex items-center gap-3 py-2 border-t border-slate-100 dark:border-white/5 mt-4">
-                        <InputSwitch
-                          control={control}
-                          name="without_vat"
-                          label="Тариф без ПДВ"
-                        />
-                        <span className="text-[12px] text-slate-400 mt-0.5">
-                          ставки учасників будуть без ПДВ
-                        </span>
-                      </div>
                     </div>
 
                     <div className="lg:col-span-4">
@@ -2212,7 +2200,7 @@ export default function TenderSaveForm({
                       <InputFinance
                         name="price_start"
                         control={control}
-                        label="ЛІМІТ БЮДЖЕТУ"
+                        label="СТАРТОВА ЦІНА"
                         currency={currencySign}
                       />
                       <InputFinance
@@ -2224,14 +2212,14 @@ export default function TenderSaveForm({
                       <InputFinance
                         name="price_step"
                         control={control}
-                        label="КРОК ПОНИЖЕННЯ"
+                        label="КРОК"
                         currency={currencySign}
                       />
                       {typeValue === "REDUCTION_WITH_REDEMPTION" ? (
                         <InputFinance
                           name="price_redemption"
                           control={control}
-                          label="ЦІНА ВИКУПУ"
+                          label="ВИКУП"
                           currency={currencySign}
                           required
                         />

@@ -139,7 +139,7 @@ export function TenderCardManagers({
   const winningBid = cargo.rate_company?.find((r) => r.car_count_winner! > 0);
 
   return (
-    <div className="w-full relative mb-5 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
+    <div className="w-full relative  overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
       {/* Tender Actions Menu */}
       <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
         <TenderActions tender={cargo} />

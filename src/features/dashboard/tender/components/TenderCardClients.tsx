@@ -103,6 +103,18 @@ export function TenderCardClients({
     };
   }, [cargo.tender_route]);
 
+  const bestBidPrice = useMemo(() => {
+    if (!cargo.rate_company || cargo.rate_company.length === 0) {
+      return cargo.price_start;
+    }
+    // For transport, mostly it's lowest price wins (Reduction)
+    // If it's an auction (bidding up), we take the max.
+    if (cargo.ids_type === "AUCTION") {
+      return Math.max(...cargo.rate_company.map((r) => r.price_proposed));
+    }
+    return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
+  }, [cargo.rate_company, cargo.price_start, cargo.ids_type]);
+
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
   const loadTypes =
@@ -118,7 +130,7 @@ export function TenderCardClients({
 
   console.log(profile);
   return (
-    <div className="w-full relative mb-5 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card">
+    <div className="w-full relative mb-1 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card">
       {/* Tender Actions Menu */}
       <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
         <TenderActions tender={cargo} />
@@ -406,29 +418,36 @@ export function TenderCardClients({
           {/* 11. Ставки / Action */}
           <div className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l lg:border-l-0 border-zinc-200/80 relative">
             {isAuction ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-3 relative h-full">
-                {/* Auction specific top absolute for "Ваша ціна" etc if we needed to stretch, but button is centered */}
-                <div className="absolute top-0 w-full h-[26px] bg-[#eef7ec] dark:bg-emerald-900/40 flex items-center justify-between px-2">
+              <div className="flex flex-col h-full border-l lg:border-l-0 border-zinc-200/80 z-10 w-full">
+                <div className="h-[26px] flex items-center justify-between px-2 bg-[#eef7ec] dark:bg-emerald-900/40">
                   <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
                     Ваша ціна
                   </span>
                   <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
                     {cargo.price_proposed
-                      ? `${cargo.price_proposed} ${currencySymbol}`
+                      ? `${cargo.price_proposed}${currencySymbol}`
                       : ""}
                   </span>
                 </div>
-                <div className="mt-5 w-full">
+                <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 bg-white dark:bg-transparent overflow-hidden">
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleManualPrice();
                     }}
                     disabled={!canBid || !isActive}
-                    className="w-full h-[36px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] shadow-sm transition-all"
+                    className="w-full h-full min-h-[34px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] shadow-sm transition-all"
                   >
                     Зробити ставку
                   </Button>
+                </div>
+                <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">
+                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
+                    Краща ставка
+                  </span>
+                  <span className="text-[11px] font-black text-[#e03131] dark:text-red-400">
+                    {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -460,9 +479,7 @@ export function TenderCardClients({
                     Краща ставка
                   </span>
                   <span className="text-[11px] font-black text-[#e03131] dark:text-red-400">
-                    {cargo.price_next
-                      ? `${cargo.price_next}${currencySymbol}`
-                      : "—"}
+                    {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
                   </span>
                 </div>
               </div>
@@ -506,7 +523,7 @@ export function TenderCardClients({
             )}
           </div>
           <div className="flex items-center">
-            {cargo?.files && (
+            {cargo?.files && cargo.files.length > 0 && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
