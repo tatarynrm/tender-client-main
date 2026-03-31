@@ -2200,7 +2200,7 @@ export default function TenderSaveForm({
                       <InputFinance
                         name="price_start"
                         control={control}
-                        label="СТАРТОВА ЦІНА"
+                        label="СТАРТ"
                         currency={currencySign}
                       />
                       <InputFinance
