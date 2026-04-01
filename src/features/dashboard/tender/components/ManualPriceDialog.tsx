@@ -12,11 +12,13 @@ export function ManualPriceDialog({
   currentValut,
 }: any) {
   const [price, setPrice] = useState<string | number>(currentPrice || "");
+  const [notes, setNotes] = useState("");
   const [showConfirmStep, setShowConfirmStep] = useState(false);
   const { closeModal } = useModalStore();
 
   useEffect(() => {
     setPrice(currentPrice || "");
+    setNotes("");
     setShowConfirmStep(false);
   }, [currentPrice]);
 
@@ -34,7 +36,7 @@ export function ManualPriceDialog({
       return;
     }
 
-    onConfirm(price, "Користувацька ціна");
+    onConfirm(price, notes || "Користувацька ціна");
     setShowConfirmStep(false);
     closeModal();
   };
@@ -125,6 +127,23 @@ export function ManualPriceDialog({
                       <span>Ставка занадто висока</span>
                     </motion.div>
                   )}
+                </div>
+
+                {/* NOTES SECTION */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-1">
+                    Нотатки (опційно)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Додайте важливі деталі до вашої пропозиції..."
+                    className={cn(
+                      "w-full h-24 p-4 text-sm font-medium rounded-2xl border-2 transition-all duration-500 resize-none outline-none",
+                      "bg-zinc-50 dark:bg-[#121214] text-zinc-900 dark:text-white border-zinc-100 dark:border-zinc-800",
+                      "focus:border-indigo-600/50 focus:ring-4 focus:ring-indigo-500/5"
+                    )}
+                  />
                 </div>
               </div>
 

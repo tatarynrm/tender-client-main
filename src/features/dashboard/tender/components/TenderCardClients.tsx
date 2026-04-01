@@ -462,16 +462,27 @@ export function TenderCardClients({
                       : ""}
                   </span>
                 </div>
-                <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 bg-white dark:bg-transparent overflow-hidden">
+                <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-1.5 py-2 bg-white dark:bg-transparent overflow-hidden">
                   <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleConfirmBid();
                     }}
                     disabled={!canBid || !isActive}
-                    className="w-full h-full min-h-[34px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] transition-all"
+                    className="w-full h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-[10px] uppercase rounded-[4px] transition-all shadow-sm"
                   >
                     Зробити ставку
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManualPrice();
+                    }}
+                    disabled={!canBid || !isActive}
+                    variant="outline"
+                    className="w-full h-9 border-[#6366f1] text-[#6366f1] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 font-bold text-[10px] uppercase rounded-[4px] transition-all"
+                  >
+                    Своя ціна
                   </Button>
                 </div>
                 <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">

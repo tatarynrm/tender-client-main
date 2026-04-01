@@ -193,4 +193,6 @@ export interface IRateCompany {
   // Нові поля для кількості машин
   car_count_winner: number;
   car_count_proposed: number;
+
+  notes: string | null;
 }

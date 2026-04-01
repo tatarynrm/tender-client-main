@@ -389,9 +389,14 @@ export function TenderCardManagers({
 
           {/* 11. Краща Ставка */}
           <div
-            className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-[#eef7ec] dark:bg-emerald-900/30 border-l lg:border-l-0 border-[#eef7ec] relative items-center justify-center p-3 hover:bg-[#e4f2df] transition-colors cursor-pointer"
+            className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-[#eef7ec] dark:bg-emerald-900/30 border-l lg:border-l-0 border-[#eef7ec] relative items-center justify-center p-3 hover:bg-[#e4f2df] transition-colors cursor-pointer group/rates"
             onClick={() => setIsRatesOpen(!isRatesOpen)}
           >
+            {cargo.rate_company && cargo.rate_company.length > 0 && (
+              <div className="absolute -top-2 -right-2 z-20 bg-[#e03131] text-white text-[10px] font-bold h-6 w-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800 group-hover/rates:scale-110 transition-transform">
+                {cargo.rate_company.length}
+              </div>
+            )}
             <div className="flex flex-col items-center justify-center w-full">
               <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 uppercase mb-1">
                 Краща ставка
@@ -404,13 +409,18 @@ export function TenderCardManagers({
                 {bestBid ? bestBid.company_name : "Очікується"}
               </span>
             </div>
+            {isRatesOpen ? (
+              <ChevronUp size={14} className="mt-1 text-[#2c5f2d]/50" />
+            ) : (
+              <ChevronDown size={14} className="mt-1 text-[#2c5f2d]/50" />
+            )}
           </div>
         </div>
       </div>
 
       {/* 2. PROPOSAL / TOP BIDS HIGHLIGHT */}
       {isRatesOpen && topBids.length > 0 && (
-        <div className="mx-2 mt-2 mb-2 flex flex-col gap-2 max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
+        <div className="mx-2 mt-5 mb-4 flex flex-col gap-3 max-h-[450px] overflow-y-auto custom-scrollbar pr-2 py-1">
           {topBids.map((bid, index) => {
             const isTop1 = index === 0;
             const isTop2 = index === 1;
@@ -494,13 +504,13 @@ export function TenderCardManagers({
               <div
                 key={bid.id}
                 className={cn(
-                  "relative border rounded-3xl p-4 flex flex-col lg:flex-row shadow-sm gap-4 items-center transition-all",
+                  "relative border rounded-[1.5rem] p-4 flex flex-col lg:flex-row shadow-sm gap-4 items-center transition-all hover:shadow-md",
                   cardBg,
                 )}
               >
                 <div
                   className={cn(
-                    "absolute -top-[9px] left-4 text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest shadow-sm",
+                    "absolute -top-[10px] left-6 text-white text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest shadow-lg z-10",
                     badgeBg,
                   )}
                 >
@@ -509,16 +519,16 @@ export function TenderCardManagers({
 
                 {/* Left Info Box */}
                 <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-6 pl-2">
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 min-w-[140px]">
                     <div className="flex items-center gap-2">
                       <Building2 size={16} className={iconColor} />
-                      <span className="font-bold text-zinc-800 text-sm whitespace-nowrap">
+                      <span className="font-bold text-zinc-800 dark:text-zinc-100 text-sm whitespace-nowrap">
                         {bid.company_name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <UserIcon size={16} className="text-zinc-400" />
-                      <span className="font-medium text-zinc-600 text-[11px] whitespace-nowrap">
+                      <span className="font-medium text-zinc-600 dark:text-zinc-400 text-[11px] whitespace-nowrap">
                         {bid.author}
                       </span>
                     </div>
@@ -528,22 +538,37 @@ export function TenderCardManagers({
                     className={cn("hidden sm:block w-px h-10", dividerColor)}
                   />
 
-                  <div className="flex items-center">
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "rounded-full bg-white h-8 px-4 text-[11px] font-medium opacity-80 pointer-events-none",
-                        emailBtnColor,
-                      )}
-                    >
-                      <MailIcon size={12} className="mr-2 opacity-50" />{" "}
-                      {bid.email || "email не вказано"}
-                    </Button>
+                  {/* Notes / Comment section */}
+                  <div className="flex-1 flex flex-col gap-1.5 min-w-[200px]">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1">
+                      <Info size={10} /> Коментарій
+                    </span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium italic line-clamp-2 leading-relaxed">
+                      {bid.notes &&
+                      bid.notes !== "---" &&
+                      bid.notes !== "Користувацька ціна"
+                        ? `"${bid.notes}"`
+                        : "Без коментарів"}
+                    </p>
                   </div>
                 </div>
 
+                {/* Contact Box */}
+                <div className="flex items-center">
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "rounded-full bg-white dark:bg-slate-900 border h-8 px-4 text-[11px] font-medium opacity-80 pointer-events-none",
+                      emailBtnColor,
+                    )}
+                  >
+                    <MailIcon size={12} className="mr-2 opacity-50" />{" "}
+                    {bid.email || "email не вказано"}
+                  </Button>
+                </div>
+
                 {/* Right Price Action */}
-                <div className="flex flex-col items-center sm:items-end justify-center pr-2 gap-1.5 w-full sm:w-auto">
+                <div className="flex flex-col items-center sm:items-end justify-center pr-2 gap-1.5 w-full sm:w-auto min-w-[120px]">
                   <span
                     className={cn(
                       "text-[9px] font-black uppercase tracking-widest",
@@ -563,7 +588,10 @@ export function TenderCardManagers({
                   {isWinner ? (
                     <Button
                       disabled={isDelWinner}
-                      onClick={() => handleRemoveWinner(bid)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveWinner(bid);
+                      }}
                       className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest shadow-md shadow-amber-500/20"
                     >
                       Скасувати вибір
@@ -571,9 +599,12 @@ export function TenderCardManagers({
                   ) : (
                     <Button
                       disabled={isPending || winningBid !== undefined}
-                      onClick={() => handleSetWinner(bid, 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSetWinner(bid, 1);
+                      }}
                       className={cn(
-                        "w-full sm:w-auto bg-white border rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest",
+                        "w-full sm:w-auto bg-white dark:bg-slate-900 border rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest",
                         actionBtnColor,
                       )}
                     >
