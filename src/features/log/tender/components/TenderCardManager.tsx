@@ -392,11 +392,6 @@ export function TenderCardManagers({
             className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-[#eef7ec] dark:bg-emerald-900/30 border-l lg:border-l-0 border-[#eef7ec] relative items-center justify-center p-3 hover:bg-[#e4f2df] transition-colors cursor-pointer group/rates"
             onClick={() => setIsRatesOpen(!isRatesOpen)}
           >
-            {cargo.rate_company && cargo.rate_company.length > 0 && (
-              <div className="absolute -top-2 -right-2 z-20 bg-[#e03131] text-white text-[10px] font-bold h-6 w-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-800 group-hover/rates:scale-110 transition-transform">
-                {cargo.rate_company.length}
-              </div>
-            )}
             <div className="flex flex-col items-center justify-center w-full">
               <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 uppercase mb-1">
                 Краща ставка
@@ -409,11 +404,16 @@ export function TenderCardManagers({
                 {bestBid ? bestBid.company_name : "Очікується"}
               </span>
             </div>
-            {isRatesOpen ? (
-              <ChevronUp size={14} className="mt-1 text-[#2c5f2d]/50" />
-            ) : (
-              <ChevronDown size={14} className="mt-1 text-[#2c5f2d]/50" />
-            )}
+            <div className="mt-1.5 flex items-center justify-center gap-1.5 px-3 py-0.5 rounded-full bg-[#2c5f2d]/10 dark:bg-emerald-500/10">
+              {isRatesOpen ? (
+                <ChevronUp size={14} className="text-[#2c5f2d]/70 dark:text-emerald-400" />
+              ) : (
+                <ChevronDown size={14} className="text-[#2c5f2d]/70 dark:text-emerald-400" />
+              )}
+              <span className="text-[10px] font-black text-[#2c5f2d] dark:text-emerald-400">
+                {cargo.rate_company?.length || 0}
+              </span>
+            </div>
           </div>
         </div>
       </div>
