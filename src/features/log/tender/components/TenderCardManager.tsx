@@ -611,7 +611,7 @@ export function TenderCardManagers({
                     >
                       Скасувати вибір
                     </Button>
-                  ) : cargo.ids_status === "ANALYSIS" ? (
+                  ) : (cargo.ids_status === "ANALYSIS" || cargo.ids_status === "ANALYZE") ? (
                     <Button
                       disabled={isPending || winningBid !== undefined}
                       onClick={(e) => {
