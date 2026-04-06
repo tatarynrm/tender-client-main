@@ -81,6 +81,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  Input,
 } from "@/shared/components/ui";
 
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
@@ -124,6 +125,9 @@ const routeSchema = z.object({
   lat: z.number().optional(),
   lon: z.number().optional(),
   ids_region: z.string().optional().nullable(),
+  post_code: z.string().optional().nullable(),
+  street: z.string().optional().nullable(),
+  house: z.string().optional().nullable(),
 });
 
 const trailerSchema = z.object({ ids_trailer_type: z.string() });
@@ -135,7 +139,10 @@ const tenderPermissionSchema = z.object({
 const tenderFormSchema = z
   .object({
     id: z.number().optional(),
-    cargo: z.string().min(1, "Вантаж обов'язковий"),
+    cargo: z
+      .string()
+      .min(1, "Вантаж обов'язковий")
+      .max(25, "Максимум 25 символів"),
     notes: z.string().optional(),
     id_owner_company: z.number().nullable(),
     car_count: z.number().min(1, "Мінімум 1 авто"),
@@ -161,7 +168,9 @@ const tenderFormSchema = z
       .number({ message: "Вкажіть кількість палет" })
       .optional()
       .nullable(),
-    ids_valut: z.string({ message: "Валюта обов'язкова" }).min(1, "Валюта обов'язкова"),
+    ids_valut: z
+      .string({ message: "Валюта обов'язкова" })
+      .min(1, "Валюта обов'язкова"),
     cost_redemption: z.number().optional(),
     ref_temperature_to: z.number().optional().nullable(),
     ref_temperature_from: z.number().optional().nullable(),
@@ -318,6 +327,21 @@ function SortableRouteItem({
                             `tender_route.${index}.ids_region`,
                             location.regionCode || "",
                           );
+                          setValue(
+                            `tender_route.${index}.post_code`,
+                            location.post_code ||
+                              location.postalCode ||
+                              location.zip_code ||
+                              "",
+                          );
+                          setValue(
+                            `tender_route.${index}.street`,
+                            location.street || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.house`,
+                            location.house || "",
+                          );
                           clearErrors(`tender_route.${index}.address`);
                         }}
                       />
@@ -379,6 +403,73 @@ function SortableRouteItem({
               )}
             </div>
           </div>
+
+          {/* Manual Address Fields */}
+          {watch(`tender_route.${index}.address`) && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-2 border-t border-slate-100 dark:border-white/5 animate-in fade-in slide-in-from-top-1 duration-200">
+              {watch(`tender_route.${index}.ids_country`) === "UA" ? (
+                <>
+                  <FormField
+                    control={control}
+                    name={`tender_route.${index}.street`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1 select-none">
+                          ВУЛИЦЯ
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            className="h-10 rounded-xl bg-slate-50/50"
+                            placeholder="Введіть вулицю"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={control}
+                    name={`tender_route.${index}.house`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1 select-none">
+                          БУДИНОК
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            className="h-10 rounded-xl bg-slate-50/50"
+                            placeholder="№"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              ) : null}
+              <FormField
+                control={control}
+                name={`tender_route.${index}.post_code`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1 select-none">
+                      ПОШТОВИЙ КОД / ZIP
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value || ""}
+                        className="h-10 rounded-xl bg-slate-50/50"
+                        placeholder="Код"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1016,7 +1107,58 @@ export default function TenderSaveForm({
     };
     setDrafts((prev) => [newDraft, ...prev].slice(0, 20));
     setAiResults((prev) => prev.filter((r) => r !== result));
-    toast.success("Збережено в чернетки");
+    toast.success("Збережено в шаблони");
+  };
+
+  const handleManualSaveTemplate = () => {
+    const values = form.getValues();
+    const origins = values.tender_route
+      .filter((r: any) => r.ids_point === "LOAD_FROM")
+      .map((r: any) => ({ ...r }));
+    const destinations = values.tender_route
+      .filter((r: any) => r.ids_point === "LOAD_TO")
+      .map((r: any) => ({ ...r }));
+    const mappedTruckTypes = values.tender_trailer
+      .map((t: any) => {
+        const found = truckList.find((x) => x.value === t.ids_trailer_type);
+        return found?.label;
+      })
+      .filter(Boolean);
+
+    const result = {
+      origins,
+      destinations,
+      price: values.price_start,
+      id_client: values.id_owner_company,
+      companyName: companyLabel,
+      currency: values.ids_valut,
+      truckCount: values.car_count,
+      dateLoad: values.date_load,
+      dateUnload: values.date_unload,
+      truckTypes: mappedTruckTypes,
+      cargoName: values.cargo,
+      weight: values.weight,
+      volume: values.volume,
+    };
+
+    // Підраховуємо заповнені поля (points)
+    let filledPoints = 0;
+    if (result.cargoName) filledPoints++;
+    if (result.origins.length > 0 && result.origins[0].address) filledPoints++;
+    if (result.destinations.length > 0 && result.destinations[0].address)
+      filledPoints++;
+    if (result.price) filledPoints++;
+    if (result.weight) filledPoints++;
+    if (result.volume) filledPoints++;
+    if (result.truckTypes.length > 0) filledPoints++;
+    if (result.companyName) filledPoints++;
+
+    if (filledPoints < 2) {
+      toast.error("Для збереження шаблону потрібно заповнити хоча б 2 поля");
+      return;
+    }
+
+    saveToDrafts(result);
   };
 
   const handleBulkSaveAiToDrafts = () => {
@@ -1375,8 +1517,8 @@ export default function TenderSaveForm({
             leftIcon={<Sparkles size={14} />}
           >
             {isAiSectionVisible
-              ? "Сховати ШІ та чернетки"
-              : "Розгорнути ШІ та чернетки"}
+              ? "Сховати ШІ та шаблони"
+              : "Розгорнути ШІ та шаблони"}
           </AppButton>
         </div>
       )}
@@ -1732,7 +1874,7 @@ export default function TenderSaveForm({
                     <ClipboardList className="text-slate-500 w-4 h-4" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                    Чернетки ({drafts.length})
+                    Шаблони ({drafts.length})
                   </h3>
                 </div>
                 {isDraftsExpanded ? (
@@ -1750,7 +1892,7 @@ export default function TenderSaveForm({
                 <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[2rem] shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                      Ваші чернетки
+                      Ваші шаблони
                     </h4>
                     <div className="flex gap-2">
                       {selectedDraftIds.length > 0 && (
@@ -1802,7 +1944,7 @@ export default function TenderSaveForm({
                     ) : (
                       <div className="py-10 text-center opacity-40">
                         <ClipboardList className="mx-auto mb-2 h-8 w-8" />
-                        <p className="text-xs font-bold">Чернеток немає</p>
+                        <p className="text-xs font-bold">Шаблонів немає</p>
                       </div>
                     )}
                   </div>
@@ -1856,10 +1998,21 @@ export default function TenderSaveForm({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => reset()}
+                      onClick={() => {
+                        reset();
+                        setCompanyLabel("");
+                      }}
                       className="border-indigo-100 text-indigo-500 hover:bg-indigo-50 bg-white"
                     >
                       Скинути
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleManualSaveTemplate}
+                      className="border-emerald-200 text-emerald-600 hover:bg-emerald-50 bg-white hidden sm:inline-flex"
+                    >
+                      Зберегти в шаблон
                     </Button>
                     <AppButton
                       type="submit"
@@ -2099,7 +2252,7 @@ export default function TenderSaveForm({
                         <InputTextarea
                           name="notes"
                           control={control}
-                          label="ДОДАТКОВІ ІНСТРУКЦІЇ ВОДІЮ"
+                          label="ДОДАТКОВІ УМОВИ"
                           icon={Notebook}
                         />
                       </div>
@@ -2225,9 +2378,17 @@ export default function TenderSaveForm({
                         </>
                       )}
                       {typeValue === "AUCTION" && (
-                        <div className="md:col-span-2 text-slate-400 text-xs italic">
-                          Оберіть валюту для проведення аукціону.
-                        </div>
+                        <>
+                          <InputFinance
+                            name="price_client"
+                            control={control}
+                            label="ЦІНА ЗАМОВНИКА"
+                            currency={currencySign}
+                          />
+                          <div className="text-slate-400 text-xs italic mt-4">
+                            Вкажіть бажану ціну замовника та оберіть валюту.
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -2254,10 +2415,21 @@ export default function TenderSaveForm({
                   <Button
                     variant="outline"
                     type="button"
-                    onClick={() => reset()}
+                    onClick={() => {
+                      reset();
+                      setCompanyLabel("");
+                    }}
                     className="w-full md:w-auto min-w-[140px] h-12 bg-[#f4f5f8] text-[#6366f1] border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium tracking-wide shadow-sm"
                   >
                     Скинути
+                  </Button>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={handleManualSaveTemplate}
+                    className="w-full md:w-auto min-w-[140px] h-12 bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-xl font-medium tracking-wide shadow-sm"
+                  >
+                    Зберегти в шаблон
                   </Button>
                   <AppButton
                     type="submit"

@@ -205,7 +205,8 @@ export const GoogleLocationInput = ({
                         // Гарантуємо, що об'єкт location містить правильну назву міста для батьківського компонента
                         const fixedLocation = {
                           ...location,
-                          city: displayCity
+                          city: displayCity,
+                          post_code: location.postalCode || location.zip_code || location.zipCode || location.postCode || r.structured_formatting?.secondary_text?.match(/\b\d{5}\b/)?.[0] || ""
                         };
 
                         onChange(fixedLocation);

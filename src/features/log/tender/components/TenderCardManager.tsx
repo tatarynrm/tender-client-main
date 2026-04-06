@@ -189,11 +189,16 @@ export function TenderCardManagers({
                       className="rounded-[2px] shadow-sm"
                     />
                   )}
-                  <span>
-                    {pt.ids_country ? `${pt.ids_country}-` : ""}
-                    {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
-                    {pt.city}
-                  </span>
+                    <span>
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {pt.ids_country !== "UA" &&
+                        ((pt as any).post_code || (pt as any).zip_code) && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                            {(pt as any).post_code || (pt as any).zip_code}
+                          </span>
+                        )}
+                      {pt.city}
+                    </span>
                 </div>
                 {(pt as any).ids_region && (
                   <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
@@ -234,7 +239,12 @@ export function TenderCardManagers({
                 </span>
                 <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
                   {pt.ids_country ? `${pt.ids_country}-` : ""}
-                  {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                  {pt.ids_country !== "UA" &&
+                    ((pt as any).post_code || (pt as any).zip_code) && (
+                      <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                        {(pt as any).post_code || (pt as any).zip_code}
+                      </span>
+                    )}
                   {pt.city}
                 </span>
                 {(pt as any).ids_region && (
@@ -269,7 +279,12 @@ export function TenderCardManagers({
                   )}
                   <span>
                     {pt.ids_country ? `${pt.ids_country}-` : ""}
-                    {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                    {pt.ids_country !== "UA" &&
+                      ((pt as any).post_code || (pt as any).zip_code) && (
+                        <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                          {(pt as any).post_code || (pt as any).zip_code}
+                        </span>
+                      )}
                     {pt.city}
                   </span>
                 </div>
@@ -288,8 +303,8 @@ export function TenderCardManagers({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center">
-            <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
               {cargo.cargo || "ТНП"}
             </span>
           </div>
@@ -330,8 +345,8 @@ export function TenderCardManagers({
 
           {/* 8. Нотатки */}
           <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
-            <div className="max-h-[80px] overflow-y-auto custom-scrollbar w-full">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight">
+            <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
                 {cargo.notes || "—"}
               </span>
             </div>
@@ -596,7 +611,7 @@ export function TenderCardManagers({
                     >
                       Скасувати вибір
                     </Button>
-                  ) : (
+                  ) : cargo.ids_status === "ANALYSIS" ? (
                     <Button
                       disabled={isPending || winningBid !== undefined}
                       onClick={(e) => {
@@ -610,7 +625,7 @@ export function TenderCardManagers({
                     >
                       Обрати переможцем
                     </Button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );
@@ -646,19 +661,29 @@ export function TenderCardManagers({
           )}
         </div>
 
-        {cargo.files && cargo.files.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFilesModalOpen(true);
-            }}
-          >
-            <Paperclip size={16} />
-          </Button>
-        )}
+        <div className="flex items-center gap-4 mt-auto">
+          {cargo.company_name && (
+            <div className="text-zinc-400 font-bold text-[11px] uppercase tracking-wider">
+              {cargo.company_name}
+            </div>
+          )}
+          <div className="text-zinc-500 font-medium">
+            {format(new Date((cargo as any).time_create || cargo.time_start || new Date()), "HH:mm dd.MM.yyyy")}
+          </div>
+          {cargo.files && cargo.files.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsFilesModalOpen(true);
+              }}
+            >
+              <Paperclip size={16} />
+            </Button>
+          )}
+        </div>
       </div>
 
       <FilesPreviewModal

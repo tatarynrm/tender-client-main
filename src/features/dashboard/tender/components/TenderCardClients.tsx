@@ -197,7 +197,12 @@ export function TenderCardClients({
                     )}
                     <span>
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
+                      {pt.ids_country !== "UA" &&
+                        ((pt as any).post_code || ptAny.zip_code) && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                            {(pt as any).post_code || ptAny.zip_code}
+                          </span>
+                        )}
                       {pt.city}
                     </span>
                   </div>
@@ -241,7 +246,12 @@ export function TenderCardClients({
                 </span>
                 <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
                   {pt.ids_country ? `${pt.ids_country}-` : ""}
-                  {(pt as any).zip_code ? `${(pt as any).zip_code}, ` : ""}
+                  {pt.ids_country !== "UA" &&
+                    ((pt as any).post_code || (pt as any).zip_code) && (
+                      <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                        {(pt as any).post_code || (pt as any).zip_code}
+                      </span>
+                    )}
                   {pt.city}
                 </span>
                 {(pt as any).ids_region && (
@@ -278,7 +288,12 @@ export function TenderCardClients({
                     )}
                     <span>
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {ptAny.zip_code ? `${ptAny.zip_code}, ` : ""}
+                      {pt.ids_country !== "UA" &&
+                        ((pt as any).post_code || ptAny.zip_code) && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-1">
+                            {(pt as any).post_code || ptAny.zip_code}
+                          </span>
+                        )}
                       {pt.city}
                     </span>
                   </div>
@@ -298,8 +313,8 @@ export function TenderCardClients({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center">
-            <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
               {cargo.cargo || "ТНП"}
             </span>
           </div>
@@ -335,8 +350,8 @@ export function TenderCardClients({
 
           {/* 8. Нотатки */}
           <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
-            <div className="max-h-[80px] overflow-y-auto custom-scrollbar w-full">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight">
+            <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
                 {cargo.notes || "—"}
               </span>
             </div>
@@ -345,13 +360,17 @@ export function TenderCardClients({
           {/* 9. Ціни */}
           <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white overflow-hidden">
             {isAuction ? (
-              <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 border-l border-[#eef7ec]">
-                <span className="text-[11px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-1">
-                  Ваша ціна
+              <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 border-l border-[#eef7ec] leading-tight">
+                <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 text-center">
+                  Ваша поточна ставка
                 </span>
-                <span className="text-[16px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                  {cargo.price_proposed || null}
-                  <span className="text-[12px] ml-[1px]">{currencySymbol}</span>
+                <span className="text-[18px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
+                  {cargo.price_proposed || "—"}
+                  {cargo.price_proposed ? (
+                    <span className="text-[12px] ml-[1px]">
+                      {currencySymbol}
+                    </span>
+                  ) : null}
                 </span>
               </div>
             ) : (
@@ -367,35 +386,52 @@ export function TenderCardClients({
                     </span>
                   )}
                 </div>
-                <div className="h-[45px] flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80">
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80 p-2">
                   <span className="text-[10px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-0.5">
                     Ваша ціна
                   </span>
-                  <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
+                  <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none mb-1.5">
                     {cargo.price_proposed || null}
                     <span className="text-[11px] ml-[1px]">
                       {currencySymbol}
                     </span>
                   </span>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManualPrice();
+                    }}
+                    disabled={!canBid || !isActive}
+                    variant="outline"
+                    className="w-full h-6 border-[#2c5f2d]/30 text-[#2c5f2d] hover:bg-emerald-100/50 font-bold text-[9px] uppercase rounded-[4px] transition-all"
+                  >
+                    Ваша ціна
+                  </Button>
                 </div>
               </>
             )}
           </div>
 
-          {/* 10. Залишилось / Викуп */}
           <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white">
             <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
-                Залишилось
-              </span>
-              <span className="font-bold text-[#e03131] dark:text-red-400 text-[14px] tracking-tight leading-none">
-                <TenderTimer
-                  label=""
-                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
-                />
-              </span>
+              {isAuction && (
+                <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-1">
+                  Час тендеру
+                </span>
+              )}
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
+                  Залишилось
+                </span>
+                <span className="font-bold text-[#e03131] dark:text-red-400 text-[16px] tracking-tight">
+                  <TenderTimer
+                    label=""
+                    targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                  />
+                </span>
+              </div>
             </div>
-            {isRedemption && cargo.price_redemption && (
+            {!isAuction && isRedemption && cargo.price_redemption && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -418,37 +454,17 @@ export function TenderCardClients({
           {/* 11. Ставки / Action */}
           <div className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l lg:border-l-0 border-zinc-200/80 relative">
             {isAuction ? (
-              <div className="flex flex-col h-full border-l lg:border-l-0 border-zinc-200/80 z-10 w-full">
-                <div className="h-[26px] flex items-center justify-between px-2 bg-[#eef7ec] dark:bg-emerald-900/40">
-                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
-                    Ваша ціна
-                  </span>
-                  <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
-                    {cargo.price_proposed
-                      ? `${cargo.price_proposed}${currencySymbol}`
-                      : ""}
-                  </span>
-                </div>
-                <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 bg-white dark:bg-transparent overflow-hidden">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleManualPrice();
-                    }}
-                    disabled={!canBid || !isActive}
-                    className="w-full h-full min-h-[34px] bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[11px] uppercase rounded-[4px] shadow-sm transition-all"
-                  >
-                    Зробити ставку
-                  </Button>
-                </div>
-                <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">
-                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
-                    Краща ставка
-                  </span>
-                  <span className="text-[11px] font-black text-[#e03131] dark:text-red-400">
-                    {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
-                  </span>
-                </div>
+              <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 overflow-hidden">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleManualPrice();
+                  }}
+                  disabled={!canBid || !isActive}
+                  className="px-3 h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[10px] uppercase rounded-[4px] shadow-sm transition-all"
+                >
+                  Ваша ціна
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col h-full border-l lg:border-l-0 border-zinc-200/80 z-10 w-full">
@@ -469,20 +485,9 @@ export function TenderCardClients({
                       handleConfirmBid();
                     }}
                     disabled={!canBid || !isActive}
-                    className="w-full h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-[10px] uppercase rounded-[4px] transition-all shadow-sm"
+                    className="px-3 h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-[10px] uppercase rounded-[4px] transition-all shadow-sm"
                   >
                     Зробити ставку
-                  </Button>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleManualPrice();
-                    }}
-                    disabled={!canBid || !isActive}
-                    variant="outline"
-                    className="w-full h-9 border-[#6366f1] text-[#6366f1] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 font-bold text-[10px] uppercase rounded-[4px] transition-all"
-                  >
-                    Своя ціна
                   </Button>
                 </div>
                 <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">

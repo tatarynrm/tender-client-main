@@ -777,7 +777,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   // ---------- Handlers ----------
 
   const handleManualReset = () => {
-    if (window.confirm("Очистити всю форму та чернетку?")) {
+    if (window.confirm("Очистити всю форму та шаблон?")) {
       localStorage.removeItem(STORAGE_KEY);
       setCompanyLabel("");
       reset({
@@ -1126,7 +1126,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     }
 
     setValue("id_client", result.id_client || null);
-    // Якщо є реальний ID клієнта (з чернетки), то ставимо лейбл.
+    // Якщо є реальний ID клієнта (з шаблона), то ставимо лейбл.
     if (result.id_client) {
       setCompanyLabel(getCompanyName(result));
     } else if (result.companyName) {
@@ -1291,7 +1291,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     };
     setDrafts((prev) => [newDraft, ...prev].slice(0, 20));
     setAiResults((prev) => prev.filter((r) => r !== result));
-    toast.success("Збережено в чернетки");
+    toast.success("Збережено в шаблони");
   };
 
   const togglePinDraft = (id: string, e?: React.MouseEvent) => {
@@ -1310,7 +1310,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
     e?.stopPropagation();
     setConfirmDialog({
       open: true,
-      title: "Видалити чернетку?",
+      title: "Видалити шаблон?",
       description: "Цю дію неможливо буде скасувати.",
       confirmText: "Видалити",
       variant: "danger",
@@ -1318,7 +1318,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         setDrafts(prev => prev.filter(d => d.id !== id));
         setSelectedDraftIds(prev => prev.filter(item => item !== id));
         setConfirmDialog(prev => ({ ...prev, open: false }));
-        toast.success("Чернетку видалено");
+        toast.success("Шаблон видалено");
       }
     });
   };
@@ -1334,7 +1334,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         setDrafts(prev => prev.filter(d => !selectedDraftIds.includes(d.id)));
         setSelectedDraftIds([]);
         setConfirmDialog(prev => ({ ...prev, open: false }));
-        toast.success("Обрані чернетки видалено");
+        toast.success("Обрані шаблони видалено");
       }
     });
   };
@@ -1342,15 +1342,15 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   const handleDeleteAllDrafts = () => {
     setConfirmDialog({
       open: true,
-      title: "Видалити ВСІ чернетки?",
-      description: "Це видалить абсолютно всі збережені чернетки без можливості відновлення.",
+      title: "Видалити ВСІ шаблони?",
+      description: "Це видалить абсолютно всі збережені шаблони без можливості відновлення.",
       confirmText: "Видалити все",
       variant: "danger",
       onConfirm: () => {
         setDrafts([]);
         setSelectedDraftIds([]);
         setConfirmDialog(prev => ({ ...prev, open: false }));
-        toast.success("Всі чернетки видалено");
+        toast.success("Всі шаблони видалено");
       }
     });
   };
@@ -1444,7 +1444,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
             className="text-indigo-500 font-bold uppercase tracking-widest text-[10px] bg-indigo-50/50 hover:bg-indigo-100"
             leftIcon={<Sparkles size={14} />}
           >
-            {isAiSectionVisible ? "Сховати ШІ та чернетки" : "Розгорнути ШІ та чернетки"}
+            {isAiSectionVisible ? "Сховати ШІ та шаблони" : "Розгорнути ШІ та шаблони"}
           </AppButton>
         </div>
       )}
@@ -1731,7 +1731,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
                     <ClipboardList className="text-slate-500 w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">Чернетки ({drafts.length})</h3>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">Шаблони ({drafts.length})</h3>
                 </div>
                 {isDraftsExpanded ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
               </button>
@@ -1742,7 +1742,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
               )}>
                 <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200 dark:border-white/10 p-5 rounded-[2rem] shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ваші чернетки</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Ваші шаблони</h4>
                     <div className="flex gap-2">
                       {selectedDraftIds.length > 0 && (
                         <button onClick={handleDeleteSelectedDrafts} className="text-[9px] text-red-500 font-bold uppercase hover:underline">Видалити обрані</button>
@@ -1825,7 +1825,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     className="text-indigo-500 hover:text-indigo-600 h-8 px-2 flex items-center gap-1.5"
                     leftIcon={<Save size={14} />}
                   >
-                    Зберегти в чернетку
+                    Зберегти в шаблон
                   </AppButton>
                   <div className="w-[1px] h-4 bg-slate-200 dark:bg-white/10 mx-1" />
                   <AppButton
@@ -1839,7 +1839,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     Очистити
                   </AppButton>
                   <MyTooltip
-                    text="Повністю очистити форму та видалити чернетку"
+                    text="Повністю очистити форму та видалити шаблон"
                     icon={<Info size={14} />}
                   />
                 </div>
@@ -1924,20 +1924,31 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                       }}
                                     />
                                   </FormControl>
-                                  {(watch(`crm_load_route_from.${idx}.street`) || watch(`crm_load_route_from.${idx}.house`)) && (
+                                  {watch(`crm_load_route_from.${idx}.address`) && (
                                     <div className="grid grid-cols-12 gap-2 mt-2">
-                                      <div className="col-span-8">
+                                      {watch(`crm_load_route_from.${idx}.ids_country`) === "UA" ? (
+                                        <>
+                                          <div className="col-span-4">
+                                            <InputText
+                                              name={`crm_load_route_from.${idx}.street`}
+                                              control={control}
+                                              label="Вулиця"
+                                            />
+                                          </div>
+                                          <div className="col-span-3">
+                                            <InputText
+                                              name={`crm_load_route_from.${idx}.house`}
+                                              control={control}
+                                              label="Буд."
+                                            />
+                                          </div>
+                                        </>
+                                      ) : null}
+                                      <div className={watch(`crm_load_route_from.${idx}.ids_country`) === "UA" ? "col-span-5" : "col-span-12"}>
                                         <InputText
-                                          name={`crm_load_route_from.${idx}.street`}
+                                          name={`crm_load_route_from.${idx}.post_code`}
                                           control={control}
-                                          label="Вулиця"
-                                        />
-                                      </div>
-                                      <div className="col-span-4">
-                                        <InputText
-                                          name={`crm_load_route_from.${idx}.house`}
-                                          control={control}
-                                          label="Буд."
+                                          label="Поштовий код"
                                         />
                                       </div>
                                     </div>
@@ -2021,20 +2032,31 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                                       }}
                                     />
                                   </FormControl>
-                                  {(watch(`crm_load_route_to.${idx}.street`) || watch(`crm_load_route_to.${idx}.house`)) && (
+                                  {watch(`crm_load_route_to.${idx}.address`) && (
                                     <div className="grid grid-cols-12 gap-2 mt-2">
-                                      <div className="col-span-8">
+                                      {watch(`crm_load_route_to.${idx}.ids_country`) === "UA" ? (
+                                        <>
+                                          <div className="col-span-4">
+                                            <InputText
+                                              name={`crm_load_route_to.${idx}.street`}
+                                              control={control}
+                                              label="Вулиця"
+                                            />
+                                          </div>
+                                          <div className="col-span-3">
+                                            <InputText
+                                              name={`crm_load_route_to.${idx}.house`}
+                                              control={control}
+                                              label="Буд."
+                                            />
+                                          </div>
+                                        </>
+                                      ) : null}
+                                      <div className={watch(`crm_load_route_to.${idx}.ids_country`) === "UA" ? "col-span-5" : "col-span-12"}>
                                         <InputText
-                                          name={`crm_load_route_to.${idx}.street`}
+                                          name={`crm_load_route_to.${idx}.post_code`}
                                           control={control}
-                                          label="Вулиця"
-                                        />
-                                      </div>
-                                      <div className="col-span-4">
-                                        <InputText
-                                          name={`crm_load_route_to.${idx}.house`}
-                                          control={control}
-                                          label="Буд."
+                                          label="Поштовий код"
                                         />
                                       </div>
                                     </div>
@@ -2145,13 +2167,31 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-end pt-4">
+                {/* 🏁 BOTTOM ACTION BAR */}
+                <div className="flex flex-col md:flex-row justify-center items-center gap-4 pt-6 pb-12 w-full border-t border-zinc-100 dark:border-white/5 mt-8">
+                  <AppButton
+                    variant="ghost"
+                    type="button"
+                    onClick={handleManualReset}
+                    className="w-full md:w-auto min-w-[140px] h-12 bg-[#f4f5f8] text-[#6366f1] border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium tracking-wide shadow-sm"
+                  >
+                    Скинути
+                  </AppButton>
+                  {!defaultValues && !copyId && (
+                    <AppButton
+                      variant="ghost"
+                      type="button"
+                      onClick={handleSaveCurrentToDrafts}
+                      className="w-full md:w-auto min-w-[140px] h-12 bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 rounded-xl font-medium tracking-wide shadow-sm"
+                    >
+                      Зберегти в шаблон
+                    </AppButton>
+                  )}
                   <AppButton
                     variant="primary"
                     type="submit"
                     isLoading={isLoading}
-                    className="px-12 h-12 shadow-blue-500/20 shadow-lg"
+                    className="w-full md:w-auto min-w-[140px] h-12 bg-[#6366f1] hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20 rounded-xl font-medium tracking-wide"
                   >
                     {copyId
                       ? "Створити копію"
@@ -2185,7 +2225,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
               className="w-full bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20 shadow-lg h-12 rounded-2xl font-bold"
               leftIcon={<Save size={18} />}
             >
-              Зберегти всі в чернетки
+              Зберегти всі в шаблони
             </AppButton>
             <div className="grid grid-cols-2 gap-3">
               <AppButton

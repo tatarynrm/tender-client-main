@@ -254,7 +254,11 @@ export default function Sidebar({
     footerLinks.push({ name: "Адмін панель", href: "/admin", icon: BarChart });
   }
   if (profile.role.is_ict) {
-    footerLinks.push({ name: "CRM система", href: "/log", icon: FileStack });
+    footerLinks.push({
+      name: "CRM система",
+      href: "/log/tender/active",
+      icon: FileStack,
+    });
   }
 
   return (
