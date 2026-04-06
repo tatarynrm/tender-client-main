@@ -16,12 +16,20 @@ import {
   SheetDescription,
 } from "@/shared/components/ui/sheet";
 import { Button } from "@/shared/components/ui/button";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { useModalStore } from "@/shared/stores/useModalStore";
 import { cn } from "@/shared/utils";
 import { AlertCircle, HelpCircle, CheckCircle2, X } from "lucide-react";
 
 export const ModalProvider = () => {
   const { isOpen, type, view, config, closeModal } = useModalStore();
+  const [comment, setComment] = React.useState("");
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setComment("");
+    }
+  }, [isOpen]);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -86,7 +94,7 @@ export const ModalProvider = () => {
     return (
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent
-          className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-[#09090b] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] dark:shadow-[0_32px_128px_-16px_rgba(0,0,0,1)] rounded-[2.5rem] я"
+          className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-[#09090b] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] dark:shadow-[0_32px_128px_-16px_rgba(0,0,0,1)] rounded-[2.5rem]"
           onPointerDownOutside={onPointerDownOutside}
         >
           <div className="relative pt-12 pb-8 px-8 flex flex-col items-center text-center overflow-hidden">
@@ -118,6 +126,16 @@ export const ModalProvider = () => {
                   {config.description}
                 </DialogDescription>
               )}
+              {config.showComment && (
+                <div className="mt-6 w-full text-left">
+                  <Textarea
+                    placeholder={config.commentPlaceholder || "Ваш коментар..."}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="min-h-[100px] bg-zinc-50 dark:bg-white/5 border-zinc-100 dark:border-white/5 rounded-2xl p-4 text-[13px] font-medium resize-none focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder:text-zinc-400"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -134,7 +152,7 @@ export const ModalProvider = () => {
             </Button>
             <Button
               onClick={() => {
-                config.onConfirm?.();
+                config.onConfirm?.(comment);
                 closeModal();
               }}
               className={cn(

@@ -12,7 +12,9 @@ interface ModalConfig {
   variant?: 'default' | 'danger' | 'success' | 'warning'; // For confirm
   confirmText?: string;
   cancelText?: string;
-  onConfirm?: () => void;
+  showComment?: boolean;
+  commentPlaceholder?: string;
+  onConfirm?: (comment?: string) => void;
   onCancel?: () => void;
   onClose?: () => void;
   closeOnOutsideClick?: boolean;

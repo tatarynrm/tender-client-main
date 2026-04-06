@@ -50,6 +50,8 @@ export function TenderCardClients({
       description: `Ви впевнені, що хочете зробити ставку: ${cargo.price_next} ${currencySymbol}?`,
       onConfirm: onConfirmReduction,
       variant: "default",
+      showComment: true,
+      commentPlaceholder: "Додайте коментар до вашої ставки (опціонально)...",
     });
   };
 

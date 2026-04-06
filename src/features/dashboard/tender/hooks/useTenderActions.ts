@@ -27,12 +27,12 @@ export function useTenderActions(
     }
   };
 
-  const onConfirmReduction = () => {
+  const onConfirmReduction = (notes?: string) => {
     if (nextPrice === null) return;
     handleAction({
       ids_redemption_price: "reduction",
       price_proposed: nextPrice,
-      notes: "---",
+      notes: notes || "---",
       car_count: 1,
     });
   };
