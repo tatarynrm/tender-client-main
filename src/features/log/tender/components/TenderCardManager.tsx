@@ -293,10 +293,12 @@ export function TenderCardManagers({
 
           {/* 9. Ціни - Optimized widths and wrapping */}
           <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
-            <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Стартова ціна</span>
-              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_start}{currencySymbol}</span>
-            </div>
+            {cargo.ids_type !== "AUCTION" && (
+              <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
+                <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Стартова ціна</span>
+                <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_start}{currencySymbol}</span>
+              </div>
+            )}
             <div className="h-[43px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
               <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Ціна замовника</span>
               <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_client || "—"}{currencySymbol}</span>
