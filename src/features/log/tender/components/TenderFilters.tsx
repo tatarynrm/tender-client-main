@@ -85,181 +85,198 @@ export const TenderFiltersSheet = <T extends Filters>({
           </SheetTitle>
         </SheetHeader>
 
-        {/* ОСНОВНИЙ КОНТЕНТ: flex-1 змушує його зайняти весь вільний простір */}
-        <ScrollArea className="flex-1 w-full h-full overflow-y-auto">
-          <div className="p-6 space-y-10">
-            {/* МАРШРУТ ЗВІДКИ */}
-            <section className="space-y-5">
-              <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
-                <MapPin className="h-4 w-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Маршрут звідки
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <NativeSelect
-                  isMulti
-                  showSearch
-                  label="Країна"
-                  value={filters.country_from}
-                  onChange={(v) => updateField("country_from", v)}
-                  options={dropdowns?.country_dropdown?.map((c) => ({
-                    ids: c.ids,
-                    value: c.country_name,
-                  }))}
-                />
-                {(!filters.country_from || filters.country_from === "UA") && (
-                  <NativeSelect
-                    isMulti
-                    showSearch
-                    label="Область"
-                    value={filters.region_from}
-                    onChange={(v) => updateField("region_from", v)}
-                    options={dropdowns?.region_dropdown?.map((r) => ({
-                      ids: r.ids,
-                      value: r.short_name,
-                    }))}
-                  />
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Місто відправлення
-                </label>
-                <Input
-                  className="h-10 border-gray-200 focus-visible:ring-orange-500 transition-all rounded-lg"
-                  placeholder="Введіть назву міста..."
-                  value={filters.city_from ? String(filters.city_from) : ""}
-                  onChange={(e) => updateField("city_from", e.target.value)}
-                />
-              </div>
+        {/* ОСНОВНИЙ КОНТЕНТ: flex-1 розтягується, ScrollArea всередині скролить */}
+        <ScrollArea
+          className="
+            flex-1
+            overflow-y-auto
+            max-h-[calc(100vh-120px)]
+            sm:max-h-[calc(100vh-140px)]
+          "
+        >
+          <div className="p-4 space-y-5">
+            {/* 📍 СЕКЦІЯ: МАРШРУТ (Звідки та Куди) */}
+            <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-orange-100/50">
+                  <MapPin className="h-4 w-4 text-orange-500" />
+                  <h3 className="text-[12px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
+                    Маршрут перевезення
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* ЗВІДКИ */}
+                    <div className="space-y-3">
+                        <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest pl-1">Звідки:</span>
+                        <div className="grid grid-cols-2 gap-2">
+                           <NativeSelect
+                                isMulti
+                                showSearch
+                                label="Країна"
+                                value={filters.country_from}
+                                onChange={(v) => updateField("country_from", v)}
+                                options={dropdowns?.country_dropdown?.map((c) => ({
+                                    ids: c.ids,
+                                    value: c.country_name,
+                                }))}
+                            />
+                            {(!filters.country_from || filters.country_from === "UA") && (
+                                <NativeSelect
+                                    isMulti
+                                    showSearch
+                                    label="Область"
+                                    value={filters.region_from}
+                                    onChange={(v) => updateField("region_from", v)}
+                                    options={dropdowns?.region_dropdown?.map((r) => ({
+                                        ids: r.ids,
+                                        value: r.short_name,
+                                    }))}
+                                />
+                            )}
+                        </div>
+                        <Input
+                            className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                            placeholder="Місто відправлення..."
+                            value={filters.city_from ? String(filters.city_from) : ""}
+                            onChange={(e) => updateField("city_from", e.target.value)}
+                        />
+                    </div>
+
+                    {/* КУДИ */}
+                    <div className="space-y-3">
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest pl-1">Куди:</span>
+                        <div className="grid grid-cols-2 gap-2">
+                            <NativeSelect
+                                isMulti
+                                showSearch
+                                label="Країна"
+                                value={filters.country_to}
+                                onChange={(v) => updateField("country_to", v)}
+                                options={dropdowns?.country_dropdown?.map((c) => ({
+                                    ids: c.ids,
+                                    value: c.country_name,
+                                }))}
+                            />
+                            {(!filters.country_to || filters.country_to === "UA") && (
+                                <NativeSelect
+                                    isMulti
+                                    showSearch
+                                    label="Область"
+                                    value={filters.region_to}
+                                    onChange={(v) => updateField("region_to", v)}
+                                    options={dropdowns?.region_dropdown?.map((r) => ({
+                                        ids: r.ids,
+                                        value: r.short_name,
+                                    }))}
+                                />
+                            )}
+                        </div>
+                        <Input
+                            className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                            placeholder="Місто отримувач..."
+                            value={filters.city_to ? String(filters.city_to) : ""}
+                            onChange={(e) => updateField("city_to", e.target.value)}
+                        />
+                    </div>
+                </div>
             </section>
 
-            {/* МАРШРУТ КУДИ */}
-            <section className="space-y-5">
-              <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
-                <MapPin className="h-4 w-4 text-orange-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Маршрут куди
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <NativeSelect
-                  isMulti
-                  showSearch
-                  label="Країна"
-                  value={filters.country_to}
-                  onChange={(v) => updateField("country_to", v)}
-                  options={dropdowns?.country_dropdown?.map((c) => ({
-                    ids: c.ids,
-                    value: c.country_name,
-                  }))}
-                />
-                {(!filters.country_to || filters.country_to === "UA") && (
-                  <NativeSelect
-                    isMulti
-                    showSearch
-                    label="Область"
-                    value={filters.region_to}
-                    onChange={(v) => updateField("region_to", v)}
-                    options={dropdowns?.region_dropdown?.map((r) => ({
-                      ids: r.ids,
-                      value: r.short_name,
-                    }))}
-                  />
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Місто отримувач
-                </label>
-                <Input
-                  className="h-10 border-gray-200 focus-visible:ring-orange-500 transition-all rounded-lg"
-                  placeholder="Введіть назву міста..."
-                  value={filters.city_to ? String(filters.city_to) : ""}
-                  onChange={(e) => updateField("city_to", e.target.value)}
-                />
-              </div>
+            {/* 📦 СЕКЦІЯ: ТРАНСПОРТ ТА ВАНТАЖ */}
+            <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-blue-100/50">
+                  <Truck className="h-4 w-4 text-blue-500" />
+                  <h3 className="text-[12px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
+                    Параметри вантажу
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <NativeSelect
+                        isMulti
+                        showSearch
+                        label="Тип причепу"
+                        value={filters.trailer_type}
+                        onChange={(v) => updateField("trailer_type", v)}
+                        options={dropdowns?.trailer_type_dropdown}
+                        placeholder="Всі типи"
+                    />
+                    <NativeSelect
+                        showSearch
+                        isMulti
+                        label="Завантаження"
+                        value={filters.load_type}
+                        onChange={(v) => updateField("load_type", v)}
+                        options={dropdowns?.load_type_dropdown}
+                    />
+                    <div className="sm:col-span-2">
+                        <NativeSelect
+                            isMulti
+                            label="Тип тендеру"
+                            value={filters.tender_type}
+                            onChange={(v) => updateField("tender_type", v)}
+                            options={dropdowns?.tender_type_dropdown}
+                            placeholder="Будь-який"
+                        />
+                    </div>
+                </div>
             </section>
 
-            {/* ПАРАМЕТРИ ВАНТАЖУ */}
-            <section className="space-y-5 pb-6">
-              <div className="flex items-center gap-2 pb-2 border-b border-blue-100">
-                <Truck className="h-4 w-4 text-blue-500" />
-                <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                  Вантаж та причіп
-                </h3>
-              </div>
-              <NativeSelect
-                isMulti
-                showSearch
-                label="Тип причепу / кузова"
-                value={filters.trailer_type}
-                onChange={(v) => updateField("trailer_type", v)}
-                options={dropdowns?.trailer_type_dropdown}
-                placeholder="Всі типи"
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <NativeSelect
-                  showSearch
-                  isMulti
-                  label="Завантаження"
-                  value={filters.load_type}
-                  onChange={(v) => updateField("load_type", v)}
-                  options={dropdowns?.load_type_dropdown}
-                />
-                <NativeSelect
-                  isMulti
-                  label="Тип тендеру"
-                  value={filters.tender_type}
-                  onChange={(v) => updateField("tender_type", v)}
-                  options={dropdowns?.tender_type_dropdown}
-                  placeholder="Будь-який"
-                />
-                <NativeSelect
-                  isMulti
-                  showSearch
-                  label="Менеджер"
-                  value={filters.manager} // Змінено з manager_dropdown на manager
-                  onChange={(v) => updateField("manager", v)} // Змінено на manager
-                  options={dropdowns?.manager_dropdown} // Опції залишаємо як є (вони з бекенду)
-                  placeholder="Будь-який"
-                />
-                <NativeSelect
-                  isMulti
-                  showSearch
-                  label="Замовник"
-                  value={filters.company} // Змінено з manager_dropdown на manager
-                  onChange={(v) => updateField("company", v)} // Змінено на manager
-                  options={dropdowns?.company_dropdown} // Опції залишаємо як є (вони з бекенду)
-                  placeholder="Будь-який"
-                />
-                <NativeSelect
-                  isMulti
-                  showSearch
-                  label="Стаус тендеру"
-                  value={filters.status} // Змінено з manager_dropdown на manager
-                  onChange={(v) => updateField("status", v)} // Змінено на manager
-                  options={dropdowns?.tender_status_dropdown} // Опції залишаємо як є (вони з бекенду)
-                  placeholder="Будь-який"
-                />
-              </div>
+            {/* 👥 СЕКЦІЯ: СТУТАС ТА ПЕРСОНАЛ */}
+            <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4 pb-2">
+                <div className="flex items-center gap-2 pb-1 border-b border-zinc-200/50">
+                  <Settings2 className="h-4 w-4 text-zinc-500" />
+                  <h3 className="text-[12px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
+                    Статус та відповідальні
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <NativeSelect
+                        isMulti
+                        showSearch
+                        label="Менеджер"
+                        value={filters.manager}
+                        onChange={(v) => updateField("manager", v)}
+                        options={dropdowns?.manager_dropdown}
+                        placeholder="Будь-який"
+                    />
+                    <NativeSelect
+                        isMulti
+                        showSearch
+                        label="Замовник"
+                        value={filters.company}
+                        onChange={(v) => updateField("company", v)}
+                        options={dropdowns?.company_dropdown}
+                        placeholder="Будь-який"
+                    />
+                    <div className="sm:col-span-2">
+                        <NativeSelect
+                            isMulti
+                            showSearch
+                            label="Статус тендеру"
+                            value={filters.status}
+                            onChange={(v) => updateField("status", v)}
+                            options={dropdowns?.tender_status_dropdown}
+                            placeholder="Будь-який"
+                        />
+                    </div>
+                </div>
             </section>
           </div>
         </ScrollArea>
 
         {/* ФІКСОВАНИЙ ФУТЕР: shrink-0 гарантує, що він не зникне */}
-        <SheetFooter className="p-4 border-t bg-gray-50/80 backdrop-blur-sm shrink-0 mt-auto">
-          <div className="flex items-center gap-3 w-full">
+        <SheetFooter className="sticky bottom-0 z-20 p-4 border-t bg-gray-50 dark:bg-zinc-900">
+          <div className="flex flex-row items-center gap-3 w-full">
             <Button
-              variant="ghost"
-              className="flex-1 text-gray-500 hover:bg-gray-200 hover:text-gray-900 h-11"
+              variant="outline"
+              className="flex-1 h-10 text-xs"
               onClick={handleReset}
             >
               Очистити
             </Button>
             <Button
-              className="flex-[2] bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 shadow-lg shadow-orange-200 active:scale-[0.98] transition-all"
+              className="flex-[2] bg-orange-500 hover:bg-orange-600 h-10 text-xs font-bold rounded-xl"
               onClick={handleApply}
             >
               Застосувати

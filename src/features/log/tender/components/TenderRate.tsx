@@ -27,8 +27,8 @@ export function TenderRatesList({
   const [carCount, setCarCount] = useState<number>(1);
 
   // Витягуємо дані безпосередньо з cargo
-  const rates = cargo.rate_company;
-  const currency = cargo.valut_name || "—";
+  const rates = cargo?.rate_company || [];
+  const currency = cargo?.valut_name || "—";
 
   if (!rates || rates.length === 0) return null;
 

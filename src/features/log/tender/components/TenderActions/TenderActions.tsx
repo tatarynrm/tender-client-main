@@ -132,9 +132,9 @@ export default function TenderActions({
         ref={buttonRef}
         onClick={toggleMenu}
         className="cursor-pointer flex items-center justify-center rounded-md hover:bg-zinc-200/70 dark:hover:bg-zinc-800 transition-colors"
-        style={{ width: config.icon + 8, height: config.icon + 8 }}
+        style={{ width: 34, height: 34 }}
       >
-        <GripVertical size={config.icon} className="text-zinc-400" />
+        <GripVertical size={24} className="text-zinc-500 dark:text-zinc-400" />
       </button>
 
       {isOpen && createPortal(menuContent, document.body)}

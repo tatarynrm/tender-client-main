@@ -133,10 +133,6 @@ export function TenderCardClients({
   console.log(profile);
   return (
     <div className="w-full relative mb-1 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card">
-      {/* Tender Actions Menu */}
-      <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
-        <TenderActions tender={cargo} />
-      </div>
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 
@@ -223,49 +219,68 @@ export function TenderCardClients({
             )}
           </div>
 
-          {/* 3. Митне оформлення */}
-          <div className="flex-1 min-w-[150px] flex flex-col justify-center p-3 relative">
-            {transitPoints.map((pt, i) => (
-              <div
-                key={i}
-                className="flex flex-col text-left mb-1.5 last:mb-0 leading-tight"
-              >
-                <span
-                  className={cn(
-                    "text-[10px] uppercase font-bold tracking-tight mb-0.5",
-                    pt.ids_point === "CUSTOM_UP"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : pt.ids_point === "CUSTOM_DOWN"
-                        ? "text-indigo-500 dark:text-indigo-400"
-                        : "text-zinc-500",
-                  )}
-                >
-                  {pt.ids_point === "CUSTOM_UP"
-                    ? "Замитнення"
-                    : pt.ids_point === "CUSTOM_DOWN"
-                      ? "Розмитнення"
-                      : "Кордон"}
-                </span>
-                <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
-                  {pt.ids_country ? `${pt.ids_country}-` : ""}
-                  {pt.ids_country !== "UA" &&
-                    ((pt as any).post_code || (pt as any).zip_code) && (
-                      <span className="text-indigo-600 dark:text-indigo-400 mr-1">
-                        {(pt as any).post_code || (pt as any).zip_code}
-                      </span>
-                    )}
-                  {pt.city}
-                </span>
-                {(pt as any).ids_region && (
-                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                    {getRegionName((pt as any).ids_region)}
-                  </span>
-                )}
-              </div>
-            ))}
+          {/* 3. Митне оформлення (Центр) */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 text-center overflow-hidden">
             {transitPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium text-center">—</span>
+              <span className="text-zinc-400 font-medium">—</span>
             )}
+            {transitPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              const isCustomsUp =
+                pt.ids_point === "CUSTOM_UP" || ptAny.customs === true;
+              const isCustomsDown = pt.ids_point === "CUSTOM_DOWN";
+
+              return (
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center leading-tight mb-2 last:mb-0 w-full px-1"
+                >
+                  {(isCustomsUp ||
+                    isCustomsDown ||
+                    pt.ids_point === "BORDER") && (
+                    <span
+                      className={cn(
+                        "text-[9px] uppercase font-black tracking-tight mb-0.5",
+                        isCustomsUp
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : isCustomsDown
+                            ? "text-indigo-500 dark:text-indigo-400"
+                            : "text-zinc-500",
+                      )}
+                    >
+                      {isCustomsUp
+                        ? "Замитнення"
+                        : isCustomsDown
+                          ? "Розмитнення"
+                          : "Кордон"}
+                    </span>
+                  )}
+                  <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-800 dark:text-white text-[11px] w-full">
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={14}
+                        className="rounded-[1px] shadow-sm flex-shrink-0"
+                      />
+                    )}
+                    <span className="truncate">
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {pt.ids_country !== "UA" && (ptAny.post_code || ptAny.zip_code) ? (
+                        <span className="text-indigo-500 dark:text-indigo-400 mr-0.5">
+                          {ptAny.post_code || ptAny.zip_code}
+                        </span>
+                      ) : null}
+                      {pt.city}
+                    </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[9px] text-zinc-400 font-medium truncate w-full">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* 4. Розвантаження */}
@@ -351,87 +366,87 @@ export function TenderCardClients({
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
+          <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden relative">
             <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
               <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
                 {cargo.notes || "—"}
               </span>
             </div>
+            {cargo.files && cargo.files.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFilesModalOpen(true);
+                }}
+                className="absolute bottom-1 right-1 p-1 text-[#6366f1] hover:text-indigo-700 transition-colors"
+              >
+                <PaperclipIcon size={14} className="rotate-45" />
+              </button>
+            )}
           </div>
 
           {/* 9. Ціни */}
-          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white overflow-hidden">
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
             {isAuction ? (
-              <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 border-l border-[#eef7ec] leading-tight">
-                <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 text-center">
-                  Ваша поточна ставка
+              <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 leading-tight text-center">
+                <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300">
+                  Ваша поточна ціна
                 </span>
-                <span className="text-[18px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
-                  {cargo.price_proposed || "—"}
-                  {cargo.price_proposed ? (
-                    <span className="text-[12px] ml-[1px]">
-                      {currencySymbol}
-                    </span>
-                  ) : null}
+                <span className="text-[17px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
+                  {cargo.price_proposed
+                    ? `${cargo.price_proposed}${currencySymbol}`
+                    : "—"}
                 </span>
               </div>
             ) : (
               <>
-                <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
-                  <div className="flex items-center gap-[1px] font-black text-[15px] text-zinc-800 dark:text-white leading-none">
+                {/* Level 1: Start Price */}
+                <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5 whitespace-nowrap">
+                    Стартова ціна
+                  </span>
+                  <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
                     {cargo.price_start}
-                    <span>{currencySymbol}</span>
-                  </div>
+                    {currencySymbol}
+                  </span>
                   {cargo.price_step && (
-                    <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium mt-1">
+                    <span className="text-[8px] text-zinc-400 mt-0.5 leading-none">
                       крок {cargo.price_step}
                     </span>
                   )}
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80 p-2">
-                  <span className="text-[10px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-0.5">
-                    Ваша ціна
-                  </span>
-                  <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none mb-1.5">
-                    {cargo.price_proposed || null}
-                    <span className="text-[11px] ml-[1px]">
-                      {currencySymbol}
-                    </span>
-                  </span>
-                  <Button
+                {/* Level 2: Custom Price Link (Green BG) */}
+                <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 text-center">
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleManualPrice();
                     }}
-                    disabled={!canBid || !isActive}
-                    variant="outline"
-                    className="w-full h-6 border-[#2c5f2d]/30 text-[#2c5f2d] hover:bg-emerald-100/50 font-bold text-[9px] uppercase rounded-[4px] transition-all"
+                    disabled={!isActive}
+                    className="text-[11px] font-extrabold text-[#2c5f2d] hover:underline uppercase leading-none"
                   >
                     Ваша ціна
-                  </Button>
+                  </button>
+                  <span className="text-[8px] text-[#2c5f2d]/70 font-bold uppercase mt-1 leading-none">
+                    поставити власну ставку
+                  </span>
                 </div>
               </>
             )}
           </div>
 
-          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white">
-            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
-              {isAuction && (
-                <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-1">
-                  Час тендеру
-                </span>
-              )}
-              <div className="flex flex-col items-center leading-none">
-                <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
-                  Залишилось
-                </span>
-                <span className="font-bold text-[#e03131] dark:text-red-400 text-[16px] tracking-tight">
-                  <TenderTimer
-                    label=""
-                    targetDate={isPlan ? cargo.time_start : cargo.time_end}
-                  />
-                </span>
-              </div>
+          {/* 10. Залишилось / Викуп */}
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+            <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-[43px]">
+              <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5">
+                Залишилось
+              </span>
+              <span className="font-bold text-[#e03131] dark:text-red-400 text-[15px] tracking-tight leading-none">
+                <TenderTimer
+                  label=""
+                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                />
+              </span>
             </div>
             {!isAuction && isRedemption && cargo.price_redemption && (
               <button
@@ -440,123 +455,114 @@ export function TenderCardClients({
                   handleBuyoutConfirm();
                 }}
                 disabled={!isActive}
-                className="h-[45px] w-full flex flex-col items-center justify-center bg-[#fce8e8] hover:bg-[#fad1d1] transition-colors border-t border-zinc-200/80 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-[43px] flex flex-col items-center justify-center bg-[#fce8e8] hover:bg-[#fad1d1] transition-colors group disabled:opacity-50"
               >
-                <span className="text-[10px] text-[#a61e1e] font-medium mb-0.5">
+                <span className="text-[10px] text-[#a61e1e] font-bold uppercase leading-none mb-0.5">
                   Викуп
                 </span>
-                <span className="text-[14px] font-black text-[#a61e1e] leading-none group-hover:scale-105 transition-transform">
+                <span className="text-[14px] font-black text-[#a61e1e] leading-none">
                   {cargo.price_redemption}
-                  <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
+                  {currencySymbol}
                 </span>
               </button>
             )}
           </div>
 
           {/* 11. Ставки / Action */}
-          <div className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l lg:border-l-0 border-zinc-200/80 relative">
+          <div className="w-full lg:w-[160px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 relative overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+            {/* Top Green: Your Current Bid */}
+            {!isAuction && (
+              <div className="h-[26px] flex items-center justify-center px-2 bg-[#eef7ec] dark:bg-emerald-900/40 text-center">
+                <span className="text-[9px] text-[#2c5f2d] dark:text-emerald-300 font-bold uppercase mr-1.5 leading-none">
+                  Ваша поточна ставка
+                </span>
+                <span className="text-[12px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
+                  {cargo.price_proposed
+                    ? `${cargo.price_proposed}${currencySymbol}`
+                    : "—"}
+                </span>
+              </div>
+            )}
+
+            {/* Middle: Submit Button */}
             {isAuction ? (
-              <div className="flex-1 flex items-center justify-center px-1.5 py-1.5 overflow-hidden">
-                <Button
+              <div className="flex-1 flex items-center justify-center p-2 bg-white dark:bg-slate-900 overflow-hidden">
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleManualPrice();
                   }}
-                  disabled={!canBid || !isActive}
-                  className="px-3 h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold text-[10px] uppercase rounded-[4px] shadow-sm transition-all"
+                  disabled={!isActive}
+                  className="px-6 h-9 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
                 >
-                  Ваша ціна
-                </Button>
+                  Зробити ставку
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col h-full border-l lg:border-l-0 border-zinc-200/80 z-10 w-full">
-                <div className="h-[26px] flex items-center justify-between px-2 bg-[#eef7ec] dark:bg-emerald-900/40">
-                  <span className="text-[9px] text-[#2c5f2d] dark:text-slate-400 font-medium">
-                    Ваша ставка
-                  </span>
-                  <span className="text-[11px] font-black text-[#2c5f2d] dark:text-emerald-400">
-                    {cargo.price_proposed
-                      ? `${cargo.price_proposed}${currencySymbol}`
-                      : ""}
-                  </span>
-                </div>
-                <div className="flex-1 flex flex-col items-center justify-center gap-1.5 px-1.5 py-2 bg-white dark:bg-transparent overflow-hidden">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConfirmBid();
-                    }}
-                    disabled={!canBid || !isActive}
-                    className="px-3 h-9 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-[10px] uppercase rounded-[4px] transition-all shadow-sm"
-                  >
-                    Зробити ставку
-                  </Button>
-                </div>
-                <div className="h-[26px] flex items-center justify-between px-2 bg-white dark:bg-slate-900 border-t border-zinc-200/80 dark:border-white/5">
-                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium">
-                    Краща ставка
-                  </span>
-                  <span className="text-[11px] font-black text-[#e03131] dark:text-red-400">
-                    {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
-                  </span>
-                </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirmBid();
+                }}
+                disabled={!isActive}
+                className="h-[43px] w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all"
+              >
+                Зробити ставку
+              </button>
+            )}
+
+            {/* Bottom: Best Bid */}
+            {!isAuction && (
+              <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
+                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none">
+                  Краща ставка
+                </span>
+                <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
+                  {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="h-[34px] px-3 flex items-center justify-between border-t border-zinc-200/80 dark:border-white/10 bg-white dark:bg-slate-800/30 text-[11px]">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-            <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
-              <UserIcon
-                size={14}
-                className="text-zinc-500 dark:text-slate-400"
-              />
+        {/* FLATTENED FOOTER: Manager Info & Tender metadata */}
+        <div className="h-[26px] px-3 flex items-center justify-between border-t border-zinc-200/80 dark:border-white/10 bg-white dark:bg-slate-800/30 text-[10px]">
+          <div className="flex items-center gap-x-4">
+            <div className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300">
+              <UserIcon size={13} className="text-zinc-400" />
               <span>{cargo?.author || "Менеджер"}</span>
             </div>
             {cargo?.email && (
               <a
-                href={`mailto:${cargo?.email}`}
-                className="flex items-center gap-1.5 text-[#6366f1] dark:text-indigo-400 hover:underline transition-colors"
+                href={`mailto:${cargo.email}`}
+                className="flex items-center gap-1 text-indigo-500 hover:text-indigo-600 transition-colors"
               >
-                <MailIcon
-                  size={14}
-                  className="text-indigo-400 dark:text-indigo-500"
-                />
-                <span>{cargo?.email}</span>
+                <MailIcon size={13} />
+                <span>{cargo.email}</span>
               </a>
             )}
             {cargo?.usr_phone && cargo.usr_phone.length > 0 && (
               <a
-                href={`tel:${cargo.usr_phone[0]?.phone || "380987546702"}`}
-                className="flex items-center gap-1.5 text-[#6366f1] dark:text-indigo-400 hover:underline transition-colors"
+                href={`tel:${cargo.usr_phone[0]?.phone}`}
+                className="flex items-center gap-1 text-indigo-500 hover:text-indigo-600 transition-colors"
               >
-                <PhoneIcon
-                  size={14}
-                  className="text-indigo-400 dark:text-indigo-500"
-                />
-                <span>{cargo.usr_phone[0]?.phone || "380987546702"}</span>
+                <PhoneIcon size={13} />
+                <span>{cargo.usr_phone[0]?.phone}</span>
               </a>
             )}
           </div>
-          <div className="flex items-center">
-            {cargo?.files && cargo.files.length > 0 && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsFilesModalOpen(true);
-                }}
-                className="p-1 rounded text-[#6366f1] dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
-                title={`Документи (${cargo.files.length})`}
-              >
-                <PaperclipIcon
-                  size={15}
-                  className="-rotate-45"
-                  strokeWidth={2.5}
-                />
-              </button>
-            )}
+
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold uppercase text-zinc-800 dark:text-white leading-none">
+              {isAuction
+                ? "АУКЦІОН"
+                : isRedemption
+                  ? "РЕДУКЦІОН З ВИКУПОМ"
+                  : "РЕДУКЦІОН"}
+            </span>
+            <span className="text-zinc-400 font-medium lowercase leading-none">
+              публікація {formatTenderDate(cargo.time_start)}
+            </span>
           </div>
         </div>
       </div>

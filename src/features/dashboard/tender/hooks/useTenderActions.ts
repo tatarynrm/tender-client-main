@@ -1,13 +1,15 @@
 import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
 import { useModalStore } from "@/shared/stores/useModalStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useTenderActions(
   tenderId: number,
   nextPrice: number | null,
-  price_redemption: number | null
+  price_redemption: number | null,
 ) {
   const { confirm, closeModal } = useModalStore();
+  const queryClient = useQueryClient();
 
   const handleAction = async (payload: any) => {
     if (payload.ids_redemption_price !== "offer" && !payload.price_proposed) {
@@ -21,6 +23,8 @@ export function useTenderActions(
         ...payload,
       });
       toast.success("Дію виконано успішно");
+      queryClient.invalidateQueries({ queryKey: ["tenders"] });
+      queryClient.invalidateQueries({ queryKey: ["tender", tenderId] });
       closeModal();
     } catch (error) {
       // Axios interceptor handles errors

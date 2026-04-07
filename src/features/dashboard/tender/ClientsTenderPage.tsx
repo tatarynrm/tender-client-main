@@ -139,6 +139,7 @@ export default function ClientsTenderPage({
       openModal(<TenderFullInfoModal tenderId={tender.id} />, {
         size: "full",
         className: "p-0 overflow-hidden",
+        showCloseButton: false,
       });
     },
     [openModal],
@@ -148,10 +149,13 @@ export default function ClientsTenderPage({
   if (isLoading) return <TenderLoader />;
 
   return (
-    <div className="p-0 mx-auto space-y-2">
-      <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-        <div className="flex justify-between items-center bg-white dark:bg-white/5 p-2 rounded-lg border border-zinc-200 dark:border-white/10">
-          <div className="flex items-center gap-2">
+    <div className="p-0 space-y-4 pb-40">
+
+      {/* ── Sticky header ─────────────────────────────────────────────────── */}
+      <div className="sticky top-[-20px] z-20 pt-4 pb-3 -mx-4 px-4 border-b border-zinc-200/60 dark:border-white/10 backdrop-blur-md transition-all">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4">
+            {/* ── Left: Filter sheet ──────────────────────────────────────── */}
             <TenderFiltersSheet
               filters={filters}
               setFilters={setFilters}
@@ -159,13 +163,16 @@ export default function ClientsTenderPage({
               reset={handleReset}
               dropdowns={tenderFilters}
             />
-          </div>
 
-          <ItemsPerPage
-            options={[10, 20, 50, 100]}
-            defaultValue={currentParams.limit}
-            onChange={handleLimitChange}
-          />
+            {/* ── Right: List controls ───────────────────────────── */}
+            <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-zinc-200 dark:border-white/10 shadow-sm">
+              <ItemsPerPage
+                options={[10, 20, 50, 100]}
+                defaultValue={currentParams.limit}
+                onChange={handleLimitChange}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -179,68 +186,70 @@ export default function ClientsTenderPage({
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
-        <div className="space-y-1 pb-20 relative">
-          {/* HEADER ROW extracted from TenderCardClients */}
-          <div className="sticky top-[-20px] z-20 hidden lg:grid grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-sm text-[10.5px]">
-            <div className="flex items-center justify-center p-2 text-[14px] font-black tracking-tighter text-zinc-400 dark:text-zinc-500">
-              №
-            </div>
-            <div className="flex items-center justify-center p-2">
-              Завантаження
-            </div>
-            <div className="flex items-center justify-center p-2">
-              Митне оформлення
-            </div>
-            <div className="flex items-center justify-center p-2">
-              Розвантаження
-            </div>
-            <div className="flex items-center justify-center p-2">Вантаж</div>
-            <div className="flex items-center justify-center p-2 text-center leading-tight">
-              Тип
-              <br />
-              транспорту
-            </div>
-            <div className="flex items-center justify-center p-2">Вага</div>
-            <div className="flex items-center justify-center p-2 text-center leading-tight">
-              Додаткова
-              <br />
-              інформація
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center justify-center py-1.5 border-b border-zinc-200/80 dark:border-zinc-800">
-                Інформація по тендеру
+        <div className="space-y-1 pb-20 relative overflow-x-auto scrollbar-thin">
+          <div className="min-w-[1240px] xl:min-w-full">
+            {/* HEADER ROW extracted from TenderCardClients */}
+            <div className="sticky top-[-20px] z-20 hidden lg:grid grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-sm text-[10.5px]">
+              <div className="flex items-center justify-center p-2 text-[14px] font-black tracking-tighter text-zinc-400 dark:text-zinc-500">
+                №
               </div>
-              <div className="grid grid-cols-[1fr_1fr_1fr] divide-x divide-zinc-200/80 dark:divide-zinc-800 flex-1">
-                <div className="flex items-center justify-center text-[10px]">
-                  Ціна
+              <div className="flex items-center justify-center p-2">
+                Завантаження
+              </div>
+              <div className="flex items-center justify-center p-2">
+                Митне оформлення
+              </div>
+              <div className="flex items-center justify-center p-2">
+                Розвантаження
+              </div>
+              <div className="flex items-center justify-center p-2">Вантаж</div>
+              <div className="flex items-center justify-center p-2 text-center leading-tight">
+                Тип
+                <br />
+                транспорту
+              </div>
+              <div className="flex items-center justify-center p-2">Вага</div>
+              <div className="flex items-center justify-center p-2 text-center leading-tight">
+                Додаткова
+                <br />
+                інформація
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center justify-center py-1.5 border-b border-zinc-200/80 dark:border-zinc-800">
+                  Інформація по тендеру
                 </div>
-                <div className="flex items-center justify-center text-[10px]">
-                  Час тендера
-                </div>
-                <div className="flex items-center justify-center text-[10px]">
-                  Ставка
+                <div className="grid grid-cols-[1fr_1fr_1fr] divide-x divide-zinc-200/80 dark:divide-zinc-800 flex-1">
+                  <div className="flex items-center justify-center text-[10px]">
+                    Ціна
+                  </div>
+                  <div className="flex items-center justify-center text-[10px]">
+                    Час тендера
+                  </div>
+                  <div className="flex items-center justify-center text-[10px]">
+                    Ставка
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1">
-            {tenders.map((item) => (
-              <TenderCardClients
-                key={item.id}
-                cargo={item}
-                onOpenDetails={() => handleOpenDetails(item)}
+            <div className="grid grid-cols-1">
+              {tenders.map((item) => (
+                <TenderCardClients
+                  key={item.id}
+                  cargo={item}
+                  onOpenDetails={() => handleOpenDetails(item)}
+                />
+              ))}
+            </div>
+
+            {pagination && pagination.page_count > 1 && (
+              <Pagination
+                page={currentParams.page}
+                pageCount={pagination.page_count}
+                onChange={handlePageChange}
               />
-            ))}
+            )}
           </div>
-
-          {pagination && pagination.page_count > 1 && (
-            <Pagination
-              page={currentParams.page}
-              pageCount={pagination.page_count}
-              onChange={handlePageChange}
-            />
-          )}
         </div>
       )}
     </div>

@@ -78,25 +78,35 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
         return {
           ...old,
           content: old.content.map((t) =>
-            t.id === updatedTender.id ? updatedTender : t,
+            t.id === updatedTender.id ? { ...t, ...updatedTender } : t,
           ),
         };
       });
       // Також оновлюємо кеш конкретного тендера
-      queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
+      queryClient.setQueryData(["tender", updatedTender.id], (old: any) =>
+        old ? { ...old, ...updatedTender } : updatedTender,
+      );
     };
 
     // Підписуємось на неймспейс load
     load.on("new_tender", handleNewLoad);
     load.on("new_bid", handleNewBid);
 
+    // Додаємо підписки на tender для надійності (як у клієнтів)
+    if (tender) {
+      tender.on("new_bid", handleNewBid);
+      tender.on("tender_status_updated", handleRefresh);
+    }
+
     // Відписуємось
     return () => {
       load.off("new_tender", handleNewLoad);
       load.off("new_bid", handleNewBid);
+      if (tender) {
+        tender.off("new_bid", handleNewBid);
+        tender.off("tender_status_updated", handleRefresh);
+      }
     };
-
-    // 2. ВИПРАВЛЕНО: Додано load у залежності замість tender, і правильний ID юзера
-  }, [profile?.person?.id, queryClient, load, queryKey]);
+  }, [profile?.person?.id, queryClient, load, tender, queryKey]);
   return { tenders, pagination, isLoading, error };
 };

@@ -5,7 +5,6 @@ import React from "react";
 const CargoActivePage = () => {
   return (
     <div className="mx-auto scrollbar-thin">
-      <GoBackButton />
       <TenderSaveForm />
     </div>
   );

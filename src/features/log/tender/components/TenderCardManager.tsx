@@ -25,20 +25,24 @@ import {
   Building2,
 } from "lucide-react";
 
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 import { IRateCompany, ITender } from "@/features/log/types/tender.type";
 import { TenderTimer } from "@/features/dashboard/tender/components/TenderTimer";
 import { TenderRatesList } from "./TenderRate";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
+import { useModalStore } from "@/shared/stores/useModalStore";
+import { useTenderActions } from "@/features/dashboard/tender/hooks/useTenderActions";
+import { ManualPriceDialog } from "@/features/dashboard/tender/components/ManualPriceDialog";
 import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { getRegionName } from "@/shared/utils/region.utils";
+import { useProfile } from "@/shared/hooks";
 import {
   formatTenderDate,
+  formatTenderDateTime,
   getTenderLoadDateString,
 } from "@/shared/utils/date.utils";
 import { getCurrencySymbol } from "@/shared/utils/currency.utils";
@@ -58,74 +62,21 @@ export function TenderCardManagers({
     useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
-  const displayPrice = cargo.price_proposed || cargo.price_start;
+  const { openModal, confirm } = useModalStore();
+  const { profile } = useProfile();
 
-  const fromPoints = cargo.tender_route.filter(
-    (p) => p.ids_point === "LOAD_FROM",
-  );
-  const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
-  const transitPoints = cargo.tender_route.filter((p) =>
-    ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point),
-  );
+  const myPrice = React.useMemo(() => {
+    if (!profile || !cargo.rate_company) return 0;
+    const myLatestBid = [...cargo.rate_company]
+      .filter(r => r.id_author === profile.id)
+      .sort((a, b) => b.id - a.id)[0];
+    return myLatestBid ? myLatestBid.price_proposed : 0;
+  }, [cargo.rate_company, profile]);
 
-  const getPointLabel = (type: string) => {
-    switch (type) {
-      case "CUSTOM_UP":
-        return "Зам.";
-      case "BORDER":
-        return "Корд.";
-      case "CUSTOM_DOWN":
-        return "Розм.";
-      default:
-        return "";
-    }
-  };
-
-  const stars =
-    Number(cargo.rating) === 2 ? 5 : Number(cargo.rating) === 1 ? 3 : 1;
-  const isRef = cargo?.tender_trailer?.some(
-    (t) => t.ids_trailer_type === "REF",
-  );
-
-  // Допоміжна функція для знаків (якщо ще не додали)
-  const formatTemp = (temp: number | null | undefined) => {
-    if (temp === null || temp === undefined) return "";
-    return temp > 0 ? `+${temp}` : temp.toString();
-  };
-
-  const handleSetWinner = async (rate: IRateCompany, carCount: number) => {
-    if (!rate.id) return;
-    try {
-      await setWinner({
-        id_tender_rate: rate.id,
-        car_count: carCount, // Тепер передаємо обрану кількість!
-      });
-    } catch (e) {
-      // обробка помилки
-    }
-  };
-
-  // Функція для скасування переможця
-  const handleRemoveWinner = async (rate: IRateCompany) => {
-    if (!rate.id) return;
-
-    try {
-      await delWinner({
-        id_tender_rate: rate.id,
-        car_count: 0, // Передаємо 0, щоб скасувати
-      });
-    } catch (e) {
-      // Помилка вже оброблена в хуку
-    }
-  };
   const currencySymbol = getCurrencySymbol(cargo.valut_name);
-  const trailers =
-    cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
-  const loadTypes =
-    cargo.tender_load?.map((l) => l.load_type_name).join(", ") || "";
+  const isActive = cargo.ids_status === "ACTIVE";
   const isPlan = cargo.ids_status === "PLAN";
 
-  // Generating all bids sorted by lowest price
   const topBids = React.useMemo(() => {
     if (!cargo.rate_company || cargo.rate_company.length === 0) return [];
     return [...cargo.rate_company].sort(
@@ -134,17 +85,64 @@ export function TenderCardManagers({
   }, [cargo.rate_company]);
 
   const bestBid = topBids[0] || null;
+  const bestBidValue = bestBid ? bestBid.price_proposed : cargo.price_start;
+  const nextBidValue = cargo.price_next || Number(bestBidValue) - (cargo.price_step || 0);
 
-  // Check if we have an active winner
+  const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
+    cargo.id,
+    nextBidValue,
+    cargo.price_redemption,
+  );
+
+  const handleConfirmBid = () => {
+    confirm({
+      title: "Підтвердження ставки",
+      description: `Ви впевнені, що хочете зробити ставку: ${nextBidValue} ${currencySymbol}?`,
+      onConfirm: onConfirmReduction,
+      variant: "default",
+      showComment: true,
+      commentPlaceholder: "Додайте коментар до вашої ставки (опціонально)...",
+    });
+  };
+
+  const handleManualPrice = () => {
+    openModal(
+      <ManualPriceDialog
+        currentPrice={cargo.price_proposed || cargo.price_start}
+        onConfirm={onManualPrice}
+        currentValut={cargo.valut_name}
+      />,
+      { size: "md" },
+    );
+  };
+
+  const fromPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM");
+  const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
+  const transitPoints = cargo.tender_route.filter(
+    (p) => ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point) || p.customs === true,
+  );
+
+  const isRef = cargo?.tender_trailer?.some((t) => t.ids_trailer_type === "REF");
+
+  const handleSetWinner = async (rate: IRateCompany, carCount: number) => {
+    if (!rate.id) return;
+    try {
+      await setWinner({ id_tender_rate: rate.id, car_count: carCount });
+    } catch (e) {}
+  };
+
+  const handleRemoveWinner = async (rate: IRateCompany) => {
+    if (!rate.id) return;
+    try {
+      await delWinner({ id_tender_rate: rate.id, car_count: 0 });
+    } catch (e) {}
+  };
+
+  const trailers = cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
   const winningBid = cargo.rate_company?.find((r) => r.car_count_winner! > 0);
 
   return (
-    <div className="w-full relative  overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
-      {/* Tender Actions Menu */}
-      <div className="absolute top-2 right-2 z-50 opacity-100 lg:opacity-50 lg:group-hover/card:opacity-100 transition-opacity">
-        <TenderActions tender={cargo} />
-      </div>
-
+    <div className="w-full relative overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
       {isRef && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
           <Snowflake className="absolute -top-1 -right-1 text-blue-400/10 w-12 h-12 rotate-12" />
@@ -153,545 +151,262 @@ export function TenderCardManagers({
         </div>
       )}
 
-      {/* Main Grid Card */}
+      {/* Main Grid Card - Adjusted for better responsiveness */}
       <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col border-b border-zinc-200/80">
         <div className="flex flex-col lg:flex-row w-full min-h-[90px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10">
           {/* 1. № */}
           <div
-            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 transition-colors"
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 dark:hover:bg-white/5 transition-colors"
             onClick={onOpenDetails}
           >
-            <span
-              className={cn(
-                "text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none",
-                title,
-              )}
-            >
+            <span className={cn("text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none", title)}>
               {cargo.id}
             </span>
           </div>
 
           {/* 2. Завантаження */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
-            {fromPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium">—</span>
-            )}
-            {fromPoints.map((pt, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
-              >
-                <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
-                  {pt.ids_country && (
-                    <Flag
-                      country={pt.ids_country}
-                      size={16}
-                      className="rounded-[2px] shadow-sm"
-                    />
-                  )}
-                    <span>
+          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2">
+            {fromPoints.length === 0 && <span className="text-zinc-400 font-medium">—</span>}
+            {fromPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              const zip = ptAny.post_code || ptAny.zip_code;
+              return (
+                <div key={i} className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2">
+                  <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    <span className="truncate">
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {pt.ids_country !== "UA" &&
-                        ((pt as any).post_code || (pt as any).zip_code) && (
-                          <span className="text-indigo-600 dark:text-indigo-400 mr-1">
-                            {(pt as any).post_code || (pt as any).zip_code}
-                          </span>
-                        )}
+                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
                       {pt.city}
                     </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
+                  )}
                 </div>
-                {(pt as any).ids_region && (
-                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                    {getRegionName((pt as any).ids_region)}
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
-              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
+                <span className="text-[10px] uppercase text-zinc-400 font-black">Від:</span>
                 {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
               </span>
             )}
           </div>
 
           {/* 3. Митне оформлення */}
-          <div className="flex-1 min-w-[150px] flex flex-col justify-center p-3 relative">
-            {transitPoints.map((pt, i) => (
-              <div
-                key={i}
-                className="flex flex-col text-left mb-1.5 last:mb-0 leading-tight"
-              >
-                <span
-                  className={cn(
-                    "text-[10px] uppercase font-bold tracking-tight mb-0.5",
-                    pt.ids_point === "CUSTOM_UP"
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : pt.ids_point === "CUSTOM_DOWN"
-                        ? "text-indigo-500 dark:text-indigo-400"
-                        : "text-zinc-500",
-                  )}
-                >
-                  {pt.ids_point === "CUSTOM_UP"
-                    ? "Замитнення"
-                    : pt.ids_point === "CUSTOM_DOWN"
-                      ? "Розмитнення"
-                      : "Кордон"}
-                </span>
-                <span className="font-bold text-[12px] text-zinc-800 dark:text-white mt-0.5">
-                  {pt.ids_country ? `${pt.ids_country}-` : ""}
-                  {pt.ids_country !== "UA" &&
-                    ((pt as any).post_code || (pt as any).zip_code) && (
-                      <span className="text-indigo-600 dark:text-indigo-400 mr-1">
-                        {(pt as any).post_code || (pt as any).zip_code}
-                      </span>
-                    )}
-                  {pt.city}
-                </span>
-                {(pt as any).ids_region && (
-                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                    {getRegionName((pt as any).ids_region)}
+          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center">
+            {transitPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              const zip = ptAny.post_code || ptAny.zip_code;
+              const isLoadFrom = pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
+              return (
+                <div key={i} className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2">
+                  <span className={cn(
+                      "text-[10px] uppercase font-bold tracking-tight mb-1",
+                      isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-indigo-500 dark:text-indigo-400"
+                    )}>
+                    {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM") ? "Замитнення" : "Розмитнення"}
                   </span>
-                )}
-              </div>
-            ))}
-            {transitPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium text-center">—</span>
-            )}
+                  <div className="flex items-center justify-center gap-2 font-bold text-[12px] text-zinc-800 dark:text-white w-full min-w-0">
+                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    <span className="truncate">
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
+                      {pt.city}
+                    </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
+                  )}
+                </div>
+              );
+            })}
+            {transitPoints.length === 0 && <span className="text-zinc-400 font-medium text-center">—</span>}
           </div>
 
           {/* 4. Розвантаження */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2">
-            {toPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium">—</span>
-            )}
-            {toPoints.map((pt, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0"
-              >
-                <div className="flex items-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px]">
-                  {pt.ids_country && (
-                    <Flag
-                      country={pt.ids_country}
-                      size={16}
-                      className="rounded-[2px] shadow-sm"
-                    />
+          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2">
+            {toPoints.map((pt, i) => {
+              const ptAny = pt as any;
+              const zip = ptAny.post_code || ptAny.zip_code;
+              return (
+                <div key={i} className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2">
+                  <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    <span className="truncate">
+                      {pt.ids_country ? `${pt.ids_country}-` : ""}
+                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
+                      {pt.city}
+                    </span>
+                  </div>
+                  {ptAny.ids_region && (
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
                   )}
-                  <span>
-                    {pt.ids_country ? `${pt.ids_country}-` : ""}
-                    {pt.ids_country !== "UA" &&
-                      ((pt as any).post_code || (pt as any).zip_code) && (
-                        <span className="text-indigo-600 dark:text-indigo-400 mr-1">
-                          {(pt as any).post_code || (pt as any).zip_code}
-                        </span>
-                      )}
-                    {pt.city}
-                  </span>
                 </div>
-                {(pt as any).ids_region && (
-                  <span className="text-[10px] text-zinc-500 font-medium mt-0.5">
-                    {getRegionName((pt as any).ids_region)}
-                  </span>
-                )}
-              </div>
-            ))}
-            {formatTenderDate(cargo.date_unload) && (
-              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1">
-                {formatTenderDate(cargo.date_unload)}
+              );
+            })}
+            {formatTenderDateTime(cargo.date_unload) && (
+              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 flex gap-1 items-center">
+                <span className="text-[10px] uppercase text-zinc-400 font-black">До:</span>
+                {formatTenderDateTime(cargo.date_unload)}
               </span>
             )}
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden">
-            <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
-              {cargo.cargo || "ТНП"}
-            </span>
+          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center text-[11px] font-semibold lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+            {cargo.cargo || "—"}
           </div>
 
-          {/* 6. Тип транспорту */}
-          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1">
-            <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
-              {trailers.split(", ").map((t, i) => (
-                <React.Fragment key={i}>
-                  {t}
-                  <br />
-                </React.Fragment>
-              ))}
-            </span>
-            {loadTypes && (
-              <span className="text-[11px] text-zinc-500">
-                {loadTypes.split(", ")[0]}
-              </span>
-            )}
+          {/* 6. Транспорт */}
+          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+                <Truck size={13} className="text-zinc-500" />
+                <span className="font-black text-zinc-800 dark:text-white text-[11px]">{cargo.car_count || 1}</span>
+             </div>
+             <span className="font-semibold text-zinc-800 dark:text-white text-[11px]">{trailers}</span>
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
-            {cargo.volume ? (
-              <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
-                {cargo.volume} м³
-              </span>
-            ) : null}
-            {cargo.weight ? (
-              <span className="font-semibold text-zinc-800 dark:text-white text-[12px] mt-0.5">
-                {cargo.weight} т.
-              </span>
-            ) : null}
-            {!cargo.volume && !cargo.weight && (
-              <span className="text-zinc-500">—</span>
-            )}
+          <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+            {cargo.volume && <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">{cargo.volume} м³</span>}
+            {cargo.weight && <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">{cargo.weight} т.</span>}
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden">
-            <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
-                {cargo.notes || "—"}
-              </span>
-            </div>
+          <div className="flex-1 min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-2 text-center relative lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+            <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words">
+              {cargo.notes || "—"}
+            </span>
+            {cargo.files && cargo.files.length > 0 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsFilesModalOpen(true); }} 
+                className="absolute bottom-1 right-1 text-[#6366f1] hover:scale-110 transition-transform"
+              >
+                <Paperclip size={14} className="rotate-45" />
+              </button>
+            )}
           </div>
 
-          {/* 9. Ціни */}
-          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white overflow-hidden">
-            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
-              <div className="flex items-center gap-[1px] font-black text-[15px] text-zinc-800 dark:text-white leading-none">
-                {cargo.price_start}
-                <span>{currencySymbol}</span>
-              </div>
-              {cargo.price_step && (
-                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-medium mt-1">
-                  крок {cargo.price_step}
-                </span>
-              )}
+          {/* 9. Ціни - Optimized widths and wrapping */}
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+            <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
+              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Стартова ціна</span>
+              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_start}{currencySymbol}</span>
             </div>
-            <div className="h-[45px] flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 border-t border-zinc-200/80">
-              <span className="text-[10px] text-[#2c5f2d] dark:text-emerald-300 font-medium mb-0.5">
-                Ціна замовника
-              </span>
-              <span className="text-[14px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                {cargo.cost_start || 0}
-                <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
+            <div className="h-[43px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
+              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Ціна замовника</span>
+              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_client || "—"}{currencySymbol}</span>
+            </div>
+            <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
+              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Ваша поточна ставка</span>
+              <span className="text-[14px] font-black text-emerald-600 dark:text-emerald-400 leading-none">
+                {myPrice > 0 ? `${myPrice}${currencySymbol}` : "—"}
               </span>
             </div>
           </div>
 
           {/* 10. Залишилось */}
-          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white">
-            <div className="flex-1 flex flex-col items-center justify-center p-2 min-h-[45px]">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium tracking-normal mb-1">
-                Залишилось
-              </span>
-              <span className="font-bold text-[#e03131] dark:text-red-400 text-[14px] tracking-tight leading-none">
-                <TenderTimer
-                  label=""
-                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
-                />
-              </span>
-            </div>
-            {cargo.price_redemption ? (
-              <div className="h-[45px] w-full flex flex-col items-center justify-center border-t border-zinc-200/80">
-                <span className="text-[10px] text-zinc-500 font-medium mb-0.5">
-                  Викуп
-                </span>
-                <span className="text-[14px] font-black text-zinc-800 leading-none">
-                  {cargo.price_redemption}
-                  <span className="text-[11px] ml-[1px]">{currencySymbol}</span>
-                </span>
-              </div>
-            ) : null}
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-2 bg-white dark:bg-slate-900 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+            <span className="text-[10px] text-zinc-500 font-medium mb-1">Залишилось</span>
+            <span className={cn("font-bold text-[16px] tracking-tight leading-none", cargo.time_end ? "text-[#e03131]" : "text-emerald-500")}>
+              {cargo.time_end ? <TenderTimer label="" targetDate={isPlan ? cargo.time_start : cargo.time_end} /> : "—"}
+            </span>
           </div>
 
-          {/* 11. Краща Ставка */}
-          <div
-            className="w-full lg:w-[150px] flex-shrink-0 flex flex-col bg-[#eef7ec] dark:bg-emerald-900/30 border-l lg:border-l-0 border-[#eef7ec] relative items-center justify-center p-3 hover:bg-[#e4f2df] transition-colors cursor-pointer group/rates"
-            onClick={() => setIsRatesOpen(!isRatesOpen)}
-          >
-            <div className="flex flex-col items-center justify-center w-full">
-              <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300 uppercase mb-1">
-                Краща ставка
-              </span>
-              <span className="text-[16px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none mb-1">
-                {bestBid ? bestBid.price_proposed : cargo.price_start}
-                <span className="text-[12px] ml-[1px]">{currencySymbol}</span>
-              </span>
-              <span className="text-[10px] text-[#2c5f2d]/70 font-medium truncate max-w-full">
-                {bestBid ? bestBid.company_name : "Очікується"}
-              </span>
+          {/* 11. Дії */}
+          <div className="w-full lg:w-[155px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l border-zinc-100 dark:border-white/5 relative overflow-hidden">
+            <div 
+              className="h-[43px] flex flex-col items-center justify-center p-1 bg-[#f0f9f1] dark:bg-emerald-900/40 cursor-pointer overflow-hidden relative group/rates transition-colors hover:bg-[#e6f4e7] dark:hover:bg-emerald-800/50" 
+              onClick={() => setIsRatesOpen(!isRatesOpen)}
+            >
+              <div className="flex items-center gap-1.5 leading-none mb-0.5">
+                <span className="text-[9px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-tight">Краща ставка</span>
+                <span className="text-[8px] font-black text-white bg-emerald-500 rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                  {cargo.rate_company?.length || 0}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 leading-none">
+                <span className="text-[13px] font-black text-emerald-900 dark:text-emerald-200">
+                  {bestBid ? `${bestBid.price_proposed}${currencySymbol}` : `${cargo.price_start}${currencySymbol}`}
+                </span>
+                <ChevronDown size={11} className={cn("text-emerald-600 transition-transform duration-300", isRatesOpen && "rotate-180")} />
+              </div>
             </div>
-            <div className="mt-1.5 flex items-center justify-center gap-1.5 px-3 py-0.5 rounded-full bg-[#2c5f2d]/10 dark:bg-emerald-500/10">
-              {isRatesOpen ? (
-                <ChevronUp size={14} className="text-[#2c5f2d]/70 dark:text-emerald-400" />
-              ) : (
-                <ChevronDown size={14} className="text-[#2c5f2d]/70 dark:text-emerald-400" />
-              )}
-              <span className="text-[10px] font-black text-[#2c5f2d] dark:text-emerald-400">
-                {cargo.rate_company?.length || 0}
-              </span>
-            </div>
+            {cargo.ids_type !== "AUCTION" && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); handleConfirmBid(); }} 
+                disabled={!isActive} 
+                className="h-[43px] w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
+              >
+                Зробити ставку
+              </button>
+            )}
+            <button 
+              onClick={(e) => { e.stopPropagation(); handleManualPrice(); }} 
+              disabled={!isActive} 
+              className="flex-1 min-h-[30px] text-[11px] font-bold text-[#6366f1] hover:underline uppercase py-2"
+            >
+              Ваша ціна
+            </button>
+          </div>
+
+          {/* 12. Меню */}
+          <div className="w-full lg:w-[36px] flex-shrink-0 flex items-center justify-center bg-zinc-50 dark:bg-white/5 border-l border-zinc-200 dark:border-white/10 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10 py-2 lg:py-0">
+            <TenderActions tender={cargo} />
           </div>
         </div>
       </div>
-
-      {/* 2. PROPOSAL / TOP BIDS HIGHLIGHT */}
-      {isRatesOpen && topBids.length > 0 && (
-        <div className="mx-2 mt-5 mb-4 flex flex-col gap-3 max-h-[450px] overflow-y-auto custom-scrollbar pr-2 py-1">
-          {topBids.map((bid, index) => {
-            const isTop1 = index === 0;
-            const isTop2 = index === 1;
-            const isTop3 = index === 2;
-            const isWinner = winningBid?.id === bid.id;
-
-            // Створення динамічних пропсів для стилів
-            const cardBg = isTop1
-              ? "border-emerald-400/50 bg-emerald-50/40 dark:bg-emerald-500/10 dark:border-emerald-500/20"
-              : isTop2
-                ? "border-amber-400/50 bg-amber-50/40 dark:bg-amber-500/10 dark:border-amber-500/20"
-                : isTop3
-                  ? "border-red-400/50 bg-red-50/40 dark:bg-red-500/10 dark:border-red-500/20"
-                  : "border-slate-100 bg-white dark:bg-slate-800/40 dark:border-white/5";
-
-            const badgeBg = isTop1
-              ? "bg-emerald-500 shadow-emerald-500/20"
-              : isTop2
-                ? "bg-amber-500 shadow-amber-500/20"
-                : isTop3
-                  ? "bg-red-500 shadow-red-500/20"
-                  : "bg-slate-400 shadow-slate-400/20";
-
-            const badgeLabel = isTop1
-              ? "BEST PRICE"
-              : isTop2
-                ? "TOP 2"
-                : isTop3
-                  ? "TOP 3"
-                  : `TOP ${index + 1}`;
-
-            const iconColor = isTop1
-              ? "text-emerald-700"
-              : isTop2
-                ? "text-amber-700"
-                : isTop3
-                  ? "text-red-700"
-                  : "text-slate-500";
-
-            const dividerColor = isTop1
-              ? "bg-emerald-200"
-              : isTop2
-                ? "bg-amber-200"
-                : isTop3
-                  ? "bg-red-200"
-                  : "bg-slate-200";
-
-            const emailBtnColor = isTop1
-              ? "border-emerald-200 text-emerald-600"
-              : isTop2
-                ? "border-amber-200 text-amber-600"
-                : isTop3
-                  ? "border-red-200 text-red-600"
-                  : "border-slate-200 text-slate-500";
-
-            const labelTitleColor = isTop1
-              ? "text-emerald-600"
-              : isTop2
-                ? "text-amber-600"
-                : isTop3
-                  ? "text-red-500"
-                  : "text-slate-400";
-
-            const priceColor = isTop1
-              ? "text-[#0eb48c]"
-              : isTop2
-                ? "text-amber-600"
-                : isTop3
-                  ? "text-red-500"
-                  : "text-slate-700";
-
-            const actionBtnColor = isTop1
-              ? "border-emerald-400 text-emerald-600 hover:bg-emerald-50"
-              : isTop2
-                ? "border-amber-400 text-amber-600 hover:bg-amber-50"
-                : isTop3
-                  ? "border-red-400 text-red-600 hover:bg-red-50"
-                  : "border-slate-300 text-slate-600 hover:bg-slate-50";
-
-            return (
-              <div
-                key={bid.id}
-                className={cn(
-                  "relative border rounded-[1.5rem] p-4 flex flex-col lg:flex-row shadow-sm gap-4 items-center transition-all hover:shadow-md",
-                  cardBg,
-                )}
-              >
-                <div
-                  className={cn(
-                    "absolute -top-[10px] left-6 text-white text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-widest shadow-lg z-10",
-                    badgeBg,
-                  )}
-                >
-                  {badgeLabel}
-                </div>
-
-                {/* Left Info Box */}
-                <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-6 pl-2">
-                  <div className="flex flex-col gap-2 min-w-[140px]">
-                    <div className="flex items-center gap-2">
-                      <Building2 size={16} className={iconColor} />
-                      <span className="font-bold text-zinc-800 dark:text-zinc-100 text-sm whitespace-nowrap">
-                        {bid.company_name}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <UserIcon size={16} className="text-zinc-400" />
-                      <span className="font-medium text-zinc-600 dark:text-zinc-400 text-[11px] whitespace-nowrap">
-                        {bid.author}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div
-                    className={cn("hidden sm:block w-px h-10", dividerColor)}
-                  />
-
-                  {/* Notes / Comment section */}
-                  <div className="flex-1 flex flex-col gap-1.5 min-w-[200px]">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-zinc-400 flex items-center gap-1">
-                      <Info size={10} /> Коментарій
-                    </span>
-                    <p className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium italic line-clamp-2 leading-relaxed">
-                      {bid.notes &&
-                      bid.notes !== "---" &&
-                      bid.notes !== "Користувацька ціна"
-                        ? `"${bid.notes}"`
-                        : "Без коментарів"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Contact Box */}
-                <div className="flex items-center">
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "rounded-full bg-white dark:bg-slate-900 border h-8 px-4 text-[11px] font-medium opacity-80 pointer-events-none",
-                      emailBtnColor,
-                    )}
-                  >
-                    <MailIcon size={12} className="mr-2 opacity-50" />{" "}
-                    {bid.email || "email не вказано"}
-                  </Button>
-                </div>
-
-                {/* Right Price Action */}
-                <div className="flex flex-col items-center sm:items-end justify-center pr-2 gap-1.5 w-full sm:w-auto min-w-[120px]">
-                  <span
-                    className={cn(
-                      "text-[9px] font-black uppercase tracking-widest",
-                      labelTitleColor,
-                    )}
-                  >
-                    ПРОПОЗИЦІЯ
-                  </span>
-                  <span
-                    className={cn(
-                      "text-2xl font-black leading-none mb-1",
-                      priceColor,
-                    )}
-                  >
-                    {bid.price_proposed} {currencySymbol}
-                  </span>
-                  {isWinner ? (
-                    <Button
-                      disabled={isDelWinner}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveWinner(bid);
-                      }}
-                      className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest shadow-md shadow-amber-500/20"
-                    >
-                      Скасувати вибір
-                    </Button>
-                  ) : (cargo.ids_status === "ANALYSIS" || cargo.ids_status === "ANALYZE") ? (
-                    <Button
-                      disabled={isPending || winningBid !== undefined}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSetWinner(bid, 1);
-                      }}
-                      className={cn(
-                        "w-full sm:w-auto bg-white dark:bg-slate-900 border rounded-full h-8 px-6 text-[10px] font-black uppercase tracking-widest",
-                        actionBtnColor,
-                      )}
-                    >
-                      Обрати переможцем
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* FOOTER */}
-      <div className="h-[34px] px-3 flex items-center justify-between bg-zinc-100/50 dark:bg-slate-800/30 text-[11px] mt-auto">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-          <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
-            <UserIcon size={14} className="text-zinc-500" />
-            <span>{cargo.author}</span>
+      <div className="min-h-[36px] px-3 py-2 lg:py-0 flex flex-col lg:flex-row items-center justify-between bg-zinc-50 dark:bg-slate-800/40 text-[11px] border-t border-zinc-100 dark:border-white/5 gap-2 xl:gap-0">
+        <div className="flex items-center gap-4 w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-white">
+            <UserIcon size={14} className="text-zinc-400" />
+            <span className="truncate max-w-[120px]">{cargo.author}</span>
           </div>
-          {cargo?.price_client && (
-            <div className="flex items-center gap-1.5 font-semibold text-zinc-800 dark:text-white">
-              <FaMoneyBill size={14} className="text-zinc-500" />
-              <span>{cargo?.price_client}</span>
-            </div>
-          )}
+          <div className="hidden sm:flex items-center gap-4">
+            {(cargo as any).email && (
+              <a href={`mailto:${(cargo as any).email}`} className="flex items-center gap-1.5 text-blue-500 hover:underline">
+                <MailIcon size={14} className="opacity-70" />
+                <span className="truncate max-w-[140px]">{(cargo as any).email}</span>
+              </a>
+            )}
+          </div>
+        </div>
 
-          {(cargo as any).email && (
-            <div className="flex items-center gap-1.5 font-medium text-blue-600 hover:underline cursor-pointer">
-              <MailIcon size={14} className="text-blue-400" />
-              <span>{(cargo as any).email}</span>
-            </div>
-          )}
-          {(cargo as any).usr_phone && (
-            <div className="flex items-center gap-1.5 font-medium text-blue-600 hover:underline cursor-pointer">
-              <PhoneIcon size={14} className="text-blue-400" />
-              <span>{(cargo as any).usr_phone}</span>
+        <div className="flex items-center justify-center">
+          {cargo.company_name && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Замовник:</span>
+              <span className="text-[12px] font-black text-zinc-800 dark:text-white uppercase truncate max-w-[200px]">{cargo.company_name}</span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-4 mt-auto">
-          {cargo.company_name && (
-            <div className="text-zinc-400 font-bold text-[11px] uppercase tracking-wider">
-              {cargo.company_name}
-            </div>
-          )}
-          <div className="text-zinc-500 font-medium">
-            {format(new Date((cargo as any).time_create || cargo.time_start || new Date()), "HH:mm dd.MM.yyyy")}
-          </div>
-          {cargo.files && cargo.files.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 rounded-full text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all hover:rotate-12 flex-shrink-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsFilesModalOpen(true);
-              }}
-            >
-              <Paperclip size={16} />
-            </Button>
-          )}
+        <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
+          <span className={cn("text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider", cargo.ids_type === "AUCTION" ? "bg-amber-100 text-amber-600" : "bg-indigo-100 text-indigo-600")}>
+            {cargo.ids_type === "AUCTION" ? "АУКЦІОН" : "РЕДУКЦІОН"}
+          </span>
+          <span className="text-zinc-400 font-medium">публікація {formatTenderDate(cargo.time_start)}</span>
         </div>
       </div>
 
-      <FilesPreviewModal
-        isOpen={isFilesModalOpen}
-        onClose={() => setIsFilesModalOpen(false)}
-        files={cargo.files || []}
-        title={`Документи тендеру #${cargo.id}`}
-      />
+      {/* Rates list */}
+      {isRatesOpen && topBids.length > 0 && (
+         <div className="p-4 bg-white dark:bg-slate-900 border-t border-zinc-100 dark:border-white/5">
+            <TenderRatesList 
+              cargo={cargo} 
+              onSetWinner={handleSetWinner} 
+              onRemoveWinner={handleRemoveWinner} 
+            />
+         </div>
+      )}
+
+      <FilesPreviewModal isOpen={isFilesModalOpen} onClose={() => setIsFilesModalOpen(false)} files={cargo.files || []} />
     </div>
   );
 }

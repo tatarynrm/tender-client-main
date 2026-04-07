@@ -126,29 +126,37 @@ export default function ManagersTenderPage({ status }: Props) {
   if (isLoading) return <Loader />;
 
   return (
-    <div className="p-0 mx-auto space-y-1 pb-40">
+    <div className="p-0 space-y-4 pb-40">
       <TenderFullInfoModal
         tenderId={selectedTender?.id}
         onClose={() => setSelectedTender(null)}
       />
 
-      <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-        <div className="flex justify-between items-center p-2">
-          <TenderFiltersSheet
-            filters={filters}
-            setFilters={setFilters}
-            apply={() => updateUrl({ ...filters, page: 1 })}
-            reset={handleReset}
-            dropdowns={tenderFilters}
-          />
-          <ItemsPerPage
-            options={[10, 20, 50, 100]}
-            defaultValue={currentParams.limit}
-            onChange={(newLimit) => {
-              localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
-              updateUrl({ ...currentParams, limit: newLimit, page: 1 });
-            }}
-          />
+      {/* ── Sticky header ─────────────────────────────────────────────────── */}
+      <div className="sticky top-[-20px] z-10 pt-4 pb-3 -mx-4 px-4 border-b border-border/60 backdrop-blur-md transition-all">
+        <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4">
+            {/* ── Left: Filter sheet ──────────────────────────────────────── */}
+            <TenderFiltersSheet
+              filters={filters}
+              setFilters={setFilters}
+              apply={() => updateUrl({ ...filters, page: 1 })}
+              reset={handleReset}
+              dropdowns={tenderFilters}
+            />
+
+            {/* ── Right: List controls ───────────────────────────── */}
+            <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
+              <ItemsPerPage
+                options={[10, 20, 50, 100]}
+                defaultValue={currentParams.limit}
+                onChange={(newLimit) => {
+                  localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
+                  updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -163,14 +171,16 @@ export default function ManagersTenderPage({ status }: Props) {
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-6">
-          <div className="grid gap-4">
-            {tenders.map((item) => (
-              <TenderCardManagers
-                key={item.id}
-                cargo={item}
-                onOpenDetails={() => setSelectedTender(item)}
-              />
-            ))}
+          <div className="overflow-x-auto pb-6 scrollbar-thin">
+            <div className="grid gap-4 min-w-full lg:min-w-[1240px]">
+              {tenders.map((item) => (
+                <TenderCardManagers
+                  key={item.id}
+                  cargo={item}
+                  onOpenDetails={() => setSelectedTender(item)}
+                />
+              ))}
+            </div>
           </div>
 
           {pagination && pagination.page_count > 1 && (

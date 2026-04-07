@@ -176,6 +176,7 @@ export const ModalProvider = () => {
       <DialogContent
         className={cn(getWidthClass(config.size), "p-0 overflow-hidden", config.className)}
         onPointerDownOutside={onPointerDownOutside}
+        showCloseButton={config.showCloseButton}
       >
         {(config.title || config.description) && (
           <DialogHeader className="p-6 border-b border-zinc-100 dark:border-white/5">

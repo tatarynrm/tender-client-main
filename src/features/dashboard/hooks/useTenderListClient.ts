@@ -80,12 +80,14 @@ export const useTenderListClient = (filters: TenderListFilters) => {
         return {
           ...old,
           content: old.content.map((t) =>
-            t.id === updatedTender.id ? updatedTender : t,
+            t.id === updatedTender.id ? { ...t, ...updatedTender } : t,
           ),
         };
       });
       // Також оновлюємо кеш конкретного тендера
-      queryClient.setQueryData(["tender", updatedTender.id], updatedTender);
+      queryClient.setQueryData(["tender", updatedTender.id], (old: any) =>
+        old ? { ...old, ...updatedTender } : updatedTender,
+      );
     };
 
     // Підписуємось
