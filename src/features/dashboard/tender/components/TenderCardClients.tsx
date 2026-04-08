@@ -265,7 +265,8 @@ export function TenderCardClients({
                     )}
                     <span className="truncate">
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {pt.ids_country !== "UA" && (ptAny.post_code || ptAny.zip_code) ? (
+                      {pt.ids_country !== "UA" &&
+                      (ptAny.post_code || ptAny.zip_code) ? (
                         <span className="text-indigo-500 dark:text-indigo-400 mr-0.5">
                           {ptAny.post_code || ptAny.zip_code}
                         </span>
@@ -486,7 +487,7 @@ export function TenderCardClients({
 
             {/* Middle: Submit Button */}
             {isAuction ? (
-              <div className="flex-1 flex items-center justify-center p-2 bg-white dark:bg-slate-900 overflow-hidden">
+              <div className="flex-1 flex items-center justify-center p-0 bg-white dark:bg-slate-900 overflow-hidden">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -505,7 +506,7 @@ export function TenderCardClients({
                   handleConfirmBid();
                 }}
                 disabled={!isActive}
-                className="h-[43px] w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all"
+                className="px-6 h-9 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
               >
                 Зробити ставку
               </button>

@@ -68,7 +68,7 @@ export function TenderCardManagers({
   const myPrice = React.useMemo(() => {
     if (!profile || !cargo.rate_company) return 0;
     const myLatestBid = [...cargo.rate_company]
-      .filter(r => r.id_author === profile.id)
+      .filter((r) => r.id_author === profile.id)
       .sort((a, b) => b.id - a.id)[0];
     return myLatestBid ? myLatestBid.price_proposed : 0;
   }, [cargo.rate_company, profile]);
@@ -86,7 +86,8 @@ export function TenderCardManagers({
 
   const bestBid = topBids[0] || null;
   const bestBidValue = bestBid ? bestBid.price_proposed : cargo.price_start;
-  const nextBidValue = cargo.price_next || Number(bestBidValue) - (cargo.price_step || 0);
+  const nextBidValue =
+    cargo.price_next || Number(bestBidValue) - (cargo.price_step || 0);
 
   const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
     cargo.id,
@@ -116,13 +117,19 @@ export function TenderCardManagers({
     );
   };
 
-  const fromPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_FROM");
+  const fromPoints = cargo.tender_route.filter(
+    (p) => p.ids_point === "LOAD_FROM",
+  );
   const toPoints = cargo.tender_route.filter((p) => p.ids_point === "LOAD_TO");
   const transitPoints = cargo.tender_route.filter(
-    (p) => ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point) || p.customs === true,
+    (p) =>
+      ["CUSTOM_UP", "BORDER", "CUSTOM_DOWN"].includes(p.ids_point) ||
+      p.customs === true,
   );
 
-  const isRef = cargo?.tender_trailer?.some((t) => t.ids_trailer_type === "REF");
+  const isRef = cargo?.tender_trailer?.some(
+    (t) => t.ids_trailer_type === "REF",
+  );
 
   const handleSetWinner = async (rate: IRateCompany, carCount: number) => {
     if (!rate.id) return;
@@ -138,7 +145,8 @@ export function TenderCardManagers({
     } catch (e) {}
   };
 
-  const trailers = cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
+  const trailers =
+    cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
   const winningBid = cargo.rate_company?.find((r) => r.car_count_winner! > 0);
 
   return (
@@ -159,36 +167,57 @@ export function TenderCardManagers({
             className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 dark:hover:bg-white/5 transition-colors"
             onClick={onOpenDetails}
           >
-            <span className={cn("text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none", title)}>
+            <span
+              className={cn(
+                "text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none",
+                title,
+              )}
+            >
               {cargo.id}
             </span>
           </div>
 
           {/* 2. Завантаження */}
           <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2">
-            {fromPoints.length === 0 && <span className="text-zinc-400 font-medium">—</span>}
+            {fromPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium">—</span>
+            )}
             {fromPoints.map((pt, i) => {
               const ptAny = pt as any;
               const zip = ptAny.post_code || ptAny.zip_code;
               return (
-                <div key={i} className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2">
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
+                >
                   <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
-                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={16}
+                        className="rounded-[2px] shadow-sm shrink-0"
+                      />
+                    )}
                     <span className="truncate">
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
+                      {zip && pt.ids_country !== "UA" && (
+                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                          {zip}
+                        </span>
+                      )}
                       {pt.city}
                     </span>
                   </div>
                   {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
                   )}
                 </div>
               );
             })}
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
-              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
-                <span className="text-[10px] uppercase text-zinc-400 font-black">Від:</span>
+              <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
                 {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
               </span>
             )}
@@ -199,32 +228,54 @@ export function TenderCardManagers({
             {transitPoints.map((pt, i) => {
               const ptAny = pt as any;
               const zip = ptAny.post_code || ptAny.zip_code;
-              const isLoadFrom = pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
+              const isLoadFrom =
+                pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
               return (
-                <div key={i} className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2">
-                  <span className={cn(
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2"
+                >
+                  <span
+                    className={cn(
                       "text-[10px] uppercase font-bold tracking-tight mb-1",
                       isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
                         ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-indigo-500 dark:text-indigo-400"
-                    )}>
-                    {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM") ? "Замитнення" : "Розмитнення"}
+                        : "text-indigo-500 dark:text-indigo-400",
+                    )}
+                  >
+                    {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                      ? "Замитнення"
+                      : "Розмитнення"}
                   </span>
                   <div className="flex items-center justify-center gap-2 font-bold text-[12px] text-zinc-800 dark:text-white w-full min-w-0">
-                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={16}
+                        className="rounded-[2px] shadow-sm shrink-0"
+                      />
+                    )}
                     <span className="truncate">
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
+                      {zip && pt.ids_country !== "UA" && (
+                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                          {zip}
+                        </span>
+                      )}
                       {pt.city}
                     </span>
                   </div>
                   {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
                   )}
                 </div>
               );
             })}
-            {transitPoints.length === 0 && <span className="text-zinc-400 font-medium text-center">—</span>}
+            {transitPoints.length === 0 && (
+              <span className="text-zinc-400 font-medium text-center">—</span>
+            )}
           </div>
 
           {/* 4. Розвантаження */}
@@ -233,24 +284,38 @@ export function TenderCardManagers({
               const ptAny = pt as any;
               const zip = ptAny.post_code || ptAny.zip_code;
               return (
-                <div key={i} className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2">
+                <div
+                  key={i}
+                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
+                >
                   <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
-                    {pt.ids_country && <Flag country={pt.ids_country} size={16} className="rounded-[2px] shadow-sm shrink-0" />}
+                    {pt.ids_country && (
+                      <Flag
+                        country={pt.ids_country}
+                        size={16}
+                        className="rounded-[2px] shadow-sm shrink-0"
+                      />
+                    )}
                     <span className="truncate">
                       {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">{zip}</span>}
+                      {zip && pt.ids_country !== "UA" && (
+                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                          {zip}
+                        </span>
+                      )}
                       {pt.city}
                     </span>
                   </div>
                   {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">{getRegionName(ptAny.ids_region)}</span>
+                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                      {getRegionName(ptAny.ids_region)}
+                    </span>
                   )}
                 </div>
               );
             })}
             {formatTenderDateTime(cargo.date_unload) && (
-              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 flex gap-1 items-center">
-                <span className="text-[10px] uppercase text-zinc-400 font-black">До:</span>
+              <span className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 flex gap-1 items-center">
                 {formatTenderDateTime(cargo.date_unload)}
               </span>
             )}
@@ -263,17 +328,32 @@ export function TenderCardManagers({
 
           {/* 6. Транспорт */}
           <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
-             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
-                <Truck size={13} className="text-zinc-500" />
-                <span className="font-black text-zinc-800 dark:text-white text-[11px]">{cargo.car_count || 1}</span>
-             </div>
-             <span className="font-semibold text-zinc-800 dark:text-white text-[11px]">{trailers}</span>
+            <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+              <Truck size={13} className="text-zinc-500" />
+              <span className="font-black text-zinc-800 dark:text-white text-[11px]">
+                {cargo.car_count || 1}
+              </span>
+            </div>
+            <span className="font-semibold text-zinc-800 dark:text-white text-[11px]">
+              {trailers}
+            </span>
+            <span className="font-semibold text-zinc-800 dark:text-white text-[11px]">
+              {}
+            </span>
           </div>
 
           {/* 7. Вага/Об'єм */}
           <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
-            {cargo.volume && <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">{cargo.volume} м³</span>}
-            {cargo.weight && <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">{cargo.weight} т.</span>}
+            {cargo.volume && (
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                {cargo.volume} м³
+              </span>
+            )}
+            {cargo.weight && (
+              <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                {cargo.weight} т.
+              </span>
+            )}
           </div>
 
           {/* 8. Нотатки */}
@@ -282,8 +362,11 @@ export function TenderCardManagers({
               {cargo.notes || "—"}
             </span>
             {cargo.files && cargo.files.length > 0 && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); setIsFilesModalOpen(true); }} 
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsFilesModalOpen(true);
+                }}
                 className="absolute bottom-1 right-1 text-[#6366f1] hover:scale-110 transition-transform"
               >
                 <Paperclip size={14} className="rotate-45" />
@@ -295,16 +378,28 @@ export function TenderCardManagers({
           <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
             {cargo.ids_type !== "AUCTION" && (
               <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-                <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Стартова ціна</span>
-                <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_start}{currencySymbol}</span>
+                <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+                  Стартова ціна
+                </span>
+                <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
+                  {cargo.price_start}
+                  {currencySymbol}
+                </span>
               </div>
             )}
             <div className="h-[43px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Ціна замовника</span>
-              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">{cargo.price_client || "—"}{currencySymbol}</span>
+              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+                Ціна замовника
+              </span>
+              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
+                {cargo.price_client || "—"}
+                {currencySymbol}
+              </span>
             </div>
             <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">Ваша поточна ставка</span>
+              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+                Ваша поточна ставка
+              </span>
               <span className="text-[14px] font-black text-emerald-600 dark:text-emerald-400 leading-none">
                 {myPrice > 0 ? `${myPrice}${currencySymbol}` : "—"}
               </span>
@@ -313,43 +408,73 @@ export function TenderCardManagers({
 
           {/* 10. Залишилось */}
           <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-2 bg-white dark:bg-slate-900 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
-            <span className="text-[10px] text-zinc-500 font-medium mb-1">Залишилось</span>
-            <span className={cn("font-bold text-[16px] tracking-tight leading-none", cargo.time_end ? "text-[#e03131]" : "text-emerald-500")}>
-              {cargo.time_end ? <TenderTimer label="" targetDate={isPlan ? cargo.time_start : cargo.time_end} /> : "—"}
+            <span className="text-[10px] text-zinc-500 font-medium mb-1">
+              Залишилось
+            </span>
+            <span
+              className={cn(
+                "font-bold text-[16px] tracking-tight leading-none",
+                cargo.time_end ? "text-[#e03131]" : "text-emerald-500",
+              )}
+            >
+              {cargo.time_end ? (
+                <TenderTimer
+                  label=""
+                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                />
+              ) : (
+                "—"
+              )}
             </span>
           </div>
 
           {/* 11. Дії */}
           <div className="w-full lg:w-[155px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l border-zinc-100 dark:border-white/5 relative overflow-hidden">
-            <div 
-              className="h-[43px] flex flex-col items-center justify-center p-1 bg-[#f0f9f1] dark:bg-emerald-900/40 cursor-pointer overflow-hidden relative group/rates transition-colors hover:bg-[#e6f4e7] dark:hover:bg-emerald-800/50" 
+            <div
+              className="h-[43px] flex flex-col items-center justify-center p-1 bg-[#f0f9f1] dark:bg-emerald-900/40 cursor-pointer overflow-hidden relative group/rates transition-colors hover:bg-[#e6f4e7] dark:hover:bg-emerald-800/50"
               onClick={() => setIsRatesOpen(!isRatesOpen)}
             >
               <div className="flex items-center gap-1.5 leading-none mb-0.5">
-                <span className="text-[9px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-tight">Краща ставка</span>
+                <span className="text-[9px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-tight">
+                  Краща ставка
+                </span>
                 <span className="text-[8px] font-black text-white bg-emerald-500 rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
                   {cargo.rate_company?.length || 0}
                 </span>
               </div>
               <div className="flex items-center gap-1 leading-none">
                 <span className="text-[13px] font-black text-emerald-900 dark:text-emerald-200">
-                  {bestBid ? `${bestBid.price_proposed}${currencySymbol}` : `${cargo.price_start}${currencySymbol}`}
+                  {bestBid
+                    ? `${bestBid.price_proposed}${currencySymbol}`
+                    : `${cargo.price_start}${currencySymbol}`}
                 </span>
-                <ChevronDown size={11} className={cn("text-emerald-600 transition-transform duration-300", isRatesOpen && "rotate-180")} />
+                <ChevronDown
+                  size={11}
+                  className={cn(
+                    "text-emerald-600 transition-transform duration-300",
+                    isRatesOpen && "rotate-180",
+                  )}
+                />
               </div>
             </div>
             {cargo.ids_type !== "AUCTION" && (
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleConfirmBid(); }} 
-                disabled={!isActive} 
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirmBid();
+                }}
+                disabled={!isActive}
                 className="h-[43px] w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
               >
                 Зробити ставку
               </button>
             )}
-            <button 
-              onClick={(e) => { e.stopPropagation(); handleManualPrice(); }} 
-              disabled={!isActive} 
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleManualPrice();
+              }}
+              disabled={!isActive}
               className="flex-1 min-h-[30px] text-[11px] font-bold text-[#6366f1] hover:underline uppercase py-2"
             >
               Ваша ціна
@@ -372,9 +497,14 @@ export function TenderCardManagers({
           </div>
           <div className="hidden sm:flex items-center gap-4">
             {(cargo as any).email && (
-              <a href={`mailto:${(cargo as any).email}`} className="flex items-center gap-1.5 text-blue-500 hover:underline">
+              <a
+                href={`mailto:${(cargo as any).email}`}
+                className="flex items-center gap-1.5 text-blue-500 hover:underline"
+              >
                 <MailIcon size={14} className="opacity-70" />
-                <span className="truncate max-w-[140px]">{(cargo as any).email}</span>
+                <span className="truncate max-w-[140px]">
+                  {(cargo as any).email}
+                </span>
               </a>
             )}
           </div>
@@ -383,32 +513,49 @@ export function TenderCardManagers({
         <div className="flex items-center justify-center">
           {cargo.company_name && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Замовник:</span>
-              <span className="text-[12px] font-black text-zinc-800 dark:text-white uppercase truncate max-w-[200px]">{cargo.company_name}</span>
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">
+                Замовник:
+              </span>
+              <span className="text-[12px] font-black text-zinc-800 dark:text-white uppercase truncate max-w-[200px]">
+                {cargo.company_name}
+              </span>
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
-          <span className={cn("text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider", cargo.ids_type === "AUCTION" ? "bg-amber-100 text-amber-600" : "bg-indigo-100 text-indigo-600")}>
+          <span
+            className={cn(
+              "text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
+              cargo.ids_type === "AUCTION"
+                ? "bg-amber-100 text-amber-600"
+                : "bg-indigo-100 text-indigo-600",
+            )}
+          >
             {cargo.ids_type === "AUCTION" ? "АУКЦІОН" : "РЕДУКЦІОН"}
           </span>
-          <span className="text-zinc-400 font-medium">публікація {formatTenderDate(cargo.time_start)}</span>
+          <span className="text-zinc-400 font-medium">
+            публікація {formatTenderDate(cargo.time_start)}
+          </span>
         </div>
       </div>
 
       {/* Rates list */}
       {isRatesOpen && topBids.length > 0 && (
-         <div className="p-4 bg-white dark:bg-slate-900 border-t border-zinc-100 dark:border-white/5">
-            <TenderRatesList 
-              cargo={cargo} 
-              onSetWinner={handleSetWinner} 
-              onRemoveWinner={handleRemoveWinner} 
-            />
-         </div>
+        <div className="p-4 bg-white dark:bg-slate-900 border-t border-zinc-100 dark:border-white/5">
+          <TenderRatesList
+            cargo={cargo}
+            onSetWinner={handleSetWinner}
+            onRemoveWinner={handleRemoveWinner}
+          />
+        </div>
       )}
 
-      <FilesPreviewModal isOpen={isFilesModalOpen} onClose={() => setIsFilesModalOpen(false)} files={cargo.files || []} />
+      <FilesPreviewModal
+        isOpen={isFilesModalOpen}
+        onClose={() => setIsFilesModalOpen(false)}
+        files={cargo.files || []}
+      />
     </div>
   );
 }

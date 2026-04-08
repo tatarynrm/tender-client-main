@@ -5,9 +5,7 @@ import { format } from "date-fns";
  * If time is 00:00, returns only dd.MM.
  * Otherwise returns dd.MM - HH:mm.
  */
-export const formatTenderDate = (
-  dateString?: string | Date | null
-): string => {
+export const formatTenderDate = (dateString?: string | Date | null): string => {
   if (!dateString) return "";
   const date = dateString instanceof Date ? dateString : new Date(dateString);
   if (isNaN(date.getTime())) return "";
@@ -27,7 +25,7 @@ export const formatTenderDate = (
  * If time is 00:00, returns only dd.MM.
  */
 export const formatTenderDateTime = (
-  dateString?: string | Date | null
+  dateString?: string | Date | null,
 ): string => {
   if (!dateString) return "";
   const date = dateString instanceof Date ? dateString : new Date(dateString);
@@ -46,7 +44,7 @@ export const formatTenderDateTime = (
  */
 export const getTenderLoadDateString = (
   date1?: string | Date | null,
-  date2?: string | Date | null
+  date2?: string | Date | null,
 ): string => {
   const d1 = formatTenderDateTime(date1);
   const d2 = formatTenderDateTime(date2);
