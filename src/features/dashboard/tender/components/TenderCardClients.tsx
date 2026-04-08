@@ -331,7 +331,7 @@ export function TenderCardClients({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[70px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden">
+          <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden">
             <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
               {cargo.cargo || "ТНП"}
             </span>
@@ -350,7 +350,7 @@ export function TenderCardClients({
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full lg:w-[80px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+          <div className="lg:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
             {cargo.volume && (
               <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
                 {cargo.volume} м³
