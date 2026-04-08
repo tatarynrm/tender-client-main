@@ -14,6 +14,7 @@ import {
   Mail as MailIcon,
   Phone as PhoneIcon,
   Paperclip as PaperclipIcon,
+  Truck,
 } from "lucide-react";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { TenderTimer } from "./TenderTimer";
@@ -339,6 +340,12 @@ export function TenderCardClients({
 
           {/* 6. Тип транспорту */}
           <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center">
+            <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+              <Truck size={13} className="text-zinc-500" />
+              <span className="font-black text-zinc-800 dark:text-white text-[11px]">
+                {cargo.car_count || 1}
+              </span>
+            </div>
             <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
               {trailers.split(", ").map((t, i) => (
                 <React.Fragment key={i}>
