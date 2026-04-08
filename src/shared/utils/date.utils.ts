@@ -49,6 +49,6 @@ export const getTenderLoadDateString = (
   const d1 = formatTenderDateTime(date1);
   const d2 = formatTenderDateTime(date2);
 
-  if (d1 && d2 && d1 !== d2) return `${d1}\n${d2}`;
+  if (d1 && d2 && d1 !== d2) return `${d1} - ${d2}`;
   return d1 || d2 || "—";
 };

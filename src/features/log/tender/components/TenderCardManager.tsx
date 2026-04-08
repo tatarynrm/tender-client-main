@@ -230,7 +230,7 @@ export function TenderCardManagers({
               );
             })}
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
-              <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
+              <span className="text-[12px]  font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
                 {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
               </span>
             )}
