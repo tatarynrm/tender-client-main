@@ -1,4 +1,3 @@
-
 "use client";
 
 import { BrushCleaning, X } from "lucide-react";
@@ -79,19 +78,19 @@ export const ActiveFilters = ({
       case "status":
         return (
           dropdowns.tender_status_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
       case "manager":
         return (
           dropdowns.manager_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
       case "company":
         return (
           dropdowns.company_dropdown?.find(
-            (s: any) => String(s.ids) === String(value)
+            (s: any) => String(s.ids) === String(value),
           )?.value || value
         );
       default:
@@ -117,18 +116,15 @@ export const ActiveFilters = ({
       }
       return acc;
     },
-    {} as Record<string, { id: string; display: string }[]>
+    {} as Record<string, { id: string; display: string }[]>,
   );
-
-
-
 
   const groupKeys = Object.keys(groupedFilters);
   if (groupKeys.length === 0) return null;
 
   return (
     <div className="space-y-2 mt-2 mb-4  p-2 rounded-lg border border-dashed border-zinc-200">
-      <div className="flex items-center justify-between border-b pb-1.5 border-zinc-200">
+      <div className="flex items-center  border-b pb-1.5 border-zinc-200">
         <span className="text-[9px] text-zinc-400 font-black uppercase tracking-tighter">
           Активні фільтри
         </span>

@@ -391,9 +391,9 @@ export function TenderCardClients({
             {isAuction ? (
               <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 leading-tight text-center">
                 <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300">
-                  Ваша поточна ціна
+                  Ваша поточна ставка
                 </span>
-                <span className="text-[17px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
+                <span className="text-[13px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
                   {cargo.price_proposed
                     ? `${cargo.price_proposed}${currencySymbol}`
                     : "—"}
@@ -417,14 +417,16 @@ export function TenderCardClients({
                   )}
                 </div>
                 {/* Level 2: Custom Price Link (Green BG) */}
-                <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 text-center">
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleManualPrice();
+                  }}
+                  className="flex-1 cursor-pointer flex flex-col items-center justify-center bg-[#eef7ec] hover:bg-[#dcf3d9] dark:bg-emerald-900/20 p-2 text-center rounded-xl"
+                >
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleManualPrice();
-                    }}
                     disabled={!isActive}
-                    className="text-[11px] font-extrabold text-[#2c5f2d] hover:underline uppercase leading-none"
+                    className="text-[11px] font-extrabold text-[#2c5f2d]  uppercase leading-none cursor-pointer rounded-full px-3 py-1"
                   >
                     Ваша ціна
                   </button>
@@ -456,7 +458,7 @@ export function TenderCardClients({
                   handleBuyoutConfirm();
                 }}
                 disabled={!isActive}
-                className="h-[43px] flex flex-col items-center justify-center bg-[#fce8e8] hover:bg-[#fad1d1] transition-colors group disabled:opacity-50"
+                className="h-[43px] flex flex-col cursor-pointer items-center justify-center bg-[#fce8e8] hover:bg-[#fad1d1] transition-colors group disabled:opacity-50"
               >
                 <span className="text-[10px] text-[#a61e1e] font-bold uppercase leading-none mb-0.5">
                   Викуп
@@ -494,7 +496,7 @@ export function TenderCardClients({
                     handleManualPrice();
                   }}
                   disabled={!isActive}
-                  className="px-6 h-9 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
+                  className="px-6 h-9 bg-[#6366f1] cursor-pointer hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
                 >
                   Зробити ставку
                 </button>
@@ -506,7 +508,7 @@ export function TenderCardClients({
                   handleConfirmBid();
                 }}
                 disabled={!isActive}
-                className="px-6 h-9 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
+                className="px-6 h-9 bg-[#6366f1] cursor-pointer hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
               >
                 Зробити ставку
               </button>

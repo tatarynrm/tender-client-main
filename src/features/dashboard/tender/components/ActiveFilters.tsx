@@ -32,7 +32,7 @@ export const ActiveFilters = ({
 }: ActiveFiltersProps) => {
   const getDisplayValue = (key: string, value: string) => {
     if (key === "winner_company") return "Переможець";
-    
+
     if (!dropdowns) return value;
     switch (key) {
       case "country_from":
@@ -44,7 +44,7 @@ export const ActiveFilters = ({
       case "region_from":
       case "region_to":
         const region = dropdowns.region_dropdown?.find(
-          (r: any) => r.ids === value
+          (r: any) => r.ids === value,
         );
         return region ? region.short_name : value;
       case "trailer_type":
@@ -83,7 +83,7 @@ export const ActiveFilters = ({
       }
       return acc;
     },
-    {} as Record<string, { id: string; display: string }[]>
+    {} as Record<string, { id: string; display: string }[]>,
   );
 
   const groupKeys = Object.keys(groupedFilters);
