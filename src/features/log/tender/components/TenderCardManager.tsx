@@ -174,7 +174,7 @@ export function TenderCardManagers({
 
       {/* Main Grid Card - Adjusted for better responsiveness */}
       <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col border-b border-zinc-200/80">
-        <div className="flex flex-col lg:flex-row w-full min-h-[90px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10">
+        <div className="flex flex-col lg:flex-row w-full lg:h-[115px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
             className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 dark:hover:bg-white/5 transition-colors"
@@ -191,44 +191,46 @@ export function TenderCardManagers({
           </div>
 
           {/* 2. Завантаження */}
-          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2">
-            {fromPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium">—</span>
-            )}
-            {fromPoints.map((pt, i) => {
-              const ptAny = pt as any;
-              const zip = ptAny.post_code || ptAny.zip_code;
-              return (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
-                >
-                  <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
-                    {pt.ids_country && (
-                      <Flag
-                        country={pt.ids_country}
-                        size={16}
-                        className="rounded-[2px] shadow-sm shrink-0"
-                      />
-                    )}
-                    <span className="truncate">
-                      {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && (
-                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
-                          {zip}
-                        </span>
+          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2 h-full">
+            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
+              {fromPoints.length === 0 && (
+                <span className="text-zinc-400 font-medium">—</span>
+              )}
+              {fromPoints.map((pt, i) => {
+                const ptAny = pt as any;
+                const zip = ptAny.post_code || ptAny.zip_code;
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
+                  >
+                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                      {pt.ids_country && (
+                        <Flag
+                          country={pt.ids_country}
+                          size={16}
+                          className="rounded-[2px] shadow-sm shrink-0"
+                        />
                       )}
-                      {pt.city}
-                    </span>
+                      <span className="truncate">
+                        {pt.ids_country ? `${pt.ids_country}-` : ""}
+                        {zip && pt.ids_country !== "UA" && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                            {zip}
+                          </span>
+                        )}
+                        {pt.city}
+                      </span>
+                    </div>
+                    {ptAny.ids_region && (
+                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                        {getRegionName(ptAny.ids_region)}
+                      </span>
+                    )}
                   </div>
-                  {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
-                      {getRegionName(ptAny.ids_region)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
               <span className="text-[12px]  font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
                 {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
@@ -237,96 +239,100 @@ export function TenderCardManagers({
           </div>
 
           {/* 3. Митне оформлення */}
-          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center">
-            {transitPoints.map((pt, i) => {
-              const ptAny = pt as any;
-              const zip = ptAny.post_code || ptAny.zip_code;
-              const isLoadFrom =
-                pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
-              return (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2"
-                >
-                  <span
-                    className={cn(
-                      "text-[10px] uppercase font-bold tracking-tight mb-1",
-                      isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-indigo-500 dark:text-indigo-400",
-                    )}
+          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center h-full">
+            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
+              {transitPoints.map((pt, i) => {
+                const ptAny = pt as any;
+                const zip = ptAny.post_code || ptAny.zip_code;
+                const isLoadFrom =
+                  pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2"
                   >
-                    {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
-                      ? "Замитнення"
-                      : "Розмитнення"}
-                  </span>
-                  <div className="flex items-center justify-center gap-2 font-bold text-[12px] text-zinc-800 dark:text-white w-full min-w-0">
-                    {pt.ids_country && (
-                      <Flag
-                        country={pt.ids_country}
-                        size={16}
-                        className="rounded-[2px] shadow-sm shrink-0"
-                      />
-                    )}
-                    <span className="truncate">
-                      {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && (
-                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
-                          {zip}
-                        </span>
+                    <span
+                      className={cn(
+                        "text-[10px] uppercase font-bold tracking-tight mb-1",
+                        isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-indigo-500 dark:text-indigo-400",
                       )}
-                      {pt.city}
+                    >
+                      {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                        ? "Замитнення"
+                        : "Розмитнення"}
                     </span>
+                    <div className="flex items-center justify-center gap-2 font-bold text-[12px] text-zinc-800 dark:text-white w-full min-w-0">
+                      {pt.ids_country && (
+                        <Flag
+                          country={pt.ids_country}
+                          size={16}
+                          className="rounded-[2px] shadow-sm shrink-0"
+                        />
+                      )}
+                      <span className="truncate">
+                        {pt.ids_country ? `${pt.ids_country}-` : ""}
+                        {zip && pt.ids_country !== "UA" && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                            {zip}
+                          </span>
+                        )}
+                        {pt.city}
+                      </span>
+                    </div>
+                    {ptAny.ids_region && (
+                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                        {getRegionName(ptAny.ids_region)}
+                      </span>
+                    )}
                   </div>
-                  {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
-                      {getRegionName(ptAny.ids_region)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-            {transitPoints.length === 0 && (
-              <span className="text-zinc-400 font-medium text-center">—</span>
-            )}
+                );
+              })}
+              {transitPoints.length === 0 && (
+                <span className="text-zinc-400 font-medium text-center">—</span>
+              )}
+            </div>
           </div>
 
           {/* 4. Розвантаження */}
-          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2">
-            {toPoints.map((pt, i) => {
-              const ptAny = pt as any;
-              const zip = ptAny.post_code || ptAny.zip_code;
-              return (
-                <div
-                  key={i}
-                  className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
-                >
-                  <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
-                    {pt.ids_country && (
-                      <Flag
-                        country={pt.ids_country}
-                        size={16}
-                        className="rounded-[2px] shadow-sm shrink-0"
-                      />
-                    )}
-                    <span className="truncate">
-                      {pt.ids_country ? `${pt.ids_country}-` : ""}
-                      {zip && pt.ids_country !== "UA" && (
-                        <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
-                          {zip}
-                        </span>
+          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2 h-full">
+            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
+              {toPoints.map((pt, i) => {
+                const ptAny = pt as any;
+                const zip = ptAny.post_code || ptAny.zip_code;
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
+                  >
+                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                      {pt.ids_country && (
+                        <Flag
+                          country={pt.ids_country}
+                          size={16}
+                          className="rounded-[2px] shadow-sm shrink-0"
+                        />
                       )}
-                      {pt.city}
-                    </span>
+                      <span className="truncate">
+                        {pt.ids_country ? `${pt.ids_country}-` : ""}
+                        {zip && pt.ids_country !== "UA" && (
+                          <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
+                            {zip}
+                          </span>
+                        )}
+                        {pt.city}
+                      </span>
+                    </div>
+                    {ptAny.ids_region && (
+                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                        {getRegionName(ptAny.ids_region)}
+                      </span>
+                    )}
                   </div>
-                  {ptAny.ids_region && (
-                    <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
-                      {getRegionName(ptAny.ids_region)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
             {formatTenderDateTime(cargo.date_unload) && (
               <span className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 flex gap-1 items-center">
                 {formatTenderDateTime(cargo.date_unload)}
@@ -335,12 +341,12 @@ export function TenderCardManagers({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center text-[11px] font-semibold lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+          <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center text-[11px] font-semibold lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
             {cargo.cargo || "—"}
           </div>
 
           {/* 6. Транспорт */}
-          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1 lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
               <Truck size={13} className="text-zinc-500" />
               <span className="font-black text-zinc-800 dark:text-white text-[11px]">
@@ -356,7 +362,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full lg:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+          <div className="w-full lg:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
             {cargo.volume && (
               <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
                 {cargo.volume} м³
@@ -370,10 +376,12 @@ export function TenderCardManagers({
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-2 text-center relative lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
-            <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words">
-              {cargo.notes || "—"}
-            </span>
+          <div className="flex-1 min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-2 text-center relative lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full overflow-hidden">
+            <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
+                {cargo.notes || "—"}
+              </span>
+            </div>
             {cargo.files && cargo.files.length > 0 && (
               <button
                 onClick={(e) => {
@@ -388,40 +396,40 @@ export function TenderCardManagers({
           </div>
 
           {/* 9. Ціни - Optimized widths and wrapping */}
-          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5">
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 h-full">
             {cargo.ids_type !== "AUCTION" && (
-              <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-                <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+              <div className="h-[38px] flex flex-col items-center justify-center p-1 text-center">
+                <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
                   Стартова ціна
                 </span>
-                <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
+                <span className="font-bold text-[12px] text-zinc-800 dark:text-white leading-none">
                   {cargo.price_start}
                   {currencySymbol}
                 </span>
-                <span className="text-[8px]">Крок: {cargo.price_step}</span>
+                <span className="text-[7.5px] text-zinc-500 mt-0.5">Крок: {cargo.price_step}</span>
               </div>
             )}
-            <div className="h-[43px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+            <div className="h-[38px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
+              <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
                 Ціна замовника
               </span>
-              <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
+              <span className="font-bold text-[12px] text-zinc-800 dark:text-white leading-none">
                 {cargo.price_client || "—"}
                 {currencySymbol}
               </span>
             </div>
-            <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-              <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
+            <div className="h-[38px] flex flex-col items-center justify-center p-1 text-center">
+              <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
                 Ваша поточна ставка
               </span>
-              <span className="text-[14px] font-black text-emerald-600 dark:text-emerald-400 leading-none">
+              <span className="text-[13px] font-black text-emerald-600 dark:text-emerald-400 leading-none">
                 {myPrice > 0 ? `${myPrice}${currencySymbol}` : "—"}
               </span>
             </div>
           </div>
 
           {/* 10. Залишилось */}
-          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-2 bg-white dark:bg-slate-900 lg:border-b-0 border-b border-zinc-100 dark:border-white/5">
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-2 bg-white dark:bg-slate-900 lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
             <span className="text-[10px] text-zinc-500 font-medium mb-1">
               Залишилось
             </span>
