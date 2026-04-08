@@ -515,14 +515,17 @@ export function TenderCardClients({
             )}
 
             {/* Bottom: Best Bid */}
-            <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
-              <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none">
-                Краща ставка
-              </span>
-              <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
-                {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
-              </span>
-            </div>
+
+            {!isAuction && (
+              <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
+                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none">
+                  Краща ставка
+                </span>
+                <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
+                  {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

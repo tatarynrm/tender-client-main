@@ -441,7 +441,7 @@ export function TenderCardManagers({
               )}
             </span>
 
-            {cargo.ids_type !== "AUCTION" && cargo.price_redemption && (
+            {cargo.ids_type !== "AUCTION" && cargo.price_redemption ? (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -456,7 +456,7 @@ export function TenderCardManagers({
                   {currencySymbol}
                 </span>
               </button>
-            )}
+            ) : null}
           </div>
 
           {/* 11. Дії */}
@@ -493,7 +493,7 @@ export function TenderCardManagers({
                   handleConfirmBid();
                 }}
                 disabled={!isActive}
-                className="h-[43px] w-full cursor-pointer mb-1 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
+                className="h-[43px] w-full cursor-pointer mb-1 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[11px] uppercase tracking-wider transition-colors"
               >
                 Зробити ставку
               </button>
@@ -504,7 +504,7 @@ export function TenderCardManagers({
                 handleManualPrice();
               }}
               disabled={!isActive}
-              className="h-[43px] w-full cursor-pointer rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
+              className="h-[43px] w-full cursor-pointer rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[11px] uppercase tracking-wider transition-colors"
             >
               Ваша ціна
             </button>
