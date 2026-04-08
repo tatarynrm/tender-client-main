@@ -14,15 +14,43 @@ import {
   Lightbulb,
   Bug,
   Heart,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 
 const categories = [
-  { id: "suggestion", label: "Ідея", icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-  { id: "bug", label: "Помилка", icon: Bug, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
-  { id: "feedback", label: "Відгук", icon: Heart, color: "text-rose-500", bg: "bg-rose-500/10", border: "border-rose-500/20" },
-  { id: "other", label: "Інше", icon: MessageSquare, color: "text-indigo-500", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+  {
+    id: "suggestion",
+    label: "Ідея",
+    icon: Lightbulb,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+  },
+  {
+    id: "bug",
+    label: "Помилка",
+    icon: Bug,
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+    border: "border-red-500/20",
+  },
+  {
+    id: "feedback",
+    label: "Відгук",
+    icon: Heart,
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/20",
+  },
+  {
+    id: "other",
+    label: "Інше",
+    icon: MessageSquare,
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+    border: "border-indigo-500/20",
+  },
 ];
 
 export const ModernSuggestionForm = () => {
@@ -41,7 +69,9 @@ export const ModernSuggestionForm = () => {
 
     setIsLoading(true);
     try {
-      await suggestionService.saveSuggestion(`${category.toUpperCase()}: ${notes}`);
+      await suggestionService.saveSuggestion(
+        `${category.toUpperCase()}: ${notes}`,
+      );
       setIsSuccess(true);
       toast.success("Дякуємо! Ваша пропозиція надіслана.");
       setTimeout(() => {
@@ -94,17 +124,17 @@ export const ModernSuggestionForm = () => {
             initial={{
               x: Math.random() * 400,
               y: Math.random() * 500,
-              opacity: 0
+              opacity: 0,
             }}
             animate={{
               y: [null, Math.random() * -100 - 50],
               opacity: [0, 0.8, 0],
-              scale: [0, 1, 0]
+              scale: [0, 1, 0],
             }}
             transition={{
               duration: Math.random() * 5 + 5,
               repeat: Infinity,
-              delay: Math.random() * 5
+              delay: Math.random() * 5,
             }}
             className="absolute w-2 h-2 bg-indigo-400/30 rounded-full blur-[1px]"
           />
@@ -135,7 +165,9 @@ export const ModernSuggestionForm = () => {
                 className="absolute inset-0 bg-green-500 rounded-full -z-10 blur-2xl"
               />
             </div>
-            <h3 className="text-3xl font-black text-zinc-900 dark:text-white mb-4">Надіслано!</h3>
+            <h3 className="text-3xl font-black text-zinc-900 dark:text-white mb-4">
+              Надіслано!
+            </h3>
             <p className="text-lg text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
               Дякуємо! Ваша ідея вже летить до нашої команди.
             </p>
@@ -151,7 +183,7 @@ export const ModernSuggestionForm = () => {
           >
             <div className="flex flex-col gap-1 mb-2">
               <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-700 to-fuchsia-600 dark:from-indigo-400 dark:to-fuchsia-400">
-                Ваш відгуки та ідеї
+                Ваші відгуки та ідеї
               </h2>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Ми цінуємо кожну думку, яка допомагає нам ставати кращими.
@@ -177,17 +209,24 @@ export const ModernSuggestionForm = () => {
                         className={cn(
                           "flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300",
                           active
-                            ? cn("bg-white dark:bg-zinc-800 shadow-xl ring-2 ring-indigo-500/20", cat.border)
-                            : "bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                            ? cn(
+                                "bg-white dark:bg-zinc-800 shadow-xl ring-2 ring-indigo-500/20",
+                                cat.border,
+                              )
+                            : "bg-transparent border-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/50",
                         )}
                       >
                         <div className={cn("p-2 rounded-xl mb-2", cat.bg)}>
                           <Icon className={cn("w-5 h-5", cat.color)} />
                         </div>
-                        <span className={cn(
-                          "text-xs font-bold",
-                          active ? "text-zinc-900 dark:text-white" : "text-zinc-500 dark:text-zinc-400"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-xs font-bold",
+                            active
+                              ? "text-zinc-900 dark:text-white"
+                              : "text-zinc-500 dark:text-zinc-400",
+                          )}
+                        >
                           {cat.label}
                         </span>
                       </motion.button>

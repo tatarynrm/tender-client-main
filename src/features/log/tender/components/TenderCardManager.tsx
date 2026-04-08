@@ -79,10 +79,13 @@ export function TenderCardManagers({
 
   const topBids = React.useMemo(() => {
     if (!cargo.rate_company || cargo.rate_company.length === 0) return [];
-    return [...cargo.rate_company].sort(
-      (a, b) => a.price_proposed - b.price_proposed,
-    );
-  }, [cargo.rate_company]);
+    return [...cargo.rate_company].sort((a, b) => {
+      if (cargo.ids_type === "AUCTION") {
+        return b.price_proposed - a.price_proposed;
+      }
+      return a.price_proposed - b.price_proposed;
+    });
+  }, [cargo.rate_company, cargo.ids_type]);
 
   const bestBid = topBids[0] || null;
   const bestBidValue = bestBid ? bestBid.price_proposed : cargo.price_start;
@@ -115,6 +118,16 @@ export function TenderCardManagers({
       />,
       { size: "md" },
     );
+  };
+
+  const handleBuyoutConfirm = () => {
+    confirm({
+      title: "Підтвердження викупу",
+      description: `Ви впевнені, що хочете викупити рейс за ${cargo.price_redemption} ${currencySymbol}?`,
+      onConfirm: onBuyout,
+      variant: "success",
+      confirmText: "Викупити зараз",
+    });
   };
 
   const fromPoints = cargo.tender_route.filter(
@@ -385,6 +398,7 @@ export function TenderCardManagers({
                   {cargo.price_start}
                   {currencySymbol}
                 </span>
+                <span className="text-[8px]">Крок: {cargo.price_step}</span>
               </div>
             )}
             <div className="h-[43px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
@@ -426,6 +440,23 @@ export function TenderCardManagers({
                 "—"
               )}
             </span>
+
+            {cargo.ids_type !== "AUCTION" && cargo.price_redemption && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBuyoutConfirm();
+                }}
+                disabled={!isActive}
+                className="mt-2 w-full cursor-pointer  py-1 bg-[#fef2f2] hover:bg-red-300  text-rose-600 font-bold border border-rose-100 rounded-lg transition-colors flex flex-col items-center justify-center disabled:opacity-50"
+              >
+                <span className="text-[8px] uppercase">Викуп</span>
+                <span className="text-[11px]">
+                  {cargo.price_redemption}
+                  {currencySymbol}
+                </span>
+              </button>
+            )}
           </div>
 
           {/* 11. Дії */}
@@ -444,9 +475,7 @@ export function TenderCardManagers({
               </div>
               <div className="flex items-center gap-1 leading-none">
                 <span className="text-[13px] font-black text-emerald-900 dark:text-emerald-200">
-                  {bestBid
-                    ? `${bestBid.price_proposed}${currencySymbol}`
-                    : `${cargo.price_start}${currencySymbol}`}
+                  {bestBid ? `${bestBid.price_proposed}${currencySymbol}` : "—"}
                 </span>
                 <ChevronDown
                   size={11}
@@ -464,7 +493,7 @@ export function TenderCardManagers({
                   handleConfirmBid();
                 }}
                 disabled={!isActive}
-                className="h-[43px] w-full bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
+                className="h-[43px] w-full cursor-pointer mb-1 rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
               >
                 Зробити ставку
               </button>
@@ -475,7 +504,7 @@ export function TenderCardManagers({
                 handleManualPrice();
               }}
               disabled={!isActive}
-              className="flex-1 min-h-[30px] text-[11px] font-bold text-[#6366f1] hover:underline uppercase py-2"
+              className="h-[43px] w-full cursor-pointer rounded-xl bg-[#6366f1] hover:bg-[#4f46e5] disabled:bg-zinc-400 text-white font-black text-[12px] uppercase tracking-wider transition-colors"
             >
               Ваша ціна
             </button>
