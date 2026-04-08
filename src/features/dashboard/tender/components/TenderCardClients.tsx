@@ -166,18 +166,16 @@ export function TenderCardClients({
         <div className="flex flex-col lg:flex-row w-full lg:h-[115px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full lg:w-[60px] flex-shrink-0 flex lg:flex-col items-center justify-between lg:justify-center p-3 lg:p-2 cursor-pointer hover:bg-sky-50 transition-colors h-full bg-zinc-50/50 lg:bg-transparent"
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 transition-colors h-full"
             onClick={onOpenDetails}
           >
-            <span className="lg:hidden text-[10px] uppercase font-bold text-zinc-400">Номер тендеру</span>
             <span className="text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none">
               {cargo.id}
             </span>
           </div>
 
           {/* 2. Завантаження */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-3 lg:p-2 h-full">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400 mb-2">Завантаження</span>
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {loadPoints.length === 0 && (
                 <span className="text-zinc-400 font-medium">—</span>
@@ -225,8 +223,7 @@ export function TenderCardClients({
           </div>
 
           {/* 3. Митне оформлення (Центр) */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-3 lg:p-2 text-center overflow-hidden h-full">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400 mb-2">Митниця / Кордон</span>
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 text-center overflow-hidden h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {transitPoints.length === 0 && (
                 <span className="text-zinc-400 font-medium">—</span>
@@ -293,8 +290,7 @@ export function TenderCardClients({
           </div>
 
           {/* 4. Розвантаження */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-3 lg:p-2 h-full">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400 mb-2">Розвантаження</span>
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {unloadPoints.length === 0 && (
                 <span className="text-zinc-400 font-medium">—</span>
@@ -342,16 +338,14 @@ export function TenderCardClients({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[150px] flex-shrink-0 flex lg:flex-col items-center justify-between lg:justify-center p-3 lg:p-2 text-center overflow-hidden h-full">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400">Вантаж</span>
-            <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight lg:text-center text-right">
+          <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden h-full">
+            <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
               {cargo.cargo || "ТНП"}
             </span>
           </div>
 
           {/* 6. Тип транспорту */}
-          <div className="w-full lg:w-[90px] flex-shrink-0 flex lg:flex-col items-center justify-between lg:justify-center p-3 lg:p-2 text-center h-full gap-2">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400">Транспорт</span>
+          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center h-full">
             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
               <Truck size={13} className="text-zinc-500" />
               <span className="font-black text-zinc-800 dark:text-white text-[11px]">
@@ -369,8 +363,7 @@ export function TenderCardClients({
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full lg:w-[50px] flex-shrink-0 flex lg:flex-col items-center justify-between lg:justify-center p-3 lg:p-2 text-center h-full">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400">Вага/Об'єм</span>
+          <div className="lg:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center h-full">
             <div className="flex lg:flex-col items-center gap-2 lg:gap-0">
               {cargo.volume && (
                 <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
@@ -389,9 +382,8 @@ export function TenderCardClients({
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 w-full lg:min-w-[120px] lg:max-w-[140px] flex flex-col items-center justify-center p-3 lg:p-2 text-center overflow-hidden relative h-full bg-zinc-50/30 lg:bg-transparent">
-            <span className="lg:hidden text-[9px] uppercase font-bold text-zinc-400 mb-2">Нотатки</span>
-            <div className="max-h-[45px] lg:max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
+          <div className="flex-1 w-full lg:min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden relative h-full">
+            <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
               <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
                 {cargo.notes || "—"}
               </span>
@@ -410,7 +402,7 @@ export function TenderCardClients({
           </div>
 
           {/* 9. Ціни */}
-          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-row lg:flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-x lg:divide-x-0 lg:divide-y divide-zinc-100 dark:divide-white/5 h-auto lg:h-full">
+          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 h-full">
             {isAuction ? (
               <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 leading-tight text-center">
                 <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300">
@@ -462,7 +454,7 @@ export function TenderCardClients({
           </div>
 
           {/* 10. Залишилось / Викуп */}
-          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-row lg:flex-col bg-white dark:bg-slate-900 overflow-hidden divide-x lg:divide-x-0 lg:divide-y divide-zinc-100 dark:divide-white/5 h-auto lg:h-full">
+          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 h-full">
             <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-[43px]">
               <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5">
                 Залишилось
