@@ -243,74 +243,7 @@ export function TenderCardClients({
             )}
           </div>
 
-          {/* 3. Митне оформлення (Центр) */}
-          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 text-center overflow-hidden h-full">
-            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
-              {transitPoints.length === 0 && (
-                <span className="text-zinc-400 font-medium">—</span>
-              )}
-              {transitPoints.map((pt, i) => {
-                const ptAny = pt as any;
-                const isCustomsUp =
-                  pt.ids_point === "CUSTOM_UP" || ptAny.customs === true;
-                const isCustomsDown = pt.ids_point === "CUSTOM_DOWN";
-
-                return (
-                  <div
-                    key={i}
-                    className="flex flex-col items-center justify-center text-center leading-tight mb-2 last:mb-0 w-full px-1"
-                  >
-                    {(isCustomsUp ||
-                      isCustomsDown ||
-                      pt.ids_point === "BORDER") && (
-                      <span
-                        className={cn(
-                          "text-[9px] uppercase font-black tracking-tight mb-0.5",
-                          isCustomsUp
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : isCustomsDown
-                              ? "text-indigo-500 dark:text-indigo-400"
-                              : "text-zinc-500",
-                        )}
-                      >
-                        {isCustomsUp
-                          ? "Замитнення"
-                          : isCustomsDown
-                            ? "Розмитнення"
-                            : "Кордон"}
-                      </span>
-                    )}
-                    <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-800 dark:text-white text-[11px] w-full">
-                      {pt.ids_country && (
-                        <Flag
-                          country={pt.ids_country}
-                          size={14}
-                          className="rounded-[1px] shadow-sm flex-shrink-0"
-                        />
-                      )}
-                      <span className="truncate">
-                        {pt.ids_country ? `${pt.ids_country}-` : ""}
-                        {pt.ids_country !== "UA" &&
-                        (ptAny.post_code || ptAny.zip_code) ? (
-                          <span className="text-indigo-500 dark:text-indigo-400 mr-0.5">
-                            {ptAny.post_code || ptAny.zip_code}
-                          </span>
-                        ) : null}
-                        {pt.city}
-                      </span>
-                    </div>
-                    {ptAny.ids_region && (
-                      <span className="text-[9px] text-zinc-400 font-medium truncate w-full">
-                        {getRegionName(ptAny.ids_region)}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 4. Розвантаження */}
+          {/* 3. Розвантаження */}
           <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {unloadPoints.length === 0 && (
@@ -358,6 +291,73 @@ export function TenderCardClients({
             )}
           </div>
 
+          {/* 4. Митне оформлення (Зменшений шрифт) */}
+          <div className="flex-1 min-w-[150px] flex flex-col items-center justify-center p-2 text-center overflow-hidden h-full bg-zinc-50/30 dark:bg-white/[0.02]">
+            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
+              {transitPoints.length === 0 && (
+                <span className="text-zinc-400 font-medium">—</span>
+              )}
+              {transitPoints.map((pt, i) => {
+                const ptAny = pt as any;
+                const isCustomsUp =
+                  pt.ids_point === "CUSTOM_UP" || ptAny.customs === true;
+                const isCustomsDown = pt.ids_point === "CUSTOM_DOWN";
+
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center text-center leading-tight mb-2 last:mb-0 w-full px-1"
+                  >
+                    {(isCustomsUp ||
+                      isCustomsDown ||
+                      pt.ids_point === "BORDER") && (
+                      <span
+                        className={cn(
+                          "text-[8px] uppercase font-black tracking-tight mb-0.5",
+                          isCustomsUp
+                            ? "text-emerald-600/70 dark:text-emerald-400/70"
+                            : isCustomsDown
+                              ? "text-indigo-500/70 dark:text-indigo-400/70"
+                              : "text-zinc-400",
+                        )}
+                      >
+                        {isCustomsUp
+                          ? "Замитнення"
+                          : isCustomsDown
+                            ? "Розмитнення"
+                            : "Кордон"}
+                      </span>
+                    )}
+                    <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-600 dark:text-zinc-400 text-[10px] w-full">
+                      {pt.ids_country && (
+                        <Flag
+                          country={pt.ids_country}
+                          size={12}
+                          className="rounded-[1px] opacity-70 flex-shrink-0"
+                        />
+                      )}
+                      <span className="truncate">
+                        {pt.ids_country ? `${pt.ids_country}-` : ""}
+                        {pt.ids_country !== "UA" &&
+                        (ptAny.post_code || ptAny.zip_code) ? (
+                          <span className="text-indigo-500/70 mr-0.5">
+                            {ptAny.post_code || ptAny.zip_code}
+                          </span>
+                        ) : null}
+                        {pt.city}
+                      </span>
+                    </div>
+                    {ptAny.ids_region && (
+                      <span className="text-[9px] text-zinc-400 font-medium truncate w-full">
+                        {getRegionName(ptAny.ids_region)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* 5. Вантаж */}
           <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center overflow-hidden h-full">
             <span className="font-semibold text-zinc-800 dark:text-white text-[11px] break-words line-clamp-3 leading-tight">
@@ -375,6 +375,14 @@ export function TenderCardClients({
             </div>
             <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
               {trailers.split(", ").map((t, i) => (
+                <React.Fragment key={i}>
+                  {t}
+                  <br />
+                </React.Fragment>
+              ))}
+            </span>
+            <span className="font-semibold text-zinc-800 dark:text-white text-[8px] leading-tight">
+              {loadTypes.split(", ").map((t, i) => (
                 <React.Fragment key={i}>
                   {t}
                   <br />

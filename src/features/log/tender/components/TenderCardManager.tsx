@@ -238,64 +238,7 @@ export function TenderCardManagers({
             )}
           </div>
 
-          {/* 3. Митне оформлення */}
-          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center h-full">
-            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
-              {transitPoints.map((pt, i) => {
-                const ptAny = pt as any;
-                const zip = ptAny.post_code || ptAny.zip_code;
-                const isLoadFrom =
-                  pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
-                return (
-                  <div
-                    key={i}
-                    className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2"
-                  >
-                    <span
-                      className={cn(
-                        "text-[10px] uppercase font-bold tracking-tight mb-1",
-                        isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-indigo-500 dark:text-indigo-400",
-                      )}
-                    >
-                      {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
-                        ? "Замитнення"
-                        : "Розмитнення"}
-                    </span>
-                    <div className="flex items-center justify-center gap-2 font-bold text-[12px] text-zinc-800 dark:text-white w-full min-w-0">
-                      {pt.ids_country && (
-                        <Flag
-                          country={pt.ids_country}
-                          size={16}
-                          className="rounded-[2px] shadow-sm shrink-0"
-                        />
-                      )}
-                      <span className="truncate">
-                        {pt.ids_country ? `${pt.ids_country}-` : ""}
-                        {zip && pt.ids_country !== "UA" && (
-                          <span className="text-indigo-600 dark:text-indigo-400 mr-0.5">
-                            {zip}
-                          </span>
-                        )}
-                        {pt.city}
-                      </span>
-                    </div>
-                    {ptAny.ids_region && (
-                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
-                        {getRegionName(ptAny.ids_region)}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-              {transitPoints.length === 0 && (
-                <span className="text-zinc-400 font-medium text-center">—</span>
-              )}
-            </div>
-          </div>
-
-          {/* 4. Розвантаження */}
+          {/* 3. Розвантаження */}
           <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2 h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {toPoints.map((pt, i) => {
@@ -338,6 +281,63 @@ export function TenderCardManagers({
                 {formatTenderDateTime(cargo.date_unload)}
               </span>
             )}
+          </div>
+
+          {/* 4. Митне оформлення (Зменшений шрифт) */}
+          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center h-full bg-zinc-50/30 dark:bg-white/[0.02]">
+            <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
+              {transitPoints.map((pt, i) => {
+                const ptAny = pt as any;
+                const zip = ptAny.post_code || ptAny.zip_code;
+                const isLoadFrom =
+                  pt.ids_point === "LOAD_FROM" || pt.ids_point === "CUSTOM_UP";
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col items-center justify-center text-center mb-2 last:mb-0 leading-tight w-full min-w-0 px-2"
+                  >
+                    <span
+                      className={cn(
+                        "text-[8px] uppercase font-bold tracking-tight mb-1",
+                        isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                          ? "text-emerald-600/70 dark:text-emerald-400/70"
+                          : "text-indigo-500/70 dark:text-indigo-400/70",
+                      )}
+                    >
+                      {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                        ? "Замитнення"
+                        : "Розмитнення"}
+                    </span>
+                    <div className="flex items-center justify-center gap-1.5 font-bold text-[10px] text-zinc-600 dark:text-zinc-400 w-full min-w-0">
+                      {pt.ids_country && (
+                        <Flag
+                          country={pt.ids_country}
+                          size={12}
+                          className="rounded-[1px] opacity-70 shrink-0"
+                        />
+                      )}
+                      <span className="truncate">
+                        {pt.ids_country ? `${pt.ids_country}-` : ""}
+                        {zip && pt.ids_country !== "UA" && (
+                          <span className="text-indigo-500/70 mr-0.5">
+                            {zip}
+                          </span>
+                        )}
+                        {pt.city}
+                      </span>
+                    </div>
+                    {ptAny.ids_region && (
+                      <span className="text-[9px] text-zinc-400 font-medium mt-0.5 truncate w-full">
+                        {getRegionName(ptAny.ids_region)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+              {transitPoints.length === 0 && (
+                <span className="text-zinc-400 font-medium text-center">—</span>
+              )}
+            </div>
           </div>
 
           {/* 5. Вантаж */}
