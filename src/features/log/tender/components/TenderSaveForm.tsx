@@ -427,6 +427,10 @@ function SortableRouteItem({
                     </FormItem>
                   )}
                 />
+
+                {/* Hidden Coordinate Fields to ensure they are sent in the form */}
+                <input type="hidden" {...control.register(`tender_route.${index}.lat`)} />
+                <input type="hidden" {...control.register(`tender_route.${index}.lon`)} />
               </div>
             )}
         </div>
@@ -982,7 +986,14 @@ export default function TenderSaveForm({
           ids_point: "LOAD_FROM",
           order_num: idx + 1,
           customs: false,
-          address: loc.city || loc.address,
+          address: loc.address || loc.city || "",
+          ids_country: (loc.ids_country || "UA").toUpperCase(),
+          lat: loc.lat ? Number(Number(loc.lat).toFixed(6)) : undefined,
+          lon: loc.lon ? Number(Number(loc.lon).toFixed(6)) : undefined,
+          post_code: loc.post_code ? String(loc.post_code) : "",
+          city: loc.city || "",
+          street: loc.street || "",
+          house: loc.house || "",
         })),
       );
     } else
@@ -992,27 +1003,32 @@ export default function TenderSaveForm({
           ids_point: "LOAD_FROM",
           order_num: 1,
           customs: false,
-          ids_country: "",
+          ids_country: "UA",
         },
       ]);
 
     if (result.destinations?.length > 0) {
-      const existing = form.getValues("tender_route");
+      const existing = form.getValues("tender_route") || [];
       const offset = existing.length;
-      result.destinations.forEach((loc: any, idx: number) => {
-        existing.push({
-          ...loc,
-          ids_point: "LOAD_TO",
-          order_num: offset + idx + 1,
-          customs: false,
-          address: loc.city || loc.address,
-        });
-      });
-      setValue("tender_route", existing);
+      const mappedDestinations = result.destinations.map((loc: any, idx: number) => ({
+        ...loc,
+        ids_point: "LOAD_TO",
+        order_num: offset + idx + 1,
+        customs: false,
+        address: loc.address || loc.city || "",
+        ids_country: (loc.ids_country || "UA").toUpperCase(),
+        lat: loc.lat ? Number(Number(loc.lat).toFixed(6)) : undefined,
+        lon: loc.lon ? Number(Number(loc.lon).toFixed(6)) : undefined,
+        post_code: loc.post_code ? String(loc.post_code) : "",
+        city: loc.city || "",
+        street: loc.street || "",
+        house: loc.house || "",
+      }));
+      setValue("tender_route", [...existing, ...mappedDestinations]);
     }
 
     if (result.price) {
-      setValue("price_start", result.price);
+      setValue("price_start", Number(Number(result.price).toFixed(2)));
     }
     if (result.id_client) setCompanyLabel(getCompanyName(result));
     if (result.currency) {
@@ -1020,10 +1036,20 @@ export default function TenderSaveForm({
       if (valut.map((v) => v.value).includes(cur)) setValue("ids_valut", cur);
     }
     if (result.truckCount) setValue("car_count", result.truckCount);
+    
+    // Дати логістики
     if (isValidDate(result.dateLoad))
       setValue("date_load", new Date(result.dateLoad));
+    if (isValidDate(result.dateLoad2))
+      setValue("date_load2", new Date(result.dateLoad2));
     if (isValidDate(result.dateUnload))
       setValue("date_unload", new Date(result.dateUnload));
+
+    // Дати самого тендеру (терміни проведення)
+    if (isValidDate(result.tenderStart))
+      setValue("time_start", new Date(result.tenderStart));
+    if (isValidDate(result.tenderEnd))
+      setValue("time_end", new Date(result.tenderEnd));
 
     let mappedTrailers: any[] = [];
     if (result.truckTypes?.length > 0) {
@@ -1040,9 +1066,21 @@ export default function TenderSaveForm({
     }
     if (mappedTrailers.length > 0) setValue("tender_trailer", mappedTrailers);
 
-    if (result.cargoName) setValue("cargo", result.cargoName);
-    if (result.weight) setValue("weight", result.weight);
-    if (result.volume) setValue("volume", result.volume);
+    if (result.cargoName) {
+        setValue("cargo", result.cargoName.substring(0, 25));
+    }
+    if (result.weight) setValue("weight", Number(Number(result.weight).toFixed(2)));
+    if (result.volume) setValue("volume", Number(Number(result.volume).toFixed(2)));
+    
+    // Збираємо максимум інформації в load_info
+    const fullInfo = [
+        result.description,
+        result.companyName ? `Замовник: ${result.companyName}` : ""
+    ].filter(Boolean).join("\n");
+    
+    if (fullInfo) {
+        setValue("load_info", fullInfo);
+    }
 
     if (draftId) setActiveDraftId(draftId);
     else setActiveDraftId(null);
@@ -1386,8 +1424,24 @@ export default function TenderSaveForm({
   }, [typeValue, setValue, clearErrors]);
 
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
-    const payload = {
+    // Sanitization: Round all numeric fields to prevent database overflow
+    const sanitizedValues = {
       ...values,
+      weight: values.weight ? Number(Number(values.weight).toFixed(2)) : values.weight,
+      volume: values.volume ? Number(Number(values.volume).toFixed(2)) : values.volume,
+      price_start: values.price_start ? Number(Number(values.price_start).toFixed(2)) : values.price_start,
+      price_step: values.price_step ? Number(Number(values.price_step).toFixed(2)) : values.price_step,
+      price_redemption: values.price_redemption ? Number(Number(values.price_redemption).toFixed(2)) : values.price_redemption,
+      tender_route: values.tender_route.map((route, idx) => ({
+        ...route,
+        order_num: idx + 1,
+        lat: route.lat ? Number(Number(route.lat).toFixed(6)) : route.lat,
+        lon: route.lon ? Number(Number(route.lon).toFixed(6)) : route.lon,
+      })),
+    };
+
+    const payload = {
+      ...sanitizedValues,
       tender_permission:
         values.tender_permission?.filter((p) => p && p.ids_permission_type) ||
         [],
@@ -1395,10 +1449,6 @@ export default function TenderSaveForm({
         values.tender_trailer?.filter((t) => t && t.ids_trailer_type) || [],
       tender_load:
         values.tender_load?.filter((l) => l && l.ids_load_type) || [],
-      tender_route: values.tender_route.map((route, idx) => ({
-        ...route,
-        order_num: idx + 1,
-      })),
     };
     if (defaultValues?.id) payload.id = defaultValues.id;
 
