@@ -112,7 +112,7 @@ export function TenderCardManagers({
   const handleManualPrice = () => {
     openModal(
       <ManualPriceDialog
-        currentPrice={cargo.price_proposed || cargo.price_start}
+        currentPrice={myPrice || cargo.price_proposed || cargo.price_start}
         onConfirm={onManualPrice}
         currentValut={cargo.valut_name}
       />,
@@ -177,12 +177,12 @@ export function TenderCardManagers({
         <div className="flex flex-col lg:flex-row w-full lg:h-[115px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 dark:hover:bg-white/5 transition-colors"
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number"
             onClick={onOpenDetails}
           >
             <span
               className={cn(
-                "text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none",
+                "text-[16px] lg:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform",
                 title,
               )}
             >
@@ -441,8 +441,9 @@ export function TenderCardManagers({
             >
               {cargo.time_end ? (
                 <TenderTimer
-                  label=""
+                  label={isPlan ? "до старту тендеру" : ""}
                   targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                  variant={isPlan ? "blue" : "orange"}
                 />
               ) : (
                 "—"

@@ -68,16 +68,16 @@ export const TenderTimer = ({
 
   return (
     <div className={cn(
-      "flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-sm transition-all animate-in fade-in",
+      "flex items-center gap-1 px-2 py-0.5 rounded-lg border shadow-sm transition-all animate-in fade-in max-w-fit",
       styles[variant]
     )}>
-      <div className="flex flex-col items-end leading-none">
+      <div className="flex flex-col items-center leading-[1.1]">
         {label && (
-          <span className="text-[8px] uppercase font-black tracking-wider opacity-80 whitespace-nowrap">
+          <span className="text-[7.5px] uppercase font-black tracking-tighter opacity-80 whitespace-nowrap">
             {label}
           </span>
         )}
-        <span className="text-[11px] font-mono font-black animate-pulse">
+        <span className="text-[10.5px] font-mono font-black tabular-nums">
           {timeLeft}
         </span>
       </div>

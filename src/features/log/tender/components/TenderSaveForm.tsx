@@ -1432,8 +1432,10 @@ export default function TenderSaveForm({
     try {
       await saveTender(formData);
       localStorage.removeItem(STORAGE_KEY);
-      if (!isNextTender) {
-        // router.push("/log/tender/draft");
+      if (isEdit) {
+        router.back();
+      } else if (!isNextTender) {
+        router.push("/log/tender/draft");
       } else {
         toast.success("Тендер збережено. Ви можете створити наступний.");
         // We don't reset everything to keep the form filled for the next one
@@ -2378,19 +2380,21 @@ export default function TenderSaveForm({
 
                 {/* 🏁 BOTTOM ACTION BAR */}
                 <div className="flex flex-col md:flex-row justify-center items-center gap-4 pt-6 pb-12 w-full">
-                  <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-4 h-12 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
-                    <Switch
-                      id="next-tender-switch"
-                      checked={isNextTender}
-                      onCheckedChange={setIsNextTender}
-                    />
-                    <label
-                      htmlFor="next-tender-switch"
-                      className="text-[12px] font-bold text-slate-500 uppercase tracking-tight cursor-pointer select-none"
-                    >
-                      Наступний тендер
-                    </label>
-                  </div>
+                  {!isEdit && (
+                    <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-4 h-12 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+                      <Switch
+                        id="next-tender-switch"
+                        checked={isNextTender}
+                        onCheckedChange={setIsNextTender}
+                      />
+                      <label
+                        htmlFor="next-tender-switch"
+                        className="text-[12px] font-bold text-slate-500 uppercase tracking-tight cursor-pointer select-none"
+                      >
+                        Наступний тендер
+                      </label>
+                    </div>
+                  )}
 
                   <Button
                     variant="outline"

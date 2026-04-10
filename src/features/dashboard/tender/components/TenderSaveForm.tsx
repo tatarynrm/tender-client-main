@@ -438,9 +438,11 @@ export default function TenderSaveForm({
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
       localStorage.removeItem(STORAGE_KEY);
       tenderSocket?.emit("");
-      if (!isNextTender) {
-        // form.reset();
+      if (isEdit) {
+        router.back();
+      } else if (!isNextTender) {
         setFiles([]);
+        router.push("/log/tender/draft");
       }
     } catch (err) {
       console.error(err);
@@ -1106,15 +1108,17 @@ export default function TenderSaveForm({
 
           {/* Submit */}
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="is_next_tender">Додати схожий тендер</Label>
-              <MyTooltip text="Якщо включено, форма не буде очищена після збереження" />
-              <Switch
-                id="is_next_tender"
-                checked={isNextTender}
-                onCheckedChange={setIsNextTender}
-              />
-            </div>
+            {!isEdit && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="is_next_tender">Додати схожий тендер</Label>
+                <MyTooltip text="Якщо включено, форма не буде очищена після збереження" />
+                <Switch
+                  id="is_next_tender"
+                  checked={isNextTender}
+                  onCheckedChange={setIsNextTender}
+                />
+              </div>
+            )}
             <Button type="submit">
               {isEdit ? "Редагувати тендер" : "Додати тендер"}
             </Button>

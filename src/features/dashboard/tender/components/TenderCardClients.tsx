@@ -59,7 +59,7 @@ export function TenderCardClients({
   const handleManualPrice = () => {
     openModal(
       <ManualPriceDialog
-        currentPrice={cargo.price_proposed || cargo.price_start}
+        currentPrice={myPrice || cargo.price_proposed || cargo.price_start}
         onConfirm={onManualPrice}
         currentValut={cargo.valut_name}
       />,
@@ -118,6 +118,14 @@ export function TenderCardClients({
     return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
   }, [cargo.rate_company, cargo.ids_type]);
 
+  const myPrice = useMemo(() => {
+    if (!profile || !cargo.rate_company) return 0;
+    const myLatestBid = [...cargo.rate_company]
+      .filter((r) => r.id_author === profile.id)
+      .sort((a, b) => b.id - a.id)[0];
+    return myLatestBid ? myLatestBid.price_proposed : 0;
+  }, [cargo.rate_company, profile]);
+
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
   const loadTypes =
@@ -166,10 +174,10 @@ export function TenderCardClients({
         <div className="flex flex-col lg:flex-row w-full lg:h-[115px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer hover:bg-sky-50 transition-colors h-full"
+            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all h-full border-r border-zinc-100 dark:border-white/5 group/number"
             onClick={onOpenDetails}
           >
-            <span className="text-[16px] lg:text-[18px] font-bold text-zinc-800 dark:text-white leading-none">
+            <span className="text-[16px] lg:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform">
               {cargo.id}
             </span>
           </div>
@@ -382,12 +390,13 @@ export function TenderCardClients({
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 w-full lg:min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-2 text-center overflow-hidden relative h-full">
+          <div className="flex-1 w-full lg:min-w-[120px] lg:max-w-[140px] flex items-start justify-start p-2 overflow-hidden relative h-full">
             <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
-              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
+              <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block text-left">
                 {cargo.notes || "—"}
               </span>
             </div>
+
             {cargo.files && cargo.files.length > 0 && (
               <button
                 onClick={(e) => {
@@ -409,8 +418,8 @@ export function TenderCardClients({
                   Ваша поточна ставка
                 </span>
                 <span className="text-[13px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
-                  {cargo.price_proposed
-                    ? `${cargo.price_proposed}${currencySymbol}`
+                  {myPrice
+                    ? `${myPrice}${currencySymbol}`
                     : "—"}
                 </span>
               </div>
@@ -461,8 +470,9 @@ export function TenderCardClients({
               </span>
               <span className="font-bold text-[#e03131] dark:text-red-400 text-[15px] tracking-tight leading-none">
                 <TenderTimer
-                  label=""
+                  label={isPlan ? "до старту тендеру" : ""}
                   targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                  variant={isPlan ? "blue" : "orange"}
                 />
               </span>
             </div>
@@ -495,8 +505,8 @@ export function TenderCardClients({
                   Ваша поточна ставка
                 </span>
                 <span className="text-[12px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                  {cargo.price_proposed
-                    ? `${cargo.price_proposed}${currencySymbol}`
+                  {myPrice
+                    ? `${myPrice}${currencySymbol}`
                     : "—"}
                 </span>
               </div>
