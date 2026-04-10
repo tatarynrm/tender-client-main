@@ -68,7 +68,7 @@ export function TenderCardManagers({
   const myPrice = React.useMemo(() => {
     if (!profile || !cargo.rate_company) return 0;
     const myLatestBid = [...cargo.rate_company]
-      .filter((r) => r.id_author === profile.id)
+      .filter((r) => r.id_author === profile.id || (profile.company?.id && r.id_company === profile.company.id))
       .sort((a, b) => b.id - a.id)[0];
     return myLatestBid ? myLatestBid.price_proposed : 0;
   }, [cargo.rate_company, profile]);
@@ -418,11 +418,17 @@ export function TenderCardManagers({
                 {currencySymbol}
               </span>
             </div>
-            <div className="h-[38px] flex flex-col items-center justify-center p-1 text-center">
+            <div className={cn(
+              "h-[38px] flex flex-col items-center justify-center p-1 text-center transition-colors",
+              myPrice > 0 ? "bg-emerald-50/50 dark:bg-emerald-500/10" : "bg-white dark:bg-slate-900"
+            )}>
               <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
                 Ваша поточна ставка
               </span>
-              <span className="text-[13px] font-black text-emerald-600 dark:text-emerald-400 leading-none">
+              <span className={cn(
+                "text-[13px] font-black leading-none",
+                myPrice > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-300 dark:text-zinc-700"
+              )}>
                 {myPrice > 0 ? `${myPrice}${currencySymbol}` : "—"}
               </span>
             </div>
