@@ -1093,11 +1093,20 @@ export default function TenderSaveForm({
   };
 
   const saveToDrafts = (result: any) => {
+    const typeNames: Record<string, string> = {
+      AUCTION: "АУКЦІОН",
+      REDUCTION: "РЕДУКЦІОН",
+      REDUCTION_WITH_REDEMPTION: "РЕДУКЦІОН З ВИКУПОМ",
+    };
+    const typeName = typeNames[result.ids_type] || "ЧЕРНЕТКА";
+    const routeTitle = [...(result.origins || []), ...(result.destinations || [])]
+      .map((loc) => loc.city || loc.address)
+      .filter(Boolean)
+      .join(" → ");
+
     const newDraft = {
       id: Math.random().toString(36).substr(2, 9),
-      title: [...(result.origins || []), ...(result.destinations || [])]
-        .map((loc) => loc.city || loc.address)
-        .join(", "),
+      title: `${typeName}: ${routeTitle || "Без назви"}`,
       data: result,
       createdAt: new Date().toISOString(),
       isPinned: false,

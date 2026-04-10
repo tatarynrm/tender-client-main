@@ -119,12 +119,25 @@ export function TenderCardClients({
   }, [cargo.rate_company, cargo.ids_type]);
 
   const myPrice = useMemo(() => {
-    if (!profile || !cargo.rate_company) return 0;
+    // 1. Пріоритет - пряме поле з бекенду (зазвичай там остання ставка поточного юзера)
+    if (cargo.price_proposed && cargo.price_proposed > 0) {
+      return cargo.price_proposed;
+    }
+
+    // 2. Фолбек - пошук у списку за id користувача або за приналежністю до компанії
+    if (!profile || !cargo.rate_company || cargo.rate_company.length === 0)
+      return 0;
+
     const myLatestBid = [...cargo.rate_company]
-      .filter((r) => r.id_author === profile.id)
+      .filter(
+        (r) =>
+          r.id_author === profile.id ||
+          (profile.company?.id && r.id_company === profile.company.id),
+      )
       .sort((a, b) => b.id - a.id)[0];
+
     return myLatestBid ? myLatestBid.price_proposed : 0;
-  }, [cargo.rate_company, profile]);
+  }, [cargo.price_proposed, cargo.rate_company, profile]);
 
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
@@ -357,7 +370,7 @@ export function TenderCardClients({
             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
               <Truck size={13} className="text-zinc-500" />
               <span className="font-black text-zinc-800 dark:text-white text-[11px]">
-                {cargo.car_count || 1}
+                {cargo.car_count_actual || 1}
               </span>
             </div>
             <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
@@ -418,9 +431,7 @@ export function TenderCardClients({
                   Ваша поточна ставка
                 </span>
                 <span className="text-[13px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
-                  {myPrice
-                    ? `${myPrice}${currencySymbol}`
-                    : "—"}
+                  {myPrice ? `${myPrice}${currencySymbol}` : "—"}
                 </span>
               </div>
             ) : (
@@ -505,9 +516,7 @@ export function TenderCardClients({
                   Ваша поточна ставка
                 </span>
                 <span className="text-[12px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                  {myPrice
-                    ? `${myPrice}${currencySymbol}`
-                    : "—"}
+                  {myPrice ? `${myPrice}${currencySymbol}` : "—"}
                 </span>
               </div>
             )}

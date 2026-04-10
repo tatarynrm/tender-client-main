@@ -96,27 +96,19 @@ export function TenderRatesList({
 
             <div className="flex flex-col min-w-0 flex-1 gap-2.5 w-full">
               {/* Компанія та Автор */}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-1.5">
                   <Building2
                     size={13}
                     className={cn(
                       "shrink-0",
-                      isWinner
-                        ? "text-blue-500"
-                        : isTop1
-                          ? "text-emerald-500"
-                          : "text-slate-400",
+                      isWinner ? "text-blue-500" : isTop1 ? "text-emerald-500" : "text-slate-400"
                     )}
                   />
-                  <span
-                    className={cn(
-                      "text-[12px] font-bold truncate uppercase tracking-wide",
-                      isTopThree || isWinner
-                        ? "text-slate-900 dark:text-white"
-                        : "text-slate-700 dark:text-slate-200",
-                    )}
-                  >
+                  <span className={cn(
+                    "text-[12px] font-bold truncate uppercase tracking-wide",
+                    isTopThree || isWinner ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-200"
+                  )}>
                     {rate.company_name || "Компанія не вказана"}
                   </span>
                 </div>
@@ -134,12 +126,19 @@ export function TenderRatesList({
                       className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-blue-500 transition-colors"
                     >
                       <Mail size={11} />
-                      <span className="truncate max-w-[120px]">
-                        {rate.email}
-                      </span>
+                      <span className="truncate max-w-[120px]">{rate.email}</span>
                     </a>
                   )}
                 </div>
+
+                {/* Коментар до ставки */}
+                {rate.notes && (
+                  <div className="mt-1 bg-amber-50/50 dark:bg-amber-900/10 border-l-2 border-amber-400/50 p-2 rounded-r-md">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 italic leading-relaxed">
+                      "{rate.notes}"
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Телефони */}
@@ -148,14 +147,8 @@ export function TenderRatesList({
                   {rate.person_phone.map((p: any) => {
                     const cleanPhone = p.phone.replace(/\D/g, "");
                     return (
-                      <div
-                        key={p.id}
-                        className="group/phone flex items-center gap-2 bg-white/50 dark:bg-slate-800/40 p-1 pr-2 rounded-lg border border-slate-100 dark:border-slate-700/50 shadow-xs"
-                      >
-                        <a
-                          href={`tel:${p.phone}`}
-                          className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 pl-1"
-                        >
+                      <div key={p.id} className="group/phone flex items-center gap-2 bg-white/50 dark:bg-slate-800/40 p-1 pr-2 rounded-lg border border-slate-100 dark:border-slate-700/50 shadow-xs">
+                        <a href={`tel:${p.phone}`} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 pl-1">
                           <div className="w-5 h-5 rounded-md bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm">
                             <Phone size={10} />
                           </div>
@@ -163,30 +156,17 @@ export function TenderRatesList({
                         </a>
                         <div className="flex items-center gap-2 ml-1 border-l border-slate-200 dark:border-slate-700 pl-2">
                           {p.is_viber && (
-                            <a
-                              href={`viber://chat?number=%2B${cleanPhone}`}
-                              className="hover:scale-125 transition-transform text-[#7360f2]"
-                            >
+                            <a href={`viber://chat?number=%2B${cleanPhone}`} className="hover:scale-125 transition-transform text-[#7360f2]">
                               <FaViber size={14} />
                             </a>
                           )}
                           {p.is_telegram && (
-                            <a
-                              href={`https://t.me/+${cleanPhone}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:scale-125 transition-transform text-[#229ED9]"
-                            >
+                            <a href={`https://t.me/+${cleanPhone}`} target="_blank" rel="noreferrer" className="hover:scale-125 transition-transform text-[#229ED9]">
                               <FaTelegram size={14} />
                             </a>
                           )}
                           {p.is_whatsapp && (
-                            <a
-                              href={`https://wa.me/${cleanPhone}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="hover:scale-125 transition-transform text-[#25D366]"
-                            >
+                            <a href={`https://wa.me/${cleanPhone}`} target="_blank" rel="noreferrer" className="hover:scale-125 transition-transform text-[#25D366]">
                               <FaWhatsapp size={14} />
                             </a>
                           )}
