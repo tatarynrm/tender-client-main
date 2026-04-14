@@ -186,10 +186,10 @@ export default function ClientsTenderPage({
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
-        <div className="space-y-1 pb-20 relative overflow-x-auto scrollbar-thin">
-          <div className="min-w-[1240px] xl:min-w-full">
+        <div className="space-y-1 pb-20 relative xl:overflow-x-auto scrollbar-thin">
+          <div className="w-full xl:min-w-[1240px]">
             {/* HEADER ROW extracted from TenderCardClients */}
-            <div className="sticky top-[-20px] z-20 hidden lg:grid grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-sm text-[10.5px]">
+            <div className="sticky top-[-20px] z-20 hidden xl:grid grid-cols-[60px_1fr_1fr_1fr_minmax(60px,0.6fr)_minmax(80px,0.8fr)_minmax(60px,0.6fr)_minmax(110px,1fr)_320px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-sm text-[10.5px]">
               <div className="flex items-center justify-center p-2 text-[14px] font-black tracking-tighter text-zinc-400 dark:text-zinc-500">
                 №
               </div>

@@ -171,8 +171,8 @@ export default function ManagersTenderPage({ status }: Props) {
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-6">
-          <div className="overflow-x-auto pb-6 scrollbar-thin">
-            <div className="grid gap-4 min-w-full lg:min-w-[1240px]">
+          <div className="xl:overflow-x-auto pb-6 scrollbar-thin">
+            <div className="grid gap-4 w-full xl:min-w-[1240px]">
               {tenders.map((item) => (
                 <TenderCardManagers
                   key={item.id}
