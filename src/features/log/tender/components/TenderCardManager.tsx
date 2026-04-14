@@ -174,15 +174,15 @@ export function TenderCardManagers({
 
       {/* Main Grid Card - Adjusted for better responsiveness */}
       <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col border-b border-zinc-200/80">
-        <div className="flex flex-col lg:flex-row w-full lg:h-[115px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
+        <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full lg:w-[60px] flex-shrink-0 flex items-center justify-center p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number"
+            className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number"
             onClick={onOpenDetails}
           >
             <span
               className={cn(
-                "text-[16px] lg:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform",
+                "text-[18px] xl:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform",
                 title,
               )}
             >
@@ -191,7 +191,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 2. Завантаження */}
-          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2 h-full">
+          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {fromPoints.length === 0 && (
                 <span className="text-zinc-400 font-medium">—</span>
@@ -239,7 +239,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 3. Розвантаження */}
-          <div className="flex-1 min-w-[130px] flex flex-col items-center justify-center p-2 h-full">
+          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {toPoints.map((pt, i) => {
                 const ptAny = pt as any;
@@ -284,7 +284,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 4. Митне оформлення (Зменшений шрифт) */}
-          <div className="flex-1 min-w-[130px] flex flex-col justify-center p-3 relative items-center h-full bg-zinc-50/30 dark:bg-white/[0.02]">
+          <div className="flex-1 md:min-w-[130px] flex flex-col justify-center p-3 relative items-center xl:h-full bg-zinc-50/30 dark:bg-white/[0.02]">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {transitPoints.map((pt, i) => {
                 const ptAny = pt as any;
@@ -341,12 +341,12 @@ export function TenderCardManagers({
           </div>
 
           {/* 5. Вантаж */}
-          <div className="w-full lg:w-[150px] flex-shrink-0 flex items-center justify-center p-2 text-center text-[11px] font-semibold lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
+          <div className="w-full xl:w-[150px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 text-center text-[11px] font-semibold xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
             {cargo.cargo || "—"}
           </div>
 
           {/* 6. Транспорт */}
-          <div className="w-full lg:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center leading-tight gap-1 lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
+          <div className="w-full xl:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center leading-tight gap-1 xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
             <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
               <Truck size={13} className="text-zinc-500" />
               <span className="font-black text-zinc-800 dark:text-white text-[11px]">
@@ -362,7 +362,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full lg:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-2 text-center lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
+          <div className="w-full xl:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
             {cargo.volume && (
               <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
                 {cargo.volume} м³
@@ -376,7 +376,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 8. Нотатки */}
-          <div className="flex-1 w-full lg:min-w-[120px] lg:max-w-[140px] flex items-center justify-center p-1 lg:p-2 text-center relative lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full overflow-hidden">
+          <div className="flex-1 w-full xl:min-w-[120px] xl:max-w-[140px] flex items-center justify-center p-3 xl:p-2 text-center relative xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full overflow-hidden">
             <div className="max-h-[80px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full">
               <span className="text-[10px] text-zinc-500 dark:text-slate-400 font-medium leading-tight break-words whitespace-pre-wrap block">
                 {cargo.notes || "—"}
@@ -396,7 +396,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 9. Ціни - Optimized widths and wrapping */}
-          <div className="w-full lg:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 h-full">
+          <div className="w-full xl:w-[130px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-x border-zinc-100 dark:border-white/5 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 xl:h-full">
             {cargo.ids_type !== "AUCTION" && (
               <div className="h-[38px] flex flex-col items-center justify-center p-1 text-center">
                 <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
@@ -435,7 +435,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 10. Залишилось */}
-          <div className="w-full lg:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-2 bg-white dark:bg-slate-900 lg:border-b-0 border-b border-zinc-100 dark:border-white/5 h-full">
+          <div className="w-full xl:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 bg-white dark:bg-slate-900 xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
             <span className="text-[10px] text-zinc-500 font-medium mb-1">
               Залишилось
             </span>
@@ -475,7 +475,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 11. Дії */}
-          <div className="w-full lg:w-[155px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l border-zinc-100 dark:border-white/5 relative overflow-hidden">
+          <div className="w-full xl:w-[155px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 border-l border-zinc-100 dark:border-white/5 relative overflow-hidden p-3 xl:p-0">
             <div
               className="h-[43px] flex flex-col items-center justify-center p-1 bg-[#f0f9f1] dark:bg-emerald-900/40 cursor-pointer overflow-hidden relative group/rates transition-colors hover:bg-[#e6f4e7] dark:hover:bg-emerald-800/50"
               onClick={() => setIsRatesOpen(!isRatesOpen)}
@@ -526,15 +526,15 @@ export function TenderCardManagers({
           </div>
 
           {/* 12. Меню */}
-          <div className="w-full lg:w-[36px] flex-shrink-0 flex items-center justify-center bg-zinc-50 dark:bg-white/5 border-l border-zinc-200 dark:border-white/10 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10 py-2 lg:py-0">
+          <div className="w-full xl:w-[36px] flex-shrink-0 flex items-center justify-center bg-zinc-50 dark:bg-white/5 border-l border-zinc-200 dark:border-white/10 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10 py-3 xl:py-0">
             <TenderActions tender={cargo} />
           </div>
         </div>
       </div>
 
       {/* FOOTER */}
-      <div className="min-h-[36px] px-3 py-2 lg:py-0 flex flex-col lg:flex-row items-center justify-between bg-zinc-50 dark:bg-slate-800/40 text-[11px] border-t border-zinc-100 dark:border-white/5 gap-2 xl:gap-0">
-        <div className="flex items-center gap-4 w-full lg:w-auto">
+      <div className="min-h-[36px] px-3 py-3 xl:py-0 flex flex-col xl:flex-row items-center justify-between bg-zinc-50 dark:bg-slate-800/40 text-[11px] border-t border-zinc-100 dark:border-white/5 gap-3 xl:gap-0">
+        <div className="flex flex-wrap items-center justify-center xl:justify-start gap-4 w-full xl:w-auto">
           <div className="flex items-center gap-1.5 font-bold text-zinc-700 dark:text-white">
             <UserIcon size={14} className="text-zinc-400" />
             <span className="truncate max-w-[120px]">{cargo.author}</span>
@@ -567,7 +567,7 @@ export function TenderCardManagers({
           )}
         </div>
 
-        <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-center xl:justify-end">
           <span
             className={cn(
               "text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
