@@ -107,37 +107,40 @@ export function TenderCardClients({
   }, [cargo.tender_route]);
 
   const bestBidPrice = useMemo(() => {
+    let globalBest = null;
+
+    if (cargo.price_next && cargo.price_step) {
+      if (cargo.ids_type === "AUCTION") {
+        globalBest = cargo.price_next - cargo.price_step;
+      } else {
+        globalBest = cargo.price_next + cargo.price_step;
+      }
+    }
+
     if (!cargo.rate_company || cargo.rate_company.length === 0) {
-      return null;
+      return globalBest;
     }
-    // For transport, mostly it's lowest price wins (Reduction)
-    // If it's an auction (bidding up), we take the max.
+
     if (cargo.ids_type === "AUCTION") {
-      return Math.max(...cargo.rate_company.map((r) => r.price_proposed));
+      const localMax = Math.max(...cargo.rate_company.map((r) => r.price_proposed));
+      return globalBest !== null ? Math.max(globalBest, localMax) : localMax;
     }
-    return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
-  }, [cargo.rate_company, cargo.ids_type]);
+    
+    const localMin = Math.min(...cargo.rate_company.map((r) => r.price_proposed));
+    return globalBest !== null ? Math.min(globalBest, localMin) : localMin;
+  }, [cargo.price_next, cargo.price_step, cargo.rate_company, cargo.ids_type]);
 
   const myPrice = useMemo(() => {
-    // 1. Пріоритет - пряме поле з бекенду (зазвичай там остання ставка поточного юзера)
-    if (cargo.price_proposed && cargo.price_proposed > 0) {
-      return cargo.price_proposed;
-    }
-
-    // 2. Фолбек - пошук у списку за id користувача або за приналежністю до компанії
+    // Шукаємо у списку виключно за id поточного користувача (автора), а не всієї компанії
     if (!profile || !cargo.rate_company || cargo.rate_company.length === 0)
       return 0;
 
     const myLatestBid = [...cargo.rate_company]
-      .filter(
-        (r) =>
-          r.id_author === profile.id ||
-          (profile.company?.id && r.id_company === profile.company.id),
-      )
+      .filter((r) => r.id_author === profile.id)
       .sort((a, b) => b.id - a.id)[0];
 
     return myLatestBid ? myLatestBid.price_proposed : 0;
-  }, [cargo.price_proposed, cargo.rate_company, profile]);
+  }, [cargo.rate_company, profile]);
 
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";

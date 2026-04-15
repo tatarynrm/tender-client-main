@@ -65,10 +65,34 @@ export function TenderCardManagers({
   const { openModal, confirm } = useModalStore();
   const { profile } = useProfile();
 
+  const isAuthor = React.useMemo(() => {
+    if (!profile || !cargo) return false;
+
+    const pEmail = profile.email || (profile as any).usr_email || "";
+    const cEmail = cargo.email || (cargo as any).usr_email || "";
+    if (pEmail && cEmail && pEmail.toLowerCase() === cEmail.toLowerCase())
+      return true;
+
+    const cIdAuthor = (cargo as any).id_usr || (cargo as any).id_author;
+    if (cIdAuthor && profile.id === cIdAuthor) return true;
+
+    const pName =
+      `${profile.person.name || ""} ${profile.person.surname || ""}`.trim();
+    const cName = cargo.author?.trim();
+    if (pName && cName && pName.toLowerCase() === cName.toLowerCase())
+      return true;
+
+    return false;
+  }, [profile, cargo]);
+
   const myPrice = React.useMemo(() => {
     if (!profile || !cargo.rate_company) return 0;
     const myLatestBid = [...cargo.rate_company]
-      .filter((r) => r.id_author === profile.id || (profile.company?.id && r.id_company === profile.company.id))
+      .filter(
+        (r) =>
+          r.id_author === profile.id ||
+          (profile.company?.id && r.id_company === profile.company.id),
+      )
       .sort((a, b) => b.id - a.id)[0];
     return myLatestBid ? myLatestBid.price_proposed : 0;
   }, [cargo.rate_company, profile]);
@@ -80,12 +104,11 @@ export function TenderCardManagers({
   const topBids = React.useMemo(() => {
     if (!cargo.rate_company || cargo.rate_company.length === 0) return [];
     return [...cargo.rate_company].sort((a, b) => {
-      if (cargo.ids_type === "AUCTION") {
-        return b.price_proposed - a.price_proposed;
-      }
-      return a.price_proposed - b.price_proposed;
+      const priceA = a?.price_proposed ?? Infinity;
+      const priceB = b?.price_proposed ?? Infinity;
+      return priceA - priceB;
     });
-  }, [cargo.rate_company, cargo.ids_type]);
+  }, [cargo.rate_company]);
 
   const bestBid = topBids[0] || null;
   const bestBidValue = bestBid ? bestBid.price_proposed : cargo.price_start;
@@ -299,12 +322,14 @@ export function TenderCardManagers({
                     <span
                       className={cn(
                         "text-[8px] uppercase font-bold tracking-tight mb-1",
-                        isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                        isLoadFrom ||
+                          (pt.customs && pt.ids_point === "LOAD_FROM")
                           ? "text-emerald-600/70 dark:text-emerald-400/70"
                           : "text-indigo-500/70 dark:text-indigo-400/70",
                       )}
                     >
-                      {isLoadFrom || (pt.customs && pt.ids_point === "LOAD_FROM")
+                      {isLoadFrom ||
+                      (pt.customs && pt.ids_point === "LOAD_FROM")
                         ? "Замитнення"
                         : "Розмитнення"}
                     </span>
@@ -406,7 +431,9 @@ export function TenderCardManagers({
                   {cargo.price_start}
                   {currencySymbol}
                 </span>
-                <span className="text-[7.5px] text-zinc-500 mt-0.5">Крок: {cargo.price_step}</span>
+                <span className="text-[7.5px] text-zinc-500 mt-0.5">
+                  Крок: {cargo.price_step}
+                </span>
               </div>
             )}
             <div className="h-[38px] flex flex-col items-center justify-center bg-zinc-50 dark:bg-white/5 p-1 text-center border-y border-zinc-100 dark:border-white/10">
@@ -418,17 +445,25 @@ export function TenderCardManagers({
                 {currencySymbol}
               </span>
             </div>
-            <div className={cn(
-              "h-[38px] flex flex-col items-center justify-center p-1 text-center transition-colors",
-              myPrice > 0 ? "bg-emerald-50/50 dark:bg-emerald-500/10" : "bg-white dark:bg-slate-900"
-            )}>
+            <div
+              className={cn(
+                "h-[38px] flex flex-col items-center justify-center p-1 text-center transition-colors",
+                myPrice > 0
+                  ? "bg-emerald-50/50 dark:bg-emerald-500/10"
+                  : "bg-white dark:bg-slate-900",
+              )}
+            >
               <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5">
                 Ваша поточна ставка
               </span>
-              <span className={cn(
-                "text-[13px] font-black leading-none",
-                myPrice > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-300 dark:text-zinc-700"
-              )}>
+              <span
+                className={cn(
+                  "text-[13px] font-black leading-none",
+                  myPrice > 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-zinc-300 dark:text-zinc-700",
+                )}
+              >
                 {myPrice > 0 ? `${myPrice}${currencySymbol}` : "—"}
               </span>
             </div>
@@ -527,7 +562,7 @@ export function TenderCardManagers({
 
           {/* 12. Меню */}
           <div className="w-full xl:w-[36px] flex-shrink-0 flex items-center justify-center bg-zinc-50 dark:bg-white/5 border-l border-zinc-200 dark:border-white/10 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10 py-3 xl:py-0">
-            <TenderActions tender={cargo} />
+            <TenderActions tender={cargo} disabled={!isAuthor} />
           </div>
         </div>
       </div>

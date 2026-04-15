@@ -16,11 +16,13 @@ import { AnalyzeActions } from "./AnalyzeActions";
 interface TenderActionsProps {
   tender: any;
   canDelete?: boolean;
+  disabled?: boolean;
 }
 
 export default function TenderActions({
   tender,
   canDelete = true,
+  disabled = false,
 }: TenderActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -38,6 +40,7 @@ export default function TenderActions({
 
   const toggleMenu = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (disabled) return;
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setCoords({
@@ -131,10 +134,14 @@ export default function TenderActions({
       <button
         ref={buttonRef}
         onClick={toggleMenu}
-        className="cursor-pointer flex items-center justify-center rounded-md hover:bg-zinc-200/70 dark:hover:bg-zinc-800 transition-colors"
+        disabled={disabled}
+        className={cn(
+          "cursor-pointer flex items-center justify-center rounded-md hover:bg-zinc-200/70 dark:hover:bg-zinc-800 transition-colors",
+          disabled && "opacity-30 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent"
+        )}
         style={{ width: 34, height: 34 }}
       >
-        <GripVertical size={24} className="text-zinc-500 dark:text-zinc-400" />
+        <GripVertical size={24} className={cn("text-zinc-500 dark:text-zinc-400", disabled && "opacity-50")} />
       </button>
 
       {isOpen && createPortal(menuContent, document.body)}
