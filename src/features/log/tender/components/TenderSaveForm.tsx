@@ -82,6 +82,12 @@ import {
   SelectContent,
   SelectItem,
   Input,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/shared/components/ui";
 
 import { GoogleLocationInput } from "@/shared/components/google-location-input/GoogleLocationInput";
@@ -539,6 +545,58 @@ const getCompanyName = (data: any) => {
   );
 };
 
+// --- Confirmation Dialog ---
+const ConfirmDialog = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  onConfirm,
+  confirmText = "Підтвердити",
+  cancelText = "Скасувати",
+  variant = "primary",
+}: any) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem]">
+      <div className="p-8">
+        <div className="flex flex-col gap-2 mb-6">
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+            {title}
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-[14px] leading-relaxed font-medium">
+            {description}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="flex-1 h-12 rounded-2xl font-bold uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-white/5 hover:bg-slate-200"
+          >
+            {cancelText}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+            className={cn(
+              "flex-1 h-12 rounded-2xl font-bold uppercase tracking-wider text-[11px] text-white shadow-lg transition-all active:scale-95",
+              variant === "danger"
+                ? "bg-rose-500 hover:bg-rose-600 shadow-rose-500/20"
+                : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20",
+            )}
+          >
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
 const TenderPreviewCard = ({
   data,
   onApply,
@@ -843,7 +901,43 @@ export default function TenderSaveForm({
     let result = [...drafts];
     if (draftSearch.trim()) {
       const search = draftSearch.toLowerCase();
-      result = result.filter((d) => d.title?.toLowerCase().includes(search));
+      result = result.filter((d) => {
+        const titleMatch = d.title?.toLowerCase().includes(search);
+        const cargoMatch = d.data?.cargoName?.toLowerCase().includes(search);
+        const companyMatch = d.data?.companyName?.toLowerCase().includes(search);
+
+        const originsMatch = d.data?.origins?.some(
+          (o: any) =>
+            o.city?.toLowerCase().includes(search) ||
+            o.address?.toLowerCase().includes(search),
+        );
+        const destinationsMatch = d.data?.destinations?.some(
+          (dest: any) =>
+            dest.city?.toLowerCase().includes(search) ||
+            dest.address?.toLowerCase().includes(search),
+        );
+
+        const truckMatch = d.data?.truckTypes?.some((t: string) =>
+          t.toLowerCase().includes(search),
+        );
+
+        // Numeric fields
+        const weightMatch = d.data?.weight?.toString().includes(search);
+        const volumeMatch = d.data?.volume?.toString().includes(search);
+        const priceMatch = d.data?.price?.toString().includes(search);
+
+        return (
+          titleMatch ||
+          cargoMatch ||
+          companyMatch ||
+          originsMatch ||
+          destinationsMatch ||
+          truckMatch ||
+          weightMatch ||
+          volumeMatch ||
+          priceMatch
+        );
+      });
     }
     return result.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
@@ -1164,7 +1258,15 @@ export default function TenderSaveForm({
       return;
     }
 
-    saveToDrafts(result);
+    setConfirmDialog({
+      open: true,
+      title: "Зберегти шаблон",
+      description:
+        "Ви впевнені, що хочете зберегти поточні дані як новий шаблон?",
+      confirmText: "Зберегти",
+      variant: "primary",
+      onConfirm: () => saveToDrafts(result),
+    });
   };
 
   const handleBulkSaveAiToDrafts = () => {
@@ -1201,17 +1303,46 @@ export default function TenderSaveForm({
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   const handleDeleteDraft = (id: string) => {
-    /* simplified */ setDrafts((prev) => prev.filter((d) => d.id !== id));
+    setConfirmDialog({
+      open: true,
+      title: "Видалити шаблон",
+      description:
+        "Ви впевнені, що хочете видалити цей шаблон? Цю дію неможливо скасувати.",
+      confirmText: "Видалити",
+      variant: "danger",
+      onConfirm: () => {
+        setDrafts((prev) => prev.filter((d) => d.id !== id));
+      },
+    });
   };
   const handleDeleteSelectedDrafts = () => {
-    /* simplified */ setDrafts((prev) =>
-      prev.filter((d) => !selectedDraftIds.includes(d.id)),
-    );
-    setSelectedDraftIds([]);
+    setConfirmDialog({
+      open: true,
+      title: "Видалити обрані",
+      description: `Ви впевнені, що хочете видалити обрані шаблони (${selectedDraftIds.length})?`,
+      confirmText: "Видалити",
+      variant: "danger",
+      onConfirm: () => {
+        setDrafts((prev) =>
+          prev.filter((d) => !selectedDraftIds.includes(d.id)),
+        );
+        setSelectedDraftIds([]);
+      },
+    });
   };
   const handleDeleteAllDrafts = () => {
-    /* simplified */ setDrafts([]);
-    setSelectedDraftIds([]);
+    setConfirmDialog({
+      open: true,
+      title: "Видалити всі шаблони",
+      description:
+        "Ви впевнені, що хочете видалити ВСІ шаблони? Цю дію неможливо скасувати.",
+      confirmText: "Видалити все",
+      variant: "danger",
+      onConfirm: () => {
+        setDrafts([]);
+        setSelectedDraftIds([]);
+      },
+    });
   };
 
   const form = useForm<TenderFormValues>({
@@ -2515,6 +2646,18 @@ export default function TenderSaveForm({
           background: #1e293b;
         }
       `}</style>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        onOpenChange={(open: boolean) =>
+          setConfirmDialog((p) => ({ ...p, open }))
+        }
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        onConfirm={confirmDialog.onConfirm}
+        confirmText={confirmDialog.confirmText}
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

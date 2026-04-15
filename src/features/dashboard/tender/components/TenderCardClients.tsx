@@ -150,11 +150,13 @@ export function TenderCardClients({
   const isActive = cargo.ids_status === "ACTIVE";
   const isAnalyze = cargo.ids_status === "ANALYZE";
   const isPlan = cargo.ids_status === "PLAN";
+  const isFinished = !isActive && !isPlan && !isAnalyze;
   const isWinByCompany = cargo.company_winner_car_count > 0;
+  const hasNoBids = !cargo.rate_company || cargo.rate_company.length === 0;
 
   console.log(profile);
   return (
-    <div className="w-full relative mb-1 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card">
+    <div className="w-full relative mb-1 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card mt-2">
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 
@@ -177,6 +179,30 @@ export function TenderCardClients({
           </span>
           <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
             Ви виграли
+          </span>
+        </div>
+      )}
+      {isFinished && !isWinByCompany && myPrice > 0 && (
+        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-rose-50/90 border-b border-r border-rose-200 px-2.5 py-1.5 backdrop-blur-md">
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-rose-600">
+            Ви не перемогли
+          </span>
+        </div>
+      )}
+      {isFinished && !isWinByCompany && myPrice === 0 && !hasNoBids && (
+        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-zinc-100/90 border-b border-r border-zinc-300 px-2.5 py-1.5 backdrop-blur-md">
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-400"></span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-zinc-600">
+            Ви не приймали участі
+          </span>
+        </div>
+      )}
+      {isFinished && hasNoBids && (
+        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-amber-50/90 border-b border-r border-amber-200 px-2.5 py-1.5 backdrop-blur-md">
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">
+            Не відбувся (немає ставок)
           </span>
         </div>
       )}

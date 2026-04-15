@@ -132,8 +132,8 @@ export default function ManagersTenderPage({ status }: Props) {
         onClose={() => setSelectedTender(null)}
       />
 
-      {/* ── Sticky header ─────────────────────────────────────────────────── */}
-      <div className="sticky top-[-20px] z-10 pt-4 pb-3 -mx-4 px-4 border-b border-border/60 backdrop-blur-md transition-all">
+      {/* ── Filter Controls (Not Sticky) ─────────────────────────────────────────────────── */}
+      <div className="pt-4 pb-3 -mx-4 px-4 border-b border-border/60 transition-all">
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="flex flex-wrap items-center justify-between gap-3 px-4">
             {/* ── Left: Filter sheet ──────────────────────────────────────── */}
@@ -171,8 +171,24 @@ export default function ManagersTenderPage({ status }: Props) {
         <EmptyTenders onReset={handleReset} />
       ) : (
         <div className="space-y-6">
-          <div className="xl:overflow-x-auto pb-6 scrollbar-thin">
+          <div className="pb-6 scrollbar-thin">
             <div className="grid gap-4 w-full xl:min-w-[1240px]">
+              {/* STICKY HEADER ROW */}
+              <div className="sticky top-[-16px] z-20 hidden xl:flex w-full min-h-[38px] mb-[-8px] font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] text-[10px] uppercase tracking-wider">
+                <div className="w-[60px] flex-shrink-0 flex items-center justify-center py-2">№</div>
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">Завантаження</div>
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">Розвантаження</div>
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">Митне<br/>оформлення</div>
+                <div className="w-[150px] flex-shrink-0 flex items-center justify-center py-2 text-center">Вантаж</div>
+                <div className="w-[90px] flex-shrink-0 flex items-center justify-center py-2 text-center">Тип<br/>транспорту</div>
+                <div className="w-[50px] flex-shrink-0 flex items-center justify-center py-2 text-center">Вага/<br/>Об'єм</div>
+                <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center py-2 text-center">Нотатки</div>
+                <div className="w-[130px] flex-shrink-0 flex items-center justify-center py-2 text-center">Ціни</div>
+                <div className="w-[110px] flex-shrink-0 flex items-center justify-center py-2 text-center">Час / Викуп</div>
+                <div className="w-[155px] flex-shrink-0 flex items-center justify-center py-2 text-center">Дії / Ставки</div>
+                <div className="w-[36px] flex-shrink-0 flex items-center justify-center py-2"></div>
+              </div>
+
               {tenders.map((item) => (
                 <TenderCardManagers
                   key={item.id}
