@@ -214,7 +214,7 @@ export function TenderCardManagers({
           </div>
 
           {/* 2. Завантаження */}
-          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full">
+          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full overflow-hidden">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {fromPoints.length === 0 && (
                 <span className="text-zinc-400 font-medium">—</span>
@@ -255,14 +255,14 @@ export function TenderCardManagers({
               })}
             </div>
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
-              <span className="text-[12px]  font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex gap-1 items-center">
+              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 w-full text-center px-1 truncate">
                 {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
               </span>
             )}
           </div>
 
           {/* 3. Розвантаження */}
-          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full">
+          <div className="flex-1 md:min-w-[130px] flex flex-col items-center justify-center p-3 xl:p-2 xl:h-full overflow-hidden">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {toPoints.map((pt, i) => {
                 const ptAny = pt as any;
@@ -300,14 +300,14 @@ export function TenderCardManagers({
               })}
             </div>
             {formatTenderDateTime(cargo.date_unload) && (
-              <span className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 flex gap-1 items-center">
+              <span className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 mt-1 w-full text-center px-1 truncate">
                 {formatTenderDateTime(cargo.date_unload)}
               </span>
             )}
           </div>
 
           {/* 4. Митне оформлення (Зменшений шрифт) */}
-          <div className="flex-1 md:min-w-[130px] flex flex-col justify-center p-3 relative items-center xl:h-full bg-zinc-50/30 dark:bg-white/[0.02]">
+          <div className="flex-1 md:min-w-[130px] flex flex-col justify-center p-3 relative items-center xl:h-full bg-zinc-50/30 dark:bg-white/[0.02] overflow-hidden">
             <div className="max-h-[70px] overflow-y-auto overflow-x-hidden custom-scrollbar w-full flex flex-col items-center">
               {transitPoints.map((pt, i) => {
                 const ptAny = pt as any;
@@ -608,10 +608,16 @@ export function TenderCardManagers({
               "text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider",
               cargo.ids_type === "AUCTION"
                 ? "bg-amber-100 text-amber-600"
-                : "bg-indigo-100 text-indigo-600",
+                : cargo.ids_type === "REDUCTION_WITH_REDEMPTION"
+                  ? "bg-purple-100 text-purple-600"
+                  : "bg-indigo-100 text-indigo-600",
             )}
           >
-            {cargo.ids_type === "AUCTION" ? "АУКЦІОН" : "РЕДУКЦІОН"}
+            {cargo.ids_type === "AUCTION" 
+              ? "АУКЦІОН" 
+              : cargo.ids_type === "REDUCTION_WITH_REDEMPTION"
+                ? "РЕДУКЦІОН З ВИКУПОМ"
+                : "РЕДУКЦІОН"}
           </span>
           <span className="text-zinc-400 font-medium">
             публікація {formatTenderDate(cargo.time_start)}

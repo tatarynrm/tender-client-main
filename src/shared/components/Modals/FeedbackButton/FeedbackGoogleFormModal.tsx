@@ -32,15 +32,6 @@ export const FeedbackButton = ({ className }: FeedbackButtonProps) => {
     >
       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
 
-      {isNew && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-auto px-1.5 items-center justify-center">
-          <span className="animate-ping absolute inline-flex h-[70%] w-[90%] rounded-full bg-red-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full px-1.5 py-0.5 bg-red-500 text-[10px] font-black leading-none text-white shadow-sm ring-1 ring-white dark:ring-red-400/30">
-            NEW
-          </span>
-        </span>
-      )}
-
       <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
       <span className="hidden md:inline">ВІДГУКИ!!!!!</span>
     </Button>

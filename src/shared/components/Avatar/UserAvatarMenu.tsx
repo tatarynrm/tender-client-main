@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LogOut, User, Settings, LayoutDashboard, X } from "lucide-react";
 
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
@@ -11,6 +12,7 @@ import { LogoutButton } from "../Buttons/LogoutButton";
 export function UserAvatarMenu() {
   const { profile } = useAuth();
   const { logout } = useProfileLogoutMutation();
+  const pathname = usePathname();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -89,18 +91,18 @@ export function UserAvatarMenu() {
           </div>
 
           {/* Links */}
-          <nav className="p-1.5 flex flex-col gap-0.5">
-            {/* <MenuLink href="/profile" icon={User} label="Мій профіль" />
-            <MenuLink href="/dashboard" icon={LayoutDashboard} label="Панель керування" />
-             */}
-            {/* Показуємо налаштування лише адмінам, як приклад використання useAuth */}
-            {/* {(profile.is_admin || profile.is_manager) && (
-                <MenuLink href="/settings" icon={Settings} label="Налаштування" />
-            )} */}
+            <nav className="p-1.5 flex flex-col gap-0.5" onClick={() => detailsRef.current?.removeAttribute("open")}>
+              {/* <MenuLink href="/profile" icon={User} label="Мій профіль" /> */}
+              
+              <MenuLink 
+                href={pathname.startsWith("/log") ? "/log/settings" : "/dashboard/settings"} 
+                icon={Settings} 
+                label="Налаштування" 
+              />
 
-            <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
-            <LogoutButton />
-          </nav>
+              <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
+              <LogoutButton />
+            </nav>
         </div>
       </details>
 

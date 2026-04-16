@@ -11,35 +11,43 @@ export const TelegramConnectButton = ({
   token,
   email,
 }: TelegramConnectButtonProps) => {
-  const [telegramToken, setTelegramToken] = useState<string | null>(token);
+  const [loading, setLoading] = useState(false);
 
   const fetchToken = async () => {
-    if (!email) return;
+    if (!email) return null;
     try {
-      const { data } = await api.post("/telegram-token/get", { email });
-      setTelegramToken(data.token);
+      const { data } = await api.post("/telegram-token/get-token", { email });
+      return data.token; 
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch telegram token:", error);
+      return null;
     }
   };
 
-  const handleClick = () => {
-    if (telegramToken) {
-      console.log("good");
-
-      const url = `https://t.me/${process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME}?start=${telegramToken}`;
-      window.open(url, "_blank");
-    } else {
-      fetchToken();
+  const handleClick = async () => {
+    setLoading(true);
+    try {
+      const activeToken = token || (await fetchToken());
+      
+      if (activeToken) {
+        const botName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || "ict_tender_bot";
+        const url = `https://t.me/${botName}?start=${activeToken}`;
+        window.open(url, "_blank");
+      } else {
+        console.error("No token available for Telegram connection");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <button
-      className="px-6 py-2 bg-gradient-to-r from-teal-500 to-indigo-500 text-white rounded-lg shadow-md hover:shadow-lg transition"
+      className="px-6 py-2 bg-gradient-to-r from-teal-500 to-indigo-500 text-white rounded-lg shadow-md hover:shadow-lg transition disabled:opacity-50"
       onClick={handleClick}
+      disabled={loading}
     >
-      Підключити Telegram
+      {loading ? "Завантаження..." : "Підключити Telegram"}
     </button>
   );
 };

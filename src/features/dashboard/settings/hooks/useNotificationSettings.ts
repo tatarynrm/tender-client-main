@@ -21,12 +21,10 @@ export const useNotificationSettings = () => {
       return data;
     },
     onSuccess: () => {
-      toast.success("Налаштування сповіщень збережено");
       queryClient.invalidateQueries({ queryKey: ["notificationSettings"] });
     },
     onError: (err) => {
       console.error("Failed to update notification settings", err);
-      toast.error("Помилка при збереженні налаштувань");
     },
   });
 

@@ -6,7 +6,9 @@ import {
   Menu,
   PanelRight,
   LayoutGrid, // 👈 Додали іконку для віджетів
+  Settings,
 } from "lucide-react";
+import Link from "next/link";
 import { ToggleTheme } from "@/shared/components/ui";
 import { IUserProfile } from "@/shared/types/user.types";
 import { motion, AnimatePresence } from "framer-motion"; // 👈 Додали AnimatePresence для плавного меню
@@ -110,11 +112,18 @@ export default function LogHeader({
         {/* Додаткові інструменти (зменшені на мобілці) */}
         <div className="flex items-center gap-1.5 mr-1 sm:mr-2">
           <TrainingButton />
-          <FeedbackButton className="new-feature" />
+          <FeedbackButton />
         </div>
 
         {/* Налаштування (можна було б сховати на дуже малих екранах, але поки залишимо) */}
-        <div className="hidden sm:flex items-center gap-1.5">
+        <div className="hidden sm:flex items-center gap-1.5 focus-within:ring-0">
+          <Link 
+            href="/log/settings"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-500 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+            title="Налаштування сповіщень"
+          >
+            <Settings className="w-5 h-5" />
+          </Link>
           <GlobalSettings />
           <ToggleTheme />
         </div>

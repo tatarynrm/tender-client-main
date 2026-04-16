@@ -8,7 +8,20 @@ import ReactSelect from "react-select";
 import api from "@/shared/api/instance.api";
 import Loading from "@/shared/components/ui/Loading";
 import { useNotificationSettings } from "../hooks/useNotificationSettings";
-import { Globe, Truck, Bell, CheckSquare, Square } from "lucide-react";
+import {
+  Globe,
+  Truck,
+  Bell,
+  CheckSquare,
+  Square,
+  FileText,
+  BarChart,
+  MailWarning,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/shared/utils";
+import { toast } from "sonner";
+import { NotificationChannelsTable } from "../components/NotificationChannelsTable";
 
 interface NotifyDestination {
   value: string;
@@ -102,18 +115,17 @@ const DEFAULT_EVENTS: NotifyDestination[] = [
     to_viber: false,
     to_whatsapp: false,
   },
-  {
-    value: "Зміна статусу тендеру",
-    ids_notify_type: "TENDER_STATUS_CHANGED",
-    to_web: false,
-    to_email: false,
-    to_telegram: false,
-    to_viber: false,
-    to_whatsapp: false,
-  },
+];
+
+const SETTINGS_CATEGORIES = [
+  { id: "tenders", label: "Тендери", icon: Truck },
+  { id: "orders", label: "Заявки", icon: FileText },
+  { id: "analytics", label: "Аналітика", icon: BarChart },
+  { id: "system", label: "Системні повідомлення", icon: MailWarning },
 ];
 
 export function NotificationsTab() {
+  const [activeCategory, setActiveCategory] = useState("tenders");
   const {
     data: settingsData,
     isLoading,
@@ -235,8 +247,13 @@ export function NotificationsTab() {
       </div>
     );
 
-  const onSubmit = (formData: NotificationFormValues) =>
-    updateMutation.mutate(formData);
+  const onSubmit = (formData: NotificationFormValues) => {
+    toast.promise(updateMutation.mutateAsync(formData), {
+      loading: "Збереження налаштувань...",
+      success: "Налаштування сповіщень успішно збережено",
+      error: "Не вдалося зберегти налаштування",
+    });
+  };
 
   const toggleAll = (
     field: "to_telegram" | "to_email" | "to_web",
@@ -311,261 +328,236 @@ export function NotificationsTab() {
   const notifyDest = watch("notify_destination") || [];
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-6 pb-24 animate-in fade-in duration-500 overflow-visible "
-    >
-      {/* SECTION: DIRECTIONS */}
-      <section className="p-6 border border-zinc-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-3xl shadow-sm space-y-6">
-        <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-white/5 pb-4">
-          <div className="p-2 bg-blue-600 rounded-xl shadow-lg">
-            <Globe className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-base font-black uppercase tracking-tight text-zinc-800 dark:text-white">
-            Напрямки сповіщень
-          </h2>
-        </div>
+    <div className="flex flex-col md:flex-row gap-8 pb-24">
+      {/* Лівий сайдбар з меню категорій */}
+      <div className="w-full md:w-64 flex flex-col gap-2 shrink-0 md:border-r border-zinc-200/80 dark:border-white/5 md:pr-6">
+        {SETTINGS_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setActiveCategory(cat.id)}
+            className={cn(
+              "text-left px-4 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center gap-3 text-[13px] group border",
+              activeCategory === cat.id
+                ? "bg-[#6366f1]/10 text-[#6366f1] dark:bg-indigo-500/20 dark:text-indigo-400 border-[#6366f1]/20 shadow-sm"
+                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border-transparent hover:border-zinc-200 dark:hover:border-white/5",
+            )}
+          >
+            <cat.icon
+              className={cn(
+                "w-5 h-5 transition-colors",
+                activeCategory === cat.id
+                  ? "text-[#6366f1] dark:text-indigo-400"
+                  : "text-zinc-400 group-hover:text-zinc-500 dark:group-hover:text-zinc-300",
+              )}
+            />
+            {cat.label}
+          </button>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[
-            {
-              id_active: "reg",
-              label: "По Україні",
-              fromList: "tender_notify_reg_region_from",
-              fromOpts: regions,
-              fromKey: "ids_region",
-              toList: "tender_notify_reg_region_to",
-              toOpts: regions,
-              toKey: "ids_region",
-            },
-            {
-              id_active: "exp",
-              label: "Експорт",
-              fromList: "tender_notify_exp_region_from",
-              fromOpts: regions,
-              fromKey: "ids_region",
-              toList: "tender_notify_exp_country_to",
-              toOpts: countries,
-              toKey: "ids_country",
-            },
-            {
-              id_active: "imp",
-              label: "Імпорт",
-              fromList: "tender_notify_imp_country_from",
-              fromOpts: countries,
-              fromKey: "ids_country",
-              toList: "tender_notify_imp_region_to",
-              toOpts: regions,
-              toKey: "ids_region",
-            },
-            {
-              id_active: "tr",
-              label: "Міжнародні",
-              fromList: "tender_notify_tr_country_from",
-              fromOpts: countries,
-              fromKey: "ids_country",
-              toList: "tender_notify_tr_country_to",
-              toOpts: countries,
-              toKey: "ids_country",
-            },
-          ].map((dir, i) => {
-            const isActive = watch(dir.id_active as any);
-            return (
-              <div
-                key={i}
-                className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-white/5 shadow-sm space-y-4 transition-all hover:shadow-md"
+      <div className="flex-1 w-full ">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCategory}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {activeCategory === "tenders" ? (
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-6 animate-in fade-in duration-500 overflow-visible"
               >
-                <div className="flex items-center justify-between border-b border-zinc-50 dark:border-white/5 pb-2">
-                  <div className="flex items-center gap-3">
-                    <Controller
-                      name={dir.id_active as any}
-                      control={control}
-                      render={({ field }) => (
-                        <Checkbox
-                          id={dir.id_active}
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className="w-5 h-5 rounded-md"
-                        />
-                      )}
-                    />
-                    <Label
-                      htmlFor={dir.id_active}
-                      className="font-black uppercase text-[11px] text-zinc-700 dark:text-zinc-200 cursor-pointer"
-                    >
-                      {dir.label}
-                    </Label>
+                {/* SECTION: DIRECTIONS */}
+                <section className="p-6 border border-zinc-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-3xl shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-white/5 pb-4">
+                    <div className="p-2 bg-blue-600 rounded-xl shadow-lg">
+                      <Globe className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-base font-black uppercase tracking-tight text-zinc-800 dark:text-white">
+                      Напрямки сповіщень
+                    </h2>
                   </div>
-                </div>
 
-                <div
-                  className={`grid grid-cols-1 gap-3 transition-opacity duration-300 ${!isActive ? "opacity-50" : "opacity-100"}`}
-                >
-                  <div className="space-y-1.5">
-                    <div className="text-[9px] font-black uppercase text-zinc-400 px-1">
-                      Звідки
-                    </div>
-                    {renderMultiSelect(
-                      dir.fromList as any,
-                      dir.fromOpts,
-                      "Виберіть звідки...",
-                      dir.fromKey,
-                      !isActive,
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      {
+                        id_active: "reg",
+                        label: "По Україні",
+                        fromList: "tender_notify_reg_region_from",
+                        fromOpts: regions,
+                        fromKey: "ids_region",
+                        toList: "tender_notify_reg_region_to",
+                        toOpts: regions,
+                        toKey: "ids_region",
+                      },
+                      {
+                        id_active: "exp",
+                        label: "Експорт",
+                        fromList: "tender_notify_exp_region_from",
+                        fromOpts: regions,
+                        fromKey: "ids_region",
+                        toList: "tender_notify_exp_country_to",
+                        toOpts: countries,
+                        toKey: "ids_country",
+                      },
+                      {
+                        id_active: "imp",
+                        label: "Імпорт",
+                        fromList: "tender_notify_imp_country_from",
+                        fromOpts: countries,
+                        fromKey: "ids_country",
+                        toList: "tender_notify_imp_region_to",
+                        toOpts: regions,
+                        toKey: "ids_region",
+                      },
+                      {
+                        id_active: "tr",
+                        label: "Міжнародні",
+                        fromList: "tender_notify_tr_country_from",
+                        fromOpts: countries,
+                        fromKey: "ids_country",
+                        toList: "tender_notify_tr_country_to",
+                        toOpts: countries,
+                        toKey: "ids_country",
+                      },
+                    ].map((dir, i) => {
+                      const isActive = watch(dir.id_active as any);
+                      return (
+                        <div
+                          key={i}
+                          className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-white/5 shadow-sm space-y-4 transition-all hover:shadow-md"
+                        >
+                          <div className="flex items-center justify-between border-b border-zinc-50 dark:border-white/5 pb-2">
+                            <div className="flex items-center gap-3">
+                              <Controller
+                                name={dir.id_active as any}
+                                control={control}
+                                render={({ field }) => (
+                                  <Checkbox
+                                    id={dir.id_active}
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    className="w-5 h-5 rounded-md"
+                                  />
+                                )}
+                              />
+                              <Label
+                                htmlFor={dir.id_active}
+                                className="font-black uppercase text-[11px] text-zinc-700 dark:text-zinc-200 cursor-pointer"
+                              >
+                                {dir.label}
+                              </Label>
+                            </div>
+                          </div>
+
+                          <div
+                            className={`grid grid-cols-1 gap-3 transition-opacity duration-300 ${!isActive ? "opacity-50" : "opacity-100"}`}
+                          >
+                            <div className="space-y-1.5">
+                              <div className="text-[9px] font-black uppercase text-zinc-400 px-1">
+                                Звідки
+                              </div>
+                              {renderMultiSelect(
+                                dir.fromList as any,
+                                dir.fromOpts,
+                                "Виберіть звідки...",
+                                dir.fromKey,
+                                !isActive,
+                              )}
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="text-[9px] font-black uppercase text-zinc-400 px-1">
+                                Куди
+                              </div>
+                              {renderMultiSelect(
+                                dir.toList as any,
+                                dir.toList ? dir.toOpts : [],
+                                "Виберіть куди...",
+                                dir.toKey,
+                                !isActive,
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="text-[9px] font-black uppercase text-zinc-400 px-1">
-                      Куди
+                </section>
+
+                {/* SECTION: TRAILERS */}
+                <section className="p-6 border border-zinc-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-3xl shadow-sm">
+                  <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-600 rounded-xl shadow-lg">
+                        <Truck className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-base font-black uppercase text-zinc-800 dark:text-white">
+                        Тип транспорту
+                      </h2>
                     </div>
-                    {renderMultiSelect(
-                      dir.toList as any,
-                      dir.toList ? dir.toOpts : [],
-                      "Виберіть куди...",
-                      dir.toKey,
-                      !isActive,
-                    )}
+                    <div className="flex-1 w-full bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-100 dark:border-white/5 shadow-inner">
+                      {renderMultiSelect(
+                        "tender_notify_trailer",
+                        trailers,
+                        "Виберіть типи причепів...",
+                        "ids_trailer",
+                      )}
+                    </div>
                   </div>
+                </section>
+
+                {/* SECTION: MESSAGING TABLE */}
+                <NotificationChannelsTable 
+                  control={control}
+                  nameRef="notify_destination"
+                  items={notifyDest}
+                  toggleAll={toggleAll}
+                  title="Канали сповіщень (Тендери)"
+                />
+
+                {/* FINAL SUBMIT BUTTON */}
+                <div className="flex justify-end pt-4">
+                  <Button
+                    type="submit"
+                    disabled={updateMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-7 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
+                  >
+                    {updateMutation.isPending
+                      ? "Збереження..."
+                      : "Зберегти налаштування"}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-12 lg:p-24 border border-dashed border-zinc-200 dark:border-white/10 rounded-3xl lg:rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-2xl text-center">
+                <div className="p-4 bg-zinc-50 dark:bg-white/5 rounded-full shadow-inner border border-zinc-100 dark:border-white/5 mb-4 text-zinc-400">
+                  {activeCategory === "system" ? (
+                    <MailWarning className="w-8 h-8" />
+                  ) : (
+                    <Globe className="w-8 h-8" />
+                  )}
+                </div>
+                <h2 className="text-xl font-black uppercase text-zinc-700 dark:text-zinc-200">
+                  {
+                    SETTINGS_CATEGORIES.find((c) => c.id === activeCategory)
+                      ?.label
+                  }
+                </h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                  Цей розділ наразі перебуває в стадії розробки. Специфічні
+                  сповіщення з'являться незабаром.
+                </p>
+                <div className="mt-6 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 shadow-sm text-[10px] uppercase font-black">
+                  У розробці
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* SECTION: TRAILERS */}
-      <section className="p-6 border border-zinc-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-3xl shadow-sm">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-600 rounded-xl shadow-lg">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <h2 className="text-base font-black uppercase text-zinc-800 dark:text-white">
-              Тип транспорту
-            </h2>
-          </div>
-          <div className="flex-1 w-full bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-100 dark:border-white/5 shadow-inner">
-            {renderMultiSelect(
-              "tender_notify_trailer",
-              trailers,
-              "Виберіть типи причепів...",
-              "ids_trailer",
             )}
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION: MESSAGING TABLE */}
-      <section className="p-6 border border-zinc-200 dark:border-white/10 rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-3xl shadow-sm space-y-6">
-        <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-white/5 pb-4">
-          <div className="p-2 bg-zinc-900 dark:bg-white rounded-xl shadow-lg">
-            <Bell className="w-5 h-5 text-white dark:text-zinc-900" />
-          </div>
-          <h2 className="text-base font-black uppercase text-zinc-800 dark:text-white">
-            Канали сповіщень
-          </h2>
-        </div>
-
-        <div className="rounded-3xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden max-w-4xl mx-auto">
-          {/* SCROLLABLE WRAPPER FOR TABLE */}
-          <div className="overflow-x-auto w-full scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700">
-            <table className="w-full border-separate border-spacing-0 min-w-[650px]">
-              <thead>
-                <tr className="text-[9px] font-black uppercase text-white h-16">
-                  <th className="p-4 text-left text-zinc-400 bg-zinc-50 dark:bg-zinc-800/30 border-b dark:border-white/5 sticky left-0 z-10 backdrop-blur-sm">
-                    Подія
-                  </th>
-                  {[
-                    {
-                      id: "to_telegram",
-                      label: "Telegram",
-                      bg: "bg-[#007cc3]",
-                    },
-                    { id: "to_email", label: "Email", bg: "bg-[#0070b4]" },
-                    { id: "to_web", label: "WEB", bg: "bg-[#005a96]" },
-                  ].map((col) => (
-                    <th
-                      key={col.id}
-                      className={`${col.bg} p-2 text-center border-l border-white/10`}
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <span>{col.label}</span>
-                        <div className="flex gap-1">
-                          <button
-                            type="button"
-                            onClick={() => toggleAll(col.id as any, true)}
-                            className="p-1 px-2 rounded-md bg-white/20 hover:bg-white/40 transition-colors flex items-center gap-1"
-                          >
-                            <CheckSquare className="w-3 h-3" />{" "}
-                            <span className="text-[7px]">ВСІ</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => toggleAll(col.id as any, false)}
-                            className="p-1 px-2 rounded-md bg-white/10 hover:bg-white/30 transition-colors flex items-center gap-1"
-                          >
-                            <Square className="w-3 h-3" />{" "}
-                            <span className="text-[7px]">ЖОДНОГО</span>
-                          </button>
-                        </div>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
-                {notifyDest.map((item, index) => (
-                  <tr
-                    key={index}
-                    className="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all h-14 group"
-                  >
-                    <td className="p-4 px-6 text-[12px] font-bold text-zinc-600 dark:text-zinc-400 sticky left-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-r dark:border-white/5">
-                      {item.value}
-                    </td>
-                    {(["to_telegram", "to_email", "to_web"] as const).map(
-                      (field) => (
-                        <td
-                          key={field}
-                          className="p-4 text-center border-l border-zinc-100 dark:border-white/5"
-                        >
-                          <div className="flex justify-center">
-                            <Controller
-                              name={
-                                `notify_destination.${index}.${field}` as const
-                              }
-                              control={control}
-                              render={({ field: cb }) => (
-                                <input
-                                  type="checkbox"
-                                  checked={!!cb.value}
-                                  onChange={(e) =>
-                                    cb.onChange(e.target.checked)
-                                  }
-                                  className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 cursor-pointer rounded-lg checked:bg-blue-600 appearance-none flex items-center justify-center after:content-['✓'] after:text-white after:font-black after:text-sm after:hidden checked:after:block transition-all shadow-sm focus:ring-2 focus:ring-blue-500/20"
-                                />
-                              )}
-                            />
-                          </div>
-                        </td>
-                      ),
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* FINAL SUBMIT BUTTON */}
-      <div className="flex justify-end pt-4">
-        <Button
-          type="submit"
-          disabled={updateMutation.isPending}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-7 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all"
-        >
-          {updateMutation.isPending ? "Збереження..." : "Зберегти налаштування"}
-        </Button>
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </form>
+    </div>
   );
 }

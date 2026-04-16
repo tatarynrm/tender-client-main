@@ -17,7 +17,8 @@ import {
   UserRoundPlus,
   Users2Icon,
   MessageSquare,
-  Bell
+  Bell,
+  Send,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -71,6 +72,11 @@ const links: MenuItem[] = [
         name: "Повідомлення",
         href: "/admin/telegram/telegram-messages",
         icon: SiTelegram,
+      },
+      {
+        name: "Розсилка",
+        href: "/admin/telegram/broadcast",
+        icon: Send,
       },
     ],
   },

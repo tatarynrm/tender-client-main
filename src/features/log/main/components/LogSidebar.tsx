@@ -17,6 +17,7 @@ import {
   ActivitySquare,
   MapPin,
   Gavel,
+  Settings,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -46,8 +47,6 @@ const links: MenuItem[] = [
     name: "Тендери",
     icon: LayoutList,
     // href: "/log/tender",
-    info: "New",
-    status: "new",
     children: [
       { name: "Чернетки", icon: ShieldCheck, href: "/log/tender/draft" },
       { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
@@ -67,14 +66,12 @@ const links: MenuItem[] = [
   {
     name: "Карта",
     icon: MapPin,
-    status: "new",
     href: "/log/map",
-    info: "New",
   },
 ];
 
 const defaultFooterLinks: MenuItem[] = [
-  // { name: "Налаштування", href: "/dashboard/settings", icon: Settings },
+  { name: "Налаштування", href: "/log/settings", icon: Settings },
 ];
 
 export default function LogSidebar({
@@ -163,16 +160,6 @@ export default function LogSidebar({
           <span className={active ? "font-semibold" : "font-medium"}>
             {name}
           </span>
-
-          {/* Анімація NEW */}
-          {isNew && (
-            <span className="absolute right-[30] flex h-4 w-8">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-200 opacity-75"></span>
-              <span className="relative inline-flex rounded-md bg-red-500 px-1 text-[9px] font-bold text-white items-center justify-center">
-                NEW
-              </span>
-            </span>
-          )}
         </Link>
       );
     }
@@ -201,16 +188,6 @@ export default function LogSidebar({
               />
             )}
             <span className="font-semibold">{name}</span>
-
-            {/* Анімація NEW для пунктів з підпунктами */}
-            {isNew && (
-              <span className="flex h-4 w-8 shrink-0 ml-1 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-md bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-md bg-red-500 px-1 text-[9px] font-bold text-white items-center justify-center">
-                  NEW
-                </span>
-              </span>
-            )}
           </div>
           {openMenus[name] ? (
             <ChevronDown className="w-4 h-4 opacity-50" />

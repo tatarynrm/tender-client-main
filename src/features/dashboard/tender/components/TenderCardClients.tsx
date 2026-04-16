@@ -131,16 +131,35 @@ export function TenderCardClients({
   }, [cargo.price_next, cargo.price_step, cargo.rate_company, cargo.ids_type]);
 
   const myPrice = useMemo(() => {
-    // Шукаємо у списку виключно за id поточного користувача (автора), а не всієї компанії
-    if (!profile || !cargo.rate_company || cargo.rate_company.length === 0)
-      return 0;
+    if (!profile) return cargo.price_proposed || 0;
 
-    const myLatestBid = [...cargo.rate_company]
-      .filter((r) => r.id_author === profile.id)
-      .sort((a, b) => b.id - a.id)[0];
+    if (!cargo.rate_company || cargo.rate_company.length === 0) {
+      return cargo.price_proposed || 0;
+    }
 
-    return myLatestBid ? myLatestBid.price_proposed : 0;
-  }, [cargo.rate_company, profile]);
+    const pName = `${profile.person?.name || ""} ${profile.person?.surname || ""}`.trim().toLowerCase();
+    const pSurnameName = `${profile.person?.surname || ""} ${profile.person?.name || ""}`.trim().toLowerCase();
+
+    const myBids = cargo.rate_company.filter((r) => {
+      // 1. за id_author
+      if (r.id_author && r.id_author === profile.id) return true;
+      // 2. за id_company
+      if (r.id_company && profile.company?.id && r.id_company === profile.company.id) return true;
+      // 3. за іменем (бек може не віддавати ID для клієнтів)
+      if (r.author) {
+        const aName = r.author.trim().toLowerCase();
+        if (aName === pName || aName === pSurnameName || aName === "ви" || aName === "you") return true;
+      }
+      return false;
+    });
+
+    if (myBids.length > 0) {
+      const myLatestBid = myBids.sort((a, b) => b.id - a.id)[0];
+      return myLatestBid.price_proposed;
+    }
+
+    return cargo.price_proposed || 0;
+  }, [cargo.rate_company, cargo.price_proposed, profile]);
 
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
@@ -465,10 +484,10 @@ export function TenderCardClients({
             {isAuction ? (
               <div className="flex-1 flex flex-col items-center justify-center bg-[#eef7ec] dark:bg-emerald-900/20 p-2 leading-tight text-center">
                 <span className="text-[11px] font-bold text-[#2c5f2d] dark:text-emerald-300">
-                  Ваша поточна ставка
+                  Ваша поточна ставка ({currencySymbol})
                 </span>
                 <span className="text-[13px] font-black text-[#2c5f2d] dark:text-emerald-400 mt-1">
-                  {myPrice ? `${myPrice}${currencySymbol}` : "—"}
+                  {myPrice ? myPrice : "—"}
                 </span>
               </div>
             ) : (
@@ -550,10 +569,10 @@ export function TenderCardClients({
             {!isAuction && (
               <div className="h-[26px] flex items-center justify-center px-2 bg-[#eef7ec] dark:bg-emerald-900/40 text-center">
                 <span className="text-[9px] text-[#2c5f2d] dark:text-emerald-300 font-bold uppercase mr-1.5 leading-none">
-                  Ваша поточна ставка
+                  Ваша поточна ставка ({currencySymbol})
                 </span>
                 <span className="text-[12px] font-black text-[#2c5f2d] dark:text-emerald-400 leading-none">
-                  {myPrice ? `${myPrice}${currencySymbol}` : "—"}
+                  {myPrice ? myPrice : "—"}
                 </span>
               </div>
             )}
@@ -588,10 +607,10 @@ export function TenderCardClients({
             {!isAuction && (
               <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
                 <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none">
-                  Краща ставка
+                  Краща ставка ({currencySymbol})
                 </span>
                 <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
-                  {bestBidPrice ? `${bestBidPrice}${currencySymbol}` : "—"}
+                  {bestBidPrice ? bestBidPrice : "—"}
                 </span>
               </div>
             )}

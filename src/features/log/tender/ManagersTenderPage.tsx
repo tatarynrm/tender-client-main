@@ -178,16 +178,18 @@ export default function ManagersTenderPage({ status }: Props) {
                 <div className="w-[60px] flex-shrink-0 flex items-center justify-center py-2">
                   №
                 </div>
-                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">
-                  Завантаження
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 px-1 text-center overflow-hidden">
+                  <span className="truncate">Завантаження</span>
                 </div>
-                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">
-                  Розвантаження
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 px-1 text-center overflow-hidden">
+                  <span className="truncate">Розвантаження</span>
                 </div>
-                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 text-center">
-                  Митне
-                  <br />
-                  оформлення
+                <div className="flex-1 min-w-[130px] flex items-center justify-center py-2 px-1 text-center overflow-hidden leading-tight">
+                  <span className="line-clamp-2">
+                    Митне
+                    <br />
+                    оформлення
+                  </span>
                 </div>
                 <div className="w-[150px] flex-shrink-0 flex items-center justify-center py-2 text-center">
                   Вантаж

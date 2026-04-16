@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { AppTabs, TabOption } from "@/shared/components/Tabs/AppTabs";
-import { Settings, User, Bell, Shield, Pickaxe } from "lucide-react";
+import { Settings, User, Bell, Shield } from "lucide-react";
 import { NotificationsTab } from "@/features/dashboard/settings/ui/NotificationTab";
 
 const settingsTabs: TabOption[] = [
@@ -11,22 +11,24 @@ const settingsTabs: TabOption[] = [
   { id: "security", label: "Безпека" },
 ];
 
-export default function SettingsPage() {
+export default function LogSettingsPage() {
   const searchParams = useSearchParams();
   const activeTab = searchParams.get("tab") || "profile";
 
   return (
-    <div className="w-full space-y-6 p-4 lg:p-4 animate-in fade-in duration-500">
+    <div className="w-full space-y-6 p-4 animate-in fade-in duration-500">
       <div className="flex items-center gap-3 mb-2">
-        <Settings className="w-6 h-6 text-zinc-800 dark:text-zinc-200" />
+        <div className="p-2 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
+          <Settings className="w-6 h-6 text-zinc-800 dark:text-zinc-200" />
+        </div>
         <h1 className="text-xl lg:text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
-          Налаштування
+          Налаштування системи
         </h1>
       </div>
 
       <AppTabs tabs={settingsTabs} queryParam="tab" />
 
-      <div className="">
+      <div className="mt-6">
         {activeTab === "notifications" ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
             <NotificationsTab />
@@ -73,7 +75,7 @@ const PlaceholderSection = ({
   title: string;
   icon: React.ReactNode;
 }) => (
-  <div className="relative overflow-hidden flex flex-col items-center justify-center p-12 lg:p-24 border border-dashed border-zinc-200 dark:border-white/10 rounded-3xl lg:rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-2xl shadow-sm hover:shadow-md transition-shadow group">
+  <div className="relative overflow-hidden flex flex-col items-center justify-center p-12 lg:p-24 border border-zinc-200 dark:border-white/10 rounded-3xl lg:rounded-[2rem] bg-white/50 dark:bg-zinc-950/40 backdrop-blur-2xl shadow-sm group">
     <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
     <div className="relative z-10 flex flex-col items-center text-zinc-400 dark:text-zinc-500 gap-4 transition-transform duration-500 group-hover:scale-105 group-hover:text-zinc-600 dark:group-hover:text-zinc-300">

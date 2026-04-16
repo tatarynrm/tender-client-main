@@ -1,12 +1,23 @@
 "use client";
 import api from "@/shared/api/instance.api";
 
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { toast } from "sonner";
+
 export const TelegramDisconnectButton = ({ telegram_id }: { telegram_id: number }) => {
+  const { profile, setProfile } = useAuth();
+  
   const handleDisconnect = async () => {
     try {
       await api.post("/telegram-token/disconnect", { telegram_id });
-      alert("Telegram успішно відключено!");
-      // 🔥 тригер події через сокет, або оновлення профілю через useAuth
+      toast.success("Telegram успішно відключено!");
+      // 🔥 Оновлюємо UI миттєво
+      if (profile) {
+        setProfile({
+          ...profile,
+          person_telegram: null,
+        });
+      }
     } catch (err) {
       console.error("Помилка при відключенні Telegram:", err);
     }

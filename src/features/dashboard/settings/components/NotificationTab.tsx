@@ -2,10 +2,10 @@
 import { Key, ReactNode, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
-
+import { cn } from "@/shared/utils";
 import api from "@/shared/api/instance.api";
-import { SettingsCard } from "./SettingsCard";
-import { Label, Switch } from "@/shared/components/ui";
+import { Switch } from "@/shared/components/ui";
+
 import { TelegramConnectButton } from "./TelegramConnectButton";
 import { TelegramDisconnectButton } from "./TelegramDisconectButton";
 const notificationCategories = [
@@ -19,12 +19,12 @@ const notificationCategories = [
     ],
   },
   {
-    title: "Замовлення",
-    description: "Сповіщення про стан ваших замовлень та оновлення.",
+    title: "Заявки",
+    description: "Сповіщення про стан ваших заявок та оновлення.",
     options: [
-      "Статус замовлень",
-      "Нові замовлення від клієнтів",
-      "Затримки або проблеми у замовленнях",
+      "Статус заявок",
+      "Нові заявки від клієнтів",
+      "Затримки або проблеми у заявках",
     ],
   },
   {
@@ -55,24 +55,6 @@ const notificationCategories = [
     ],
   },
 ];
-const NotificationCard = ({ title, description, options }: any) => (
-  <SettingsCard title={title}>
-    <p className="text-sm mb-4 text-gray-700 dark:text-gray-300">
-      {description}
-    </p>
-    <div className="flex flex-col gap-3">
-      {options.map((opt: ReactNode, idx: Key | null | undefined) => (
-        <Label
-          key={idx}
-          className="flex items-center gap-2 text-gray-800 dark:text-gray-100"
-        >
-          <Switch className="accent-teal-500" />
-          {opt}
-        </Label>
-      ))}
-    </div>
-  </SettingsCard>
-);
 
 export const NotificationsTab = () => {
   const [activeTab, setActiveTab] = useState<"email" | "telegram">("email");
@@ -106,13 +88,69 @@ export const NotificationsTab = () => {
 /* --------------------------------
    📩 Email Notifications Component
 -----------------------------------*/
-const EmailNotifications = () => (
-  <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
-    {notificationCategories.map((cat, idx) => (
-      <NotificationCard key={idx} {...cat} />
-    ))}
-  </div>
-);
+const EmailNotifications = () => {
+  const [activeCategory, setActiveCategory] = useState(0);
+
+  return (
+    <div className="flex flex-col md:flex-row gap-8">
+      {/* Лівий сайдбар з меню категорій */}
+      <div className="w-full md:w-64 flex flex-col gap-2 shrink-0 md:border-r border-zinc-200/80 dark:border-white/5 md:pr-6">
+        {notificationCategories.map((cat, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveCategory(idx)}
+            className={cn(
+              "text-left px-4 py-3.5 rounded-xl font-bold transition-all duration-200 flex items-center justify-between text-[13px]",
+              activeCategory === idx
+                ? "bg-[#6366f1]/10 text-[#6366f1] dark:bg-indigo-500/20 dark:text-indigo-400 border border-[#6366f1]/20 shadow-sm"
+                : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 border border-transparent",
+            )}
+          >
+            {cat.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Права частина з опціями */}
+      <div className="flex-1 w-full max-w-2xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCategory}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="bg-white dark:bg-[#0f1115] border border-zinc-200/80 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight">
+                {notificationCategories[activeCategory].title}
+              </h3>
+              <p className="text-[13px] font-medium text-zinc-500 dark:text-zinc-400 mb-8 pb-6 border-b border-zinc-100 dark:border-white/5">
+                {notificationCategories[activeCategory].description}
+              </p>
+
+              <div className="flex flex-col gap-5">
+                {notificationCategories[activeCategory].options.map(
+                  (opt, idx) => (
+                    <label
+                      key={idx}
+                      className="flex items-center justify-between gap-4 cursor-pointer group p-2 hover:bg-zinc-50 dark:hover:bg-white/[0.02] rounded-xl transition-colors"
+                    >
+                      <span className="text-[13px] font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">
+                        {opt}
+                      </span>
+                      <Switch className="data-[state=checked]:bg-[#6366f1]" />
+                    </label>
+                  ),
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
 
 /* --------------------------------
    🤖 Telegram Notifications Component
