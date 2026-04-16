@@ -17,7 +17,7 @@ export const TelegramConnectButton = ({
     if (!email) return null;
     try {
       const { data } = await api.post("/telegram-token/get-token", { email });
-      return data.token; 
+      return data.token;
     } catch (error) {
       console.error("Failed to fetch telegram token:", error);
       return null;
@@ -28,9 +28,10 @@ export const TelegramConnectButton = ({
     setLoading(true);
     try {
       const activeToken = token || (await fetchToken());
-      
+
       if (activeToken) {
-        const botName = process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || "ict_tender_bot";
+        const botName =
+          process.env.NEXT_PUBLIC_TELEGRAM_BOT_NAME || "icttender_bot";
         const url = `https://t.me/${botName}?start=${activeToken}`;
         window.open(url, "_blank");
       } else {
