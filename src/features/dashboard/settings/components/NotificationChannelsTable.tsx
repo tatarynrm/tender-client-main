@@ -100,7 +100,7 @@ export function NotificationChannelsTable({
                     bg: isTelegramLinked ? "bg-[#007cc3]" : "bg-zinc-400",
                     disabled: !isTelegramLinked
                   },
-                  { id: "to_email", label: "Email", bg: "bg-[#0070b4]", disabled: false },
+                  { id: "to_email", label: "Email", bg: "bg-zinc-400", disabled: true },
                   { id: "to_web", label: "WEB", bg: "bg-[#005a96]", disabled: false },
                 ].map((col) => (
                   <th
@@ -145,7 +145,7 @@ export function NotificationChannelsTable({
                   </td>
                   {(["to_telegram", "to_email", "to_web"] as const).map(
                     (field) => {
-                      const isDisabled = field === "to_telegram" && !isTelegramLinked;
+                      const isDisabled = (field === "to_telegram" && !isTelegramLinked) || field === "to_email";
                       return (
                         <td
                           key={field}
