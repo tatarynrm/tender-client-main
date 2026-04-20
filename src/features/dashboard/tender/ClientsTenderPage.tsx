@@ -56,6 +56,10 @@ export default function ClientsTenderPage({
       limit: Number(searchParams.get("limit") || 10),
       winner_company:
         searchParams.get("winner_company") || winner_company || "",
+      ids_status: searchParams.get("ids_status") || "",
+      not_happen: searchParams.get("not_happen") || "",
+      not_winner_company: searchParams.get("not_winner_company") || "",
+      not_participate_company: searchParams.get("not_participate_company") || "",
     }),
     [searchParams, participate_company, winner_company],
   );
@@ -161,6 +165,9 @@ export default function ClientsTenderPage({
               apply={handleApplyFilters}
               reset={handleReset}
               dropdowns={tenderFilters}
+              showResultFilters={
+                status?.includes("CLOSED") || status?.includes("ANALYZE")
+              }
             />
 
             {/* ── Right: List controls ───────────────────────────── */}

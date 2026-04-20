@@ -85,17 +85,30 @@ export function TenderCardManagers({
     return false;
   }, [profile, cargo]);
 
-  const myPrice = React.useMemo(() => {
-    if (!profile || !cargo.rate_company) return 0;
-    const myLatestBid = [...cargo.rate_company]
-      .filter(
-        (r) =>
-          r.id_author === profile.id ||
-          (profile.company?.id && r.id_company === profile.company.id),
-      )
-      .sort((a, b) => b.id - a.id)[0];
-    return myLatestBid ? myLatestBid.price_proposed : 0;
-  }, [cargo.rate_company, profile]);
+  const [myPrice, setMyPrice] = React.useState(0);
+  React.useEffect(() => {
+    // 1. Пріоритет на персональне поле від бекенду
+    if (cargo.person_price_proposed) {
+      setMyPrice(cargo.person_price_proposed);
+      return;
+    }
+
+    // 2. Фоллбек на ручний пошук
+    if (profile && cargo.rate_company) {
+      const personId = profile.person?.id || profile.id;
+      const myBids = cargo.rate_company.filter((r) => r.id_author == personId);
+
+      if (myBids.length > 0) {
+        const latest = [...myBids].sort(
+          (a, b) => (b.id || 0) - (a.id || 0),
+        )[0];
+        if (latest.price_proposed > 0) {
+          setMyPrice(latest.price_proposed);
+        }
+      }
+    }
+  }, [cargo.person_price_proposed, cargo.rate_company, profile, cargo.id]);
+
 
   const currencySymbol = getCurrencySymbol(cargo.valut_name);
   const isActive = cargo.ids_status === "ACTIVE";
@@ -111,9 +124,17 @@ export function TenderCardManagers({
   }, [cargo.rate_company]);
 
   const bestBid = topBids[0] || null;
-  const bestBidValue = bestBid ? bestBid.price_proposed : cargo.price_start;
+  const bestBidValue = React.useMemo(() => {
+    if (!cargo.rate_company || cargo.rate_company.length === 0) return null;
+    return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
+  }, [cargo.rate_company]);
+
   const nextBidValue =
-    cargo.price_next || Number(bestBidValue) - (cargo.price_step || 0);
+    bestBidValue !== null && !isNaN(Number(bestBidValue))
+      ? Number(bestBidValue) - (Number(cargo.price_step) || 0)
+      : cargo.price_next && !isNaN(Number(cargo.price_next))
+      ? Number(cargo.price_next)
+      : Number(cargo.price_start) || 0;
 
   const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
     cargo.id,

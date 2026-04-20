@@ -36,9 +36,21 @@ export function TenderCardClients({
   onOpenDetails: () => void;
 }) {
   const { confirm, openModal } = useModalStore();
+  const bestBidPrice = useMemo(() => {
+    if (!cargo.rate_company || cargo.rate_company.length === 0) return null;
+    return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
+  }, [cargo.rate_company]);
+
+  const nextBidValue =
+    bestBidPrice !== null && !isNaN(Number(bestBidPrice))
+      ? Number(bestBidPrice) - (Number(cargo.price_step) || 0)
+      : cargo.price_next && !isNaN(Number(cargo.price_next))
+      ? Number(cargo.price_next)
+      : Number(cargo.price_start) || 0;
+
   const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
     cargo.id,
-    cargo.price_next,
+    nextBidValue,
     cargo.price_redemption,
   );
   const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
@@ -48,7 +60,7 @@ export function TenderCardClients({
   const handleConfirmBid = () => {
     confirm({
       title: "Підтвердження ставки",
-      description: `Ви впевнені, що хочете зробити ставку: ${cargo.price_next} ${currencySymbol}?`,
+      description: `Ви впевнені, що хочете зробити ставку: ${nextBidValue} ${currencySymbol}?`,
       onConfirm: onConfirmReduction,
       variant: "default",
       showComment: true,
@@ -106,60 +118,30 @@ export function TenderCardClients({
     };
   }, [cargo.tender_route]);
 
-  const bestBidPrice = useMemo(() => {
-    let globalBest = null;
+  const [myPrice, setMyPrice] = useState(0);
 
-    if (cargo.price_next && cargo.price_step) {
-      if (cargo.ids_type === "AUCTION") {
-        globalBest = cargo.price_next - cargo.price_step;
-      } else {
-        globalBest = cargo.price_next + cargo.price_step;
+  useEffect(() => {
+    // 1. Перевіряємо пряме поле від бекенду
+    if (cargo.person_price_proposed) {
+      setMyPrice(cargo.person_price_proposed);
+      return;
+    }
+
+    // 2. Фоллбек на ручний пошук у масиві
+    if (profile && cargo.rate_company) {
+      const personId = profile.person?.id || profile.id;
+      const myBids = cargo.rate_company.filter((r) => r.id_author == personId);
+
+      if (myBids.length > 0) {
+        const latest = [...myBids].sort(
+          (a, b) => (b.id || 0) - (a.id || 0),
+        )[0];
+        if (latest.price_proposed > 0) {
+          setMyPrice(latest.price_proposed);
+        }
       }
     }
-
-    if (!cargo.rate_company || cargo.rate_company.length === 0) {
-      return globalBest;
-    }
-
-    if (cargo.ids_type === "AUCTION") {
-      const localMax = Math.max(...cargo.rate_company.map((r) => r.price_proposed));
-      return globalBest !== null ? Math.max(globalBest, localMax) : localMax;
-    }
-    
-    const localMin = Math.min(...cargo.rate_company.map((r) => r.price_proposed));
-    return globalBest !== null ? Math.min(globalBest, localMin) : localMin;
-  }, [cargo.price_next, cargo.price_step, cargo.rate_company, cargo.ids_type]);
-
-  const myPrice = useMemo(() => {
-    if (!profile) return cargo.price_proposed || 0;
-
-    if (!cargo.rate_company || cargo.rate_company.length === 0) {
-      return cargo.price_proposed || 0;
-    }
-
-    const pName = `${profile.person?.name || ""} ${profile.person?.surname || ""}`.trim().toLowerCase();
-    const pSurnameName = `${profile.person?.surname || ""} ${profile.person?.name || ""}`.trim().toLowerCase();
-
-    const myBids = cargo.rate_company.filter((r) => {
-      // 1. за id_author
-      if (r.id_author && r.id_author === profile.id) return true;
-      // 2. за id_company
-      if (r.id_company && profile.company?.id && r.id_company === profile.company.id) return true;
-      // 3. за іменем (бек може не віддавати ID для клієнтів)
-      if (r.author) {
-        const aName = r.author.trim().toLowerCase();
-        if (aName === pName || aName === pSurnameName || aName === "ви" || aName === "you") return true;
-      }
-      return false;
-    });
-
-    if (myBids.length > 0) {
-      const myLatestBid = myBids.sort((a, b) => b.id - a.id)[0];
-      return myLatestBid.price_proposed;
-    }
-
-    return cargo.price_proposed || 0;
-  }, [cargo.rate_company, cargo.price_proposed, profile]);
+  }, [cargo.person_price_proposed, cargo.rate_company, profile, cargo.id]);
 
   const trailers =
     cargo.tender_trailer?.map((t) => t.trailer_type_name).join(", ") || "—";
@@ -182,52 +164,71 @@ export function TenderCardClients({
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 
-      {isAnalyze && !isWinByCompany && (
-        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-blue-50/90 border-b border-r border-blue-200 px-2.5 py-1.5 backdrop-blur-md">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
-            Аналізуємо
-          </span>
-        </div>
-      )}
-      {isWinByCompany && (
-        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-emerald-50/90 border-b border-r border-emerald-200 px-2.5 py-1.5 backdrop-blur-md">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
-            Ви виграли
-          </span>
-        </div>
-      )}
-      {isFinished && !isWinByCompany && myPrice > 0 && (
-        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-rose-50/90 border-b border-r border-rose-200 px-2.5 py-1.5 backdrop-blur-md">
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-rose-600">
-            Ви не перемогли
-          </span>
-        </div>
-      )}
-      {isFinished && !isWinByCompany && myPrice === 0 && !hasNoBids && (
-        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-zinc-100/90 border-b border-r border-zinc-300 px-2.5 py-1.5 backdrop-blur-md">
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-400"></span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-zinc-600">
-            Ви не приймали участі
-          </span>
-        </div>
-      )}
-      {isFinished && hasNoBids && (
-        <div className="absolute top-0 left-0 z-50 flex items-center gap-1.5 rounded-br-lg bg-amber-50/90 border-b border-r border-amber-200 px-2.5 py-1.5 backdrop-blur-md">
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-          <span className="text-[10px] font-black uppercase tracking-wider text-amber-700">
-            Не відбувся (немає ставок)
-          </span>
-        </div>
-      )}
+      {/* Статус-лейбли */}
+      <div className="absolute top-0 left-0 z-50 flex flex-col items-start pointer-events-none">
+        {isWinByCompany && (
+          <div className="flex items-center gap-1.5 rounded-br-lg bg-emerald-50/90 border-b border-r border-emerald-200 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+              Ви виграли (к-сть: {cargo.company_winner_car_count} авт.)
+            </span>
+          </div>
+        )}
+
+        {isAnalyze && !isWinByCompany && (
+          <div className="flex items-center gap-1.5 rounded-br-lg bg-blue-50/90 border-b border-r border-blue-200 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
+              Аналізуємо{" "}
+              {cargo.company_offer_car_count > 0 ? "(Ви приймали участь)" : ""}
+            </span>
+          </div>
+        )}
+
+        {isFinished && !isWinByCompany && (
+          <>
+            {cargo.company_offer_car_count > 0 ? (
+              <div className="flex items-center gap-1.5 rounded-br-lg bg-rose-50/90 border-b border-r border-rose-200 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-600">
+                  Ви не перемогли
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 rounded-br-lg bg-zinc-100/90 border-b border-r border-zinc-300 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-400"></span>
+                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-600">
+                  Ви не приймали участі
+                </span>
+              </div>
+            )}
+          </>
+        )}
+
+        {isActive && cargo.company_offer_car_count > 0 && !isWinByCompany && (
+          <div className="flex items-center gap-1.5 rounded-br-lg bg-emerald-50/80 border-b border-r border-emerald-100 px-2.5 py-1.5 backdrop-blur-sm shadow-sm">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+              Ви приймаєте участь
+            </span>
+          </div>
+        )}
+
+        {isFinished && hasNoBids && !isWinByCompany && (
+          <div className="flex items-center gap-1.5 rounded-br-lg bg-amber-50/90 border-b border-r border-amber-200 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 whitespace-nowrap">
+              Не відбувся
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* Main Grid Card */}
       <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col">

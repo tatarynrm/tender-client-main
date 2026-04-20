@@ -26,7 +26,11 @@ const labelMap: Record<string, string> = {
   status: "Статус",
   participate: "Моя участь",
   participate_company: "Участь компанії",
-  winner_company: "Переможець",
+  winner_company: "Результат",
+  not_winner_company: "Результат",
+  not_participate_company: "Результат",
+  ids_status: "Статус",
+  not_happen: "Тендер",
 };
 
 export const ActiveFilters = ({
@@ -36,14 +40,22 @@ export const ActiveFilters = ({
   dropdowns,
 }: ActiveFiltersProps) => {
   const getDisplayValue = (key: string, value: string) => {
-    // 0. Спочатку специфічні значення
-    if (key === "winner_company") return "Переможець";
-    if (value === "winner_company") return "Переможець";
+    // 0. Специфічні значення результатів
+    if (key === "winner_company" && value === "true") return "Ви виграли";
+    if (key === "not_winner_company" && value === "true")
+      return "Ви не перемогли";
+    if (key === "participate_company" && value === "true")
+      return "Ви приймали участь";
+    if (key === "not_participate_company" && value === "true")
+      return "Ви не приймали участі";
 
-    // 1. Обробка булевих значень (is_my, is_my_company)
+    if (key === "ids_status" && value === "ANALYZE") return "Аналізуємо";
+    if (key === "not_happen" && value === "true") return "Не відбувся";
+
+    // 1. Обробка загальних булевих значень
     if (value === "true") return "Так";
 
-    // 2. Якщо дропдаунів немає, повертаємо значення з URL (наприклад, назву міста)
+    // 2. Якщо дропдаунів немає, повертаємо значення з URL
     if (!dropdowns) return value;
 
     // 3. Пошук у відповідному списку дропдаунів

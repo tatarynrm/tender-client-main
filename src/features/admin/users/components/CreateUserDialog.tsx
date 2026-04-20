@@ -65,7 +65,6 @@ export function CreateUserDialog({ userData }: Props) {
       id_company: userData?.id_company,
     },
   });
-  console.log(userData, "user data in modal");
 
   // Використовуємо хук для сабміту
   const { createUserFromPreRegister, isLoadingUserPreRegister } =

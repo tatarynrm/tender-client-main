@@ -33,6 +33,7 @@ interface TenderFiltersProps<T extends Filters> {
   apply: () => void;
   reset: () => void;
   dropdowns?: Dropdowns;
+  showResultFilters?: boolean;
 }
 export const TenderFiltersSheet = <T extends Filters>({
   filters,
@@ -40,6 +41,7 @@ export const TenderFiltersSheet = <T extends Filters>({
   apply,
   reset,
   dropdowns,
+  showResultFilters,
 }: TenderFiltersProps<T>) => {
   const [open, setOpen] = useState(false);
 
@@ -123,24 +125,136 @@ const updateField = (field: keyof T, value: any) => {
                   </button>
 
                   <button
-                    onClick={() => updateField("participate_company", !filters.participate_company)}
+                    onClick={() => updateField("participate_company", filters.participate_company === "true" ? undefined : "true")}
                     className={cn(
                       "flex items-center justify-between px-3 py-2 rounded-xl border transition-all duration-200",
-                      filters.participate_company
+                      filters.participate_company === "true"
                         ? "bg-white border-emerald-500 shadow-sm"
                         : "bg-white/50 border-zinc-100 hover:border-zinc-200"
                     )}
                   >
                     <div className="flex flex-col text-left">
-                      <span className={cn("text-[10px] font-bold", filters.participate_company ? "text-emerald-600" : "text-zinc-600")}>
+                      <span className={cn("text-[10px] font-bold", filters.participate_company === "true" ? "text-emerald-600" : "text-zinc-600")}>
                         Компанія бере участь
                       </span>
                       <span className="text-[9px] text-zinc-400">Всі ставки компанії</span>
                     </div>
-                    {filters.participate_company && <div className="w-2 h-2 bg-emerald-500 rounded-full" />}
+                    {filters.participate_company === "true" && <div className="w-2 h-2 bg-emerald-500 rounded-full" />}
                   </button>
                 </div>
             </section>
+
+            {/* 🎖️ СЕКЦІЯ: РЕЗУЛЬТАТ ТЕНДЕРУ (Для завершених) */}
+            {showResultFilters && (
+              <section className="bg-amber-50/30 dark:bg-amber-500/5 rounded-2xl p-4 border border-amber-100/50 dark:border-amber-500/10">
+                  <div className="flex items-center gap-2 pb-2 mb-3 border-b border-amber-100/50">
+                    <Filter className="h-4 w-4 text-amber-500" />
+                    <h3 className="text-[12px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-tight">
+                      Результат тендеру
+                    </h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        const val = filters.winner_company === "true" ? undefined : "true";
+                        updateField("winner_company", val);
+                        if (val) {
+                          updateField("not_winner_company", undefined);
+                          updateField("not_participate_company", undefined);
+                          updateField("participate_company", undefined);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.winner_company === "true" ? "bg-emerald-50 border-emerald-500 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.winner_company === "true" ? "text-emerald-700" : "text-zinc-600")}>Ви виграли</span>
+                      {filters.winner_company === "true" && <div className="w-2 h-2 bg-emerald-500 rounded-full" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const val = filters.not_winner_company === "true" ? undefined : "true";
+                        updateField("not_winner_company", val);
+                        if (val) {
+                          updateField("winner_company", undefined);
+                          updateField("not_participate_company", undefined);
+                          updateField("participate_company", undefined);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.not_winner_company === "true" ? "bg-rose-50 border-rose-500 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.not_winner_company === "true" ? "text-rose-700" : "text-zinc-600")}>Ви не перемогли</span>
+                      {filters.not_winner_company === "true" && <div className="w-2 h-2 bg-rose-500 rounded-full" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const val = filters.participate_company === "true" ? undefined : "true";
+                        updateField("participate_company", val);
+                        if (val) {
+                          updateField("winner_company", undefined);
+                          updateField("not_winner_company", undefined);
+                          updateField("not_participate_company", undefined);
+                        }
+                      }}
+                       className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.participate_company === "true" ? "bg-blue-50 border-blue-500 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.participate_company === "true" ? "text-blue-700" : "text-zinc-600")}>Ви приймали участь</span>
+                      {filters.participate_company === "true" && <div className="w-2 h-2 bg-blue-500 rounded-full" />}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const val = filters.not_participate_company === "true" ? undefined : "true";
+                        updateField("not_participate_company", val);
+                        if (val) {
+                          updateField("winner_company", undefined);
+                          updateField("not_winner_company", undefined);
+                          updateField("participate_company", undefined);
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.not_participate_company === "true" ? "bg-zinc-100 border-zinc-400 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.not_participate_company === "true" ? "text-zinc-800" : "text-zinc-600")}>Ви не приймали участі</span>
+                      {filters.not_participate_company === "true" && <div className="w-2 h-2 bg-zinc-500 rounded-full" />}
+                    </button>
+
+                    <button
+                      onClick={() => updateField("ids_status", filters.ids_status === "ANALYZE" ? undefined : "ANALYZE")}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.ids_status === "ANALYZE" ? "bg-indigo-50 border-indigo-500 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.ids_status === "ANALYZE" ? "text-indigo-700" : "text-zinc-600")}>Аналізуємо</span>
+                      {filters.ids_status === "ANALYZE" && <div className="w-2 h-2 bg-indigo-500 rounded-full" />}
+                    </button>
+
+                    <button
+                      onClick={() => updateField("not_happen", filters.not_happen === "true" ? undefined : "true")}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 rounded-xl border text-left transition-all",
+                        filters.not_happen === "true" ? "bg-amber-50 border-amber-500 shadow-sm" : "bg-white border-zinc-100"
+                      )}
+                    >
+                      <span className={cn("text-[10px] font-bold", filters.not_happen === "true" ? "text-amber-700" : "text-zinc-600")}>Не відбувся</span>
+                      {filters.not_happen === "true" && <div className="w-2 h-2 bg-amber-500 rounded-full" />}
+                    </button>
+                  </div>
+              </section>
+            )}
 
             {/* 📍 СЕКЦІЯ: МАРШРУТ */}
             <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
