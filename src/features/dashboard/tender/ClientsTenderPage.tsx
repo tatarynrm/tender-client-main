@@ -19,6 +19,7 @@ import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
 import { TenderCardClients } from "./components/TenderCardClients";
+import { QuickFilterBtn } from "../../log/load/QuickFilterBtn";
 
 interface Props {
   status?: string;
@@ -60,6 +61,11 @@ export default function ClientsTenderPage({
       not_happen: searchParams.get("not_happen") || "",
       not_winner_company: searchParams.get("not_winner_company") || "",
       not_participate_company: searchParams.get("not_participate_company") || "",
+      export: searchParams.get("export") || "",
+      import: searchParams.get("import") || "",
+      regional: searchParams.get("regional") || "",
+      transit: searchParams.get("transit") || "",
+      international: searchParams.get("international") || "",
     }),
     [searchParams, participate_company, winner_company],
   );
@@ -73,8 +79,6 @@ export default function ClientsTenderPage({
   );
 
   const { filters, setFilters, reset } = useFilters(currentParams);
-  const { tenders, pagination, isLoading, error } =
-    useTenderListClient(queryFilters);
 
   const updateUrl = useCallback(
     (newParams: Record<string, any>) => {
@@ -90,6 +94,54 @@ export default function ClientsTenderPage({
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     },
     [router, pathname],
+  );
+
+  const { tenders, pagination, add_data, isLoading, error } =
+    useTenderListClient(queryFilters);
+
+  const toggleParam = useCallback(
+    (key: string, value: any) => {
+      const currentValue = String(
+        currentParams[key as keyof typeof currentParams] || "",
+      );
+      if (currentValue === String(value)) {
+        const newFilters = { ...currentParams };
+        delete (newFilters as any)[key];
+        updateUrl({ ...newFilters, page: 1 });
+      } else {
+        updateUrl({ ...currentParams, [key]: value, page: 1 });
+      }
+    },
+    [currentParams, updateUrl],
+  );
+
+  const toggleDirection = useCallback(
+    (key: string) => {
+      const newFilters = { ...queryFilters };
+      const isAlreadyActive = newFilters[key as keyof typeof newFilters] === "true";
+
+      ["export", "import", "regional", "transit", "international"].forEach((k) => {
+        delete (newFilters as any)[k];
+      });
+
+      if (!isAlreadyActive) {
+        (newFilters as any)[key] = "true";
+      }
+
+      updateUrl(newFilters);
+    },
+    [queryFilters, updateUrl],
+  );
+
+  const directionButtons = useMemo(
+    () => [
+      { id: "export", label: "Екс", countKey: "exp" },
+      { id: "import", label: "Імп", countKey: "imp" },
+      { id: "regional", label: "Рег", countKey: "reg" },
+      { id: "transit", label: "Транзит", countKey: "tr" },
+      { id: "international", label: "Міжн", countKey: "mn" },
+    ],
+    [],
   );
 
   const handleReset = useCallback(() => {
@@ -159,16 +211,83 @@ export default function ClientsTenderPage({
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
           <div className="flex flex-wrap items-center justify-between gap-3 px-4">
             {/* ── Left: Filter sheet ──────────────────────────────────────── */}
-            <TenderFiltersSheet
-              filters={filters}
-              setFilters={setFilters}
-              apply={handleApplyFilters}
-              reset={handleReset}
-              dropdowns={tenderFilters}
-              showResultFilters={
-                status?.includes("CLOSED") || status?.includes("ANALYZE")
-              }
-            />
+            <div className="flex items-center gap-3">
+              <TenderFiltersSheet
+                filters={filters}
+                setFilters={setFilters}
+                apply={handleApplyFilters}
+                reset={handleReset}
+                dropdowns={tenderFilters}
+                showResultFilters={
+                  status?.includes("CLOSED") || status?.includes("ANALYZE")
+                }
+              />
+
+              {/* ── Participation Filters ───────────────────────────────── */}
+              <div className="flex items-center p-1 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
+                <QuickFilterBtn
+                  label="Я"
+                  isActive={currentParams.participate === "true"}
+                  onClick={() => toggleParam("participate", "true")}
+                />
+                <QuickFilterBtn
+                  label="К"
+                  isActive={currentParams.participate_company === "true"}
+                  onClick={() => toggleParam("participate_company", "true")}
+                />
+                {(currentParams.participate === "true" ||
+                  currentParams.participate_company === "true") && (
+                  <>
+                    <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
+                    <button
+                      onClick={() => {
+                        const {
+                          participate,
+                          participate_company,
+                          ...rest
+                        } = currentParams;
+                        updateUrl({ ...rest, page: 1 });
+                      }}
+                      className="h-8 px-2 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors uppercase"
+                    >
+                      Усі
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ── Center: Direction quick filters ─────────────────────────── */}
+            <div className="flex flex-wrap items-center p-1 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
+              <QuickFilterBtn
+                label="Усі"
+                count={add_data?.car_count_all?.all}
+                countFilter={add_data?.car_count_filter?.all}
+                isActive={!currentParams.export && !currentParams.import && !currentParams.regional && !currentParams.transit && !currentParams.international}
+                onClick={() => {
+                  const { export: e, import: i, regional: r, transit: t, international: n, ...rest } = currentParams;
+                  updateUrl({ ...rest, page: 1 });
+                }}
+              />
+
+              <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
+
+              {directionButtons.map((btn) => {
+                const countAll = add_data?.car_count_all as Record<string, number> | undefined;
+                const countFilter = add_data?.car_count_filter as Record<string, number> | undefined;
+                
+                return (
+                  <QuickFilterBtn
+                    key={btn.id}
+                    label={btn.label}
+                    count={countAll?.[btn.countKey]}
+                    countFilter={countFilter?.[btn.countKey]}
+                    isActive={currentParams[btn.id as keyof typeof currentParams] === "true"}
+                    onClick={() => toggleDirection(btn.id)}
+                  />
+                );
+              })}
+            </div>
 
             {/* ── Right: List controls ───────────────────────────── */}
             <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-zinc-200 dark:border-white/10 shadow-sm">

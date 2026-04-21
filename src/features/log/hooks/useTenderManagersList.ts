@@ -57,6 +57,7 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
 
   const tenders = data?.content ?? [];
   const pagination = data?.props?.pagination;
+  const add_data = data?.props?.add_data;
 
   // Сокети для live-оновлення
   useEffect(() => {
@@ -108,5 +109,5 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
       }
     };
   }, [profile?.person?.id, queryClient, load, tender, queryKey]);
-  return { tenders, pagination, isLoading, error };
+  return { tenders, pagination, add_data, isLoading, error };
 };

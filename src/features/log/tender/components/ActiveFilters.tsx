@@ -25,12 +25,18 @@ const labelMap: Record<string, string> = {
   company: "Замовник",
   status: "Статус",
   participate: "Моя участь",
-  participate_company: "Участь компанії",
+  participate_company: "Компанія",
   winner_company: "Результат",
   not_winner_company: "Результат",
   not_participate_company: "Результат",
   ids_status: "Статус",
   not_happen: "Тендер",
+  transit: "Транзит",
+  export: "Експорт",
+  import: "Імпорт",
+  regional: "Регіональні",
+  international: "Міжнародні",
+  my: "Мої тендери",
 };
 
 export const ActiveFilters = ({
@@ -44,13 +50,25 @@ export const ActiveFilters = ({
     if (key === "winner_company" && value === "true") return "Ви виграли";
     if (key === "not_winner_company" && value === "true")
       return "Ви не перемогли";
+    if (key === "participate" && value === "true") return "Так";
     if (key === "participate_company" && value === "true")
-      return "Ви приймали участь";
+      return "Так";
     if (key === "not_participate_company" && value === "true")
-      return "Ви не приймали участі";
+      return "не приймали участі";
 
     if (key === "ids_status" && value === "ANALYZE") return "Аналізуємо";
     if (key === "not_happen" && value === "true") return "Не відбувся";
+
+    if (key === "transit") {
+      const transitLabels: Record<string, string> = {
+        E: "Екс",
+        I: "Імп",
+        R: "Рег",
+        T: "Транзит",
+        M: "Міжн",
+      };
+      return transitLabels[value] || value;
+    }
 
     // 1. Обробка загальних булевих значень
     if (value === "true") return "Так";
