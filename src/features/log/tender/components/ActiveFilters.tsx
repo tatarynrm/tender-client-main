@@ -66,6 +66,7 @@ export const ActiveFilters = ({
         R: "Рег",
         T: "Транзит",
         M: "Міжн",
+        true: "Так",
       };
       return transitLabels[value] || value;
     }
