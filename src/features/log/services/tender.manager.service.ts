@@ -34,4 +34,13 @@ export const tenderManagerService = {
     const { data } = await api.get(`/tender/${id}`);
     return data.content;
   },
+
+  sendCustomNotification: async (id: number | string, message: string): Promise<any> => {
+    const { data } = await api.post(`/tender/${id}/notify`, { 
+      id_tender: id, 
+      message: message, 
+      ids_notify: 'TENDER_MESSAGE_ANY' 
+    });
+    return data;
+  },
 };

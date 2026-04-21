@@ -11,6 +11,10 @@ import { DraftActions } from "./DraftActions";
 import { ActiveActions } from "./ActiveActions";
 import { PlanActions } from "./PlanActions";
 import { AnalyzeActions } from "./AnalyzeActions";
+import { SendNotificationModal } from "./SendNotificationModal";
+import { MessageSquare } from "lucide-react";
+import { tenderManagerService } from "../../../services/tender.manager.service";
+import { toast } from "sonner";
 
 
 interface TenderActionsProps {
@@ -26,6 +30,7 @@ export default function TenderActions({
 }: TenderActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const { config } = useFontSize();
 
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -70,6 +75,16 @@ export default function TenderActions({
   }, [isOpen]);
 
   const handleClose = () => setIsOpen(false);
+
+  const handleSendNotification = async (message: string) => {
+    try {
+      await tenderManagerService.sendCustomNotification(tender.id, message);
+      toast.success("Сповіщення успішно надіслано підписантам!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Помилка під час відправки сповіщення");
+    }
+  };
 
   const menuContent = (
     <div
@@ -124,7 +139,19 @@ export default function TenderActions({
         )}
 
 
-        
+        <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsNotificationModalOpen(true);
+            handleClose();
+          }}
+          className={cn(itemClass, "text-indigo-600")}
+        >
+          <MessageSquare size={config.icon - 2} />
+          <span className={textClass}>Надіслати сповіщення</span>
+        </button>
       </div>
     </div>
   );
@@ -145,6 +172,14 @@ export default function TenderActions({
       </button>
 
       {isOpen && createPortal(menuContent, document.body)}
+      {isNotificationModalOpen &&
+        createPortal(
+          <SendNotificationModal
+            onClose={() => setIsNotificationModalOpen(false)}
+            onConfirm={handleSendNotification}
+          />,
+          document.body
+        )}
     </div>
   );
 }

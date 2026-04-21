@@ -115,6 +115,15 @@ const DEFAULT_EVENTS: NotifyDestination[] = [
     to_viber: false,
     to_whatsapp: false,
   },
+  {
+    value: "Кастомні повідомлення",
+    to_web: false,
+    to_email: false,
+    to_viber: false,
+    to_telegram: false,
+    to_whatsapp: false,
+    ids_notify_type: "TENDER_MESSAGE_ANY",
+  },
 ];
 
 const SETTINGS_CATEGORIES = [
@@ -510,7 +519,7 @@ export function NotificationsTab() {
                 </section>
 
                 {/* SECTION: MESSAGING TABLE */}
-                <NotificationChannelsTable 
+                <NotificationChannelsTable
                   control={control}
                   nameRef="notify_destination"
                   items={notifyDest}
