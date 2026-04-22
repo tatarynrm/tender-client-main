@@ -120,7 +120,7 @@ export function UserListItem({ user, isOnline }: UserListItemProps) {
               <h4 className="text-[15px] font-bold text-slate-900 dark:text-slate-100 truncate flex items-center gap-2">
                 {fullName}
                 {user.verified && (
-                  <CheckCircle2 size={14} className="text-blue-500 shrink-0" title="Верифікований" />
+                  <CheckCircle2 size={14} className="text-blue-500 shrink-0" />
                 )}
               </h4>
               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
