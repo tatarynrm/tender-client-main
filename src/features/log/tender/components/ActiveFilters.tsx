@@ -34,7 +34,7 @@ const labelMap: Record<string, string> = {
   transit: "Транзит",
   export: "Експорт",
   import: "Імпорт",
-  regional: "Регіональні",
+  regional: "Локальні",
   international: "Міжнародні",
   my: "Мої тендери",
 };
@@ -51,8 +51,7 @@ export const ActiveFilters = ({
     if (key === "not_winner_company" && value === "true")
       return "Ви не перемогли";
     if (key === "participate" && value === "true") return "Так";
-    if (key === "participate_company" && value === "true")
-      return "Так";
+    if (key === "participate_company" && value === "true") return "Так";
     if (key === "not_participate_company" && value === "true")
       return "не приймали участі";
 

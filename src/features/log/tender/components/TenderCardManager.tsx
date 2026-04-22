@@ -99,16 +99,13 @@ export function TenderCardManagers({
       const myBids = cargo.rate_company.filter((r) => r.id_author == personId);
 
       if (myBids.length > 0) {
-        const latest = [...myBids].sort(
-          (a, b) => (b.id || 0) - (a.id || 0),
-        )[0];
+        const latest = [...myBids].sort((a, b) => (b.id || 0) - (a.id || 0))[0];
         if (latest.price_proposed > 0) {
           setMyPrice(latest.price_proposed);
         }
       }
     }
   }, [cargo.person_price_proposed, cargo.rate_company, profile, cargo.id]);
-
 
   const currencySymbol = getCurrencySymbol(cargo.valut_name);
   const isActive = cargo.ids_status === "ACTIVE";
@@ -133,8 +130,8 @@ export function TenderCardManagers({
     bestBidValue !== null && !isNaN(Number(bestBidValue))
       ? Number(bestBidValue) - (Number(cargo.price_step) || 0)
       : cargo.price_next && !isNaN(Number(cargo.price_next))
-      ? Number(cargo.price_next)
-      : Number(cargo.price_start) || 0;
+        ? Number(cargo.price_next)
+        : Number(cargo.price_start) || 0;
 
   const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
     cargo.id,
@@ -540,7 +537,7 @@ export function TenderCardManagers({
                 <span className="text-[9px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-tight">
                   Краща ставка
                 </span>
-                <span className="text-[8px] font-black text-white bg-emerald-500 rounded-full w-4 h-4 flex items-center justify-center shadow-sm">
+                <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1 text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-full shadow-md transition-all duration-200 hover:scale-110 hover:shadow-lg">
                   {cargo.rate_company?.length || 0}
                 </span>
               </div>
@@ -634,8 +631,8 @@ export function TenderCardManagers({
                   : "bg-indigo-100 text-indigo-600",
             )}
           >
-            {cargo.ids_type === "AUCTION" 
-              ? "АУКЦІОН" 
+            {cargo.ids_type === "AUCTION"
+              ? "АУКЦІОН"
               : cargo.ids_type === "REDUCTION_WITH_REDEMPTION"
                 ? "РЕДУКЦІОН З ВИКУПОМ"
                 : "РЕДУКЦІОН"}

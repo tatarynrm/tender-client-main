@@ -60,7 +60,8 @@ export default function ClientsTenderPage({
       ids_status: searchParams.get("ids_status") || "",
       not_happen: searchParams.get("not_happen") || "",
       not_winner_company: searchParams.get("not_winner_company") || "",
-      not_participate_company: searchParams.get("not_participate_company") || "",
+      not_participate_company:
+        searchParams.get("not_participate_company") || "",
       export: searchParams.get("export") || "",
       import: searchParams.get("import") || "",
       regional: searchParams.get("regional") || "",
@@ -118,11 +119,14 @@ export default function ClientsTenderPage({
   const toggleDirection = useCallback(
     (key: string) => {
       const newFilters = { ...queryFilters };
-      const isAlreadyActive = newFilters[key as keyof typeof newFilters] === "true";
+      const isAlreadyActive =
+        newFilters[key as keyof typeof newFilters] === "true";
 
-      ["export", "import", "regional", "transit", "international"].forEach((k) => {
-        delete (newFilters as any)[k];
-      });
+      ["export", "import", "regional", "transit", "international"].forEach(
+        (k) => {
+          delete (newFilters as any)[k];
+        },
+      );
 
       if (!isAlreadyActive) {
         (newFilters as any)[key] = "true";
@@ -137,7 +141,7 @@ export default function ClientsTenderPage({
     () => [
       { id: "export", label: "Екс", countKey: "exp" },
       { id: "import", label: "Імп", countKey: "imp" },
-      { id: "regional", label: "Рег", countKey: "reg" },
+      { id: "regional", label: "Локал", countKey: "reg" },
       { id: "transit", label: "Транзит", countKey: "tr" },
       { id: "international", label: "Міжн", countKey: "mn" },
     ],
@@ -226,12 +230,12 @@ export default function ClientsTenderPage({
               {/* ── Participation Filters ───────────────────────────────── */}
               <div className="flex items-center p-1 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
                 <QuickFilterBtn
-                  label="Я"
+                  label="Я беру участь"
                   isActive={currentParams.participate === "true"}
                   onClick={() => toggleParam("participate", "true")}
                 />
                 <QuickFilterBtn
-                  label="К"
+                  label="Компанія бере участь"
                   isActive={currentParams.participate_company === "true"}
                   onClick={() => toggleParam("participate_company", "true")}
                 />
@@ -241,11 +245,8 @@ export default function ClientsTenderPage({
                     <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
                     <button
                       onClick={() => {
-                        const {
-                          participate,
-                          participate_company,
-                          ...rest
-                        } = currentParams;
+                        const { participate, participate_company, ...rest } =
+                          currentParams;
                         updateUrl({ ...rest, page: 1 });
                       }}
                       className="h-8 px-2 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors uppercase"
@@ -263,9 +264,22 @@ export default function ClientsTenderPage({
                 label="Усі"
                 count={add_data?.car_count_all?.all}
                 countFilter={add_data?.car_count_filter?.all}
-                isActive={!currentParams.export && !currentParams.import && !currentParams.regional && !currentParams.transit && !currentParams.international}
+                isActive={
+                  !currentParams.export &&
+                  !currentParams.import &&
+                  !currentParams.regional &&
+                  !currentParams.transit &&
+                  !currentParams.international
+                }
                 onClick={() => {
-                  const { export: e, import: i, regional: r, transit: t, international: n, ...rest } = currentParams;
+                  const {
+                    export: e,
+                    import: i,
+                    regional: r,
+                    transit: t,
+                    international: n,
+                    ...rest
+                  } = currentParams;
                   updateUrl({ ...rest, page: 1 });
                 }}
               />
@@ -273,16 +287,23 @@ export default function ClientsTenderPage({
               <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
 
               {directionButtons.map((btn) => {
-                const countAll = add_data?.car_count_all as Record<string, number> | undefined;
-                const countFilter = add_data?.car_count_filter as Record<string, number> | undefined;
-                
+                const countAll = add_data?.car_count_all as
+                  | Record<string, number>
+                  | undefined;
+                const countFilter = add_data?.car_count_filter as
+                  | Record<string, number>
+                  | undefined;
+
                 return (
                   <QuickFilterBtn
                     key={btn.id}
                     label={btn.label}
                     count={countAll?.[btn.countKey]}
                     countFilter={countFilter?.[btn.countKey]}
-                    isActive={currentParams[btn.id as keyof typeof currentParams] === "true"}
+                    isActive={
+                      currentParams[btn.id as keyof typeof currentParams] ===
+                      "true"
+                    }
                     onClick={() => toggleDirection(btn.id)}
                   />
                 );

@@ -45,8 +45,8 @@ export function TenderCardClients({
     bestBidPrice !== null && !isNaN(Number(bestBidPrice))
       ? Number(bestBidPrice) - (Number(cargo.price_step) || 0)
       : cargo.price_next && !isNaN(Number(cargo.price_next))
-      ? Number(cargo.price_next)
-      : Number(cargo.price_start) || 0;
+        ? Number(cargo.price_next)
+        : Number(cargo.price_start) || 0;
 
   const { onConfirmReduction, onManualPrice, onBuyout } = useTenderActions(
     cargo.id,
@@ -133,9 +133,7 @@ export function TenderCardClients({
       const myBids = cargo.rate_company.filter((r) => r.id_author == personId);
 
       if (myBids.length > 0) {
-        const latest = [...myBids].sort(
-          (a, b) => (b.id || 0) - (a.id || 0),
-        )[0];
+        const latest = [...myBids].sort((a, b) => (b.id || 0) - (a.id || 0))[0];
         if (latest.price_proposed > 0) {
           setMyPrice(latest.price_proposed);
         }
@@ -186,7 +184,9 @@ export function TenderCardClients({
             </span>
             <span className="text-[10px] font-black uppercase tracking-wider text-blue-600">
               Аналізуємо{" "}
-              {cargo.company_offer_car_count > 0 ? "(Ви приймали участь)" : ""}
+              {cargo.company_offer_car_count > 0
+                ? "(Ви приймали участь)"
+                : "(Ви не приймали участь)"}
             </span>
           </div>
         )}

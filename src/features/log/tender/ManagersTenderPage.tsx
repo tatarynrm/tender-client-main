@@ -164,7 +164,7 @@ export default function ManagersTenderPage({ status }: Props) {
     () => [
       { id: "export", label: "Екс", countKey: "exp" },
       { id: "import", label: "Імп", countKey: "imp" },
-      { id: "regional", label: "Рег", countKey: "reg" },
+      { id: "regional", label: "Локал", countKey: "reg" },
       { id: "transit", label: "Транзит", countKey: "tr" },
       { id: "international", label: "Міжн", countKey: "mn" },
     ],
@@ -253,7 +253,13 @@ export default function ManagersTenderPage({ status }: Props) {
                   }
                   onClick={() => {
                     const newParams = { ...currentParams };
-                    ["export", "import", "regional", "transit", "international"].forEach(k => delete newParams[k]);
+                    [
+                      "export",
+                      "import",
+                      "regional",
+                      "transit",
+                      "international",
+                    ].forEach((k) => delete newParams[k]);
                     updateUrl({ ...newParams, page: 1 });
                   }}
                 />

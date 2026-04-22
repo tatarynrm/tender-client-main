@@ -18,7 +18,7 @@ interface AuthWrapperProps {
   backButtonLabel?: string;
   backButtonHref?: string;
   isShowSocial?: boolean;
-  isFullSize?:boolean
+  isFullSize?: boolean;
 }
 const AuthWrapper = ({
   children,
@@ -27,13 +27,12 @@ const AuthWrapper = ({
   backButtonHref,
   backButtonLabel,
   isShowSocial,
-  isFullSize
-  
+  isFullSize,
 }: PropsWithChildren<AuthWrapperProps>) => {
   return (
-    <Card className={`${isFullSize ? 'w-full' : 'w-[400px]'} relative `}>
+    <Card className={`${isFullSize ? "w-full" : "w-[400px]"} relative `}>
       <div className="absolute top-1 right-1">
-        <ToggleTheme/>
+        <ToggleTheme />
       </div>
       <CardHeader className="space-y-2">
         <CardTitle>{heading}</CardTitle>
