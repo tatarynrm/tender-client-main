@@ -136,7 +136,8 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
   });
 
   // 6. Мутація оновлення
-
+  const { mutateAsync: deleteUserMutation, isPending: isDeleting } =
+    useDeleteUser(queryKey);
 
   // 7. Обробка сокетів
   useEffect(() => {
@@ -167,7 +168,26 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
     error,
     refetch,
     saveUser,
-   
+    deleteUser: async (id: number | string) => deleteUserMutation(id),
+    isDeleting,
     queryKey,
   };
+};
+
+const useDeleteUser = (queryKey: string[]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: adminUserService.deleteUser,
+    onSuccess: () => {
+      toast.success("Користувача успішно видалено");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (err: any) => {
+      const msg = axios.isAxiosError(err)
+        ? err.response?.data?.message
+        : err.message;
+      toast.error(msg || "Помилка при видаленні");
+    },
+  });
 };

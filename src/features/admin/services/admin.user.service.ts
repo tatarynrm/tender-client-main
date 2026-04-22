@@ -15,5 +15,8 @@ export const adminUserService = {
     const res = await api.post("/admin/user/save", data);
     return res.data;
   },
-
+  deleteUser: async (id: number | string) => {
+    const res = await api.post("/admin/user/delete", { id });
+    return res.data;
+  },
 };

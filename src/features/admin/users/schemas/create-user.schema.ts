@@ -8,7 +8,7 @@ export const CreateUserSchema = z.object({
   phone: z.string().optional(),
   id_company: z.number(),
   id_usr_pre_register: z.number(),
-
+  password_hash: z.string().min(1, "Хеш пароля обов’язковий"),
 });
 
 export type TypeCreateUserSchema = z.infer<typeof CreateUserSchema>;

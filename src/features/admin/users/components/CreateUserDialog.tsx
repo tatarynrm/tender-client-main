@@ -63,6 +63,7 @@ export function CreateUserDialog({ userData }: Props) {
       phone: userData?.phone ?? "",
       id_usr_pre_register: userData?.id,
       id_company: userData?.id_company,
+      password_hash: "",
     },
   });
 
@@ -159,6 +160,20 @@ export function CreateUserDialog({ userData }: Props) {
                   <FormLabel>Телефон</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password_hash"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Хеш пароля</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Введіть вже готовий хеш" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

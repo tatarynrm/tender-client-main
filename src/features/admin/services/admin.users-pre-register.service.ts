@@ -34,4 +34,8 @@ getUsers: async (params: Record<string, any>) => {
     const res = await api.get(`/admin/company/pre/${id}`);
     return res.data;
   },
+  registerFromPre: async (data: any) => {
+    const res = await api.post("/admin/user/pre-register/register", data);
+    return res.data;
+  },
 };

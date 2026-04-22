@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Building2,
   UserCircle2,
+  UserPlus,
   MapPin,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
@@ -19,10 +20,31 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   data: IPreRegisterUser[];
+  onRegister: (data: any) => Promise<any>;
+  isRegistering: boolean;
 }
 
-export const UsersTable = ({ data }: Props) => {
+export const UsersTable = ({ data, onRegister, isRegistering }: Props) => {
   const router = useRouter();
+  const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
+  const handleQuickRegister = async (user: IPreRegisterUser) => {
+    try {
+      setLoadingId(user.id);
+      await onRegister({
+        id_usr_pre_register: user.id,
+        id_company: user.company?.id,
+        email: user.email,
+        password_hash: user.password_hash,
+        name: user.name,
+        surname: user.surname,
+        last_name: user.last_name,
+        phone: user.phone,
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
   const columns: ColumnDef<IPreRegisterUser>[] = [
     {
       accessorKey: "surname",
@@ -110,9 +132,12 @@ export const UsersTable = ({ data }: Props) => {
         if (hasCompany) {
           return (
             <AppButton
-              onClick={() => router.push(`/admin/users/pre/${row.original.id}`)}
+              size="sm"
+              isLoading={loadingId === row.original.id}
+              onClick={() => handleQuickRegister(row.original)}
+              leftIcon={<UserPlus size={14} />}
             >
-              Створити
+              Створити акаунт
             </AppButton>
           );
         }

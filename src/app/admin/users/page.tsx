@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { User as UserIcon, Search, X } from "lucide-react";
 import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
-import { UserCard } from "@/features/admin/users/components/UserCard";
+import { UserListItem } from "@/features/admin/users/components/UserListItem";
 
 import { Button, Input } from "@/shared/components/ui";
 import LinkButton from "@/shared/components/Buttons/LinkButton";
@@ -154,21 +154,21 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-6">
+      <div className="flex flex-col gap-3 mt-6">
         {isLoading ? (
           Array.from({ length: filters.limit }).map((_, i) => (
-            <div key={i} className="h-[140px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
+            <div key={i} className="h-[80px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
           ))
         ) : users?.length > 0 ? (
           users.map((user: any) => (
-            <UserCard 
+            <UserListItem 
               key={user.id} 
               user={user} 
               isOnline={onlineUsers.has(String(user.id))} 
             />
           ))
         ) : (
-          <div className="col-span-full py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
+          <div className="py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
             <UserIcon className="w-12 h-12 text-zinc-300 mb-3" />
             <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Немає користувачів</p>
             <p className="text-sm">Спробуйте змінити параметри пошуку або додайте нового користувача.</p>

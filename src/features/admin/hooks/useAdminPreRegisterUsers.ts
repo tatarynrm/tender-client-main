@@ -1,10 +1,12 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useCallback } from "react";
 import { useSockets } from "@/shared/providers/SocketProvider";
 import { IApiResponse } from "@/shared/api/api.type";
 import { adminPreRegisterService } from "../services/admin.users-pre-register.service";
+import { toast } from "sonner";
+import axios from "axios";
 
 /* =======================
     TYPES & INTERFACES
@@ -161,6 +163,9 @@ export const useAdminPreRegisterUsers = (filters: PreRegisterFilters = {}) => {
     return Array.from(new Set(list.map((u) => u.country_name))).sort();
   }, [data?.content]);
 
+  // 7. Мутація реєстрації
+  const { mutateAsync: registerUserMutation, isPending: isRegistering } = useRegisterFromPre(queryKey);
+
   return {
     users: data?.content ?? [],
     pagination: data?.props?.pagination,
@@ -169,6 +174,24 @@ export const useAdminPreRegisterUsers = (filters: PreRegisterFilters = {}) => {
     isPlaceholderData,
     error,
     refetch,
+    registerUser: async (data: any) => registerUserMutation(data),
+    isRegistering,
     queryKey,
   };
+};
+
+const useRegisterFromPre = (queryKey: any[]) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: adminPreRegisterService.registerFromPre,
+    onSuccess: () => {
+      toast.success("Користувача успішно створено та активовано");
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (err: any) => {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.message : err.message;
+      toast.error(msg || "Помилка при створенні користувача");
+    },
+  });
 };

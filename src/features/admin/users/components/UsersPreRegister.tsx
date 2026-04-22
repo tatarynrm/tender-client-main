@@ -25,7 +25,9 @@ const UsersPreRegister = () => {
     countries, 
     isLoading, 
     refetch,
-    pagination 
+    pagination,
+    registerUser,
+    isRegistering
   } = useAdminPreRegisterUsers(filters);
 
   // 3. Хендлери оновлення (використовуємо useCallback для оптимізації)
@@ -112,7 +114,11 @@ const UsersPreRegister = () => {
         
         <div className="flex-1 overflow-auto custom-scrollbar">
           {users.length > 0 ? (
-            <UsersTable data={users} />
+            <UsersTable 
+              data={users} 
+              onRegister={registerUser} 
+              isRegistering={isRegistering} 
+            />
           ) : (
             !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center p-10">
