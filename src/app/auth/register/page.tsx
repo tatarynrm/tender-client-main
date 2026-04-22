@@ -13,6 +13,7 @@ export default function RegisterPage() {
       <Logo />
       <div className="p-3 relative  ">
         <RegisterForm />
+        {/* віві */}
       </div>
     </div>
   );
