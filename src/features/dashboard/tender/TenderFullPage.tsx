@@ -14,24 +14,42 @@ import {
   Box,
   ChevronDown,
   CircleCheck,
-  Paperclip,
   ArrowLeft,
   Trophy,
   Phone,
   Mail,
   FileStack,
+  Paperclip,
+  Layers,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { ITender } from "@/features/log/types/tender.type";
-import { tenderManagerService } from "@/features/log/services/tender.manager.service";
+import { ITender, ITenderRoute } from "@/features/log/types/tender.type";
+import { tenderClientsService } from "@/features/dashboard/services/tender.clients.service";
 import { cn } from "@/shared/utils";
-import { TenderMap } from "@/features/log/tender/components/TenderFullInfoMap";
-import { useProfile } from "@/shared/hooks";
 import Flag from "react-flagkit";
-import { getCurrencySymbol } from "@/shared/utils/currency.utils";
+import dynamic from "next/dynamic";
+import { useProfile } from "@/shared/hooks";
 
-// --- FORMATTERS ---
+const TenderMap = dynamic(
+  () =>
+    import("@/features/log/tender/components/TenderFullInfoMap").then(
+      (mod) => mod.TenderMap,
+    ),
+  { ssr: false },
+);
+
+const getCurrencySymbol = (valut?: string) => {
+  switch (valut) {
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    default:
+      return "₴";
+  }
+};
+
 const formatDateTime = (dateString?: string | Date | null) => {
   if (!dateString) return "—";
   const d = new Date(dateString);
@@ -58,6 +76,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
   const router = useRouter();
   const [tender, setTender] = useState<ITender | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const { profile } = useProfile();
 
@@ -66,11 +85,17 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
 
     const loadTender = async () => {
       setIsLoading(true);
+      setError(null);
       try {
-        const data = await tenderManagerService.getOneTender(tenderId);
-        setTender(data);
+        const data = await tenderClientsService.getOneTender(tenderId);
+        if (!data) {
+          setError("Тендер не знайдено");
+        } else {
+          setTender(data);
+        }
       } catch (err) {
         console.error("Error loading tender:", err);
+        setError("Не вдалося завантажити дані тендеру");
       } finally {
         setIsLoading(false);
       }
@@ -79,38 +104,9 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
     loadTender();
   }, [tenderId]);
 
-  const currencySymbol = getCurrencySymbol(tender?.valut_name);
-
-  const myLastBid = useMemo(() => {
-    if (!profile || !tender?.rate_company) return tender?.price_proposed || 0;
-    const myLatest = [...tender.rate_company]
-      .filter((r) => r.id_author === profile.id)
-      .sort((a, b) => b.id - a.id)[0];
-    return myLatest ? myLatest.price_proposed : tender.price_proposed || 0;
-  }, [tender?.rate_company, profile, tender?.price_proposed]);
-
-  const leaderBid = useMemo(() => {
-    if (!tender?.rate_company || tender.rate_company.length === 0)
-      return tender?.price_start || 0;
-    const prices = tender.rate_company.map((r) => r.price_proposed);
-    return tender.ids_type === "AUCTION"
-      ? Math.max(...prices)
-      : Math.min(...prices);
-  }, [tender?.rate_company, tender?.price_start, tender?.ids_type]);
-
-  const sortedRoute = useMemo(
-    () =>
-      tender?.tender_route?.sort(
-        (a, b) => (a.order_num || 0) - (b.order_num || 0),
-      ) || [],
-    [tender?.tender_route],
-  );
-
-  const isWinner = (tender?.company_winner_car_count ?? 0) > 0;
-
   if (isLoading) {
     return (
-      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-6">
+      <div className="w-full h-full flex flex-col items-center justify-center gap-6">
         <div className="relative">
           <div className="w-24 h-24 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin" />
         </div>
@@ -123,7 +119,49 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+        <Info size={48} className="text-zinc-400" />
+        <h2 className="text-xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white">
+          {error}
+        </h2>
+        <button
+          onClick={() => router.back()}
+          className="rounded-xl bg-indigo-500 px-6 py-2 text-sm font-bold text-white transition-all hover:bg-indigo-600"
+        >
+          Повернутися назад
+        </button>
+      </div>
+    );
+  }
+
   if (!tender) return null;
+
+  const currencySymbol = getCurrencySymbol(tender?.valut_name);
+
+  const myLastBid =
+    !profile || !tender?.rate_company
+      ? tender?.price_proposed || 0
+      : [...tender.rate_company]
+          .filter((r) => r.id_author === profile.id)
+          .sort((a, b) => b.id - a.id)[0]?.price_proposed ||
+        tender.price_proposed ||
+        0;
+
+  const leaderBid =
+    !tender?.rate_company || tender.rate_company.length === 0
+      ? tender?.price_start || 0
+      : tender.ids_type === "AUCTION"
+        ? Math.max(...tender.rate_company.map((r) => r.price_proposed || 0))
+        : Math.min(
+            ...tender.rate_company.map((r) => r.price_proposed || Infinity),
+          );
+
+  const sortedRoute =
+    tender?.tender_route?.sort(
+      (a, b) => (a.order_num || 0) - (b.order_num || 0),
+    ) || [];
 
   return (
     <motion.div
@@ -131,7 +169,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
       animate={{ opacity: 1 }}
       className="flex h-full w-full flex-col gap-3 overflow-hidden"
     >
-      {/* 🚀 TOP HEADER: Stats & Breadcrumbs */}
+      {/* 🚀 TOP HEADER */}
       <div className="flex shrink-0 flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
@@ -179,6 +217,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
               </div>
             </div>
           </div>
+
           <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-emerald-500/20 bg-white p-1 pr-3 shadow-sm transition-all hover:border-emerald-500/40 dark:bg-zinc-900/50 dark:hover:border-emerald-500/60">
             <div className="flex h-full w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30">
               <CircleCheck className="h-6 w-6" />
@@ -192,6 +231,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
               </div>
             </div>
           </div>
+
           <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-zinc-200 bg-white p-1 shadow-sm transition-all hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-white/20">
             <div className="flex-1 px-4 text-center">
               <span className="mb-0.5 block text-[8px] font-black uppercase tracking-widest text-zinc-400">
@@ -215,10 +255,10 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
         </div>
       </div>
 
-      {/* 🧩 MAIN CONTENT: 2 Column Layout with inner scrolling */}
+      {/* 🧩 MAIN CONTENT */}
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 overflow-hidden lg:gap-4">
-        {/* LEFT COLUMN: Info + Cargo */}
-        <div className="custom-scrollbar col-span-12 flex flex-col gap-3 overflow-y-auto pr-1 lg:col-span-8 lg:gap-4">
+        {/* LEFT COLUMN: Info + Cargo (Widened to 9 units) */}
+        <div className="custom-scrollbar col-span-12 flex flex-col gap-3 overflow-y-auto pr-1 lg:col-span-9 lg:gap-4">
           <div className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4">
             {/* 1. Tender Info */}
             <div className="relative h-fit space-y-4 overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
@@ -247,7 +287,8 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                     </span>
                   </div>
                   <span className="text-sm font-black italic text-rose-600 dark:text-rose-400">
-                    {formatDate(tender.time_start)} — {formatDate(tender.time_end)}
+                    {formatDate(tender.time_start)} —{" "}
+                    {formatDate(tender.time_end)}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 dark:border-white/5 dark:bg-white/5">
@@ -320,14 +361,48 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
 
             <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
               {[
-                { icon: <Box size={14} />, label: "ВАНТАЖ", value: tender.cargo || "—" },
-                { icon: <FileStack size={14} />, label: "ДОКУМЕНТИ", value: <Paperclip size={14} className="rotate-45" /> },
-                { icon: <Truck size={14} />, label: "ТРАНСПОРТ", value: tender.tender_trailer?.[0]?.trailer_type_name || "БУДЬ-ЯКИЙ" },
-                { icon: <Truck size={14} />, label: "ЗАВАНТАЖЕННЯ", value: "ЗАДНЄ" },
-                { icon: <Truck size={14} />, label: "АВТО", value: tender.car_count },
-                { icon: <Box size={14} />, label: "ПАЛЕТИ", value: "33" },
-                { icon: <Box size={14} />, label: "ОБ'ЄМ", value: `${tender.volume} М³` },
-                { icon: <Calendar size={14} />, label: "ДАТА", value: formatDate(tender.time_start) },
+                {
+                  icon: <Box size={14} />,
+                  label: "ВАНТАЖ",
+                  value: tender.cargo || "—",
+                },
+                {
+                  icon: <FileStack size={14} />,
+                  label: "ТРАНСПОРТНІ ДОКУМЕНТИ",
+                  value: <Paperclip size={14} className="rotate-45" />,
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "ТИП ТРАНСПОРТУ",
+                  value:
+                    tender.tender_trailer?.[0]?.trailer_type_name ||
+                    "БУДЬ-ЯКИЙ",
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "ТИП ЗАВАНТАЖЕННЯ",
+                  value: tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ",
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "КІЛЬКІСТЬ АВТО",
+                  value: tender.car_count,
+                },
+                {
+                  icon: <Box size={14} />,
+                  label: "КІЛЬКІСТЬ ПАЛЕТ",
+                  value: "33",
+                },
+                {
+                  icon: <Box size={14} />,
+                  label: "ОБ'ЄМ",
+                  value: `${tender.volume} М³`,
+                },
+                {
+                  icon: <Scale size={14} />,
+                  label: "ВАГА",
+                  value: `${tender.weight || 0} Т.`,
+                },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -346,13 +421,25 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                   </div>
                 </div>
               ))}
+
+              <div className="col-span-full mt-1 flex items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-3 px-5 dark:border-white/10 dark:bg-white/[0.02]">
+                <Info size={16} className="shrink-0 text-amber-500" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
+                    ДОДАТКОВА ІНФОРМАЦІЯ
+                  </span>
+                  <span className="truncate italic uppercase text-[11px] font-bold text-zinc-600 dark:text-zinc-400">
+                    {tender.notes || "Відсутня"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Route + Map */}
-        <div className="col-span-12 flex min-h-0 flex-col gap-3 overflow-hidden pr-1 lg:col-span-4 lg:gap-4">
-          {/* Route Timeline (Condensed) */}
+        {/* RIGHT COLUMN: Route + Map (Narrowed to 3 units) */}
+        <div className="col-span-12 flex min-h-0 flex-col gap-3 overflow-hidden pr-1 lg:col-span-3 lg:gap-4">
+          {/* Route Timeline */}
           <div className="relative flex min-h-[200px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5 text-zinc-400">
@@ -372,22 +459,34 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                 {sortedRoute.map((point, idx) => (
                   <div key={point.id} className="relative z-10 flex gap-4">
                     <div className="flex flex-col items-center">
-                      <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-lg border border-white bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                         {point.ids_country ? <Flag country={point.ids_country} size={16} className="rounded-sm" /> : <MapPin size={14} className="text-zinc-400" />}
+                      <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-lg border border-white bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+                        {point.ids_country ? (
+                          <div className="flex items-center justify-center rounded-sm overflow-hidden shadow-sm">
+                            <Flag country={point.ids_country} size={16} />
+                          </div>
+                        ) : (
+                          <MapPin size={14} className="text-zinc-400" />
+                        )}
                       </div>
                     </div>
 
                     <div className="flex w-full flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.05em]",
-                          point.ids_point === "LOAD_FROM"
-                            ? "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-900/20"
-                            : "border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-900/20"
-                        )}>
-                          {point.ids_point === "LOAD_FROM" ? "ЗАВАНТАЖЕННЯ" : "РОЗВАНТАЖЕННЯ"}
+                        <span
+                          className={cn(
+                            "rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.05em]",
+                            point.ids_point === "LOAD_FROM"
+                              ? "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-900/20"
+                              : "border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-900/20",
+                          )}
+                        >
+                          {point.ids_point === "LOAD_FROM"
+                            ? "ЗАВАНТАЖЕННЯ"
+                            : "РОЗВАНТАЖЕННЯ"}
                         </span>
-                        <span className="text-[9px] font-black italic text-zinc-300">#{idx + 1}</span>
+                        <span className="text-[9px] font-black italic text-zinc-300">
+                          #{idx + 1}
+                        </span>
                       </div>
 
                       <div>
@@ -412,7 +511,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
             </div>
           </div>
 
-          {/* Map (Expanded Height) */}
+          {/* Map */}
           <div className="flex min-h-[300px] flex-1 flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-2 shadow-sm dark:border-white/5 dark:bg-zinc-900/60">
             <div className="flex items-center justify-between p-2 px-4">
               <div className="flex items-center gap-2">

@@ -24,6 +24,6 @@ export const tenderClientsService = {
 
   getOneTender: async (id: number | string): Promise<ITender> => {
     const { data } = await api.get(`/tender/${id}`);
-    return data.content[0];
+    return Array.isArray(data.content) ? data.content[0] : data.content;
   },
 };

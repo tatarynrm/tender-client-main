@@ -28,13 +28,21 @@ import { ITender, ITenderRoute } from "../types/tender.type";
 import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import { tenderManagerService } from "@/features/log/services/tender.manager.service";
-import { TenderMap } from "@/features/log/tender/components/TenderFullInfoMap";
+import dynamic from "next/dynamic";
+
+const TenderMap = dynamic(
+  () => import("@/features/log/tender/components/TenderFullInfoMap").then(mod => mod.TenderMap),
+  { ssr: false }
+);
 
 const getCurrencySymbol = (valut?: string) => {
   switch (valut) {
-    case "USD": return "$";
-    case "EUR": return "€";
-    default: return "₴";
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    default:
+      return "₴";
   }
 };
 
@@ -60,21 +68,32 @@ const formatDate = (dateString?: string | Date | null) => {
   });
 };
 
-export default function ManagersTenderFullPage({ tenderId }: { tenderId: number }) {
+export default function ManagersTenderFullPage({
+  tenderId,
+}: {
+  tenderId: number;
+}) {
   const router = useRouter();
   const [tender, setTender] = useState<ITender | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTender = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const data = await tenderManagerService.getOneTender(tenderId);
-        // Handle case where data might be an array
         const finalData = Array.isArray(data) ? data[0] : data;
-        setTender(finalData);
+        if (!finalData) {
+          setError("Тендер не знайдено");
+        } else {
+          setTender(finalData);
+        }
       } catch (err) {
         console.error("Failed to fetch tender", err);
+        setError("Не вдалося завантажити дані тендеру");
       } finally {
         setIsLoading(false);
       }
@@ -97,6 +116,23 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+        <Info size={48} className="text-zinc-400" />
+        <h2 className="text-xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white">
+          {error}
+        </h2>
+        <button
+          onClick={() => router.back()}
+          className="rounded-xl bg-indigo-500 px-6 py-2 text-sm font-bold text-white transition-all hover:bg-indigo-600"
+        >
+          Повернутися назад
+        </button>
+      </div>
+    );
+  }
+
   if (!tender) return null;
 
   const currencySymbol = getCurrencySymbol(tender?.valut_name);
@@ -105,8 +141,10 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
     !tender?.rate_company || tender.rate_company.length === 0
       ? tender?.price_start || 0
       : tender.ids_type === "AUCTION"
-      ? Math.max(...tender.rate_company.map((r) => r.price_proposed || 0))
-      : Math.min(...tender.rate_company.map((r) => r.price_proposed || Infinity));
+        ? Math.max(...tender.rate_company.map((r) => r.price_proposed || 0))
+        : Math.min(
+            ...tender.rate_company.map((r) => r.price_proposed || Infinity),
+          );
 
   const sortedRoute =
     tender?.tender_route?.sort(
@@ -167,7 +205,7 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
               </div>
             </div>
           </div>
-          
+
           <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-emerald-500/20 bg-white p-1 pr-3 shadow-sm transition-all hover:border-emerald-500/40 dark:bg-zinc-900/50 dark:hover:border-emerald-500/60">
             <div className="flex h-full w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30">
               <Layers className="h-6 w-6" />
@@ -237,7 +275,8 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
                     </span>
                   </div>
                   <span className="text-sm font-black italic text-rose-600 dark:text-rose-400">
-                    {formatDate(tender.time_start)} — {formatDate(tender.time_end)}
+                    {formatDate(tender.time_start)} —{" "}
+                    {formatDate(tender.time_end)}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 dark:border-white/5 dark:bg-white/5">
@@ -310,14 +349,48 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
 
             <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
               {[
-                { icon: <Box size={14} />, label: "ВАНТАЖ", value: tender.cargo || "—" },
-                { icon: <FileStack size={14} />, label: "ТРАНСПОРТНІ ДОКУМЕНТИ", value: <Paperclip size={14} className="rotate-45" /> },
-                { icon: <Truck size={14} />, label: "ТИП ТРАНСПОРТУ", value: tender.tender_trailer?.[0]?.trailer_type_name || "БУДЬ-ЯКИЙ" },
-                { icon: <Truck size={14} />, label: "ТИП ЗАВАНТАЖЕННЯ", value: tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ" },
-                { icon: <Truck size={14} />, label: "КІЛЬКІСТЬ АВТО", value: tender.car_count },
-                { icon: <Box size={14} />, label: "КІЛЬКІСТЬ ПАЛЕТ", value: "33" },
-                { icon: <Box size={14} />, label: "ОБ'ЄМ", value: `${tender.volume} М³` },
-                { icon: <Scale size={14} />, label: "ВАГА", value: `${tender.weight || 0} Т.` },
+                {
+                  icon: <Box size={14} />,
+                  label: "ВАНТАЖ",
+                  value: tender.cargo || "—",
+                },
+                {
+                  icon: <FileStack size={14} />,
+                  label: "ТРАНСПОРТНІ ДОКУМЕНТИ",
+                  value: <Paperclip size={14} className="rotate-45" />,
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "ТИП ТРАНСПОРТУ",
+                  value:
+                    tender.tender_trailer?.[0]?.trailer_type_name ||
+                    "БУДЬ-ЯКИЙ",
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "ТИП ЗАВАНТАЖЕННЯ",
+                  value: tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ",
+                },
+                {
+                  icon: <Truck size={14} />,
+                  label: "КІЛЬКІСТЬ АВТО",
+                  value: tender.car_count,
+                },
+                {
+                  icon: <Box size={14} />,
+                  label: "КІЛЬКІСТЬ ПАЛЕТ",
+                  value: "33",
+                },
+                {
+                  icon: <Box size={14} />,
+                  label: "ОБ'ЄМ",
+                  value: `${tender.volume} М³`,
+                },
+                {
+                  icon: <Scale size={14} />,
+                  label: "ВАГА",
+                  value: `${tender.weight || 0} Т.`,
+                },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -375,27 +448,33 @@ export default function ManagersTenderFullPage({ tenderId }: { tenderId: number 
                   <div key={point.id} className="relative z-10 flex gap-4">
                     <div className="flex flex-col items-center">
                       <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-lg border border-white bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
-                         {point.ids_country ? (
-                           <div className="flex items-center justify-center rounded-sm overflow-hidden shadow-sm">
-                             <Flag country={point.ids_country} size={16} />
-                           </div>
-                         ) : (
-                           <MapPin size={14} className="text-zinc-400" />
-                         )}
+                        {point.ids_country ? (
+                          <div className="flex items-center justify-center rounded-sm overflow-hidden shadow-sm">
+                            <Flag country={point.ids_country} size={16} />
+                          </div>
+                        ) : (
+                          <MapPin size={14} className="text-zinc-400" />
+                        )}
                       </div>
                     </div>
 
                     <div className="flex w-full flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.05em]",
-                          point.ids_point === "LOAD_FROM"
-                            ? "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-900/20"
-                            : "border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-900/20"
-                        )}>
-                          {point.ids_point === "LOAD_FROM" ? "ЗАВАНТАЖЕННЯ" : "РОЗВАНТАЖЕННЯ"}
+                        <span
+                          className={cn(
+                            "rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.05em]",
+                            point.ids_point === "LOAD_FROM"
+                              ? "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-900/20"
+                              : "border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-900/20",
+                          )}
+                        >
+                          {point.ids_point === "LOAD_FROM"
+                            ? "ЗАВАНТАЖЕННЯ"
+                            : "РОЗВАНТАЖЕННЯ"}
                         </span>
-                        <span className="text-[9px] font-black italic text-zinc-300">#{idx + 1}</span>
+                        <span className="text-[9px] font-black italic text-zinc-300">
+                          #{idx + 1}
+                        </span>
                       </div>
 
                       <div>
