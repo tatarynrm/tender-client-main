@@ -43,7 +43,7 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/dashboard", icon: Home },
-  { name: "Що нового?", href: "/dashboard/updates", icon: Sparkles },
+  // { name: "Що нового?", href: "/dashboard/updates", icon: Sparkles },
   {
     name: "Кабінет перевізника",
     icon: Car,

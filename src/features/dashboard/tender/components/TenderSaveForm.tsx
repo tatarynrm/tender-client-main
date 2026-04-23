@@ -63,16 +63,43 @@ const tenderPermissionSchema = z.object({
   ids_permission_type: z.string().optional(),
 });
 
+const numericSchema = (message: string) =>
+  z.union([
+    z.number(),
+    z
+      .string()
+      .min(1, message)
+      .refine((val) => !isNaN(Number(val.replace(",", "."))), {
+        message: "Має бути числом",
+      }),
+  ]);
+
+const optionalNumericSchema = () =>
+  z
+    .union([z.number(), z.string(), z.undefined(), z.null()])
+    .optional()
+    .refine(
+      (val) => {
+        if (val === "" || val === undefined || val === null) return true;
+        return !isNaN(Number(String(val).replace(",", ".")));
+      },
+      { message: "Має бути числом" },
+    );
+
 const tenderFormSchema = z
   .object({
     id: z.number().optional(),
     cargo: z.string().min(1, "Вантаж обов'язковий"),
     notes: z.string().optional(),
     id_owner_company: z.number().nullable(),
-    car_count: z.number().min(1, "Мінімум 1 авто"),
-    price_start: z.number().optional(),
-    price_step: z.number({ message: "Вкажіть крок ставки" }).optional(),
-    // price_redemption: z.number().optional(), // ⬅ ДЛЯ REDEMTION
+    car_count: z
+      .union([z.number(), z.string()])
+      .refine(
+        (v) => v !== "" && v !== null && v !== undefined,
+        "Мінімум 1 авто",
+      ),
+    price_start: optionalNumericSchema(),
+    price_step: optionalNumericSchema(),
     ids_type: z.enum(["GENERAL", "REQUEST_PRICE"]),
     ids_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
     duration_continue: z.boolean(),
@@ -84,10 +111,10 @@ const tenderFormSchema = z
     tender_permission: z.array(tenderPermissionSchema).optional(),
     company_name: z.string().optional(),
     load_info: z.string().optional(),
-    volume: z.number({ message: `Вкажіть об'єм` }),
-    weight: z.number({ message: "Вкажіть вагу" }),
+    volume: numericSchema("Вкажіть об'єм"),
+    weight: numericSchema("Вкажіть вагу"),
     ids_valut: z.string().optional(),
-    cost_redemption: z.number().optional(),
+    cost_redemption: optionalNumericSchema(),
     time_start: z.date({
       message: "Вкажіть дату початку тендеру",
     }),
@@ -104,7 +131,7 @@ const tenderFormSchema = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Стартова ціна обов'язкова",
-          path: ["cost_start"],
+          path: ["price_start"],
         });
       }
       if (!data.ids_valut) {
@@ -125,7 +152,58 @@ const tenderFormSchema = z
   });
 
 // ---------- Types ----------
-export type TenderFormValues = z.infer<typeof tenderFormSchema>;
+export type TenderFormValues = z.input<typeof tenderFormSchema>;
+export type TenderFormOutput = z.output<typeof tenderFormSchema>;
+
+// ---------- FloatInput — дозволяє вводити дробові числа ----------
+interface FloatInputProps {
+  value: string | number | undefined | null;
+  onChange: (val: string) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  className?: string;
+}
+
+function FloatInput({
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  className,
+}: FloatInputProps) {
+  const [raw, setRaw] = React.useState(value != null ? String(value) : "");
+
+  // Синхронізуємо якщо зовнішнє значення змінилось (наприклад reset форми)
+  React.useEffect(() => {
+    const external = value != null ? String(value) : "";
+    if (external !== raw && !raw.endsWith(".")) {
+      setRaw(external);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      placeholder={placeholder}
+      value={raw}
+      className={
+        className ??
+        "flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring transition-[color,box-shadow]"
+      }
+      onChange={(e) => {
+        const v = e.target.value.replace(",", ".");
+        // Дозволяємо: цифри, одну крапку, порожній рядок
+        if (v === "" || /^\d*\.?\d*$/.test(v)) {
+          setRaw(v);
+          onChange(v);
+        }
+      }}
+      onBlur={onBlur}
+    />
+  );
+}
 
 // ---------- Nominatim Input ----------
 interface NominatimInputProps {
@@ -228,13 +306,15 @@ export default function TenderSaveForm({
 
   const form = useForm<TenderFormValues>({
     resolver: zodResolver(tenderFormSchema),
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
     defaultValues: {
       cargo: "",
       notes: "",
       id_owner_company: null,
       car_count: 1,
       ids_type: "GENERAL",
-      ids_rating: "MAIN", // ← виправлена назва
+      ids_rating: "MAIN",
       duration_continue: true,
       request_price: false,
       without_vat: true,
@@ -393,16 +473,34 @@ export default function TenderSaveForm({
     }
   };
 
-  const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
+  const onSubmit: SubmitHandler<TenderFormValues> = async (data) => {
+    const values = data as any;
     console.log(values, "VALUES");
 
+    const parseNum = (v: any) => {
+      if (v === "" || v === undefined || v === null) return undefined;
+      return Number(String(v).replace(",", "."));
+    };
+
     try {
-      const payload = { 
+      const payload = {
         ...values,
-        tender_permission: values.tender_permission?.filter(p => p && p.ids_permission_type) || [],
-        tender_trailer: values.tender_trailer?.filter(t => t && t.ids_trailer_type) || [],
-        tender_load: values.tender_load?.filter(l => l && l.ids_load_type) || [],
-        tender_route: values.tender_route.map((route, idx) => ({
+        car_count: parseNum(values.car_count),
+        weight: parseNum(values.weight),
+        volume: parseNum(values.volume),
+        price_start: parseNum(values.price_start),
+        price_step: parseNum(values.price_step),
+        cost_redemption: parseNum(values.cost_redemption),
+        tender_permission:
+          values.tender_permission?.filter(
+            (p: any) => p && p.ids_permission_type,
+          ) || [],
+        tender_trailer:
+          values.tender_trailer?.filter((t: any) => t && t.ids_trailer_type) ||
+          [],
+        tender_load:
+          values.tender_load?.filter((l: any) => l && l.ids_load_type) || [],
+        tender_route: values.tender_route.map((route: any, idx: number) => ({
           ...route,
           order_num: idx + 1,
         })),
@@ -879,32 +977,6 @@ export default function TenderSaveForm({
                 </FormItem>
               )}
             />
-            {/* <FormField
-              control={control}
-              name="duration_continue"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FormLabel>Тривалий тендер</FormLabel>
-                </FormItem>
-              )}
-            /> */}
-            {/* <FormField
-              control={control}
-              name="request_price"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FormLabel>Запит ціни</FormLabel>
-                </FormItem>
-              )}
-            /> */}
           </div>
 
           {/* Car count / Cost / price_step */}
@@ -916,14 +988,10 @@ export default function TenderSaveForm({
                 <FormItem>
                   <FormLabel>К-сть авто</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      value={field.value ?? ""}
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
+                    <FloatInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
                     />
                   </FormControl>
                   <FormMessage>{errors.car_count?.message}</FormMessage>
@@ -937,15 +1005,11 @@ export default function TenderSaveForm({
                 <FormItem>
                   <FormLabel>Вага</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      value={field.value ?? ""}
-                      placeholder="22 Тон"
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
+                    <FloatInput
+                      value={field.value}
+                      placeholder="22.3 Тон"
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
                     />
                   </FormControl>
                   <FormMessage />
@@ -961,14 +1025,16 @@ export default function TenderSaveForm({
                   <FormLabel>Об’єм</FormLabel>
                   <FormControl>
                     <Input
-                      type="number"
+                      allowFloat
+                      type="text"
                       value={field.value ?? ""}
                       placeholder="86 Куб"
-                      onChange={(e) =>
-                        field.onChange(
-                          e.target.value === "" ? "" : Number(e.target.value),
-                        )
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value.replace(",", ".");
+                        if (/^\d*\.?\d*$/.test(val)) {
+                          field.onChange(val);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -987,19 +1053,13 @@ export default function TenderSaveForm({
                     <FormItem>
                       <FormLabel>Стартова ціна</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                            )
-                          }
+                        <FloatInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
                         />
                       </FormControl>
-                      <FormMessage>{errors.car_count?.message}</FormMessage>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -1011,7 +1071,6 @@ export default function TenderSaveForm({
                       <FormLabel>Валюта</FormLabel>
                       <FormControl>
                         <Select
-                          // disabled={isLoadingRegister}
                           value={field.value?.toString() || ""}
                           onValueChange={(val) => field.onChange(val)}
                         >
@@ -1019,25 +1078,16 @@ export default function TenderSaveForm({
                             <SelectValue placeholder="Вкажіть валюту" />
                           </SelectTrigger>
                           <SelectContent>
-                            {valut
-                              ?.slice(0, 4)
-                              .map(
-                                (
-                                  item: any,
-                                  idx: React.Key | null | undefined,
-                                ) => {
-                                  // console.log(item, "ITEM");
-
-                                  return (
-                                    <SelectItem
-                                      key={idx}
-                                      value={String(item.value)}
-                                    >
-                                      {item.label.toUpperCase()}
-                                    </SelectItem>
-                                  );
-                                },
-                              )}
+                            {valut?.slice(0, 4).map((item: any, idx: any) => {
+                              return (
+                                <SelectItem
+                                  key={idx}
+                                  value={String(item.value)}
+                                >
+                                  {item.label.toUpperCase()}
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -1052,16 +1102,10 @@ export default function TenderSaveForm({
                     <FormItem>
                       <FormLabel>Крок ставки</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                            )
-                          }
+                        <FloatInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1075,19 +1119,12 @@ export default function TenderSaveForm({
                     <FormItem>
                       <FormLabel>Ціна викупу</FormLabel>
                       <FormControl>
-                        <Input
-                          type="number"
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(
-                              e.target.value === ""
-                                ? ""
-                                : Number(e.target.value),
-                            )
-                          }
+                        <FloatInput
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
                         />
                       </FormControl>
-                      {/* <FormMessage>{errors.car_count?.message}</FormMessage> */}
                     </FormItem>
                   )}
                 />

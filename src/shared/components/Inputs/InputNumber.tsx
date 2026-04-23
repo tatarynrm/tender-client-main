@@ -17,6 +17,7 @@ interface InputNumberProps<T extends FieldValues> {
   placeholder?: string;
   onChange?: (value: number | null) => void;
   minus?: boolean;
+  allowFloat?: boolean;
 }
 
 export const InputNumber = <T extends FieldValues>({
@@ -30,6 +31,7 @@ export const InputNumber = <T extends FieldValues>({
   placeholder = " ",
   onChange: externalOnChange,
   minus = false,
+  allowFloat = false,
 }: InputNumberProps<T>) => {
   const {
     field,
@@ -51,12 +53,31 @@ export const InputNumber = <T extends FieldValues>({
   }, [field.value]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let rawValue = e.target.value;
+    let rawValue = e.target.value.replace(",", ".");
 
-    if (minus) {
-      rawValue = rawValue.replace(/[^\d-]/g, "").replace(/(?!^)-/g, "");
+    if (allowFloat) {
+      // Дозволяємо: цифри, одну крапку, та мінус лише на початку
+      if (minus) {
+        // -12.5 format
+        rawValue = rawValue.replace(/[^\d.-]/g, "");
+        // Дозволяємо тільки один мінус на початку
+        rawValue = rawValue.replace(/(?!^)-/g, "");
+        // Дозволяємо тільки одну крапку
+        const parts = rawValue.split(".");
+        if (parts.length > 2) rawValue = parts[0] + "." + parts.slice(1).join("");
+      } else {
+        // 12.5 format
+        rawValue = rawValue.replace(/[^\d.]/g, "");
+        // Дозволяємо тільки одну крапку
+        const parts = rawValue.split(".");
+        if (parts.length > 2) rawValue = parts[0] + "." + parts.slice(1).join("");
+      }
     } else {
-      rawValue = rawValue.replace(/\D/g, "");
+      if (minus) {
+        rawValue = rawValue.replace(/[^\d-]/g, "").replace(/(?!^)-/g, "");
+      } else {
+        rawValue = rawValue.replace(/\D/g, "");
+      }
     }
 
     // ✅ показуємо рівно те, що вводять
@@ -64,10 +85,18 @@ export const InputNumber = <T extends FieldValues>({
 
     // ✅ у форму кладемо number | null
     const numericValue =
-      rawValue === "" || rawValue === "-" ? null : Number(rawValue);
+      rawValue === "" || rawValue === "-" || rawValue === "-."
+        ? null
+        : Number(rawValue);
 
-    field.onChange(numericValue);
-    externalOnChange?.(numericValue);
+    if (numericValue !== null && !isNaN(numericValue)) {
+      field.onChange(numericValue);
+      externalOnChange?.(numericValue);
+    } else if (rawValue === "" || rawValue === "-") {
+      field.onChange(null);
+      externalOnChange?.(null);
+    }
+    // Якщо незавершене (наприклад "12.") — не чіпаємо field, щоб крапка не зникала
   };
 
   return (
@@ -85,7 +114,7 @@ export const InputNumber = <T extends FieldValues>({
           <input
             id={name}
             type="text"
-            inputMode="numeric"
+            inputMode={allowFloat ? "decimal" : "numeric"}
             disabled={disabled}
             autoComplete="off"
             spellCheck="false"

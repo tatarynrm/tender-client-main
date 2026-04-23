@@ -234,6 +234,8 @@ function SortableRouteItem({
   setValue,
   clearErrors,
   removeRoute,
+  getFieldState,
+  formState,
 }: {
   id: string;
   index: number;
@@ -242,6 +244,8 @@ function SortableRouteItem({
   setValue: any;
   clearErrors: any;
   removeRoute: (index: number) => void;
+  getFieldState: any;
+  formState: any;
 }) {
   const {
     attributes,
@@ -263,13 +267,27 @@ function SortableRouteItem({
     pointType,
   );
 
+  const addressError = getFieldState(
+    `tender_route.${index}.address`,
+    formState,
+  );
+  const countryError = getFieldState(
+    `tender_route.${index}.ids_country`,
+    formState,
+  );
+  const hasRouteError = !!addressError?.error || !!countryError?.error;
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-2xl border border-slate-200 dark:border-white/5 p-4 mb-4 relative group transition-all",
-        isBorderOrCustoms ? "bg-amber-50/30" : "bg-white dark:bg-slate-900",
+        "rounded-2xl border p-4 mb-4 relative group transition-all",
+        hasRouteError
+          ? "border-rose-300 dark:border-rose-500/40 bg-rose-50/20 dark:bg-rose-500/5"
+          : isBorderOrCustoms
+            ? "border-slate-200 dark:border-white/5 bg-amber-50/30"
+            : "border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900",
         isDragging &&
           "shadow-2xl ring-2 ring-indigo-500/20 scale-[1.01] z-50 bg-indigo-50/50",
       )}
@@ -305,53 +323,72 @@ function SortableRouteItem({
               <FormField
                 control={control}
                 name={`tender_route.${index}.address`}
-                render={({ field: f }) => (
+                render={({ field: f, fieldState }) => (
                   <FormItem>
                     <FormControl>
-                      <GoogleLocationInput
-                        value={f.value ?? ""}
-                        onChange={(location) => {
-                          const addr = location.street
-                            ? `${location.street}${location.house ? `, ${location.house}` : ""}`
-                            : location.city || "";
-                          f.onChange(addr);
-                          setValue(`tender_route.${index}.lat`, location.lat);
-                          setValue(`tender_route.${index}.lon`, location.lng);
-                          setValue(
-                            `tender_route.${index}.country`,
-                            location.countryCode || "",
-                          );
-                          setValue(
-                            `tender_route.${index}.ids_country`,
-                            location.countryCode || "",
-                          );
-                          setValue(
-                            `tender_route.${index}.city`,
-                            location.city || "",
-                          );
-                          setValue(
-                            `tender_route.${index}.ids_region`,
-                            location.regionCode || "",
-                          );
-                          setValue(
-                            `tender_route.${index}.post_code`,
-                            location.post_code ||
-                              location.postalCode ||
-                              location.zip_code ||
-                              "",
-                          );
-                          setValue(
-                            `tender_route.${index}.street`,
-                            location.street || "",
-                          );
-                          setValue(
-                            `tender_route.${index}.house`,
-                            location.house || "",
-                          );
-                          clearErrors(`tender_route.${index}.address`);
-                        }}
-                      />
+                      <div
+                        data-field-error={!!fieldState.error || undefined}
+                        className={cn(
+                          "rounded-xl",
+                          fieldState.error && "ring-2 ring-rose-400/60",
+                        )}
+                      >
+                        <GoogleLocationInput
+                          value={f.value ?? ""}
+                          onChange={(location) => {
+                            const addr = location.street
+                              ? `${location.street}${location.house ? `, ${location.house}` : ""}`
+                              : location.city || "";
+                            f.onChange(addr);
+                            setValue(`tender_route.${index}.lat`, location.lat);
+                            setValue(`tender_route.${index}.lon`, location.lng);
+                            setValue(
+                              `tender_route.${index}.country`,
+                              location.countryCode || "",
+                            );
+                            setValue(
+                              `tender_route.${index}.ids_country`,
+                              location.countryCode || "",
+                            );
+                            setValue(
+                              `tender_route.${index}.city`,
+                              location.city || "",
+                            );
+                            setValue(
+                              `tender_route.${index}.ids_region`,
+                              location.regionCode || "",
+                            );
+                            setValue(
+                              `tender_route.${index}.post_code`,
+                              location.post_code ||
+                                location.postalCode ||
+                                location.zip_code ||
+                                "",
+                            );
+                            setValue(
+                              `tender_route.${index}.street`,
+                              location.street || "",
+                            );
+                            setValue(
+                              `tender_route.${index}.house`,
+                              location.house || "",
+                            );
+                            clearErrors(`tender_route.${index}.address`);
+                            clearErrors(`tender_route.${index}.ids_country`);
+                          }}
+                        />
+                      </div>
                     </FormControl>
+                    {fieldState.error && (
+                      <p className="mt-1 ml-1 text-[11px] font-bold text-rose-500 uppercase tracking-wide">
+                        {fieldState.error.message}
+                      </p>
+                    )}
+                    {!fieldState.error && countryError?.error && (
+                      <p className="mt-1 ml-1 text-[11px] font-bold text-rose-500 uppercase tracking-wide">
+                        {countryError.error.message}
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -435,8 +472,14 @@ function SortableRouteItem({
                 />
 
                 {/* Hidden Coordinate Fields to ensure they are sent in the form */}
-                <input type="hidden" {...control.register(`tender_route.${index}.lat`)} />
-                <input type="hidden" {...control.register(`tender_route.${index}.lon`)} />
+                <input
+                  type="hidden"
+                  {...control.register(`tender_route.${index}.lat`)}
+                />
+                <input
+                  type="hidden"
+                  {...control.register(`tender_route.${index}.lon`)}
+                />
               </div>
             )}
         </div>
@@ -597,6 +640,21 @@ const ConfirmDialog = ({
   </Dialog>
 );
 
+const TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  AUCTION: {
+    label: "Аукціон",
+    color: "bg-violet-500",
+  },
+  REDUCTION: {
+    label: "Редукціон",
+    color: "bg-rose-500",
+  },
+  REDUCTION_WITH_REDEMPTION: {
+    label: "Редукціон+Викуп",
+    color: "bg-orange-500",
+  },
+};
+
 const TenderPreviewCard = ({
   data,
   onApply,
@@ -611,11 +669,24 @@ const TenderPreviewCard = ({
 }: any) => {
   const origins = data.origins || [];
   const destinations = data.destinations || [];
+  const typeInfo = data.ids_type ? TYPE_LABELS[data.ids_type] : null;
+  const fmtDate = (d: any) => {
+    if (!d) return null;
+    try {
+      return new Date(d).toLocaleDateString("uk-UA", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
+    } catch {
+      return null;
+    }
+  };
 
   return (
     <div
       className={cn(
-        "group relative flex flex-col gap-4 overflow-hidden rounded-[2rem] border-2 p-5 transition-all duration-300",
+        "group relative flex flex-col gap-3 overflow-hidden rounded-[1.75rem] border-2 p-4 transition-all duration-300",
         isActive
           ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 shadow-lg"
           : isPinned
@@ -625,21 +696,23 @@ const TenderPreviewCard = ({
               : "border-slate-100 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md dark:border-white/5 dark:bg-slate-900/40 dark:hover:border-indigo-500/20",
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      {/* TOP: cargo badge + type + actions */}
+      <div className="flex items-start justify-between gap-2">
         <div className="flex flex-1 flex-wrap gap-1.5">
           {data.cargoName && (
             <span className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
               {data.cargoName}
             </span>
           )}
-          {data.weight && (
-            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase text-slate-600 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300">
-              {data.weight} т
-            </span>
-          )}
-          {data.volume && (
-            <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase text-slate-600 dark:border-white/10 dark:bg-slate-800 dark:text-slate-300">
-              {data.volume} м³
+
+          {typeInfo && (
+            <span
+              className={cn(
+                "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white",
+                typeInfo.color,
+              )}
+            >
+              {typeInfo.label}
             </span>
           )}
         </div>
@@ -651,13 +724,13 @@ const TenderPreviewCard = ({
                 onPin();
               }}
               className={cn(
-                "rounded-xl p-2 transition-all",
+                "rounded-xl p-1.5 transition-all",
                 isPinned
                   ? "bg-amber-100 text-amber-600"
                   : "text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5",
               )}
             >
-              <Pin size={16} fill={isPinned ? "currentColor" : "none"} />
+              <Pin size={14} fill={isPinned ? "currentColor" : "none"} />
             </button>
           )}
           {onDelete && (
@@ -666,116 +739,227 @@ const TenderPreviewCard = ({
                 e.stopPropagation();
                 onDelete();
               }}
-              className="rounded-xl p-2 text-slate-300 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
+              className="rounded-xl p-1.5 text-slate-300 transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
             >
-              <Trash2 size={16} />
+              <Trash2 size={14} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="relative pl-10 pr-2">
-          <div className="absolute bottom-[14px] left-[20px] top-[14px] w-[2px] border-l-2 border-dashed border-slate-200 dark:border-white/10" />
-          <div className="relative mb-6">
-            <div className="absolute -left-[28px] top-1/2 z-10 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full border-2 border-indigo-500 bg-white dark:bg-slate-900">
-              <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            </div>
-            <div className="flex flex-col">
-              <span className="mb-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-400">
-                Звідки
-              </span>
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col">
-                  {origins.length > 0 ? (
-                    origins.map((o: any, idx: number) => (
-                      <div key={idx} className="mb-1 flex flex-col last:mb-0">
-                        <span className="text-[13px] font-bold text-slate-800 dark:text-white">
-                          {o.city || o.address}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-[13px] font-bold text-slate-800 dark:text-white">
-                      —
-                    </span>
-                  )}
-                </div>
-                {data.dateLoad && (
-                  <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-500 dark:bg-indigo-500/10">
-                    {new Date(data.dateLoad).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-            </div>
+      {/* ROUTE */}
+      <div className="relative pl-8">
+        <div className="absolute bottom-[12px] left-[13px] top-[12px] w-[2px] border-l-2 border-dashed border-slate-200 dark:border-white/10" />
+        <div className="relative mb-3">
+          <div className="absolute -left-[23px] top-1/2 z-10 flex h-3.5 w-3.5 -translate-y-1/2 items-center justify-center rounded-full border-2 border-indigo-500 bg-white dark:bg-slate-900">
+            <div className="h-1 w-1 rounded-full bg-indigo-500" />
           </div>
-          <div className="relative">
-            <div className="absolute -left-[28px] top-1/2 z-10 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-full border-2 border-emerald-500 bg-white dark:bg-slate-900">
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="mb-0.5 block text-[9px] font-black uppercase tracking-tighter text-slate-400">
+            Звідки
+          </span>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              {origins.length > 0 ? (
+                origins.map((o: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="text-[12px] font-bold text-slate-800 dark:text-white leading-tight"
+                  >
+                    {o.city || o.address || "—"}
+                    {o.ids_country && o.ids_country !== "UA" && (
+                      <span className="ml-1 text-[9px] text-slate-400 font-normal">
+                        {o.ids_country}
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <span className="text-[12px] text-slate-400">—</span>
+              )}
             </div>
-            <div className="flex flex-col">
-              <span className="mb-0.5 text-[9px] font-black uppercase tracking-tighter text-slate-400">
-                Куди
+            {fmtDate(data.dateLoad) && (
+              <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-500 dark:bg-indigo-500/10">
+                {fmtDate(data.dateLoad)}
               </span>
-              <div className="flex items-start justify-between">
-                <div className="flex flex-col">
-                  {destinations.length > 0 ? (
-                    destinations.map((d: any, idx: number) => (
-                      <div key={idx} className="mb-1 flex flex-col last:mb-0">
-                        <span className="text-[13px] font-bold text-slate-800 dark:text-white">
-                          {d.city || d.address}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <span className="text-[13px] font-bold text-slate-800 dark:text-white">
-                      —
-                    </span>
-                  )}
-                </div>
-                {data.dateUnload && (
-                  <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:bg-emerald-500/10">
-                    {new Date(data.dateUnload).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
+            )}
+          </div>
+        </div>
+        <div className="relative">
+          <div className="absolute -left-[23px] top-1/2 z-10 flex h-3.5 w-3.5 -translate-y-1/2 items-center justify-center rounded-full border-2 border-emerald-500 bg-white dark:bg-slate-900">
+            <div className="h-1 w-1 rounded-full bg-emerald-500" />
+          </div>
+          <span className="mb-0.5 block text-[9px] font-black uppercase tracking-tighter text-slate-400">
+            Куди
+          </span>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              {destinations.length > 0 ? (
+                destinations.map((d: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="text-[12px] font-bold text-slate-800 dark:text-white leading-tight"
+                  >
+                    {d.city || d.address || "—"}
+                    {d.ids_country && d.ids_country !== "UA" && (
+                      <span className="ml-1 text-[9px] text-slate-400 font-normal">
+                        {d.ids_country}
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <span className="text-[12px] text-slate-400">—</span>
+              )}
             </div>
+            {fmtDate(data.dateUnload) && (
+              <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:bg-emerald-500/10">
+                {fmtDate(data.dateUnload)}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mt-2 flex flex-col items-start justify-between gap-4 border-t border-slate-100 pt-4 dark:border-white/5 sm:flex-row sm:items-center">
-        <div className="flex flex-col">
-          <div className="flex items-baseline gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
-              Ліміт:
-            </span>
-            <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
-              {data.price ? `${data.price} ${data.currency || "UAH"}` : "Запит"}
-            </span>
-          </div>
+      {/* METRICS */}
+      {(data.weight || data.volume || data.paletCount || data.truckCount) && (
+        <div className="grid grid-cols-4 gap-1.5">
+          {data.weight && (
+            <div className="flex flex-col items-center rounded-xl bg-slate-50 dark:bg-white/5 px-1 py-1.5">
+              <span className="text-[8px] font-black uppercase text-slate-400">
+                Вага
+              </span>
+              <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
+                {data.weight}
+                <span className="text-[8px] ml-0.5 text-slate-400">т</span>
+              </span>
+            </div>
+          )}
+          {data.volume && (
+            <div className="flex flex-col items-center rounded-xl bg-slate-50 dark:bg-white/5 px-1 py-1.5">
+              <span className="text-[8px] font-black uppercase text-slate-400">
+                Об'єм
+              </span>
+              <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
+                {data.volume}
+                <span className="text-[8px] ml-0.5 text-slate-400">
+                  м³
+                </span>
+              </span>
+            </div>
+          )}
+          {data.paletCount && (
+            <div className="flex flex-col items-center rounded-xl bg-slate-50 dark:bg-white/5 px-1 py-1.5">
+              <span className="text-[8px] font-black uppercase text-slate-400">
+                Палєт
+              </span>
+              <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
+                {data.paletCount}
+              </span>
+            </div>
+          )}
+          {data.truckCount && (
+            <div className="flex flex-col items-center rounded-xl bg-slate-50 dark:bg-white/5 px-1 py-1.5">
+              <span className="text-[8px] font-black uppercase text-slate-400">
+                Авто
+              </span>
+              <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
+                {data.truckCount}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
+      )}
+
+      {/* TRUCK TYPES */}
+      {data.truckTypes?.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {data.truckTypes.map((t: string, i: number) => (
+            <span
+              key={i}
+              className="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* LOAD TYPES */}
+      {data.loadTypes?.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {data.loadTypes.map((t: string, i: number) => (
+            <span
+              key={i}
+              className="rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* COMPANY */}
+      {data.companyName && (
+        <div className="flex items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-white/5 px-3 py-1.5">
+          <span className="text-[9px] font-black uppercase text-slate-400 whitespace-nowrap">
+            Замовник:
+          </span>
+          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
+            {data.companyName}
+          </span>
+        </div>
+      )}
+
+      {/* NOTES */}
+      {data.notes && (
+        <div className="bg-amber-50/50 dark:bg-amber-900/10 p-2 rounded-xl border border-amber-100 dark:border-amber-900/20">
+          <p className="text-[10px] text-amber-800 dark:text-amber-400 italic line-clamp-3 leading-tight">
+            {data.notes}
+          </p>
+        </div>
+      )}
+
+      {/* BOTTOM: price + buttons */}
+      <div className="flex items-center justify-between gap-3 border-t border-slate-100 dark:border-white/5 pt-3">
+        <div>
+          {data.price ? (
+            <div className="flex items-baseline gap-1">
+              <span className="text-[10px] font-bold uppercase text-slate-400">
+                Ціна:
+              </span>
+              <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                {Number(data.price).toLocaleString()} {data.currency || "UAH"}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] font-bold uppercase text-slate-400">
+              Запит ціни
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
           {onSave && (
             <button
               onClick={onSave}
-              className="shrink-0 rounded-2xl bg-slate-50 p-3 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 dark:bg-white/5 dark:hover:bg-indigo-500/10"
+              className="shrink-0 rounded-xl bg-slate-50 p-2.5 text-slate-400 transition-all hover:bg-indigo-50 hover:text-indigo-500 dark:bg-white/5 dark:hover:bg-indigo-500/10"
             >
-              <Save size={18} />
+              <Save size={15} />
             </button>
           )}
           <AppButton
             onClick={onApply}
             size="sm"
             className={cn(
-              "!rounded-2xl px-6 text-[11px] font-black uppercase tracking-wider flex-1 sm:flex-none",
+              "!rounded-xl px-5 text-[10px] font-black uppercase tracking-wider",
               isDraft
                 ? "bg-slate-900 dark:bg-slate-800"
                 : "bg-indigo-600 shadow-indigo-200",
             )}
-            rightIcon={<ChevronRight size={14} />}
+            rightIcon={<ChevronRight size={13} />}
           >
-            {isDraft ? "Вставити" : "Вибрати"}
+            {isDraft
+              ? "Вставити"
+              : "Вибрати"}
           </AppButton>
         </div>
       </div>
@@ -784,19 +968,18 @@ const TenderPreviewCard = ({
         <div
           onClick={onSelect}
           className={cn(
-            "absolute left-4 top-4 z-20 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-2 transition-all",
+            "absolute left-3 top-3 z-20 flex h-5 w-5 cursor-pointer items-center justify-center rounded-md border-2 transition-all",
             isSelected
               ? "border-indigo-500 bg-indigo-500 text-white"
               : "border-slate-200 bg-white opacity-0 group-hover:opacity-100 dark:border-white/10 dark:bg-slate-800",
           )}
         >
-          {isSelected && <Check size={14} strokeWidth={4} />}
+          {isSelected && <Check size={12} strokeWidth={4} />}
         </div>
       )}
     </div>
   );
 };
-
 export default function TenderSaveForm({
   defaultValues,
   isEdit,
@@ -904,7 +1087,9 @@ export default function TenderSaveForm({
       result = result.filter((d) => {
         const titleMatch = d.title?.toLowerCase().includes(search);
         const cargoMatch = d.data?.cargoName?.toLowerCase().includes(search);
-        const companyMatch = d.data?.companyName?.toLowerCase().includes(search);
+        const companyMatch = d.data?.companyName
+          ?.toLowerCase()
+          .includes(search);
 
         const originsMatch = d.data?.origins?.some(
           (o: any) =>
@@ -925,6 +1110,12 @@ export default function TenderSaveForm({
         const weightMatch = d.data?.weight?.toString().includes(search);
         const volumeMatch = d.data?.volume?.toString().includes(search);
         const priceMatch = d.data?.price?.toString().includes(search);
+        
+        // Notes and extra info
+        const notesMatch = d.data?.notes?.toLowerCase().includes(search);
+        const loadTypesMatch = d.data?.loadTypes?.some((t: string) =>
+          t.toLowerCase().includes(search),
+        );
 
         return (
           titleMatch ||
@@ -935,7 +1126,9 @@ export default function TenderSaveForm({
           truckMatch ||
           weightMatch ||
           volumeMatch ||
-          priceMatch
+          priceMatch ||
+          notesMatch ||
+          loadTypesMatch
         );
       });
     }
@@ -1064,50 +1257,41 @@ export default function TenderSaveForm({
 
   const applyAiResult = (result: any, draftId?: string) => {
     if (!result) return;
+
+    // Reset before fill
     setValue("notes", "");
+    setValue("load_info", "");
     setValue("price_start", undefined);
+    setValue("price_client", undefined);
+    setValue("price_step", undefined);
+    setValue("price_redemption", undefined);
     setValue("id_owner_company", null);
     setCompanyLabel("");
     setValue("tender_trailer", []);
+    setValue("tender_load", []);
     setValue("car_count", 1);
     setValue("ids_valut", "UAH");
+    setValue("without_vat", true);
 
-    if (result.origins?.length > 0) {
-      setValue(
-        "tender_route",
-        result.origins.map((loc: any, idx: number) => ({
-          ...loc,
-          ids_point: "LOAD_FROM",
-          order_num: idx + 1,
-          customs: false,
-          address: loc.address || loc.city || "",
-          ids_country: (loc.ids_country || "UA").toUpperCase(),
-          lat: loc.lat ? Number(Number(loc.lat).toFixed(6)) : undefined,
-          lon: loc.lon ? Number(Number(loc.lon).toFixed(6)) : undefined,
-          post_code: loc.post_code ? String(loc.post_code) : "",
-          city: loc.city || "",
-          street: loc.street || "",
-          house: loc.house || "",
-        })),
-      );
-    } else
-      setValue("tender_route", [
-        {
-          address: "",
-          ids_point: "LOAD_FROM",
-          order_num: 1,
-          customs: false,
-          ids_country: "UA",
-        },
-      ]);
+    // Tender type
+    if (
+      result.ids_type &&
+      ["AUCTION", "REDUCTION", "REDUCTION_WITH_REDEMPTION"].includes(
+        result.ids_type,
+      )
+    ) {
+      setValue("ids_type", result.ids_type);
+    }
 
-    if (result.destinations?.length > 0) {
-      const existing = form.getValues("tender_route") || [];
-      const offset = existing.length;
-      const mappedDestinations = result.destinations.map((loc: any, idx: number) => ({
+    // Route
+    const origins = result.origins || [];
+    const destinations = result.destinations || [];
+    const routePoints: any[] = [];
+    origins.forEach((loc: any, idx: number) => {
+      routePoints.push({
         ...loc,
-        ids_point: "LOAD_TO",
-        order_num: offset + idx + 1,
+        ids_point: "LOAD_FROM",
+        order_num: idx + 1,
         customs: false,
         address: loc.address || loc.city || "",
         ids_country: (loc.ids_country || "UA").toUpperCase(),
@@ -1117,37 +1301,89 @@ export default function TenderSaveForm({
         city: loc.city || "",
         street: loc.street || "",
         house: loc.house || "",
-      }));
-      setValue("tender_route", [...existing, ...mappedDestinations]);
-    }
+      });
+    });
+    destinations.forEach((loc: any, idx: number) => {
+      routePoints.push({
+        ...loc,
+        ids_point: "LOAD_TO",
+        order_num: origins.length + idx + 1,
+        customs: false,
+        address: loc.address || loc.city || "",
+        ids_country: (loc.ids_country || "UA").toUpperCase(),
+        lat: loc.lat ? Number(Number(loc.lat).toFixed(6)) : undefined,
+        lon: loc.lon ? Number(Number(loc.lon).toFixed(6)) : undefined,
+        post_code: loc.post_code ? String(loc.post_code) : "",
+        city: loc.city || "",
+        street: loc.street || "",
+        house: loc.house || "",
+      });
+    });
+    setValue(
+      "tender_route",
+      routePoints.length > 0
+        ? routePoints
+        : [
+            {
+              address: "",
+              ids_point: "LOAD_FROM",
+              order_num: 1,
+              customs: false,
+              ids_country: "UA",
+            },
+            {
+              address: "",
+              ids_point: "LOAD_TO",
+              order_num: 2,
+              customs: false,
+              ids_country: "UA",
+            },
+          ],
+    );
 
-    if (result.price) {
+    // Prices
+    if (result.price)
       setValue("price_start", Number(Number(result.price).toFixed(2)));
-    }
-    if (result.id_client) setCompanyLabel(getCompanyName(result));
+    if (result.priceClient)
+      setValue("price_client", Number(Number(result.priceClient).toFixed(2)));
+    if (result.priceStep)
+      setValue("price_step", Number(Number(result.priceStep).toFixed(2)));
+    if (result.priceRedemption)
+      setValue(
+        "price_redemption",
+        Number(Number(result.priceRedemption).toFixed(2)),
+      );
+
+    // Currency
     if (result.currency) {
       const cur = result.currency.toUpperCase();
       if (valut.map((v) => v.value).includes(cur)) setValue("ids_valut", cur);
     }
-    if (result.truckCount) setValue("car_count", result.truckCount);
-    
-    // Дати логістики
+
+    // Cargo & dimensions
+    if (result.truckCount) setValue("car_count", Number(result.truckCount));
+    if (result.cargoName) setValue("cargo", result.cargoName.substring(0, 25));
+    if (result.weight)
+      setValue("weight", Number(Number(result.weight).toFixed(2)));
+    if (result.volume)
+      setValue("volume", Number(Number(result.volume).toFixed(2)));
+    if (result.paletCount) setValue("palet_count", Number(result.paletCount));
+
+    // Dates
     if (isValidDate(result.dateLoad))
       setValue("date_load", new Date(result.dateLoad));
     if (isValidDate(result.dateLoad2))
       setValue("date_load2", new Date(result.dateLoad2));
     if (isValidDate(result.dateUnload))
       setValue("date_unload", new Date(result.dateUnload));
-
-    // Дати самого тендеру (терміни проведення)
     if (isValidDate(result.tenderStart))
       setValue("time_start", new Date(result.tenderStart));
     if (isValidDate(result.tenderEnd))
       setValue("time_end", new Date(result.tenderEnd));
 
-    let mappedTrailers: any[] = [];
+    // Truck types
     if (result.truckTypes?.length > 0) {
-      mappedTrailers = result.truckTypes
+      const mapped = result.truckTypes
         .map((name: string) => {
           const found = truckList.find(
             (t) =>
@@ -1157,24 +1393,31 @@ export default function TenderSaveForm({
           return found ? { ids_trailer_type: found.value } : null;
         })
         .filter(Boolean);
+      if (mapped.length > 0) setValue("tender_trailer", mapped);
     }
-    if (mappedTrailers.length > 0) setValue("tender_trailer", mappedTrailers);
 
-    if (result.cargoName) {
-        setValue("cargo", result.cargoName.substring(0, 25));
+    // Load types
+    if (result.loadTypes?.length > 0) {
+      const mapped = result.loadTypes
+        .map((name: string) => {
+          const found = loadList.find(
+            (l) =>
+              l.label.toLowerCase().includes(name.toLowerCase()) ||
+              name.toLowerCase().includes(l.label.toLowerCase()),
+          );
+          return found ? { ids_load_type: found.value } : null;
+        })
+        .filter(Boolean);
+      if (mapped.length > 0) setValue("tender_load", mapped);
     }
-    if (result.weight) setValue("weight", Number(Number(result.weight).toFixed(2)));
-    if (result.volume) setValue("volume", Number(Number(result.volume).toFixed(2)));
-    
-    // Збираємо максимум інформації в load_info
-    const fullInfo = [
-        result.description,
-        result.companyName ? `Замовник: ${result.companyName}` : ""
-    ].filter(Boolean).join("\n");
-    
-    if (fullInfo) {
-        setValue("load_info", fullInfo);
-    }
+
+    // Notes & company
+    const notesText = [result.notes, result.description]
+      .filter(Boolean)
+      .join("\n");
+    if (notesText) setValue("notes", notesText);
+    if (result.companyName) setCompanyLabel(result.companyName);
+    else if (result.id_client) setCompanyLabel(getCompanyName(result));
 
     if (draftId) setActiveDraftId(draftId);
     else setActiveDraftId(null);
@@ -1190,17 +1433,25 @@ export default function TenderSaveForm({
     const typeNames: Record<string, string> = {
       AUCTION: "АУКЦІОН",
       REDUCTION: "РЕДУКЦІОН",
-      REDUCTION_WITH_REDEMPTION: "РЕДУКЦІОН З ВИКУПОМ",
+      REDUCTION_WITH_REDEMPTION: "РЕДУКЦ.+ВИКУП",
     };
-    const typeName = typeNames[result.ids_type] || "ЧЕРНЕТКА";
-    const routeTitle = [...(result.origins || []), ...(result.destinations || [])]
-      .map((loc) => loc.city || loc.address)
+    const typeName = result.ids_type ? typeNames[result.ids_type] || "" : "";
+    const fromCities = (result.origins || [])
+      .map((l: any) => l.city || l.address)
       .filter(Boolean)
-      .join(" → ");
+      .join(", ");
+    const toCities = (result.destinations || [])
+      .map((l: any) => l.city || l.address)
+      .filter(Boolean)
+      .join(", ");
+    const routeStr = [fromCities, toCities].filter(Boolean).join(" → ");
+    const title =
+      [typeName, result.cargoName, routeStr].filter(Boolean).join(" • ") ||
+      "Без назви";
 
     const newDraft = {
       id: Math.random().toString(36).substr(2, 9),
-      title: `${typeName}: ${routeTitle || "Без назви"}`,
+      title,
       data: result,
       createdAt: new Date().toISOString(),
       isPinned: false,
@@ -1219,29 +1470,38 @@ export default function TenderSaveForm({
       .filter((r: any) => r.ids_point === "LOAD_TO")
       .map((r: any) => ({ ...r }));
     const mappedTruckTypes = values.tender_trailer
-      .map((t: any) => {
-        const found = truckList.find((x) => x.value === t.ids_trailer_type);
-        return found?.label;
-      })
+      .map(
+        (t: any) =>
+          truckList.find((x) => x.value === t.ids_trailer_type)?.label,
+      )
+      .filter(Boolean);
+    const mappedLoadTypes = values.tender_load
+      .map((l: any) => loadList.find((x) => x.value === l.ids_load_type)?.label)
       .filter(Boolean);
 
     const result = {
       origins,
       destinations,
+      ids_type: values.ids_type,
       price: values.price_start,
+      priceClient: values.price_client,
+      priceStep: values.price_step,
       id_client: values.id_owner_company,
       companyName: companyLabel,
       currency: values.ids_valut,
       truckCount: values.car_count,
       dateLoad: values.date_load,
+      dateLoad2: values.date_load2,
       dateUnload: values.date_unload,
       truckTypes: mappedTruckTypes,
+      loadTypes: mappedLoadTypes,
       cargoName: values.cargo,
       weight: values.weight,
       volume: values.volume,
+      paletCount: values.palet_count,
+      notes: values.notes,
     };
 
-    // Підраховуємо заповнені поля (points)
     let filledPoints = 0;
     if (result.cargoName) filledPoints++;
     if (result.origins.length > 0 && result.origins[0].address) filledPoints++;
@@ -1567,11 +1827,21 @@ export default function TenderSaveForm({
     // Sanitization: Round all numeric fields to prevent database overflow
     const sanitizedValues = {
       ...values,
-      weight: values.weight ? Number(Number(values.weight).toFixed(2)) : values.weight,
-      volume: values.volume ? Number(Number(values.volume).toFixed(2)) : values.volume,
-      price_start: values.price_start ? Number(Number(values.price_start).toFixed(2)) : values.price_start,
-      price_step: values.price_step ? Number(Number(values.price_step).toFixed(2)) : values.price_step,
-      price_redemption: values.price_redemption ? Number(Number(values.price_redemption).toFixed(2)) : values.price_redemption,
+      weight: values.weight
+        ? Number(Number(values.weight).toFixed(2))
+        : values.weight,
+      volume: values.volume
+        ? Number(Number(values.volume).toFixed(2))
+        : values.volume,
+      price_start: values.price_start
+        ? Number(Number(values.price_start).toFixed(2))
+        : values.price_start,
+      price_step: values.price_step
+        ? Number(Number(values.price_step).toFixed(2))
+        : values.price_step,
+      price_redemption: values.price_redemption
+        ? Number(Number(values.price_redemption).toFixed(2))
+        : values.price_redemption,
       tender_route: values.tender_route.map((route, idx) => ({
         ...route,
         order_num: idx + 1,
@@ -1659,7 +1929,17 @@ export default function TenderSaveForm({
   const currencyWatch = watch("ids_valut");
   const currencySign = currencyStringTransform(currencyWatch ?? "UAH");
 
-  console.log(form.formState.errors, "ERROR");
+  // scroll to first error on invalid submit
+  const onInvalid = () => {
+    setTimeout(() => {
+      const firstError =
+        document.querySelector<HTMLElement>('[data-field-error="true"]') ??
+        document.querySelector<HTMLElement>(".border-rose-300");
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 80);
+  };
 
   return (
     <div className="gap-2 w-full overflow-x-hidden pb-40 scrollbar-thin">
@@ -2121,7 +2401,7 @@ export default function TenderSaveForm({
         >
           <Form {...form}>
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmit, onInvalid)}
               className="w-full scrollbar-thin bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-4 lg:p-6"
             >
               <fieldset
@@ -2337,6 +2617,8 @@ export default function TenderSaveForm({
                             setValue={setValue}
                             clearErrors={clearErrors}
                             removeRoute={removeRoute}
+                            getFieldState={form.getFieldState}
+                            formState={form.formState}
                           />
                         ))}
                       </SortableContext>

@@ -27,6 +27,7 @@ import {
   getTenderLoadDateString,
 } from "@/shared/utils/date.utils";
 import { getCurrencySymbol } from "@/shared/utils/currency.utils";
+import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 
 export function TenderCardClients({
   cargo,
@@ -236,9 +237,14 @@ export function TenderCardClients({
         <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-200/80 dark:divide-white/10">
           {/* 1. № */}
           <div
-            className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all xl:h-full border-r border-zinc-100 dark:border-white/5 group/number"
+            className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all xl:h-full border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
+            <MyTooltip 
+              text="Унікальний номер тендеру. Натисніть для перегляду деталей" 
+              className="absolute top-1 right-1" 
+              size={10}
+            />
             <span className="text-[18px] xl:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform">
               {cargo.id}
             </span>
@@ -286,9 +292,12 @@ export function TenderCardClients({
               })}
             </div>
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
-              <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
-              </span>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
+                  {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
+                </span>
+                <MyTooltip text="Дата або період завантаження" size={10} />
+              </div>
             )}
           </div>
 
@@ -334,9 +343,12 @@ export function TenderCardClients({
               })}
             </div>
             {formatTenderDate(cargo.date_unload) && (
-              <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 mt-1">
-                {formatTenderDate(cargo.date_unload)}
-              </span>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400">
+                  {formatTenderDate(cargo.date_unload)}
+                </span>
+                <MyTooltip text="Дата розвантаження" size={10} />
+              </div>
             )}
           </div>
 
@@ -375,6 +387,7 @@ export function TenderCardClients({
                           : isCustomsDown
                             ? "Розмитнення"
                             : "Кордон"}
+                        <MyTooltip text="Місце митного оформлення або перетину кордону" size={8} className="ml-1 inline-flex" />
                       </span>
                     )}
                     <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-600 dark:text-zinc-400 text-[10px] w-full">
@@ -416,11 +429,12 @@ export function TenderCardClients({
 
           {/* 6. Тип транспорту */}
           <div className="w-full xl:w-[90px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center xl:h-full">
-            <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full">
+            <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-white/5 px-2 py-0.5 rounded-full mb-1">
               <Truck size={13} className="text-zinc-500" />
               <span className="font-black text-zinc-800 dark:text-white text-[11px]">
                 {cargo.car_count_actual || 1}
               </span>
+              <MyTooltip text="Кількість необхідних автомобілів" size={10} />
             </div>
             <span className="font-semibold text-zinc-800 dark:text-white text-[12px] leading-tight">
               {trailers.split(", ").map((t, i) => (
@@ -444,14 +458,20 @@ export function TenderCardClients({
           <div className="w-full xl:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center xl:h-full">
             <div className="flex xl:flex-col items-center gap-2 xl:gap-0">
               {cargo.volume && (
-                <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
-                  {cargo.volume} м³
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                    {cargo.volume} м³
+                  </span>
+                  <MyTooltip text="Об’єм вантажу" size={10} />
+                </div>
               )}
               {cargo.weight && (
-                <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
-                  {cargo.weight} т.
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                    {cargo.weight} т.
+                  </span>
+                  <MyTooltip text="Вага вантажу" size={10} />
+                </div>
               )}
               {!cargo.volume && !cargo.weight && (
                 <span className="text-zinc-500">—</span>
@@ -495,16 +515,18 @@ export function TenderCardClients({
               <>
                 {/* Level 1: Start Price */}
                 <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5 whitespace-nowrap">
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5 whitespace-nowrap flex items-center gap-1">
                     Стартова ціна
+                    <MyTooltip text="Ціна, з якої розпочинаються торги" size={8} />
                   </span>
                   <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
                     {cargo.price_start}
                     {currencySymbol}
                   </span>
                   {cargo.price_step && (
-                    <span className="text-[8px] text-zinc-400 mt-0.5 leading-none">
+                    <span className="text-[8px] text-zinc-400 mt-0.5 leading-none flex items-center gap-1">
                       крок {cargo.price_step}
+                      <MyTooltip text="Сума, на яку змінюється ставка за один крок" size={7} />
                     </span>
                   )}
                 </div>
@@ -533,8 +555,9 @@ export function TenderCardClients({
           {/* 10. Залишилось / Викуп */}
           <div className="w-full xl:w-[110px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 xl:h-full">
             <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-[43px]">
-              <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5">
+              <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5 flex items-center gap-1">
                 Залишилось
+                <MyTooltip text="Час до завершення прийому ставок" size={8} />
               </span>
               <span className="font-bold text-[#e03131] dark:text-red-400 text-[15px] tracking-tight leading-none">
                 <TenderTimer
@@ -607,8 +630,9 @@ export function TenderCardClients({
             {/* Bottom: Best Bid */}
             {!isAuction && (
               <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
-                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none">
+                <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none flex items-center gap-1">
                   Краща ставка ({currencySymbol})
+                  <MyTooltip text="Найнижча ціна запропонована на даний момент іншим учасником" size={8} />
                 </span>
                 <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
                   {bestBidPrice ? bestBidPrice : "—"}
@@ -646,12 +670,20 @@ export function TenderCardClients({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="font-extrabold uppercase text-zinc-800 dark:text-white leading-none">
+            <span className="font-extrabold uppercase text-zinc-800 dark:text-white leading-none flex items-center gap-1">
               {isAuction
                 ? "АУКЦІОН"
                 : isRedemption
                   ? "РЕДУКЦІОН З ВИКУПОМ"
                   : "РЕДУКЦІОН"}
+              <MyTooltip 
+                text={
+                  isAuction 
+                    ? "Торги на підвищення: перемагає найвища ставка" 
+                    : "Торги на пониження: перемагає найнижча ставка"
+                } 
+                size={9} 
+              />
             </span>
             <span className="text-zinc-400 font-medium lowercase leading-none">
               публікація {formatTenderDate(cargo.time_start)}
