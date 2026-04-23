@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronUp, Settings2 } from "lucide-react";
 
 import { useFilters } from "@/shared/hooks/useFilters";
@@ -16,7 +16,6 @@ import { Button } from "@/shared/components/ui/button";
 import Loader from "@/shared/components/Loaders/MainLoader";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
 
-import TenderFullInfoModal from "./components/TenderFullInfoModal";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 import { ActiveFilters } from "./components/ActiveFilters";
@@ -33,10 +32,10 @@ const LIMIT_STORAGE_KEY = "tender_list_limit";
 const PERSIST_BASE_KEY = "tender_managers_filters_cache_";
 
 export default function ManagersTenderPage({ status }: Props) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
   const { tenderFilters } = useTenderManagersFormData();
-  const [selectedTender, setSelectedTender] = useState<ITender | null>(null);
 
   const { isVisible, toggle } = useVisibilityControl("tender_list");
 
@@ -184,10 +183,6 @@ export default function ManagersTenderPage({ status }: Props) {
 
   return (
     <div className="p-0 space-y-4 pb-40">
-      <TenderFullInfoModal
-        tenderId={selectedTender?.id}
-        onClose={() => setSelectedTender(null)}
-      />
 
       {/* ── Filter Controls (Not Sticky) ─────────────────────────────────────────────────── */}
       <div className="pt-4 pb-3 -mx-4 px-4 border-b border-border/60 transition-all">
@@ -367,7 +362,7 @@ export default function ManagersTenderPage({ status }: Props) {
                   <TenderCardManagers
                     key={item.id}
                     cargo={item}
-                    onOpenDetails={() => setSelectedTender(item)}
+                    onOpenDetails={() => router.push(`/log/tender/${item.id}`)}
                   />
                 ))}
               </div>
