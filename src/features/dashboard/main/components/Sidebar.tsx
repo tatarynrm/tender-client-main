@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   ArrowBigRight,
   Crown,
+  Sparkles,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -42,6 +43,7 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/dashboard", icon: Home },
+  { name: "Що нового?", href: "/dashboard/updates", icon: Sparkles },
   {
     name: "Кабінет перевізника",
     icon: Car,

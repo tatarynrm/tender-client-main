@@ -18,6 +18,7 @@ import {
   MapPin,
   Gavel,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -35,6 +36,7 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/log", icon: Home },
+  { name: "Що нового?", href: "/log/updates", icon: Sparkles },
   {
     name: "Екран заявок",
     icon: ScreenShare,
