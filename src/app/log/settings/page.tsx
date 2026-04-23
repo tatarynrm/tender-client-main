@@ -4,11 +4,12 @@ import { useSearchParams } from "next/navigation";
 import { AppTabs, TabOption } from "@/shared/components/Tabs/AppTabs";
 import { Settings, User, Bell, Shield } from "lucide-react";
 import { NotificationsTab } from "@/features/dashboard/notifications/ui/NotificationTab";
+import { PersonalInfoTab } from "@/features/dashboard/profile/main/components/PersonalInfoTab";
 
 const settingsTabs: TabOption[] = [
   { id: "profile", label: "Профіль" },
   { id: "notifications", label: "Сповіщення" },
-  { id: "security", label: "Безпека" },
+  // { id: "security", label: "Безпека" },
 ];
 
 export default function LogSettingsPage() {
@@ -16,7 +17,7 @@ export default function LogSettingsPage() {
   const activeTab = searchParams.get("tab") || "profile";
 
   return (
-    <div className="w-full space-y-6 p-4 animate-in fade-in duration-500">
+    <div className="w-full space-y-6  animate-in fade-in duration-500">
       <div className="flex items-center gap-3 mb-2">
         <div className="p-2 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
           <Settings className="w-6 h-6 text-zinc-800 dark:text-zinc-200" />
@@ -29,11 +30,17 @@ export default function LogSettingsPage() {
       <AppTabs tabs={settingsTabs} queryParam="tab" />
 
       <div className="mt-6">
-        {activeTab === "notifications" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+        {activeTab === "notifications" && (
+          <TabContentWrapper>
             <NotificationsTab />
-          </div>
-        ) : (
+          </TabContentWrapper>
+        )}
+        {activeTab === "profile" && (
+          <TabContentWrapper>
+            <PersonalInfoTab />
+          </TabContentWrapper>
+        )}
+        {activeTab !== "notifications" && activeTab !== "profile" && (
           <TabContentWrapper>
             <PlaceholderSection
               title={
