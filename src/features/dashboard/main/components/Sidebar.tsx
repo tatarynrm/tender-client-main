@@ -127,12 +127,9 @@ const links: MenuItem[] = [
       },
     ],
   },
-  { name: "Користувачі", href: "/dashboard/users", icon: Users },
 ];
 
-const defaultFooterLinks: MenuItem[] = [
-  { name: "Налаштування", href: "/dashboard/settings", icon: Settings },
-];
+const defaultFooterLinks: MenuItem[] = [];
 
 export default function Sidebar({
   onSelect,

@@ -128,9 +128,9 @@ const DEFAULT_EVENTS: NotifyDestination[] = [
 
 const SETTINGS_CATEGORIES = [
   { id: "tenders", label: "Тендери", icon: Truck },
-  { id: "orders", label: "Заявки", icon: FileText },
-  { id: "analytics", label: "Аналітика", icon: BarChart },
-  { id: "system", label: "Системні повідомлення", icon: MailWarning },
+  // { id: "orders", label: "Заявки", icon: FileText },
+  // { id: "analytics", label: "Аналітика", icon: BarChart },
+  // { id: "system", label: "Системні повідомлення", icon: MailWarning },
 ];
 
 export function NotificationsTab() {

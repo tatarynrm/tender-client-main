@@ -95,7 +95,7 @@ export function UserAvatarMenu() {
               {/* <MenuLink href="/profile" icon={User} label="Мій профіль" /> */}
               
               <MenuLink 
-                href={pathname.startsWith("/log") ? "/log/settings" : "/dashboard/settings"} 
+                href={pathname.startsWith("/log") ? "/log/settings" : "/dashboard/personal/profile"} 
                 icon={Settings} 
                 label="Налаштування" 
               />

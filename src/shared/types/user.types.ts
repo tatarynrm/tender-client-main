@@ -31,6 +31,7 @@ export interface IPerson {
   surname: string;
   birthday: string | null;
   last_name: string;
+  phone?: string;
 }
 
 export interface ICompany {

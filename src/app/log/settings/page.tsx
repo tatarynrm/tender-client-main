@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { AppTabs, TabOption } from "@/shared/components/Tabs/AppTabs";
 import { Settings, User, Bell, Shield } from "lucide-react";
-import { NotificationsTab } from "@/features/dashboard/settings/ui/NotificationTab";
+import { NotificationsTab } from "@/features/dashboard/notifications/ui/NotificationTab";
 
 const settingsTabs: TabOption[] = [
   { id: "profile", label: "Профіль" },
