@@ -86,25 +86,36 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
     (newItem: IUserAccount) => {
       if (!newItem?.id) return;
 
-      queryClient.setQueryData<IApiResponse<IUserAccount[]>>(
-        queryKey,
+      queryClient.setQueriesData<IApiResponse<IUserAccount[]>>(
+        { queryKey: ["admin-users"] },
         (old) => {
           if (!old?.content) return old;
 
-          const isMatch = matchesFilters(newItem, filtersRef.current);
-          const otherItems = old.content.filter((u) => u.id !== newItem.id);
+          let isUpdated = false;
+          const newContent = old.content.map((u) => {
+            if (u.id === newItem.id) {
+              isUpdated = true;
+              return { ...u, ...newItem };
+            }
+            return u;
+          });
+
+          if (!isUpdated) {
+            newContent.unshift(newItem);
+          }
 
           return {
             ...old,
-            content: isMatch ? [newItem, ...otherItems] : otherItems,
+            content: newContent,
           };
         },
       );
 
       // Оновлюємо також кеш окремого користувача
-      queryClient.setQueryData(["user", newItem.id], newItem);
+      queryClient.setQueryData(["user", String(newItem.id)], newItem);
+      queryClient.setQueryData(["user", Number(newItem.id)], newItem);
     },
-    [queryClient, queryKey, matchesFilters],
+    [queryClient],
   );
 
   // 4. Запит даних
