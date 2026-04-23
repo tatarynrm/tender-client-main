@@ -9,10 +9,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#f4f7fa] dark:bg-[#0c0c0e] p-5 lg:p-10 flex flex-col items-center">
-      <div className="w-full max-w-7xl">
-        <TenderFullPage tenderId={tenderId} />
-      </div>
+    <div className="h-screen w-full bg-[#f4f7fa] dark:bg-[#0b0c0d] p-3 lg:p-5 flex flex-col overflow-hidden">
+      <TenderFullPage tenderId={tenderId} />
     </div>
   );
 }
