@@ -1,7 +1,8 @@
 import TenderFullPage from "@/features/dashboard/tender/TenderFullPage";
 
-export default function Page({ params }: { params: { id: string } }) {
-  const tenderId = parseInt(params.id, 10);
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const tenderId = parseInt(resolvedParams.id, 10);
 
   if (isNaN(tenderId)) {
     return <div>Invalid tender ID</div>;
