@@ -13,8 +13,7 @@ import { EmptyTenders } from "@/features/dashboard/tender/components/EmptyTender
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
-import { useModalStore } from "@/shared/stores/useModalStore";
-import TenderFullInfoModal from "@/features/dashboard/tender/components/TenderFullInfoModal";
+
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
@@ -36,7 +35,7 @@ export default function ClientsTenderPage({
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const { openModal } = useModalStore();
+
   const { tenderFilters } = useTenderClientFormData();
 
   const currentParams = useMemo(
@@ -196,13 +195,9 @@ export default function ClientsTenderPage({
 
   const handleOpenDetails = useCallback(
     (tender: ITender) => {
-      openModal(<TenderFullInfoModal tenderId={tender.id} />, {
-        size: "full",
-        className: "p-0 overflow-hidden",
-        showCloseButton: false,
-      });
+      router.push(`/dashboard/tender/${tender.id}`);
     },
-    [openModal],
+    [router],
   );
 
   if (error) return <ErrorState />;
