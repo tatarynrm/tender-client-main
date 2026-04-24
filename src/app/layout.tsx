@@ -1,19 +1,14 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "../shared/styles/globals.css";
 import { MainProvider } from "@/shared/providers";
 import NextTopLoader from "nextjs-toploader";
 import { getProfile } from "@/shared/server/getProfile";
 import { redirect } from "next/navigation";
+import { Metadata, Viewport } from "next";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "cyrillic"],
 });
 
 // Окремий експорт для налаштувань в'юпорту
@@ -59,10 +54,9 @@ export default async function RootLayout({
   const profile = await getProfile();
 
   return (
-    <html lang="en" suppressHydrationWarning className="scrollbar-thin">
+    <html lang="uk" suppressHydrationWarning className="scrollbar-thin">
       <body
-        // wotdisconnected="true"
-        className={`${geistSans.variable} ${geistMono.variable} antialiased scrollbar-thin `}
+        className={`${inter.variable} font-sans antialiased scrollbar-thin `}
       >
         <NextTopLoader
           showSpinner={false} // вимикаємо спінер

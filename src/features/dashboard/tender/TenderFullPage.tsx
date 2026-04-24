@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -12,42 +12,39 @@ import {
   User,
   Scale,
   Box,
-  ChevronDown,
   CircleCheck,
   ArrowLeft,
   Trophy,
   Phone,
   Mail,
-  FileStack,
-  Paperclip,
   Layers,
   Hash,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { ITender, ITenderRoute } from "@/features/log/types/tender.type";
+import { ITender } from "@/features/log/types/tender.type";
 import { tenderClientsService } from "@/features/dashboard/services/tender.clients.service";
 import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import dynamic from "next/dynamic";
 import { useProfile } from "@/shared/hooks";
-import { ManagerHints } from "@/features/log/tender/components/ManagerHints";
+import {
+  formatTenderDateTime,
+  formatTenderDate,
+} from "@/shared/utils/date.utils";
 
 const InfoField = ({ label, value, icon: Icon, className }: any) => (
-  <div className={cn("relative flex flex-col w-full group mt-1.5", className)}>
-    <div className="relative flex items-center h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-3.5 shadow-sm">
+  <div className={cn("relative flex flex-col w-full group", className)}>
+    <div className="relative flex items-center h-9 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 px-3 transition-all group-hover:border-indigo-500/30">
       {Icon && (
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-30 pointer-events-none">
-          <Icon size={18} strokeWidth={2.5} />
+        <div className="text-slate-400 mr-2.5 shrink-0">
+          <Icon size={14} strokeWidth={2} />
         </div>
       )}
-      <div className={cn(
-        "text-[14px] font-black uppercase tracking-tight text-slate-900 dark:text-white truncate",
-        Icon ? "pl-8" : ""
-      )}>
+      <div className="text-[13px] font-semibold tracking-tight text-slate-900 dark:text-slate-100 truncate flex-1">
         {value || "—"}
       </div>
-      <label className="absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[10px] font-bold text-indigo-600 dark:text-indigo-500 -top-2 left-2 translate-y-0">
+      <label className="absolute -top-2 left-2 px-1 bg-white dark:bg-[#0c0c0e] text-[9px] font-bold uppercase tracking-wider text-indigo-500/80">
         {label}
       </label>
     </div>
@@ -55,20 +52,17 @@ const InfoField = ({ label, value, icon: Icon, className }: any) => (
 );
 
 const InfoArea = ({ label, value, icon: Icon, className }: any) => (
-  <div className={cn("relative flex flex-col w-full group mt-1.5", className)}>
-    <div className="relative flex items-start min-h-[88px] py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-3.5 shadow-sm">
+  <div className={cn("relative flex flex-col w-full group", className)}>
+    <div className="relative flex items-start min-h-[70px] py-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-white/5 px-3 transition-all group-hover:border-indigo-500/30">
       {Icon && (
-        <div className="absolute left-3.5 top-[22px] -translate-y-1/2 text-slate-400 z-30 pointer-events-none">
-          <Icon size={18} strokeWidth={2.5} />
+        <div className="text-slate-400 mr-2.5 mt-0.5 shrink-0">
+          <Icon size={14} strokeWidth={2} />
         </div>
       )}
-      <div className={cn(
-        "text-[13px] font-bold uppercase text-slate-600 dark:text-slate-300 leading-relaxed",
-        Icon ? "pl-8" : ""
-      )}>
+      <div className="text-[12px] font-medium text-slate-600 dark:text-slate-400 leading-relaxed flex-1">
         {value || "Відсутня"}
       </div>
-      <label className="absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[10px] font-bold text-indigo-600 dark:text-indigo-500 -top-2 left-2 translate-y-0">
+      <label className="absolute -top-2 left-2 px-1 bg-white dark:bg-[#0c0c0e] text-[9px] font-bold uppercase tracking-wider text-indigo-500/80">
         {label}
       </label>
     </div>
@@ -94,28 +88,6 @@ const getCurrencySymbol = (valut?: string) => {
   }
 };
 
-const formatDateTime = (dateString?: string | Date | null) => {
-  if (!dateString) return "—";
-  const d = new Date(dateString);
-  return d.toLocaleString("uk-UA", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const formatDate = (dateString?: string | Date | null) => {
-  if (!dateString) return "—";
-  const d = new Date(dateString);
-  return d.toLocaleDateString("uk-UA", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
 export default function TenderFullPage({ tenderId }: { tenderId: number }) {
   const router = useRouter();
   const [tender, setTender] = useState<ITender | null>(null);
@@ -126,64 +98,50 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
 
   useEffect(() => {
     if (!tenderId) return;
-
     const loadTender = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         const data = await tenderClientsService.getOneTender(tenderId);
-        if (!data) {
-          setError("Тендер не знайдено");
-        } else {
-          setTender(data);
-        }
+        if (!data) setError("Тендер не знайдено");
+        else setTender(data);
       } catch (err) {
-        console.error("Error loading tender:", err);
         setError("Не вдалося завантажити дані тендеру");
       } finally {
         setIsLoading(false);
       }
     };
-
     loadTender();
   }, [tenderId]);
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-6">
-        <div className="relative">
-          <div className="w-24 h-24 rounded-full border-4 border-indigo-500/10 border-t-indigo-500 animate-spin" />
-        </div>
-        <div className="flex flex-col items-center gap-2">
-          <h2 className="text-xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white">
-            Завантаження тендеру...
-          </h2>
-        </div>
+      <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin" />
+        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">
+          Завантаження...
+        </h2>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !tender) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-4">
-        <Info size={48} className="text-zinc-400" />
-        <h2 className="text-xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white">
-          {error}
+        <Info size={40} className="text-slate-300" />
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+          {error || "Помилка"}
         </h2>
         <button
           onClick={() => router.back()}
-          className="rounded-xl bg-indigo-500 px-6 py-2 text-sm font-bold text-white transition-all hover:bg-indigo-600"
+          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-bold text-white hover:bg-indigo-700 transition-colors"
         >
-          Повернутися назад
+          Повернутися
         </button>
       </div>
     );
   }
 
-  if (!tender) return null;
-
   const currencySymbol = getCurrencySymbol(tender?.valut_name);
-
   const myLastBid =
     !profile || !tender?.rate_company
       ? tender?.price_proposed || 0
@@ -192,7 +150,6 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
           .sort((a, b) => b.id - a.id)[0]?.price_proposed ||
         tender.price_proposed ||
         0;
-
   const leaderBid =
     !tender?.rate_company || tender.rate_company.length === 0
       ? tender?.price_start || 0
@@ -201,7 +158,6 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
         : Math.min(
             ...tender.rate_company.map((r) => r.price_proposed || Infinity),
           );
-
   const sortedRoute =
     tender?.tender_route?.sort(
       (a, b) => (a.order_num || 0) - (b.order_num || 0),
@@ -209,287 +165,234 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex h-full w-full flex-col gap-3 overflow-y-auto lg:overflow-hidden custom-scrollbar"
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex h-full w-full flex-col gap-3 lg:overflow-hidden p-0 custom-scrollbar"
     >
-      {/* 🚀 TOP HEADER */}
-      <div className="flex shrink-0 flex-col gap-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 bg-white shadow-sm transition-all hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-            >
-              <ArrowLeft
-                size={16}
-                className="text-zinc-600 dark:text-zinc-400"
-              />
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center rounded-xl border border-zinc-200 bg-white px-4 py-1.5 shadow-sm dark:border-white/10 dark:bg-zinc-900/50">
-            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
-              час публікації тендера
-            </span>
-            <span className="text-[11px] font-black text-zinc-800 dark:text-zinc-200">
-              {formatDateTime(tender.time_start)}
-            </span>
-          </div>
+      {/* 🚀 HEADER */}
+      <div className="flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push("/dashboard/tender/active");
+              }
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900 transition-all"
+          >
+            <ArrowLeft
+              size={14}
+              className="text-slate-600 dark:text-slate-400"
+            />
+          </button>
         </div>
 
-        {/* 💡 MANAGER HINTS (Only for Active Tenders) */}
-        <ManagerHints ids_status={tender.ids_status} />
-
-        {/* 📊 STATS ROW */}
-        <div className="grid grid-cols-1 gap-2 px-1 md:grid-cols-4 lg:gap-3">
-          <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-indigo-500/20 bg-white p-1 pr-3 shadow-sm transition-all hover:border-indigo-500/40 dark:bg-zinc-900/50 dark:hover:border-indigo-500/60">
-            <div className="flex h-full w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30">
-              <Trophy className="h-6 w-6" />
-            </div>
-            <div className="flex-1 px-3">
-              <span className="mb-0.5 block text-[8px] font-black uppercase tracking-widest text-indigo-400">
-                ВИГРАШНА СТАВКА
-              </span>
-              <div className="text-lg font-black leading-none tracking-tight text-indigo-600 dark:text-indigo-400">
-                {leaderBid.toLocaleString()} {currencySymbol}
-              </div>
-            </div>
-          </div>
-
-          <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-emerald-500/20 bg-white p-1 pr-3 shadow-sm transition-all hover:border-emerald-500/40 dark:bg-zinc-900/50 dark:hover:border-emerald-500/60">
-            <div className="flex h-full w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-emerald-50 text-emerald-500 dark:bg-emerald-900/30">
-              <CircleCheck className="h-6 w-6" />
-            </div>
-            <div className="flex-1 px-3">
-              <span className="mb-0.5 block text-[8px] font-black uppercase tracking-widest text-emerald-500">
-                МОЯ ОСТАННЯ СТАВКА
-              </span>
-              <div className="text-lg font-black leading-none tracking-tight text-emerald-600 dark:text-emerald-400">
-                {myLastBid.toLocaleString()} {currencySymbol}
-              </div>
-            </div>
-          </div>
-
-          <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-zinc-200 bg-white p-1 shadow-sm transition-all hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-white/20">
-            <div className="flex-1 px-4 text-center">
-              <span className="mb-0.5 block text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                КРОК ПОНИЖЕННЯ
-              </span>
-              <div className="text-lg font-black leading-none text-zinc-800 dark:text-zinc-200">
-                {tender.price_step || 0} {currencySymbol}
-              </div>
-            </div>
-          </div>
-          <div className="group flex h-[64px] items-center rounded-[1.5rem] border-2 border-zinc-200 bg-white p-1 shadow-sm transition-all hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900/50 dark:hover:border-white/20">
-            <div className="flex-1 px-4 text-center">
-              <span className="mb-0.5 block text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                СТАРТОВА ЦІНА
-              </span>
-              <div className="text-lg font-black leading-none text-zinc-800 dark:text-zinc-200">
-                {tender.price_start?.toLocaleString()} {currencySymbol}
-              </div>
-            </div>
-          </div>
+        <div className="hidden sm:flex flex-col items-end px-3 py-1 rounded-lg bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-500/10">
+          <p className="text-[9px] font-medium text-slate-400 uppercase tracking-wider">
+            Опубліковано: {formatTenderDateTime(tender.time_start)}
+          </p>
         </div>
       </div>
 
-      {/* 🧩 MAIN CONTENT */}
-      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 lg:gap-4 overflow-visible lg:overflow-hidden">
-        {/* LEFT COLUMN: Info + Cargo (Widened to 9 units) */}
-        <div className="col-span-12 flex flex-col gap-3 lg:gap-4 lg:col-span-9 lg:overflow-y-auto lg:pr-1 custom-scrollbar overflow-visible">
-          <div className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4">
-            {/* 1. Tender Info */}
-            <div className="relative h-fit space-y-4 overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
-              <div className="flex items-center gap-2.5 text-zinc-400">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20">
-                  <Box size={16} />
-                </div>
-                <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-800 dark:text-zinc-300">
-                  ІНФОРМАЦІЯ ПРО ТЕНДЕР
-                </h3>
+      {/* 📊 STATS */}
+
+      {/* 📊 MAIN GRID AREA */}
+      <div className="grid grid-cols-12 gap-4 flex-1 min-h-0 lg:overflow-hidden">
+        {/* LEFT COLUMN (9 cols) - Content that can scroll if needed */}
+        <div className="col-span-12 lg:col-span-9 flex flex-col gap-4 lg:overflow-y-auto pr-1 custom-scrollbar pb-4">
+          {/* STATS ROW */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="flex items-center h-20 rounded-[1.5rem] border-2 border-indigo-500/20 bg-indigo-50/20 dark:bg-indigo-900/10 p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-200 bg-white dark:bg-slate-800 text-indigo-500 shadow-sm shrink-0">
+                <Trophy size={24} />
               </div>
-              <div className="grid grid-cols-1 gap-4">
-                <InfoField
-                  label="№ ТЕНДЕРУ"
-                  value={tender.id}
-                  icon={Hash}
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  <InfoField
-                    label="ЧАС ПОЧАТКУ"
-                    icon={Clock}
-                    value={formatDateTime(tender.time_start)}
-                  />
-                  <InfoField
-                    label="ЧАС ЗАВЕРШЕННЯ"
-                    icon={Clock}
-                    value={formatDateTime(tender.time_end)}
-                  />
+              <div className="flex flex-col flex-1 items-center justify-center">
+                <span className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">
+                  Виграшна ставка
+                </span>
+                <div className="text-[22px] font-black text-indigo-600 leading-none mt-1">
+                  {leaderBid.toLocaleString()} {currencySymbol}
                 </div>
-                <InfoField
-                  label="ВИД ТЕНДЕРУ"
-                  icon={Layers}
-                  value={tender.tender_type || "РЕДУКЦІОН З ВИКУПОМ"}
-                />
               </div>
             </div>
 
-            {/* 2. Contact Info */}
-            <div className="h-fit space-y-4 rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
-              <div className="flex items-center gap-2.5 text-zinc-400">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20">
-                  <User size={16} />
+            <div className="flex items-center h-20 rounded-[1.5rem] border-2 border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-900/10 p-4">
+              <div className="flex flex-col flex-1 items-center justify-center text-center">
+                <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                  Кількість ставок
+                </span>
+                <div className="text-[22px] font-black text-emerald-600 leading-none mt-1">
+                  5
                 </div>
-                <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-800 dark:text-zinc-300">
-                  КОНТАКТНА ІНФОРМАЦІЯ
-                </h3>
               </div>
-              <div className="space-y-4">
-                <InfoField
-                  label="МЕНЕДЖЕР ICT"
-                  icon={User}
-                  value={tender.author}
-                />
-                <InfoField
-                  label="ТЕЛЕФОН"
-                  icon={Phone}
-                  value={tender.usr_phone?.[0]?.phone || "+38 095 689 15 76"}
-                />
-                <InfoField
-                  label="EMAIL"
-                  icon={Mail}
-                  value={tender.email || "ip@ict.lviv.ua"}
-                />
+            </div>
+
+            <div className="flex items-center h-20 rounded-[1.5rem] border border-slate-200 bg-white dark:bg-slate-900 p-4">
+              <div className="flex flex-col flex-1 items-center justify-center text-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  Крок пониження
+                </span>
+                <div className="text-[22px] font-black text-slate-600 dark:text-slate-200 leading-none mt-1">
+                  {tender.price_step || 0} {currencySymbol}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center h-20 rounded-[1.5rem] border border-slate-200 bg-white dark:bg-slate-900 p-4">
+              <div className="flex flex-col flex-1 items-center justify-center text-center">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  Стартова ціна
+                </span>
+                <div className="text-[22px] font-black text-slate-600 dark:text-slate-200 leading-none mt-1">
+                  {tender.price_start?.toLocaleString()} {currencySymbol}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* 3. Cargo Details */}
-          <div className="flex shrink-0 flex-col rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
-            <div className="mb-4 flex items-center gap-3 text-zinc-400 lg:mb-5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20">
-                <Truck size={18} />
+          {/* INFO & CONTACTS ROW */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <Box size={18} className="text-slate-400" />
+                <h3 className="text-[13px] font-black uppercase tracking-[0.15em] text-slate-600 dark:text-slate-200">
+                  Інформація про тендер
+                </h3>
               </div>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-800 dark:text-zinc-300">
-                ІНФОРМАЦІЯ ПРО ВАНТАЖ
-              </h3>
+              <div className="space-y-4">
+                <InfoField label="№ Тендеру" value={tender.id} />
+                <InfoField
+                  label="Вид тендеру"
+                  value={tender.tender_type || "Редукціон з викупом"}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <InfoField
-                  label="ВАНТАЖ"
-                  icon={Box}
-                  value={tender.cargo}
-                />
-                <InfoField
-                  label="ТИП ТРАНСПОРТУ"
-                  icon={Truck}
-                  value={tender.tender_trailer?.[0]?.trailer_type_name || "БУДЬ-ЯКИЙ"}
-                />
-                <InfoField
-                  label="ТИП ЗАВАНТАЖЕННЯ"
-                  icon={Truck}
-                  value={tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ"}
-                />
-                <InfoField
-                  label="КІЛЬКІСТЬ АВТО"
-                  icon={Truck}
-                  value={tender.car_count}
-                />
-                <InfoField
-                  label="КІЛЬКІСТЬ ПАЛЕТ"
-                  icon={Box}
-                  value={33}
-                />
-                <InfoField
-                  label="ОБ'ЄМ (М³)"
-                  icon={Box}
-                  value={`${tender.volume} М³`}
-                />
-                <InfoField
-                  label="ВАГА (Т.)"
-                  icon={Scale}
-                  value={`${tender.weight || 0} Т.`}
-                />
-                <div className="col-span-full">
-                  <InfoArea
-                    label="ДОДАТКОВА ІНФОРМАЦІЯ"
-                    icon={Info}
-                    value={tender.notes}
-                  />
+            <div className="p-5 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 shadow-sm space-y-4">
+              <div className="flex items-center gap-3">
+                <User size={18} className="text-slate-400" />
+                <h3 className="text-[13px] font-black uppercase tracking-[0.15em] text-slate-600 dark:text-slate-200">
+                  Контактна інформація
+                </h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
+                  <User size={16} className="text-slate-400" />
+                  <div className="flex flex-col">
+                    <span className="text-[13px] font-bold text-slate-900 dark:text-white leading-none">
+                      {tender.author}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-400 mt-0.5">
+                      менеджер ICT
+                    </span>
+                  </div>
                 </div>
+                <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
+                  <Phone size={16} className="text-slate-400" />
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white">
+                    {tender.usr_phone?.[0]?.phone || "+380..."}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
+                  <Mail size={16} className="text-slate-400" />
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white">
+                    {tender.email || "manager@ict.lviv.ua"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CARGO INFO */}
+          <div className="p-6 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 shadow-sm space-y-5">
+            <div className="flex items-center gap-3">
+              <Truck size={18} className="text-slate-400" />
+              <h3 className="text-[13px] font-black uppercase tracking-[0.15em] text-slate-600 dark:text-slate-200">
+                Інформація про вантаж
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-4">
+              <div className="space-y-4">
+                <InfoField label="Вантаж" value={tender.cargo} />
+                <InfoField
+                  label="Тип транспорту"
+                  value={
+                    tender.tender_trailer?.[0]?.trailer_type_name || "Будь-який"
+                  }
+                />
+                <InfoField label="Кількість авто" value={tender.car_count} />
+                <InfoField label="Об'єм" value={`${tender.volume || 0} м³`} />
+              </div>
+              <div className="space-y-4">
+                <InfoField label="Транспортні документи" value="—" />
+                <InfoField
+                  label="Тип завантаження"
+                  value={tender.tender_load?.[0]?.load_type_name || "Заднє"}
+                />
+                <InfoField label="Кількість палет" value="—" />
+                <InfoField label="Вага" value={`${tender.weight || 0} т`} />
+              </div>
+              <div className="col-span-full pt-2">
+                <InfoArea label="Додаткова інформація" value={tender.notes} />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Route + Map (Narrowed to 3 units) */}
-        <div className="col-span-12 flex flex-col gap-3 lg:gap-4 lg:col-span-3 overflow-visible lg:overflow-hidden">
-          {/* Route Timeline */}
-          <div className="relative flex h-[500px] min-h-[320px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-zinc-400">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20">
-                  <MapPin size={18} />
-                </div>
-                <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-800 dark:text-zinc-300">
-                  МАРШРУТ
-                </h3>
-              </div>
-            </div>
-
-            <div className="custom-scrollbar-thin flex-1 overflow-y-auto pr-2">
-              <div className="relative pb-6 pl-1 space-y-6">
-                <div className="absolute bottom-2 left-[19px] top-4 z-0 w-[2px] border-l-2 border-dashed border-zinc-200 dark:border-white/10" />
-
+        {/* RIGHT COLUMN (3 cols) - Sidebar exactly as in photo */}
+        <div className="col-span-12 lg:col-span-3 flex flex-col gap-4 lg:overflow-hidden h-full">
+          {/* Route Block */}
+          <div className="flex flex-col  bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden">
+            <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="relative pl-8 space-y-8 pb-4">
+                <div className="absolute left-[13px] top-6 bottom-4 w-[2px] border-l-2 border-dashed border-indigo-200 dark:border-indigo-900/50" />
                 {sortedRoute.map((point, idx) => (
-                  <div key={point.id} className="relative z-10 flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-lg border border-white bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
+                  <div key={point.id} className="relative">
+                    <div className="absolute -left-[32px] top-0 flex flex-col items-center gap-2">
+                      <div className="h-4 w-6 rounded-sm overflow-hidden border border-slate-100 shadow-sm shrink-0">
                         {point.ids_country ? (
-                          <div className="flex items-center justify-center rounded-sm overflow-hidden shadow-sm">
-                            <Flag country={point.ids_country} size={16} />
-                          </div>
+                          <Flag country={point.ids_country} size={24} />
                         ) : (
-                          <MapPin size={14} className="text-zinc-400" />
+                          <div className="w-full h-full bg-slate-100" />
                         )}
                       </div>
                     </div>
-
-                    <div className="flex w-full flex-col gap-1.5">
+                    <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span
                           className={cn(
-                            "rounded-full border px-2 py-0.5 text-[7px] font-black uppercase tracking-[0.05em]",
+                            "text-[8px] font-black uppercase tracking-[0.1em] px-2.5 py-1 rounded-full border",
                             point.ids_point === "LOAD_FROM"
-                              ? "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-900/20"
-                              : "border-indigo-100 bg-indigo-50 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-900/20",
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                              : "bg-indigo-50 text-indigo-600 border-indigo-200",
                           )}
                         >
                           {point.ids_point === "LOAD_FROM"
-                            ? "ЗАВАНТАЖЕННЯ"
-                            : "РОЗВАНТАЖЕННЯ"}
+                            ? "Завантаження"
+                            : "Розвантаження"}
                         </span>
-                        <span className="text-[9px] font-black italic text-zinc-300">
-                          #{idx + 1}
+                        <span className="text-[10px] font-medium text-slate-300 italic">
+                          # {idx + 1}
                         </span>
                       </div>
-
-                      <div>
-                        <h4 className="truncate text-base font-black uppercase tracking-tight text-zinc-900 dark:text-white leading-none">
+                      <div className="flex flex-col">
+                        <h4 className="text-[15px] font-black text-slate-900 dark:text-white uppercase leading-none">
                           {point.city}
                         </h4>
-                        <p className="truncate text-[8px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5">
-                          {point.locality || "УКРАЇНА"}
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                          {point.city}, {point.locality || "УКРАЇНА"}
                         </p>
                       </div>
-
-                      <div className="flex w-fit items-center gap-2 rounded-lg border border-zinc-100 bg-white p-1.5 px-3 dark:border-white/5 dark:bg-zinc-800/40">
-                        <Clock size={10} className="text-zinc-400" />
-                        <span className="text-[10px] font-black text-zinc-700 dark:text-zinc-300">
-                          {formatDateTime(point.date_point)}
-                        </span>
-                      </div>
+                      {point.date_point && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-100 bg-white dark:bg-slate-800/30 dark:border-white/5 shadow-sm">
+                          <Clock size={12} className="text-slate-400" />
+                          <span className="text-[11px] font-black text-slate-600 dark:text-slate-300">
+                            {formatTenderDateTime(point.date_point)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -497,23 +400,23 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
             </div>
           </div>
 
-          {/* Map */}
-          <div className="flex h-[300px] min-h-[220px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-2 shadow-sm dark:border-white/5 dark:bg-zinc-900/60">
-            <div className="flex items-center justify-between p-2 px-4">
+          {/* Map Block */}
+          <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-white/5 shadow-sm p-4 shrink-0">
+            <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-2">
-                <MapPin className="text-indigo-500" size={12} />
-                <h3 className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-                  МАРШРУТ НА КАРТІ
+                <MapPin size={16} className="text-slate-400" />
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                  Маршрут на карті
                 </h3>
               </div>
               {distance && (
-                <span className="rounded-lg bg-indigo-50 px-2 py-0.5 text-[9px] font-black italic text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
-                  {Math.round(distance)} КМ.
-                </span>
+                <div className="px-3 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-white/5 rounded-xl text-[10px] font-black text-slate-500">
+                  {Math.round(distance)} км.
+                </div>
               )}
             </div>
-            <div className="relative flex-1 overflow-hidden rounded-[1.5rem] border border-zinc-100 dark:border-white/5">
-              <TenderMap points={sortedRoute} onReady={(d) => setDistance(d)} />
+            <div className="h-66 rounded-[1.1rem] overflow-hidden border border-slate-100 dark:border-white/5 relative">
+              <TenderMap points={sortedRoute} onReady={setDistance} />
             </div>
           </div>
         </div>

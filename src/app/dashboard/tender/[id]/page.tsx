@@ -13,7 +13,7 @@ export default async function Page({
   }
 
   return (
-    <div className="h-screen w-full  p-3 lg:p-5 flex flex-col overflow-hidden">
+    <div className="h-screen w-full  flex flex-col overflow-hidden">
       <TenderFullPage tenderId={tenderId} />
     </div>
   );
