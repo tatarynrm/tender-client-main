@@ -24,6 +24,7 @@ const labelMap: Record<string, string> = {
   manager: "Менеджер",
   company: "Замовник",
   status: "Статус",
+  members: "Хто бачить",
   participate: "Моя участь",
   participate_company: "Компанія",
   winner_company: "Результат",
@@ -120,6 +121,12 @@ export const ActiveFilters = ({
       case "company":
         return (
           dropdowns.company_dropdown?.find(
+            (s: any) => String(s.ids) === String(value),
+          )?.value || value
+        );
+      case "members":
+        return (
+          dropdowns.tender_members?.find(
             (s: any) => String(s.ids) === String(value),
           )?.value || value
         );

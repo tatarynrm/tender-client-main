@@ -11,6 +11,7 @@ import { DraftActions } from "./DraftActions";
 import { ActiveActions } from "./ActiveActions";
 import { PlanActions } from "./PlanActions";
 import { AnalyzeActions } from "./AnalyzeActions";
+import { ClosedActions } from "./ClosedActions";
 import { SendNotificationModal } from "./SendNotificationModal";
 import { MessageSquare } from "lucide-react";
 import { tenderManagerService } from "../../../services/tender.manager.service";
@@ -58,6 +59,13 @@ export default function TenderActions({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      // Ігноруємо кліки всередині модалок статусів або сповіщень
+      if (target.closest('[data-status-modal]') || target.closest('[data-notification-modal]')) {
+        return;
+      }
+
       if (
         menuRef.current &&
         !menuRef.current.contains(event.target as Node) &&
@@ -130,6 +138,15 @@ export default function TenderActions({
         )}
         {tender.ids_status === "ANALYZE" && (
           <AnalyzeActions
+            tender={tender}
+            itemClass={itemClass}
+            textClass={textClass}
+            config={config}
+            onClose={handleClose}
+          />
+        )}
+        {tender.ids_status === "CLOSED" && (
+          <ClosedActions
             tender={tender}
             itemClass={itemClass}
             textClass={textClass}

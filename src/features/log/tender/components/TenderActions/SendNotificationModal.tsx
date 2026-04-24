@@ -25,7 +25,10 @@ export function SendNotificationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+    <div 
+      data-notification-modal="true"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+    >
       {/* OVERLAY */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm" 

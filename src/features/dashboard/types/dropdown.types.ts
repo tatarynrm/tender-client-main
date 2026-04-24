@@ -49,4 +49,7 @@ export interface ITenderClientFormData {
   trailer_type_dropdown: ITrailerTypeDropdown[];
   load_permission_dropdown: ILoadPermissionDropdown[];
   tender_status_dropdown: ITenderStatusDropdown[];
+  manager_dropdown?: { ids: string | number; value: string }[];
+  company_dropdown?: { ids: string | number; value: string }[];
+  tender_members?: { ids: string; value: string; order_num: number }[];
 }

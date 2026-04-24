@@ -43,4 +43,9 @@ export const tenderManagerService = {
     });
     return data;
   },
+
+  sendResultNotification: async (id: number | string): Promise<any> => {
+    const { data } = await api.post(`/tender/${id}/notify-results`);
+    return data;
+  },
 };

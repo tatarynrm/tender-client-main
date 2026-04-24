@@ -21,6 +21,7 @@ import {
   FileStack,
   Paperclip,
   Layers,
+  Hash,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -30,6 +31,49 @@ import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import dynamic from "next/dynamic";
 import { useProfile } from "@/shared/hooks";
+import { ManagerHints } from "@/features/log/tender/components/ManagerHints";
+
+const InfoField = ({ label, value, icon: Icon, className }: any) => (
+  <div className={cn("relative flex flex-col w-full group mt-1.5", className)}>
+    <div className="relative flex items-center h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-3.5 shadow-sm">
+      {Icon && (
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 z-30 pointer-events-none">
+          <Icon size={18} strokeWidth={2.5} />
+        </div>
+      )}
+      <div className={cn(
+        "text-[14px] font-black uppercase tracking-tight text-slate-900 dark:text-white truncate",
+        Icon ? "pl-8" : ""
+      )}>
+        {value || "—"}
+      </div>
+      <label className="absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[10px] font-bold text-indigo-600 dark:text-indigo-500 -top-2 left-2 translate-y-0">
+        {label}
+      </label>
+    </div>
+  </div>
+);
+
+const InfoArea = ({ label, value, icon: Icon, className }: any) => (
+  <div className={cn("relative flex flex-col w-full group mt-1.5", className)}>
+    <div className="relative flex items-start min-h-[88px] py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 px-3.5 shadow-sm">
+      {Icon && (
+        <div className="absolute left-3.5 top-[22px] -translate-y-1/2 text-slate-400 z-30 pointer-events-none">
+          <Icon size={18} strokeWidth={2.5} />
+        </div>
+      )}
+      <div className={cn(
+        "text-[13px] font-bold uppercase text-slate-600 dark:text-slate-300 leading-relaxed",
+        Icon ? "pl-8" : ""
+      )}>
+        {value || "Відсутня"}
+      </div>
+      <label className="absolute transition-all duration-200 ease-in-out pointer-events-none z-40 px-1 mx-1 bg-white dark:bg-slate-900 uppercase tracking-widest text-[10px] font-bold text-indigo-600 dark:text-indigo-500 -top-2 left-2 translate-y-0">
+        {label}
+      </label>
+    </div>
+  </div>
+);
 
 const TenderMap = dynamic(
   () =>
@@ -167,7 +211,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex h-full w-full flex-col gap-3 overflow-hidden"
+      className="flex h-full w-full flex-col gap-3 overflow-y-auto lg:overflow-hidden custom-scrollbar"
     >
       {/* 🚀 TOP HEADER */}
       <div className="flex shrink-0 flex-col gap-3">
@@ -182,14 +226,6 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                 className="text-zinc-600 dark:text-zinc-400"
               />
             </button>
-            <div className="flex flex-col">
-              <h1 className="text-base font-black italic uppercase tracking-tight text-zinc-900 dark:text-white">
-                Тендер # {tender.id}
-              </h1>
-              <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
-                Детальна інформація
-              </p>
-            </div>
           </div>
 
           <div className="flex flex-col items-center rounded-xl border border-zinc-200 bg-white px-4 py-1.5 shadow-sm dark:border-white/10 dark:bg-zinc-900/50">
@@ -201,6 +237,9 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
             </span>
           </div>
         </div>
+
+        {/* 💡 MANAGER HINTS (Only for Active Tenders) */}
+        <ManagerHints ids_status={tender.ids_status} />
 
         {/* 📊 STATS ROW */}
         <div className="grid grid-cols-1 gap-2 px-1 md:grid-cols-4 lg:gap-3">
@@ -256,9 +295,9 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
       </div>
 
       {/* 🧩 MAIN CONTENT */}
-      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 overflow-hidden lg:gap-4">
+      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 lg:gap-4 overflow-visible lg:overflow-hidden">
         {/* LEFT COLUMN: Info + Cargo (Widened to 9 units) */}
-        <div className="custom-scrollbar col-span-12 flex flex-col gap-3 overflow-y-auto pr-1 lg:col-span-9 lg:gap-4">
+        <div className="col-span-12 flex flex-col gap-3 lg:gap-4 lg:col-span-9 lg:overflow-y-auto lg:pr-1 custom-scrollbar overflow-visible">
           <div className="grid shrink-0 grid-cols-1 gap-3 md:grid-cols-2 lg:gap-4">
             {/* 1. Tender Info */}
             <div className="relative h-fit space-y-4 overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
@@ -270,35 +309,29 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                   ІНФОРМАЦІЯ ПРО ТЕНДЕР
                 </h3>
               </div>
-              <div className="space-y-2">
-                <div className="flex flex-col gap-0.5 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 dark:border-white/5 dark:bg-white/5">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                    № ТЕНДЕРУ
-                  </span>
-                  <span className="text-sm font-black uppercase tracking-tight text-zinc-900 dark:text-white">
-                    {tender.id}
-                  </span>
+              <div className="grid grid-cols-1 gap-4">
+                <InfoField
+                  label="№ ТЕНДЕРУ"
+                  value={tender.id}
+                  icon={Hash}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <InfoField
+                    label="ЧАС ПОЧАТКУ"
+                    icon={Clock}
+                    value={formatDateTime(tender.time_start)}
+                  />
+                  <InfoField
+                    label="ЧАС ЗАВЕРШЕННЯ"
+                    icon={Clock}
+                    value={formatDateTime(tender.time_end)}
+                  />
                 </div>
-                <div className="flex flex-col gap-0.5 rounded-xl border border-rose-100 bg-rose-50/50 p-3 px-5 dark:border-rose-900/20 dark:bg-rose-950/20">
-                  <div className="flex items-center gap-2">
-                    <Clock size={12} className="text-rose-500" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-rose-500">
-                      ЧАС ТЕНДЕРУ
-                    </span>
-                  </div>
-                  <span className="text-sm font-black italic text-rose-600 dark:text-rose-400">
-                    {formatDate(tender.time_start)} —{" "}
-                    {formatDate(tender.time_end)}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 dark:border-white/5 dark:bg-white/5">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                    ВИД ТЕНДЕРУ
-                  </span>
-                  <span className="text-sm font-black uppercase tracking-tight text-zinc-900 dark:text-white">
-                    {tender.tender_type || "РЕДУКЦІОН З ВИКУПОМ"}
-                  </span>
-                </div>
+                <InfoField
+                  label="ВИД ТЕНДЕРУ"
+                  icon={Layers}
+                  value={tender.tender_type || "РЕДУКЦІОН З ВИКУПОМ"}
+                />
               </div>
             </div>
 
@@ -312,38 +345,22 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
                   КОНТАКТНА ІНФОРМАЦІЯ
                 </h3>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 dark:border-white/5 dark:bg-white/5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200/50 text-zinc-500 dark:bg-white/10">
-                    <User size={16} />
-                  </div>
-                  <div>
-                    <div className="truncate capitalize text-[13px] font-black leading-none text-zinc-900 dark:text-white">
-                      {tender.author}
-                    </div>
-                    <div className="mt-0.5 text-[8px] font-bold uppercase tracking-widest text-zinc-400">
-                      менеджер ICT
-                    </div>
-                  </div>
-                </div>
-                <a
-                  href={`tel:${tender.usr_phone?.[0]?.phone}`}
-                  className="group flex items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 transition-all hover:border-indigo-500/30 dark:border-white/5 dark:bg-white/5"
-                >
-                  <Phone size={16} className="text-indigo-500" />
-                  <span className="text-[13px] font-black text-zinc-700 dark:text-zinc-300">
-                    {tender.usr_phone?.[0]?.phone || "+38 095 689 15 76"}
-                  </span>
-                </a>
-                <a
-                  href={`mailto:${tender.email}`}
-                  className="group flex items-center gap-3 rounded-xl border border-zinc-100 bg-zinc-50 p-3 px-5 transition-all hover:border-indigo-500/30 dark:border-white/5 dark:bg-white/5"
-                >
-                  <Mail size={16} className="text-indigo-500" />
-                  <span className="truncate text-[13px] font-black text-zinc-700 dark:text-zinc-300">
-                    {tender.email || "ip@ict.lviv.ua"}
-                  </span>
-                </a>
+              <div className="space-y-4">
+                <InfoField
+                  label="МЕНЕДЖЕР ICT"
+                  icon={User}
+                  value={tender.author}
+                />
+                <InfoField
+                  label="ТЕЛЕФОН"
+                  icon={Phone}
+                  value={tender.usr_phone?.[0]?.phone || "+38 095 689 15 76"}
+                />
+                <InfoField
+                  label="EMAIL"
+                  icon={Mail}
+                  value={tender.email || "ip@ict.lviv.ua"}
+                />
               </div>
             </div>
           </div>
@@ -359,88 +376,57 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
-              {[
-                {
-                  icon: <Box size={14} />,
-                  label: "ВАНТАЖ",
-                  value: tender.cargo || "—",
-                },
-                {
-                  icon: <FileStack size={14} />,
-                  label: "ТРАНСПОРТНІ ДОКУМЕНТИ",
-                  value: <Paperclip size={14} className="rotate-45" />,
-                },
-                {
-                  icon: <Truck size={14} />,
-                  label: "ТИП ТРАНСПОРТУ",
-                  value:
-                    tender.tender_trailer?.[0]?.trailer_type_name ||
-                    "БУДЬ-ЯКИЙ",
-                },
-                {
-                  icon: <Truck size={14} />,
-                  label: "ТИП ЗАВАНТАЖЕННЯ",
-                  value: tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ",
-                },
-                {
-                  icon: <Truck size={14} />,
-                  label: "КІЛЬКІСТЬ АВТО",
-                  value: tender.car_count,
-                },
-                {
-                  icon: <Box size={14} />,
-                  label: "КІЛЬКІСТЬ ПАЛЕТ",
-                  value: "33",
-                },
-                {
-                  icon: <Box size={14} />,
-                  label: "ОБ'ЄМ",
-                  value: `${tender.volume} М³`,
-                },
-                {
-                  icon: <Scale size={14} />,
-                  label: "ВАГА",
-                  value: `${tender.weight || 0} Т.`,
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex min-h-[44px] items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 p-2 px-4 transition-all dark:border-white/5 dark:bg-white/5"
-                >
-                  <div className="flex shrink-0 items-center gap-2 text-zinc-400">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-zinc-100 bg-white text-zinc-400 dark:border-white/10 dark:bg-zinc-900">
-                      {item.icon}
-                    </span>
-                    <span className="truncate text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                      {item.label}
-                    </span>
-                  </div>
-                  <div className="ml-2 flex flex-1 justify-end truncate text-right text-[12px] font-black leading-none text-zinc-800 dark:text-zinc-200">
-                    {item.value}
-                  </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <InfoField
+                  label="ВАНТАЖ"
+                  icon={Box}
+                  value={tender.cargo}
+                />
+                <InfoField
+                  label="ТИП ТРАНСПОРТУ"
+                  icon={Truck}
+                  value={tender.tender_trailer?.[0]?.trailer_type_name || "БУДЬ-ЯКИЙ"}
+                />
+                <InfoField
+                  label="ТИП ЗАВАНТАЖЕННЯ"
+                  icon={Truck}
+                  value={tender.tender_load?.[0]?.load_type_name || "ЗАДНЄ"}
+                />
+                <InfoField
+                  label="КІЛЬКІСТЬ АВТО"
+                  icon={Truck}
+                  value={tender.car_count}
+                />
+                <InfoField
+                  label="КІЛЬКІСТЬ ПАЛЕТ"
+                  icon={Box}
+                  value={33}
+                />
+                <InfoField
+                  label="ОБ'ЄМ (М³)"
+                  icon={Box}
+                  value={`${tender.volume} М³`}
+                />
+                <InfoField
+                  label="ВАГА (Т.)"
+                  icon={Scale}
+                  value={`${tender.weight || 0} Т.`}
+                />
+                <div className="col-span-full">
+                  <InfoArea
+                    label="ДОДАТКОВА ІНФОРМАЦІЯ"
+                    icon={Info}
+                    value={tender.notes}
+                  />
                 </div>
-              ))}
-
-              <div className="col-span-full mt-1 flex items-center gap-3 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-3 px-5 dark:border-white/10 dark:bg-white/[0.02]">
-                <Info size={16} className="shrink-0 text-amber-500" />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                    ДОДАТКОВА ІНФОРМАЦІЯ
-                  </span>
-                  <span className="truncate italic uppercase text-[11px] font-bold text-zinc-600 dark:text-zinc-400">
-                    {tender.notes || "Відсутня"}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Route + Map (Narrowed to 3 units) */}
-        <div className="col-span-12 flex min-h-0 flex-col gap-3 overflow-hidden pr-1 lg:col-span-3 lg:gap-4">
+        <div className="col-span-12 flex flex-col gap-3 lg:gap-4 lg:col-span-3 overflow-visible lg:overflow-hidden">
           {/* Route Timeline */}
-          <div className="relative flex min-h-[200px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
+          <div className="relative flex h-[500px] min-h-[320px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-white/5 dark:bg-zinc-900/60 lg:p-6">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5 text-zinc-400">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-900/20">
@@ -512,7 +498,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
           </div>
 
           {/* Map */}
-          <div className="flex min-h-[300px] flex-1 flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-2 shadow-sm dark:border-white/5 dark:bg-zinc-900/60">
+          <div className="flex h-[300px] min-h-[220px] flex-col overflow-hidden rounded-[2rem] border border-zinc-200 bg-white p-2 shadow-sm dark:border-white/5 dark:bg-zinc-900/60">
             <div className="flex items-center justify-between p-2 px-4">
               <div className="flex items-center gap-2">
                 <MapPin className="text-indigo-500" size={12} />

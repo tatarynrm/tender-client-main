@@ -69,6 +69,7 @@ export default function ManagersTenderPage({ status }: Props) {
       "manager",
       "company",
       "status",
+      "members",
       "export",
       "import",
       "regional",
@@ -183,7 +184,6 @@ export default function ManagersTenderPage({ status }: Props) {
 
   return (
     <div className="p-0 space-y-4 pb-40">
-
       {/* ── Filter Controls (Not Sticky) ─────────────────────────────────────────────────── */}
       <div className="pt-4 pb-3 -mx-4 px-4 border-b border-border/60 transition-all">
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-500">

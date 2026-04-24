@@ -14,8 +14,9 @@ interface GoogleLocationInputProps {
   placeholder?: string;
   defaultValue?: string;
   disabled?: boolean;
-  required?: boolean; // Додано
+  required?: boolean;
   className?: string;
+  hasError?: boolean;
 }
 
 export const GoogleLocationInput = ({
@@ -25,8 +26,9 @@ export const GoogleLocationInput = ({
   placeholder = " ",
   defaultValue,
   disabled,
-  required = false, // Дефолтне значення
+  required = false,
   className,
+  hasError = false,
 }: GoogleLocationInputProps) => {
   const [query, setQuery] = useState(value || defaultValue || "");
   const [results, setResults] = useState<any[]>([]);
@@ -96,14 +98,15 @@ export const GoogleLocationInput = ({
           <div
             className={cn(
               "absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors z-30 pointer-events-none",
-              "text-zinc-400 group-focus-within:text-teal-600",
+              "text-zinc-400 group-focus-within:text-indigo-600",
+              hasError && "text-red-500 group-focus-within:text-red-500"
             )}
           >
             {isLoading ? (
               <Loader2
                 size={18}
                 strokeWidth={2.5}
-                className="animate-spin text-teal-500"
+                className="animate-spin text-indigo-500"
               />
             ) : (
               <MapPin size={18} strokeWidth={2.5} />
@@ -123,8 +126,9 @@ export const GoogleLocationInput = ({
             }}
             className={cn(
               inputVariants.base,
-              "peer rounded-2xl !pl-11 pr-10 bg-white dark:bg-slate-900 relative z-20 h-[46px] transition-all duration-200",
-              "border-zinc-200 dark:border-white/10 hover:border-zinc-300 focus:border-teal-600 focus:ring-[0.5px] focus:ring-teal-600",
+              "peer rounded-xl !pl-11 pr-10 bg-white dark:bg-slate-900 relative z-20 h-[46px] transition-all duration-200",
+              "border-slate-200 dark:border-white/10 hover:border-slate-300 focus:border-indigo-600 focus:ring-[0.5px] focus:ring-indigo-600",
+              hasError && "border-red-500 focus:border-red-600 focus:ring-red-500/20",
               disabled && inputVariants.disabled,
             )}
           />
@@ -154,12 +158,13 @@ export const GoogleLocationInput = ({
                 "peer-focus:-top-2.5 peer-focus:left-3 peer-focus:text-[10px] peer-focus:font-bold peer-focus:translate-y-0",
                 "peer-[:not(:placeholder-shown)]:-top-2.5 peer-[:not(:placeholder-shown)]:left-3 peer-[:not(:placeholder-shown)]:text-[10px] peer-[:not(:placeholder-shown)]:font-bold peer-[:not(:placeholder-shown)]:translate-y-0",
 
-                "peer-focus:text-teal-600 dark:peer-focus:text-teal-500",
+                "peer-focus:text-indigo-600 dark:peer-focus:text-indigo-500",
+                hasError && "text-red-500 peer-focus:text-red-500"
               )}
             >
               {label}
               {required && (
-                <span className="ml-1 text-teal-600 font-bold">*</span>
+                <span className={cn("ml-1 font-bold", hasError ? "text-red-500" : "text-indigo-600")}>*</span>
               )}
             </label>
           )}
@@ -223,11 +228,11 @@ export const GoogleLocationInput = ({
                   <div className="mt-1">
                     <Navigation
                       size={14}
-                      className="text-zinc-400 group-hover:text-teal-500 transition-colors"
+                      className="text-zinc-400 group-hover:text-indigo-500 transition-colors"
                     />
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-[13px] text-zinc-700 dark:text-zinc-200 group-hover:text-teal-600 transition-colors">
+                    <span className="font-bold text-[13px] text-zinc-700 dark:text-zinc-200 group-hover:text-indigo-600 transition-colors">
                       {mainText}
                     </span>
                     {secondaryText && (

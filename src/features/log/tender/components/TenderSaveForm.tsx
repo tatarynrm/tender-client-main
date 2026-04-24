@@ -94,13 +94,13 @@ import { GoogleLocationInput } from "@/shared/components/google-location-input/G
 import { InputNumber } from "@/shared/components/Inputs/InputNumber";
 import { InputFinance } from "@/shared/components/Inputs/InputFinance";
 import { SelectFinance } from "@/shared/components/Select/SelectFinance";
-import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
 import { InputText } from "@/shared/components/Inputs/InputText";
 import { InputTextarea } from "@/shared/components/Inputs/InputTextarea";
 import { InputAsyncSelectCompany } from "@/shared/components/Inputs/InputAsyncSelectCompany";
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
+import { InputOption } from "@/shared/components/Inputs/InputOption";
 import { UniqueFileUploader } from "@/shared/ict_components/UniqueFileUploader/UniqueFileUploader";
 import { cn } from "@/shared/utils";
 
@@ -160,6 +160,7 @@ const tenderFormSchema = z
       message: "Вкажіть тип тендеру",
     }),
     ids_carrier_rating: z.enum(["MAIN", "MEDIUM", "IMPORTANT"]),
+    ids_members: z.enum(["CARRIER", "ALL", "MANAGER"]),
 
     without_vat: z.boolean(),
     tender_route: z.array(routeSchema).min(1, "Додайте хоча б одну точку"),
@@ -236,6 +237,7 @@ function SortableRouteItem({
   removeRoute,
   getFieldState,
   formState,
+  routeTypes,
 }: {
   id: string;
   index: number;
@@ -246,6 +248,7 @@ function SortableRouteItem({
   removeRoute: (index: number) => void;
   getFieldState: any;
   formState: any;
+  routeTypes?: { label: string; value: string }[];
 }) {
   const {
     attributes,
@@ -326,69 +329,52 @@ function SortableRouteItem({
                 render={({ field: f, fieldState }) => (
                   <FormItem>
                     <FormControl>
-                      <div
-                        data-field-error={!!fieldState.error || undefined}
-                        className={cn(
-                          "rounded-xl",
-                          fieldState.error && "ring-2 ring-rose-400/60",
-                        )}
-                      >
-                        <GoogleLocationInput
-                          value={f.value ?? ""}
-                          onChange={(location) => {
-                            const addr = location.street
-                              ? `${location.street}${location.house ? `, ${location.house}` : ""}`
-                              : location.city || "";
-                            f.onChange(addr);
-                            setValue(`tender_route.${index}.lat`, location.lat);
-                            setValue(`tender_route.${index}.lon`, location.lng);
-                            setValue(
-                              `tender_route.${index}.country`,
-                              location.countryCode || "",
-                            );
-                            setValue(
-                              `tender_route.${index}.ids_country`,
-                              location.countryCode || "",
-                            );
-                            setValue(
-                              `tender_route.${index}.city`,
-                              location.city || "",
-                            );
-                            setValue(
-                              `tender_route.${index}.ids_region`,
-                              location.regionCode || "",
-                            );
-                            setValue(
-                              `tender_route.${index}.post_code`,
-                              location.post_code ||
-                                location.postalCode ||
-                                location.zip_code ||
-                                "",
-                            );
-                            setValue(
-                              `tender_route.${index}.street`,
-                              location.street || "",
-                            );
-                            setValue(
-                              `tender_route.${index}.house`,
-                              location.house || "",
-                            );
-                            clearErrors(`tender_route.${index}.address`);
-                            clearErrors(`tender_route.${index}.ids_country`);
-                          }}
-                        />
-                      </div>
+                      <GoogleLocationInput
+                        value={f.value ?? ""}
+                        hasError={!!fieldState.error || !!countryError?.error}
+                        onChange={(location) => {
+                          const addr = location.street
+                            ? `${location.street}${location.house ? `, ${location.house}` : ""}`
+                            : location.city || "";
+                          f.onChange(addr);
+                          setValue(`tender_route.${index}.lat`, location.lat);
+                          setValue(`tender_route.${index}.lon`, location.lng);
+                          setValue(
+                            `tender_route.${index}.country`,
+                            location.countryCode || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.ids_country`,
+                            location.countryCode || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.city`,
+                            location.city || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.ids_region`,
+                            location.regionCode || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.post_code`,
+                            location.post_code ||
+                              location.postalCode ||
+                              location.zip_code ||
+                              "",
+                          );
+                          setValue(
+                            `tender_route.${index}.street`,
+                            location.street || "",
+                          );
+                          setValue(
+                            `tender_route.${index}.house`,
+                            location.house || "",
+                          );
+                          clearErrors(`tender_route.${index}.address`);
+                          clearErrors(`tender_route.${index}.ids_country`);
+                        }}
+                      />
                     </FormControl>
-                    {fieldState.error && (
-                      <p className="mt-1 ml-1 text-[11px] font-bold text-rose-500 uppercase tracking-wide">
-                        {fieldState.error.message}
-                      </p>
-                    )}
-                    {!fieldState.error && countryError?.error && (
-                      <p className="mt-1 ml-1 text-[11px] font-bold text-rose-500 uppercase tracking-wide">
-                        {countryError.error.message}
-                      </p>
-                    )}
                   </FormItem>
                 )}
               />
@@ -412,11 +398,11 @@ function SortableRouteItem({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="LOAD_FROM">Завантаження</SelectItem>
-                        <SelectItem value="LOAD_TO">Розвантаження</SelectItem>
-                        <SelectItem value="CUSTOM_UP">Замитнення</SelectItem>
-                        <SelectItem value="CUSTOM_DOWN">Розмитнення</SelectItem>
-                        <SelectItem value="BORDER">Кордон</SelectItem>
+                        {routeTypes?.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            {t.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -841,9 +827,7 @@ const TenderPreviewCard = ({
               </span>
               <span className="text-[11px] font-black text-slate-700 dark:text-slate-200">
                 {data.volume}
-                <span className="text-[8px] ml-0.5 text-slate-400">
-                  м³
-                </span>
+                <span className="text-[8px] ml-0.5 text-slate-400">м³</span>
               </span>
             </div>
           )}
@@ -957,9 +941,7 @@ const TenderPreviewCard = ({
             )}
             rightIcon={<ChevronRight size={13} />}
           >
-            {isDraft
-              ? "Вставити"
-              : "Вибрати"}
+            {isDraft ? "Вставити" : "Вибрати"}
           </AppButton>
         </div>
       </div>
@@ -996,6 +978,9 @@ export default function TenderSaveForm({
   const [loadList, setLoadList] = useState<{ label: string; value: string }[]>(
     [],
   );
+  const [routeTypes, setRouteTypes] = useState<
+    { label: string; value: string }[]
+  >([]);
   const [tenderPermission, setTenderPermission] = useState<
     { label: string; value: string }[]
   >([]);
@@ -1004,6 +989,9 @@ export default function TenderSaveForm({
   >([]);
   const [valut, setValut] = useState<{ label: string; value: string }[]>([]);
   const [rating, setRating] = useState<{ label: string; value: string }[]>([]);
+  const [tenderMembers, setTenderMembers] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   const [companyLabel, setCompanyLabel] = useState<string>("");
   const [isNextTender, setIsNextTender] = useState(false);
@@ -1110,7 +1098,7 @@ export default function TenderSaveForm({
         const weightMatch = d.data?.weight?.toString().includes(search);
         const volumeMatch = d.data?.volume?.toString().includes(search);
         const priceMatch = d.data?.price?.toString().includes(search);
-        
+
         // Notes and extra info
         const notesMatch = d.data?.notes?.toLowerCase().includes(search);
         const loadTypesMatch = d.data?.loadTypes?.some((t: string) =>
@@ -1614,6 +1602,7 @@ export default function TenderSaveForm({
       car_count: 1,
       ids_type: "AUCTION",
       ids_carrier_rating: "MAIN",
+      ids_members: "ALL",
 
       without_vat: true,
       tender_route: [
@@ -1732,6 +1721,12 @@ export default function TenderSaveForm({
             label: t.value,
           })),
         );
+        setRouteTypes(
+          data.content.route_type_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.info,
+          })),
+        );
         setTenderType(
           data.content.tender_type_dropdown.map((t: any) => ({
             value: t.ids,
@@ -1752,6 +1747,12 @@ export default function TenderSaveForm({
         );
         setRating(
           data.content.rating_dropdown.map((t: any) => ({
+            value: t.ids,
+            label: t.value,
+          })),
+        );
+        setTenderMembers(
+          data.content.tender_members.map((t: any) => ({
             value: t.ids,
             label: t.value,
           })),
@@ -2523,14 +2524,25 @@ export default function TenderSaveForm({
                     />
                   </div>
 
-                  <div>
-                    <InputAsyncSelectCompany
-                      name="id_owner_company"
-                      control={control}
-                      label="КОМПАНІЯ ЗАМОВНИК"
-                      initialLabel={companyLabel}
-                      onEntityChange={(c) => setCompanyLabel(c?.name || "")}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-1">
+                      <InputAsyncSelectCompany
+                        name="id_owner_company"
+                        control={control}
+                        label="КОМПАНІЯ ЗАМОВНИК"
+                        initialLabel={companyLabel}
+                        onEntityChange={(c) => setCompanyLabel(c?.name || "")}
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <InputOption
+                        name="ids_members"
+                        control={control}
+                        label="ХТО ПРИЙМАЄ УЧАСТЬ"
+                        options={tenderMembers}
+                        icon={ShieldCheck}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -2619,6 +2631,7 @@ export default function TenderSaveForm({
                             removeRoute={removeRoute}
                             getFieldState={form.getFieldState}
                             formState={form.formState}
+                            routeTypes={routeTypes}
                           />
                         ))}
                       </SortableContext>

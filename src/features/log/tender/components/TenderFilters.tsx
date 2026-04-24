@@ -24,8 +24,9 @@ interface Dropdowns {
   trailer_type_dropdown?: { ids: string; value: string }[];
   tender_status_dropdown?: { ids: string; value: string }[];
   load_permission_dropdown?: { ids: string; value: string }[];
-  manager_dropdown?: { ids: string; value: string }[];
-  company_dropdown?: { ids: string; value: string }[];
+  manager_dropdown?: { ids: string | number; value: string }[];
+  company_dropdown?: { ids: string | number; value: string }[];
+  tender_members?: { ids: string; value: string; order_num?: number }[];
 }
 
 interface TenderFiltersProps<T extends Filters> {
@@ -257,6 +258,16 @@ export const TenderFiltersSheet = <T extends Filters>({
                             value={filters.status}
                             onChange={(v) => updateField("status", v)}
                             options={dropdowns?.tender_status_dropdown}
+                            placeholder="Будь-який"
+                        />
+                    </div>
+                    <div className="sm:col-span-2">
+                        <NativeSelect
+                            isMulti
+                            label="Хто бачить"
+                            value={filters.members}
+                            onChange={(v) => updateField("members", v)}
+                            options={dropdowns?.tender_members?.filter(m => m.ids !== 'ALL')}
                             placeholder="Будь-який"
                         />
                     </div>
