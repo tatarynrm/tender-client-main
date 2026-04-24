@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Bell,
   Send,
+  Sparkles,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -37,6 +38,7 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/admin", icon: Home },
+  { name: "Що нового?", href: "/admin/updates", icon: Sparkles },
   {
     name: "Користувачі",
     icon: Users,
@@ -59,6 +61,7 @@ const links: MenuItem[] = [
     ],
   },
   { name: "Аналітика", href: "/admin/analytics", icon: BarChart },
+
   {
     name: "Telegram",
     icon: FaTelegram,
