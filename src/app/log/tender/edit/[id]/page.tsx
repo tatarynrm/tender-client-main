@@ -19,7 +19,7 @@ export default function EditCargoPage() {
         const { data } = await api.get(`/tender/${id}`);
         console.log(data, "DATA");
 
-        setData(data.content);
+        setData(data.content[0]);
       } catch (err) {
         console.error(err);
       } finally {
