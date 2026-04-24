@@ -1,6 +1,35 @@
 import { format } from "date-fns";
 
 /**
+ * Internal helper to get date parts in Kyiv timezone
+ */
+const getKyivParts = (date: Date) => {
+  const formatter = new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) => parts.find((p) => p.type === type)?.value || "00";
+
+  return {
+    day: getPart("day"),
+    month: getPart("month"),
+    year: getPart("year"),
+    hour: parseInt(getPart("hour"), 10),
+    minute: parseInt(getPart("minute"), 10),
+    hourStr: getPart("hour"),
+    minuteStr: getPart("minute"),
+  };
+};
+
+/**
  * Formats a date string.
  * If time is 00:00, returns only dd.MM.
  * Otherwise returns dd.MM - HH:mm.
@@ -10,14 +39,13 @@ export const formatTenderDate = (dateString?: string | Date | null): string => {
   const date = dateString instanceof Date ? dateString : new Date(dateString);
   if (isNaN(date.getTime())) return "";
 
-  const h = date.getHours();
-  const m = date.getMinutes();
+  const { day, month, hour, minute, hourStr, minuteStr } = getKyivParts(date);
 
-  if (h === 0 && m === 0) {
-    return format(date, "dd.MM");
+  if (hour === 0 && minute === 0) {
+    return `${day}.${month}`;
   }
 
-  return format(date, "dd.MM - HH:mm");
+  return `${day}.${month} - ${hourStr}:${minuteStr}`;
 };
 
 /**
@@ -31,12 +59,13 @@ export const formatTenderDateTime = (
   const date = dateString instanceof Date ? dateString : new Date(dateString);
   if (isNaN(date.getTime())) return "";
 
-  const time = format(date, "HH:mm");
-  if (time === "00:00") {
-    return format(date, "dd.MM");
+  const { day, month, hour, minute, hourStr, minuteStr } = getKyivParts(date);
+
+  if (hour === 0 && minute === 0) {
+    return `${day}.${month}`;
   }
 
-  return `${format(date, "dd.MM")} (${time})`;
+  return `${day}.${month} (${hourStr}:${minuteStr})`;
 };
 
 /**
