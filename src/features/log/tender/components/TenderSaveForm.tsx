@@ -2752,6 +2752,7 @@ export default function TenderSaveForm({
                             name="weight"
                             label="ВАГА (Т)"
                             icon={Weight}
+                            allowFloat
                           />
                           <InputNumber
                             control={control}
