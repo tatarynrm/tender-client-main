@@ -13,7 +13,6 @@ import { EmptyTenders } from "@/features/dashboard/tender/components/EmptyTender
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
-
 import { ActiveFilters } from "@/features/log/tender/components/ActiveFilters";
 import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
@@ -34,7 +33,6 @@ export default function ClientsTenderPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-
 
   const { tenderFilters } = useTenderClientFormData();
 

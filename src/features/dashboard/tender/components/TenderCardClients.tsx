@@ -240,9 +240,9 @@ export function TenderCardClients({
             className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all xl:h-full border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
-            <MyTooltip 
-              text="Унікальний номер тендеру. Натисніть для перегляду деталей" 
-              className="absolute top-1 right-1" 
+            <MyTooltip
+              text="Унікальний номер тендеру. Натисніть для перегляду деталей"
+              className="absolute top-1 right-1"
               size={10}
             />
             <span className="text-[18px] xl:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform">
@@ -387,7 +387,11 @@ export function TenderCardClients({
                           : isCustomsDown
                             ? "Розмитнення"
                             : "Кордон"}
-                        <MyTooltip text="Місце митного оформлення або перетину кордону" size={8} className="ml-1 inline-flex" />
+                        <MyTooltip
+                          text="Місце митного оформлення або перетину кордону"
+                          size={8}
+                          className="ml-1 inline-flex"
+                        />
                       </span>
                     )}
                     <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-600 dark:text-zinc-400 text-[10px] w-full">
@@ -628,7 +632,10 @@ export function TenderCardClients({
               <div className="h-[26px] flex items-center justify-center px-2 bg-white dark:bg-slate-900 text-center">
                 <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mr-1.5 leading-none flex items-center gap-1">
                   Краща ставка ({currencySymbol})
-                  <MyTooltip text="Найнижча ціна запропонована на даний момент іншим учасником" size={8} />
+                  <MyTooltip
+                    text="Найнижча ціна запропонована на даний момент іншим учасником"
+                    size={8}
+                  />
                 </span>
                 <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
                   {bestBidPrice ? bestBidPrice : "—"}
@@ -672,13 +679,13 @@ export function TenderCardClients({
                 : isRedemption
                   ? "РЕДУКЦІОН З ВИКУПОМ"
                   : "РЕДУКЦІОН"}
-              <MyTooltip 
+              <MyTooltip
                 text={
-                  isAuction 
-                    ? "Торги на підвищення: перемагає найвища ставка" 
+                  isAuction
+                    ? "Торги на підвищення: перемагає найвища ставка"
                     : "Торги на пониження: перемагає найнижча ставка"
-                } 
-                size={9} 
+                }
+                size={9}
               />
             </span>
             <span className="text-zinc-400 font-medium lowercase leading-none">
