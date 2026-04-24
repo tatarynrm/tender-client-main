@@ -20,7 +20,6 @@ import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
 import { FeedbackButton } from "@/shared/components/Modals/FeedbackButton/FeedbackGoogleFormModal";
-import { TrainingButton } from "@/shared/components/Modals/Training/TrainingButton";
 import { FuelWidget } from "../widgets/FuelWidget";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { AirAlarmWidget } from "../widgets/AirAlarmWidget";
@@ -111,7 +110,6 @@ export default function LogHeader({
       <div className="flex items-center gap-1.5 sm:gap-4">
         {/* Додаткові інструменти (зменшені на мобілці) */}
         <div className="flex items-center gap-1.5 mr-1 sm:mr-2">
-          <TrainingButton />
           <FeedbackButton />
         </div>
 

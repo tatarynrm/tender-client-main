@@ -462,7 +462,6 @@ export function TenderCardClients({
                   <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
                     {cargo.volume} м³
                   </span>
-                  <MyTooltip text="Об’єм вантажу" size={10} />
                 </div>
               )}
               {cargo.weight && (
@@ -470,7 +469,6 @@ export function TenderCardClients({
                   <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
                     {cargo.weight} т.
                   </span>
-                  <MyTooltip text="Вага вантажу" size={10} />
                 </div>
               )}
               {!cargo.volume && !cargo.weight && (
@@ -517,7 +515,6 @@ export function TenderCardClients({
                 <div className="h-[43px] flex flex-col items-center justify-center p-1 text-center">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase leading-none mb-0.5 whitespace-nowrap flex items-center gap-1">
                     Стартова ціна
-                    <MyTooltip text="Ціна, з якої розпочинаються торги" size={8} />
                   </span>
                   <span className="font-bold text-[13px] text-zinc-800 dark:text-white leading-none">
                     {cargo.price_start}
@@ -526,7 +523,6 @@ export function TenderCardClients({
                   {cargo.price_step && (
                     <span className="text-[8px] text-zinc-400 mt-0.5 leading-none flex items-center gap-1">
                       крок {cargo.price_step}
-                      <MyTooltip text="Сума, на яку змінюється ставка за один крок" size={7} />
                     </span>
                   )}
                 </div>

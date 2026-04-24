@@ -225,9 +225,9 @@ export function TenderCardManagers({
             className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
-            <MyTooltip 
-              text="Унікальний номер тендеру. Натисніть для перегляду деталей" 
-              className="absolute top-1 right-1" 
+            <MyTooltip
+              text="Унікальний номер тендеру. Натисніть для перегляду деталей"
+              className="absolute top-1 right-1"
               size={10}
             />
             <span
@@ -284,7 +284,7 @@ export function TenderCardManagers({
             {getTenderLoadDateString(cargo.date_load, cargo.date_load2) && (
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-[12px] font-bold text-emerald-600 dark:text-emerald-400 w-full text-center px-1 truncate">
-                    {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
+                  {getTenderLoadDateString(cargo.date_load, cargo.date_load2)}
                 </span>
                 <MyTooltip text="Дата або період завантаження" size={10} />
               </div>
@@ -321,7 +321,7 @@ export function TenderCardManagers({
                       </span>
                     </div>
                     {ptAny.ids_region && (
-                      <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
+                      <span className="text-[12px] text-zinc-500 font-medium mt-0.5 truncate w-full">
                         {getRegionName(ptAny.ids_region)}
                       </span>
                     )}
@@ -331,8 +331,8 @@ export function TenderCardManagers({
             </div>
             {formatTenderDateTime(cargo.date_unload) && (
               <div className="flex items-center gap-1 mt-1">
-                <span className="text-[8px] font-bold text-indigo-500 dark:text-indigo-400 w-full text-center px-1 truncate">
-                    {formatTenderDateTime(cargo.date_unload)}
+                <span className="text-[12px] font-bold text-indigo-500 dark:text-indigo-400 w-full text-center px-1 truncate">
+                  {formatTenderDateTime(cargo.date_unload)}
                 </span>
                 <MyTooltip text="Дата розвантаження" size={10} />
               </div>
@@ -365,7 +365,10 @@ export function TenderCardManagers({
                       (pt.customs && pt.ids_point === "LOAD_FROM")
                         ? "Замитнення"
                         : "Розмитнення"}
-                      <MyTooltip text="Місце митного оформлення або перетину кордону" size={8} />
+                      <MyTooltip
+                        text="Місце митного оформлення або перетину кордону"
+                        size={8}
+                      />
                     </span>
                     <div className="flex items-center justify-center gap-1.5 font-bold text-[10px] text-zinc-600 dark:text-zinc-400 w-full min-w-0">
                       {pt.ids_country && (
@@ -426,18 +429,16 @@ export function TenderCardManagers({
             {cargo.volume && (
               <div className="flex items-center gap-1">
                 <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
-                    {cargo.volume} м³
+                  {cargo.volume} м³
                 </span>
-                <MyTooltip text="Об’єм вантажу" size={10} />
               </div>
             )}
             {cargo.weight && (
-               <div className="flex items-center gap-1">
-                    <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
-                        {cargo.weight} т.
-                    </span>
-                    <MyTooltip text="Вага вантажу" size={10} />
-                </div>
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                  {cargo.weight} т.
+                </span>
+              </div>
             )}
           </div>
 
@@ -467,7 +468,6 @@ export function TenderCardManagers({
               <div className="h-[38px] flex flex-col items-center justify-center p-1 text-center">
                 <span className="text-[8px] text-zinc-400 font-bold uppercase leading-none mb-0.5 flex items-center gap-1">
                   Стартова ціна
-                  <MyTooltip text="Ціна, з якої розпочинаються торги" size={8} />
                 </span>
                 <span className="font-bold text-[12px] text-zinc-800 dark:text-white leading-none">
                   {cargo.price_start}
@@ -475,7 +475,6 @@ export function TenderCardManagers({
                 </span>
                 <span className="text-[7.5px] text-zinc-500 mt-0.5 flex items-center gap-1">
                   Крок: {cargo.price_step}
-                  <MyTooltip text="Сума, на яку змінюється ставка за один крок" size={7} />
                 </span>
               </div>
             )}
@@ -562,7 +561,10 @@ export function TenderCardManagers({
               <div className="flex items-center gap-1.5 leading-none mb-0.5">
                 <span className="text-[9px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-tight flex items-center gap-1">
                   Краща ставка
-                  <MyTooltip text="Найнижча ціна запропонована на даний момент іншим учасником" size={8} />
+                  <MyTooltip
+                    text="Найнижча ціна запропонована на даний момент іншим учасником"
+                    size={8}
+                  />
                 </span>
                 <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1 text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-full shadow-md transition-all duration-200 hover:scale-110 hover:shadow-lg">
                   {cargo.rate_company?.length || 0}
@@ -681,13 +683,13 @@ export function TenderCardManagers({
               : cargo.ids_type === "REDUCTION_WITH_REDEMPTION"
                 ? "РЕДУКЦІОН З ВИКУПОМ"
                 : "РЕДУКЦІОН"}
-            <MyTooltip 
-                text={
-                    cargo.ids_type === "AUCTION" 
-                    ? "Торги на підвищення: перемагає найвища ставка" 
-                    : "Торги на пониження: перемагає найнижча ставка"
-                } 
-                size={9} 
+            <MyTooltip
+              text={
+                cargo.ids_type === "AUCTION"
+                  ? "Торги на підвищення: перемагає найвища ставка"
+                  : "Торги на пониження: перемагає найнижча ставка"
+              }
+              size={9}
             />
           </span>
           <span className="text-zinc-400 font-medium">
