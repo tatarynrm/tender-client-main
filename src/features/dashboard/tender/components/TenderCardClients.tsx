@@ -455,7 +455,7 @@ export function TenderCardClients({
           </div>
 
           {/* 7. Вага/Об'єм */}
-          <div className="w-full xl:w-[50px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center xl:h-full">
+          <div className="w-full xl:w-[70px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 text-center xl:h-full">
             <div className="flex xl:flex-col items-center gap-2 xl:gap-0">
               {cargo.volume && (
                 <div className="flex items-center gap-1">

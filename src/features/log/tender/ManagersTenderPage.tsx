@@ -337,7 +337,7 @@ export default function ManagersTenderPage({ status }: Props) {
                   <br />
                   транспорту
                 </div>
-                <div className="w-[50px] flex-shrink-0 flex items-center justify-center py-2 text-center">
+                <div className="w-[70px] flex-shrink-0 flex items-center justify-center py-2 text-center">
                   Вага/
                   <br />
                   Об'єм
