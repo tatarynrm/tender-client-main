@@ -97,9 +97,15 @@ export default function UsersPage() {
   return (
     <div className="space-y-4 p-4 w-full">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Управління користувачами
-        </h2>
+        <div className="flex flex-col">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Управління користувачами
+          </h2>
+          <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1.5">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Зараз онлайн: <span className="font-bold text-emerald-600">{onlineUsers.size}</span>
+          </p>
+        </div>
         <LinkButton
           title="Додати користувача"
           href="/admin/users/save"
@@ -164,7 +170,7 @@ export default function UsersPage() {
             <UserListItem 
               key={user.id} 
               user={user} 
-              isOnline={onlineUsers.has(String(user.id))} 
+              isOnline={onlineUsers.has(String(user.id_person))} 
             />
           ))
         ) : (
