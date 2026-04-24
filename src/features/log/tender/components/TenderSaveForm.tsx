@@ -2747,6 +2747,7 @@ export default function TenderSaveForm({
                             label="КІЛЬКІСТЬ АВТО"
                             icon={Car}
                           />
+                          {/* віві */}
                           <InputNumber
                             control={control}
                             name="weight"
