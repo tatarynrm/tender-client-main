@@ -1941,6 +1941,7 @@ export default function TenderSaveForm({
       }
     }, 80);
   };
+  console.log(form.formState.errors, "ERROR");
 
   return (
     <div className="gap-2 w-full overflow-x-hidden pb-40 scrollbar-thin">
@@ -2501,7 +2502,7 @@ export default function TenderSaveForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-1.5 block">
-                            РЕЙТИНГ ДОСТУПУ
+                            РЕЙТИНГ УЧАСНИКІВ
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
