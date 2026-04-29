@@ -223,13 +223,13 @@ export default function LogSidebar({
       },
     );
   }
-  if (profile?.role.is_ict && !profile.role.is_admin) {
-    footerLinks.push({
-      name: "Платформа для перевізників",
-      href: "/dashboard/tender/active",
-      icon: FileStack,
-    });
-  }
+  // if (profile?.role.is_ict && !profile.role.is_admin) {
+  //   footerLinks.push({
+  //     name: "Платформа для перевізників",
+  //     href: "/dashboard/tender/active",
+  //     icon: FileStack,
+  //   });
+  // }
 
   return (
     <aside className="relative flex flex-col w-64 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 h-[100dvh] transition-colors duration-300 shrink-0 z-50">
