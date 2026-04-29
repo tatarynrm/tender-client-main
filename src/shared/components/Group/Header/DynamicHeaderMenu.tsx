@@ -38,7 +38,7 @@ export default function DynamicHeaderMenu() {
     {
       match: "/log",
       items: [
-        { href: "/log/load/add", label: "Нова заявка", icon: FilePlus2 },
+        { href: "/log/load/add", label: "Нова заявка", icon: FilePlus2, disabled: true },
         { href: "/log/tender/add", label: "Новий тендер", icon: Gavel },
       ],
     },
@@ -105,6 +105,24 @@ export default function DynamicHeaderMenu() {
               {currentMenu.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
+
+                if (item.disabled) {
+                  return (
+                    <div
+                      key={item.href}
+                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-2xl transition-all duration-200 group opacity-50 cursor-not-allowed text-slate-400 dark:text-zinc-500 bg-zinc-50 dark:bg-white/5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-zinc-100 dark:bg-white/10 text-zinc-400">
+                          <Icon size={18} strokeWidth={2} />
+                        </div>
+                        <span className="text-[13px] font-semibold tracking-wide">
+                          {item.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <Link

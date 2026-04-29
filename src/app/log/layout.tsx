@@ -13,7 +13,7 @@ export default async function LogLayout({
   children: React.ReactNode;
 }) {
   const profile = await getProfile();
-  // console.log(profile, "PROFILE ------------------");
+
 
   if (!profile) redirect("/auth/login");
   if (profile.is_blocked) redirect("/blocked");
