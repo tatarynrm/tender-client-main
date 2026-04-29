@@ -39,8 +39,8 @@ const ClosedOverlay = () => (
         Увага!
       </h2>
       <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mb-8">
-        За вказівкою директора даний профіль поки закривається і всі переходять
-        на гру в тендер!
+        За розпорядженням директора цей профіль закривається, і всі переходять
+        до роботи з тендерами!
       </p>
       <Link
         href="/log/tender/active"
