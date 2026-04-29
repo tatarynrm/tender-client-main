@@ -66,11 +66,6 @@ export const RegisterSchema = z
       })
       .max(200, { message: "Адреса занадто довга" }),
 
-    company_form: z
-      .string({ message: "Форма власності - обов'язкове поле" })
-      .min(1, { message: "Вкажіть форму власності (напр. ФОП, ТОВ, ПП)" })
-      .max(30, { message: "Занадто довга назва форми власності" }),
-
     ids_country: z
       .string({ message: "Виберіть країну реєстрації компанії" })
       .min(1, { message: "Необхідно обрати країну зі списку" }),

@@ -101,13 +101,7 @@ export const UsersTable = ({ data, onRegister, isRegistering }: Props) => {
           </div>
         ) : (
           // <CreateCompanyDialog companyData={row.original} />
-          <AppButton
-            onClick={() =>
-              router.push(`/admin/companies/pre/${row.original.id}`)
-            }
-          >
-            Створити
-          </AppButton>
+          <span>Очікує на створення</span>
         );
       },
     },

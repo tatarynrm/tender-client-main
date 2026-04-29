@@ -5,6 +5,7 @@ import { ToggleTheme } from "@/shared/components/ui";
 import { IUserProfile } from "@/shared/types/user.types";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils";
+import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 
 export default function AdminHeader({
   onMenuClick,
@@ -82,11 +83,11 @@ export default function AdminHeader({
 
       {/* Права частина: Глобальні дії */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center p-1 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-           {/* Сюди можна додати GlobalSettings, якщо вони потрібні в адмінці */}
+        <div className="flex items-center gap-2 p-1 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5">
+           <GlobalSettings />
            <ToggleTheme />
         </div>
       </div>
     </header>
   );
-}
+}

@@ -72,9 +72,15 @@ export function CreateUserDialog({ userData }: Props) {
     useCreateUser();
 
   const onSubmit: SubmitHandler<TypeCreateUserSchema> = (data) => {
-    createUserFromPreRegister({ values: data });
-    form.reset();
-    setOpen(false);
+    createUserFromPreRegister(
+      { values: data },
+      {
+        onSuccess: () => {
+          form.reset();
+          setOpen(false);
+        },
+      },
+    );
   };
 
   return (

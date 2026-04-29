@@ -131,18 +131,24 @@ export const useAdminUsers = (filters: UserFilters = {}) => {
   const { mutateAsync: saveUser, isPending: isSaving } = useMutation({
     mutationFn: adminUserService.createUser,
     onSuccess: (res) => {
-      // res зазвичай повертає створений об'єкт або { status: 'ok', content: {...} }
-      // адаптуйте під ваш backend API
       const newUser = res?.content || res;
-      toast.success("Користувача успішно створено");
+      // В інвалідацію додаємо загальний список
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      if (newUser?.id) updateLocalCache(newUser);
+      
+      // Якщо це редагування і є ID — інвалідуємо конкретного юзера, щоб підтягнути повні дані
+      if (newUser?.id) {
+        queryClient.invalidateQueries({ queryKey: ["user", String(newUser.id)] });
+        queryClient.invalidateQueries({ queryKey: ["user", Number(newUser.id)] });
+        
+        // Також пробуємо оновити локально, але тільки якщо там є змістовні дані
+        // updateLocalCache(newUser); // Можна закоментувати або зробити розумний мерж
+      }
     },
     onError: (err: any) => {
       const msg = axios.isAxiosError(err)
         ? err.response?.data?.message
         : err.message;
-      toast.error(msg || "Помилка при створенні");
+      toast.error(msg || "Помилка при збереженні");
     },
   });
 

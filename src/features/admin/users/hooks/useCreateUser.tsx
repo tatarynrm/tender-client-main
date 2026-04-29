@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { toastMessageHandler } from "@/shared/utils";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { userService } from "../services";
 import { TypeCreateUserSchema } from "../schemas";
 
 export function useCreateUser() {
+  const queryClient = useQueryClient();
   const {
     mutate: createUserFromPreRegister,
     isPending: isLoadingUserPreRegister,
@@ -20,6 +21,8 @@ export function useCreateUser() {
       toast.success("Успішне створення користувача", {
         description: "Очікуйте на підтвердження модератором.",
       });
+      queryClient.invalidateQueries({ queryKey: ["users-pre-register"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
 
     onError(error: any) {

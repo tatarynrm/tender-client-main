@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   User,
@@ -38,6 +38,7 @@ import AuthWrapper from "./AuthWrapper";
 import { AppButton } from "@/shared/components/Buttons/AppButton";
 import { InputSwitch } from "@/shared/components/Inputs/InputSwitch";
 import { InputNumber } from "@/shared/components/Inputs/InputNumber";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 const RegisterForm = () => {
   const [preRegisterData, setPreRegisterData] = useState<any>({});
@@ -62,6 +63,65 @@ const RegisterForm = () => {
     },
   });
 
+  const edrpouValue = useWatch({
+    control: form.control,
+    name: "company_edrpou",
+  });
+  const debouncedEdrpou = useDebounce(edrpouValue, 400);
+  const [companyOptions, setCompanyOptions] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedEdrpou, setSelectedEdrpou] = useState("");
+
+  const handleSelectCompany = (company: any) => {
+    const edrpou = company.zkpo;
+    setSelectedEdrpou(edrpou);
+    form.setValue("company_edrpou", edrpou, { shouldValidate: true });
+    form.setValue("company_name", company.nur || company.fo || "", {
+      shouldValidate: true,
+    });
+    form.setValue("company_address", company.nadr || "", {
+      shouldValidate: true,
+    });
+    setShowDropdown(false);
+  };
+
+  useEffect(() => {
+    if (
+      debouncedEdrpou &&
+      debouncedEdrpou.length >= 8 &&
+      debouncedEdrpou.length <= 20
+    ) {
+      if (debouncedEdrpou === selectedEdrpou) {
+        setShowDropdown(false);
+        return;
+      }
+
+      const fetchCompanies = async () => {
+        setIsSearching(true);
+        try {
+          const { data } = await api.get(
+            `/oracle/search-company?edrpou=${debouncedEdrpou}`,
+          );
+          setCompanyOptions(data || []);
+          if (data && data.length > 0) {
+            setShowDropdown(true);
+          } else {
+            setShowDropdown(false);
+          }
+        } catch (error) {
+          console.error("Search company error:", error);
+        } finally {
+          setIsSearching(false);
+        }
+      };
+      fetchCompanies();
+    } else {
+      setCompanyOptions([]);
+      setShowDropdown(false);
+    }
+  }, [debouncedEdrpou, selectedEdrpou]);
+
   const { register, isLoadingRegister } = userRegisterMutation();
 
   const onSubmit = (values: TypeRegisterSchema) => {
@@ -71,8 +131,8 @@ const RegisterForm = () => {
       { values },
       {
         onSuccess: () => {
-          // form.reset(); // Очищує всі поля форми до defaultValues
-          // Тут також можна додати toast.success("Реєстрація успішна!");
+          form.reset();
+          setSelectedEdrpou(""); // також скидаємо стан вибраного ЄДРПОУ
         },
       },
     );
@@ -89,6 +149,7 @@ const RegisterForm = () => {
     };
     getPreRegisterData();
   }, []);
+  console.log(form.formState.errors, "ERRORS");
 
   return (
     <AuthWrapper
@@ -179,7 +240,44 @@ const RegisterForm = () => {
               <h2 className="text-xs font-black uppercase tracking-widest text-teal-600 mb-4 flex items-center gap-2">
                 <Building2 size={14} /> Дані компанії
               </h2>
-
+              <div className="relative">
+                <InputText
+                  name="company_edrpou"
+                  control={form.control}
+                  label="ЄДРПОУ / ІПН"
+                  icon={Fingerprint}
+                  disabled={isLoadingRegister}
+                />
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-teal-600 font-bold uppercase animate-pulse z-30">
+                    Пошук...
+                  </div>
+                )}
+                {/* Autocomplete Dropdown */}
+                {showDropdown && companyOptions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl z-[100] max-h-64 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2">
+                    {companyOptions.map((comp) => (
+                      <div
+                        key={comp.kod}
+                        className="p-3 border-b border-zinc-100 dark:border-zinc-800 hover:bg-teal-50 dark:hover:bg-teal-900/20 cursor-pointer transition-colors"
+                        onClick={() => handleSelectCompany(comp)}
+                      >
+                        <div className="font-bold text-[13px] text-slate-800 dark:text-slate-200">
+                          {comp.nur || comp.fo}
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-1 flex flex-col sm:flex-row justify-between gap-1">
+                          <span className="text-teal-600 dark:text-teal-400 font-semibold">
+                            ЄДРПОУ: {comp.zkpo}
+                          </span>
+                          <span className="truncate opacity-70">
+                            {comp.nadr}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <InputText
                 name="company_name"
                 control={form.control}
@@ -187,13 +285,7 @@ const RegisterForm = () => {
                 icon={Building2}
                 disabled={isLoadingRegister}
               />
-              <InputText
-                name="company_edrpou"
-                control={form.control}
-                label="ЄДРПОУ / ІПН"
-                icon={Fingerprint}
-                disabled={isLoadingRegister}
-              />
+
               <InputText
                 name="company_address"
                 control={form.control}
@@ -203,13 +295,13 @@ const RegisterForm = () => {
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center items-center justify-center">
-                <InputText
+                {/* <InputText
                   name="company_form"
                   control={form.control}
                   label="Форма (ФОП/ТОВ)"
                   icon={Briefcase}
                   disabled={isLoadingRegister}
-                />
+                /> */}
 
                 <FormField
                   control={form.control}
@@ -277,7 +369,7 @@ const RegisterForm = () => {
           <AppButton
             disabled={isLoadingRegister}
             type="submit"
-            className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10"
+            className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10 cursor-pointer bg-[#718AF6]"
           >
             Створити аккаунт
           </AppButton>

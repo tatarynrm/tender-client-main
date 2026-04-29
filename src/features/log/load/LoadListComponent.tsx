@@ -149,6 +149,12 @@ export default function LoadListComponent({ active, archive }: Props) {
   const transitButtons = useMemo(
     () => [
       {
+        id: "M",
+        label: "Міжн",
+        count: add_data?.car_count_all.mn,
+        count_filter: add_data?.car_count_filter.mn,
+      },
+      {
         id: "E",
         label: "Екс",
         count: add_data?.car_count_all.exp,
@@ -161,22 +167,16 @@ export default function LoadListComponent({ active, archive }: Props) {
         count_filter: add_data?.car_count_filter.imp,
       },
       {
-        id: "R",
-        label: "Рег",
-        count: add_data?.car_count_all.reg,
-        count_filter: add_data?.car_count_filter.reg,
-      },
-      {
         id: "T",
         label: "Транзит",
         count: add_data?.car_count_all.tr,
         count_filter: add_data?.car_count_filter.tr,
       },
       {
-        id: "M",
-        label: "Міжн",
-        count: add_data?.car_count_all.mn,
-        count_filter: add_data?.car_count_filter.mn,
+        id: "R",
+        label: "Рег",
+        count: add_data?.car_count_all.reg,
+        count_filter: add_data?.car_count_filter.reg,
       },
     ],
     [add_data],
