@@ -71,7 +71,7 @@ export default function DashboardShell({
           toggleSidebarState={toggleSidebarState}
           closeSidebarState={closeSidebar}
         />
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900 transition-colors duration-300 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 bg-[#E5E5EB] dark:bg-slate-900 transition-colors duration-300 scrollbar-thin">
           <div className="mx-auto w-full">{children}</div>
         </main>
       </div>

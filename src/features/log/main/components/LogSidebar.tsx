@@ -54,6 +54,7 @@ const links: MenuItem[] = [
       { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
       { name: "Активні", icon: ActivitySquare, href: "/log/tender/active" },
       { name: "Аналіз", icon: BarChart, href: "/log/tender/analyze" },
+      { name: "На погодженні", icon: BarChart, href: "/log/tender/agreement" },
       { name: "Завершені", icon: Gavel, href: "/log/tender/closed" },
       { name: "Архів", icon: ArchiveIcon, href: "/log/tender/archive" },
     ],
@@ -85,7 +86,22 @@ export default function LogSidebar({
 }) {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
-  const mainLinks = [...links];
+
+  // Filter links based on user roles
+  const mainLinks = links.map((group) => {
+    if (group.name === "Тендери" && group.children) {
+      return {
+        ...group,
+        children: group.children.filter((child) => {
+          if (child.name === "На погодженні") {
+            return profile?.role?.is_admin && profile?.role?.is_ict;
+          }
+          return true;
+        }),
+      };
+    }
+    return group;
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem("userSidebarOpenMenus");

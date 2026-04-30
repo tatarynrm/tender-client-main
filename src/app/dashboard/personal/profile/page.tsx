@@ -27,12 +27,14 @@ export default function MyProfilePage() {
     <div className="w-full space-y-6 mx-auto p-0  animate-in fade-in duration-500">
       <div className="flex items-center gap-3 mb-2">
         <UserRoundPen className="w-6 h-6 text-zinc-800 dark:text-zinc-200" />
-        <h1 className="text-xl lg:text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
+        <h1 className="text-2xl font-extrabold leading-none tracking-normal text-zinc-900 dark:text-white uppercase">
           Мій профіль
         </h1>
       </div>
 
-      <AppTabs tabs={profileTabs} queryParam="tab" />
+      <div className="flex items-center gap-2 bg-zinc-100/50 dark:bg-white/5 p-1 rounded-2xl border border-zinc-200/50 dark:border-white/10">
+        <AppTabs tabs={profileTabs} queryParam="tab" />
+      </div>
 
       <div className="min-h-[400px]">
         {activeTab === "notifications" && (
@@ -45,7 +47,8 @@ export default function MyProfilePage() {
             <PersonalInfoTab />
           </TabContentWrapper>
         )}
-        {activeTab !== "notifications" && activeTab !== "personal" && (
+        {activeTab !== "notifications" &&
+          activeTab !== "personal" &&
           profileTabs.map(
             (tab) =>
               activeTab === tab.id && (
@@ -56,8 +59,7 @@ export default function MyProfilePage() {
                   />
                 </TabContentWrapper>
               ),
-          )
-        )}
+          )}
       </div>
     </div>
   );

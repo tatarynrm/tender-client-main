@@ -7,6 +7,7 @@ import { ChevronUp, Settings2 } from "lucide-react";
 import { useFilters } from "@/shared/hooks/useFilters";
 import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl";
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
+import { useProfile } from "@/shared/hooks/useProfile";
 import { ITender } from "../types/tender.type";
 import { useTenderListManagers } from "../hooks/useTenderManagersList";
 import { useTenderManagersFormData } from "../hooks/useTenderManagersFormData";
@@ -34,8 +35,21 @@ const PERSIST_BASE_KEY = "tender_managers_filters_cache_";
 export default function ManagersTenderPage({ status }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { profile, isProfileLoading } = useProfile();
   const { updateUrl, removeFilter, resetFilters } = useUrlFilters();
   const { tenderFilters } = useTenderManagersFormData();
+
+  // Role-based access control for AGREEMENT status
+  useEffect(() => {
+    if (!isProfileLoading && status?.includes("AGREEMENT")) {
+      const isAdmin = profile?.role?.is_admin;
+      const isIct = profile?.role?.is_ict;
+
+      if (!isAdmin && !isIct) {
+        router.push("/log");
+      }
+    }
+  }, [profile, isProfileLoading, status, router]);
 
   const { isVisible, toggle } = useVisibilityControl("tender_list");
 
@@ -180,7 +194,8 @@ export default function ManagersTenderPage({ status }: Props) {
   }, [reset, resetFilters, updateUrl, status]);
 
   if (error) return <ErrorState />;
-  if (isLoading) return <Loader />;
+  if (isLoading || (status?.includes("AGREEMENT") && isProfileLoading))
+    return <Loader />;
 
   return (
     <div className="p-0 space-y-4 pb-40">
