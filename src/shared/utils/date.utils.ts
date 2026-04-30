@@ -81,3 +81,22 @@ export const getTenderLoadDateString = (
   if (d1 && d2 && d1 !== d2) return `${d1} - ${d2}`;
   return d1 || d2 || "—";
 };
+
+/**
+ * Formats a date string as dd.MM.yyyy HH:mm:ss
+ */
+export const formatFullDateTime = (dateString?: string | Date | null): string => {
+  if (!dateString) return "";
+  const date = dateString instanceof Date ? dateString : new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("uk-UA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+};

@@ -90,7 +90,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="p-1 pb-10 lg:p-1 lg:pb-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto">
+    <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 ">
       {/* Хедер */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">

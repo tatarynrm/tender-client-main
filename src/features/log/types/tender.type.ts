@@ -132,5 +132,6 @@ export interface IRateCompany {
   car_count_winner: number;
   car_count_proposed: number;
 
+  time_add?: string;
   notes: string | null;
 }

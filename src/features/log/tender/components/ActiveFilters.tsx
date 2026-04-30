@@ -32,7 +32,7 @@ const labelMap: Record<string, string> = {
   not_participate_company: "Результат",
   ids_status: "Статус",
   not_happen: "Тендер",
-  transit: "Транзит",
+  transit: "Транзитні",
   export: "Експорт",
   import: "Імпорт",
   regional: "Локальні",
@@ -61,11 +61,11 @@ export const ActiveFilters = ({
 
     if (key === "transit") {
       const transitLabels: Record<string, string> = {
-        E: "Екс",
-        I: "Імп",
-        R: "Рег",
-        T: "Транзит",
-        M: "Міжн",
+        E: "Експорт",
+        I: "Імпорт",
+        R: "Локальні",
+        T: "Транзитні",
+        M: "Міжнародні",
         true: "Так",
       };
       return transitLabels[value] || value;

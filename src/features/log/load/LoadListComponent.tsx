@@ -150,31 +150,31 @@ export default function LoadListComponent({ active, archive }: Props) {
     () => [
       {
         id: "M",
-        label: "Міжн",
+        label: "Міжнародні",
         count: add_data?.car_count_all.mn,
         count_filter: add_data?.car_count_filter.mn,
       },
       {
         id: "E",
-        label: "Екс",
+        label: "Експорт",
         count: add_data?.car_count_all.exp,
         count_filter: add_data?.car_count_filter.exp,
       },
       {
         id: "I",
-        label: "Імп",
+        label: "Імпорт",
         count: add_data?.car_count_all.imp,
         count_filter: add_data?.car_count_filter.imp,
       },
       {
         id: "T",
-        label: "Транзит",
+        label: "Транзитні",
         count: add_data?.car_count_all.tr,
         count_filter: add_data?.car_count_filter.tr,
       },
       {
         id: "R",
-        label: "Рег",
+        label: "Локальні",
         count: add_data?.car_count_all.reg,
         count_filter: add_data?.car_count_filter.reg,
       },

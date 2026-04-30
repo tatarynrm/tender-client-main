@@ -6,8 +6,10 @@ import {
   Mail,
   CheckCircle2,
   XCircle,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { formatFullDateTime } from "@/shared/utils/date.utils";
 import { FaTelegram, FaViber, FaWhatsapp } from "react-icons/fa";
 import { IRateCompany, ITender } from "../../types/tender.type";
 
@@ -120,6 +122,14 @@ export function TenderRatesList({
                       {rate.author}
                     </span>
                   </div>
+                  {rate.time_add && (
+                    <div className="flex items-center gap-1">
+                      <Clock size={11} className="text-slate-400 shrink-0" />
+                      <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                        {formatFullDateTime(rate.time_add)}
+                      </span>
+                    </div>
+                  )}
                   {rate.email && (
                     <a
                       href={`mailto:${rate.email}`}

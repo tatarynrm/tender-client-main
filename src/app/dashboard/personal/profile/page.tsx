@@ -24,7 +24,7 @@ export default function MyProfilePage() {
   const activeTab = searchParams.get("tab") || "personal";
 
   return (
-    <div className="w-full space-y-6 mx-auto p-0  animate-in fade-in duration-500">
+    <div className="w-full space-y-2   animate-in fade-in duration-500">
       <div className="flex items-center gap-3 mb-2">
         <UserRoundPen className="w-6 h-6 text-zinc-800 dark:text-zinc-200" />
         <h1 className="text-2xl font-extrabold leading-none tracking-normal text-zinc-900 dark:text-white uppercase">

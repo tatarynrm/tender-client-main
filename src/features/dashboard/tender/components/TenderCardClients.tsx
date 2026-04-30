@@ -240,14 +240,14 @@ export function TenderCardClients({
             className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all xl:h-full border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
-            <MyTooltip
-              text="Унікальний номер тендеру. Натисніть для перегляду деталей"
-              className="absolute top-1 right-1"
-              size={10}
-            />
             <span className="text-[18px] xl:text-[18px] font-black text-blue-600 dark:text-blue-400 leading-none group-hover/number:scale-110 transition-transform">
               {cargo.id}
             </span>
+            <MyTooltip
+              text="Унікальний номер тендеру. Натисніть для перегляду деталей"
+              className="absolute bottom-1 right-1"
+              size={10}
+            />
           </div>
 
           {/* 2. Завантаження */}
@@ -525,7 +525,7 @@ export function TenderCardClients({
                     {currencySymbol}
                   </span>
                   {cargo.price_step && (
-                    <span className="text-[8px] text-zinc-400 mt-0.5 leading-none flex items-center gap-1">
+                    <span className="text-[10px] text-red-400 mt-0.5 leading-none flex items-center gap-1 font-bold">
                       крок {cargo.price_step}
                     </span>
                   )}

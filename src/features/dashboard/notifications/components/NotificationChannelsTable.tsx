@@ -12,7 +12,10 @@ interface NotificationChannelProps {
   control: any;
   nameRef: string;
   items: any[];
-  toggleAll: (field: "to_telegram" | "to_email" | "to_web", value: boolean) => void;
+  toggleAll: (
+    field: "to_telegram" | "to_email" | "to_web",
+    value: boolean,
+  ) => void;
   title?: string;
 }
 
@@ -51,7 +54,7 @@ export function NotificationChannelsTable({
   }, [userSocket, profile, setProfile]);
 
   return (
-    <section className="p-6 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 overflow-visible">
+    <section className="p-3 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 overflow-visible">
       <div className="flex items-center justify-between mb-4 px-2">
         <div className="flex items-center gap-3">
           <Bell className="w-5 h-5 text-zinc-900 dark:text-white" />
@@ -68,10 +71,12 @@ export function NotificationChannelsTable({
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase text-green-500 tracking-widest">
-                Telegram OK
+                Telegram Підключено
               </span>
               <div className="[&>button]:text-[10px] [&>button]:px-3 [&>button]:py-1.5 [&>button]:rounded-lg [&>button]:bg-zinc-100 dark:[&>button]:bg-zinc-800 [&>button]:text-zinc-500 [&>button]:hover:text-red-500 [&>button]:transition-all">
-                <TelegramDisconnectButton telegram_id={profile?.person_telegram?.telegram_id as number} />
+                <TelegramDisconnectButton
+                  telegram_id={profile?.person_telegram?.telegram_id as number}
+                />
               </div>
             </div>
           )}
@@ -92,21 +97,21 @@ export function NotificationChannelsTable({
                     label: "Telegram",
                     bg: isTelegramLinked ? "bg-[#b8ccf3]" : "bg-zinc-100",
                     textColor: "text-zinc-600",
-                    disabled: !isTelegramLinked
+                    disabled: !isTelegramLinked,
                   },
-                  { 
-                    id: "to_email", 
-                    label: "Email", 
-                    bg: "bg-[#7c9ff6]", 
-                    textColor: "text-white", 
-                    disabled: false 
+                  {
+                    id: "to_email",
+                    label: "Email",
+                    bg: "bg-[#7c9ff6]",
+                    textColor: "text-white",
+                    disabled: false,
                   },
-                  { 
-                    id: "to_web", 
-                    label: "WEB", 
-                    bg: "bg-[#2b4fa4]", 
-                    textColor: "text-white", 
-                    disabled: false 
+                  {
+                    id: "to_web",
+                    label: "WEB",
+                    bg: "bg-[#2b4fa4]",
+                    textColor: "text-white",
+                    disabled: false,
                   },
                 ].map((col) => (
                   <th
@@ -125,7 +130,7 @@ export function NotificationChannelsTable({
                           <div className="w-3 h-3 rounded-full border border-white/50 flex items-center justify-center group-hover:bg-white/20">
                             <div className="w-1.5 h-1.5 rounded-full bg-white opacity-0 group-active:opacity-100" />
                           </div>
-                          <span className="text-[8px] opacity-80">Всі</span>
+                          <span className="text-[10px] opacity-80">Всі</span>
                         </button>
                         <button
                           type="button"
@@ -136,7 +141,9 @@ export function NotificationChannelsTable({
                           <div className="w-3 h-3 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white/10">
                             <div className="w-1.5 h-1.5 rounded-full bg-white/50 opacity-0 group-active:opacity-100" />
                           </div>
-                          <span className="text-[8px] opacity-70">Жодного</span>
+                          <span className="text-[10px] opacity-70">
+                            Жодного
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -150,32 +157,40 @@ export function NotificationChannelsTable({
                   key={index}
                   className="hover:bg-blue-50/50 dark:hover:bg-blue-900/5 transition-colors h-14"
                 >
-                  <td className="p-4 px-6 text-[13px] font-medium text-zinc-700 dark:text-zinc-300 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-r dark:border-white/5 sticky left-0 z-10">
+                  <td className="p-2 px-6 text-[13px] font-medium text-zinc-700 dark:text-zinc-300 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-r dark:border-white/5 sticky left-0 z-10">
                     {item.value}
                   </td>
                   {(["to_telegram", "to_email", "to_web"] as const).map(
                     (field) => {
-                      const isDisabled = (field === "to_telegram" && !isTelegramLinked);
+                      const isDisabled =
+                        field === "to_telegram" && !isTelegramLinked;
                       return (
                         <td
                           key={field}
-                          className="p-4 text-center border-l border-zinc-50 dark:border-white/5"
+                          className="p-2 text-center border-l border-zinc-50 dark:border-white/5"
                         >
                           <div className="flex justify-center">
                             <Controller
                               name={`${nameRef}.${index}.${field}` as const}
                               control={control}
                               render={({ field: cb }) => (
-                                <div 
+                                <div
                                   className={cn(
                                     "w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all",
-                                    isDisabled ? "opacity-20 cursor-not-allowed border-zinc-200" :
-                                    cb.value ? "bg-indigo-600 border-indigo-600" : "border-zinc-200 dark:border-zinc-700 hover:border-indigo-400"
+                                    isDisabled
+                                      ? "opacity-20 cursor-not-allowed border-zinc-200"
+                                      : cb.value
+                                        ? "bg-indigo-600 border-indigo-600"
+                                        : "border-zinc-200 dark:border-zinc-700 hover:border-indigo-400",
                                   )}
-                                  onClick={() => !isDisabled && cb.onChange(!cb.value)}
+                                  onClick={() =>
+                                    !isDisabled && cb.onChange(!cb.value)
+                                  }
                                 >
                                   {cb.value && !isDisabled && (
-                                    <div className="text-white text-[10px] font-black">✓</div>
+                                    <div className="text-white text-[10px] font-black">
+                                      ✓
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -183,7 +198,7 @@ export function NotificationChannelsTable({
                           </div>
                         </td>
                       );
-                    }
+                    },
                   )}
                 </tr>
               ))}

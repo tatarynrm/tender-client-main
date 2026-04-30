@@ -176,11 +176,11 @@ export default function ManagersTenderPage({ status }: Props) {
 
   const directionButtons = useMemo(
     () => [
-      { id: "export", label: "Екс", countKey: "exp" },
-      { id: "import", label: "Імп", countKey: "imp" },
-      { id: "regional", label: "Локал", countKey: "reg" },
-      { id: "transit", label: "Транзит", countKey: "tr" },
-      { id: "international", label: "Міжн", countKey: "mn" },
+      { id: "international", label: "Міжнародні", countKey: "mn" },
+      { id: "export", label: "Експорт", countKey: "exp" },
+      { id: "import", label: "Імпорт", countKey: "imp" },
+      { id: "transit", label: "Транзитні", countKey: "tr" },
+      { id: "regional", label: "Локальні", countKey: "reg" },
     ],
     [],
   );

@@ -321,7 +321,7 @@ export function NotificationsTab() {
               boxShadow: state.isFocused
                 ? "0 0 0 3px rgba(99, 102, 241, 0.1)"
                 : "none",
-              minHeight: "44px",
+              minHeight: "30px",
               backgroundColor: isDisabled ? "#f8fafc" : "white",
               transition: "all 0.2s ease",
               "&:hover": {
@@ -386,9 +386,9 @@ export function NotificationsTab() {
   const notifyDest = watch("notify_destination") || [];
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-2 pb-24">
       {/* Категорії налаштувань */}
-      <div className="flex flex-wrap items-center gap-2 bg-zinc-100/50 dark:bg-white/5 p-1.5 rounded-[1.5rem] border border-zinc-200/50 dark:border-white/5 w-fit">
+      <div className="flex flex-wrap items-center  bg-zinc-100/50 dark:bg-white/5  rounded-[1.5rem] border border-zinc-200/50 dark:border-white/5 w-fit">
         {SETTINGS_CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.id;
           return (
@@ -439,7 +439,7 @@ export function NotificationsTab() {
                 className="space-y-6 animate-in fade-in duration-500 overflow-visible"
               >
                 {/* SECTION: DIRECTIONS */}
-                <section className="p-8 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden">
+                <section className="p-4 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center gap-2">
                       <Globe className="w-5 h-5 text-zinc-900 dark:text-white" />
@@ -449,7 +449,7 @@ export function NotificationsTab() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     {[
                       {
                         id_active: "reg",
@@ -497,7 +497,7 @@ export function NotificationsTab() {
                         <div
                           key={i}
                           className={cn(
-                            "p-5 rounded-[1.5rem] transition-all duration-300 border",
+                            "p-2 rounded-[1.5rem] transition-all duration-300 border",
                             isActive
                               ? "bg-white dark:bg-zinc-900 border-indigo-500/30 shadow-sm"
                               : "bg-zinc-50/30 dark:bg-zinc-900/10 border-transparent opacity-60",
@@ -509,29 +509,36 @@ export function NotificationsTab() {
                               control={control}
                               render={({ field }) => (
                                 <div
+                                  id={dir.id_active}
                                   className={cn(
-                                    "w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-colors",
+                                    "relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2",
                                     field.value
-                                      ? "bg-indigo-600"
-                                      : "bg-zinc-200 dark:bg-zinc-700",
+                                      ? "bg-indigo-600 shadow-lg shadow-indigo-500/20"
+                                      : "bg-zinc-200 dark:bg-zinc-800",
                                   )}
                                   onClick={() => field.onChange(!field.value)}
                                 >
-                                  <div
-                                    className="w-2.5 h-2.5 rounded-full bg-white scale-0 transition-transform data-[checked=true]:scale-100"
-                                    data-checked={field.value}
+                                  <motion.div
+                                    className="h-3.5 w-3.5 rounded-full bg-white shadow-sm"
+                                    animate={{ x: field.value ? 18 : 3 }}
+                                    transition={{
+                                      type: "spring",
+                                      stiffness: 500,
+                                      damping: 30,
+                                    }}
                                   />
-                                  {field.value && (
-                                    <div className="text-white text-[10px]">
-                                      ✓
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             />
                             <Label
                               htmlFor={dir.id_active}
-                              className="font-black uppercase text-[11px] text-zinc-900 dark:text-zinc-100 cursor-pointer tracking-widest"
+                              onClick={() =>
+                                setValue(
+                                  dir.id_active as any,
+                                  !watch(dir.id_active as any),
+                                )
+                              }
+                              className="font-black uppercase text-[11px] text-zinc-900 dark:text-zinc-100 cursor-pointer tracking-widest select-none"
                             >
                               {dir.label}
                             </Label>
@@ -569,10 +576,10 @@ export function NotificationsTab() {
                   </div>
                 </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start">
                   {/* SECTION: TRAILERS */}
-                  <div className="lg:col-span-4 space-y-6">
-                    <section className="p-6 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm h-full">
+                  <div className="lg:col-span-4 space-y-4">
+                    <section className="p-4 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm h-full">
                       <div className="flex items-center gap-2 mb-6">
                         <Truck className="w-5 h-5 text-zinc-900 dark:text-white" />
                         <h2 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
@@ -603,7 +610,7 @@ export function NotificationsTab() {
                 </div>
 
                 {/* FINAL SUBMIT BUTTON */}
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end pt-2">
                   <Button
                     type="submit"
                     disabled={updateMutation.isPending}
@@ -620,7 +627,7 @@ export function NotificationsTab() {
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
                 <div className="relative z-10">
-                  <div className="p-6 bg-white dark:bg-zinc-900 rounded-3xl shadow-xl shadow-zinc-200/50 dark:shadow-none border border-zinc-100 dark:border-white/5 mb-8 text-zinc-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 mx-auto w-fit">
+                  <div className="p-2 bg-white dark:bg-zinc-900 rounded-3xl shadow-xl shadow-zinc-200/50 dark:shadow-none border border-zinc-100 dark:border-white/5 mb-8 text-zinc-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 mx-auto w-fit">
                     {activeCategory === "system" ? (
                       <MailWarning className="w-10 h-10 text-amber-500" />
                     ) : (
