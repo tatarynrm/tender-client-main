@@ -16,9 +16,9 @@ export function ContractsTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* SECTION: ORGANIZATION REQUISITES */}
-      <section className="p-8 rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
-          <Building className="w-64 h-64 -mr-20 -mt-20" />
+      <section className="p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 sm:space-y-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-5 sm:p-8 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+          <Building className="w-48 h-48 sm:w-64 sm:h-64 -mr-10 -mt-10 sm:-mr-20 sm:-mt-20" />
         </div>
 
         <div className="flex items-center gap-3 relative z-10">
@@ -110,14 +110,14 @@ export function ContractsTab() {
         </div>
 
         <div className="group relative">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-[2.5rem] blur opacity-[0.08] group-hover:opacity-[0.15] transition duration-1000"></div>
-          <div className="relative p-8 rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-[1.5rem] sm:rounded-[2.5rem] blur opacity-[0.08] group-hover:opacity-[0.15] transition duration-1000"></div>
+          <div className="relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
               <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-white/5 shadow-inner">
                 <FileText className="w-8 h-8 text-indigo-500" />
               </div>
               <div className="space-y-4">
-                <div className="flex flex-wrap gap-x-8 gap-y-2">
+                <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 sm:gap-x-8 gap-y-3">
                   <div className="space-y-0.5">
                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Номер договору</p>
                     <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">0124/2024-ІСТ-З</p>
@@ -128,17 +128,17 @@ export function ContractsTab() {
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Термін дії</p>
-                    <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">До 01.04.2025 (Безстроковий)</p>
+                    <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">До 01.04.2025</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 w-fit">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 w-fit mx-auto sm:mx-0">
                   <History className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Діючий договір</span>
                 </div>
               </div>
             </div>
 
-            <Button className="h-16 px-10 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[11px] flex items-center gap-3 shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
+            <Button className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[11px] flex items-center gap-3 shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
               <Download className="w-5 h-5" />
               Скачати договір
             </Button>

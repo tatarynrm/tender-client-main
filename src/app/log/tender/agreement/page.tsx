@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function TenderServerPage() {
-  return <ManagersTenderPage status={"ANALYZE,AGREEMENT"} />;
+  return <ManagersTenderPage agree={true} />;
 }

@@ -27,12 +27,13 @@ import { QuickFilterBtn } from "../../log/load/QuickFilterBtn";
 
 interface Props {
   status?: string;
+  agree?: boolean;
 }
 
 const LIMIT_STORAGE_KEY = "tender_list_limit";
 const PERSIST_BASE_KEY = "tender_managers_filters_cache_";
 
-export default function ManagersTenderPage({ status }: Props) {
+export default function ManagersTenderPage({ status, agree }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { profile, isProfileLoading } = useProfile();
@@ -41,7 +42,8 @@ export default function ManagersTenderPage({ status }: Props) {
 
   // Role-based access control for AGREEMENT status
   useEffect(() => {
-    if (!isProfileLoading && status?.includes("AGREEMENT")) {
+    const checkStatus = agree ? "AGREEMENT" : status;
+    if (!isProfileLoading && checkStatus?.includes("AGREEMENT")) {
       const isAdmin = profile?.role?.is_admin;
       const isIct = profile?.role?.is_ict;
 
@@ -105,9 +107,10 @@ export default function ManagersTenderPage({ status }: Props) {
   const queryFilters = useMemo(
     () => ({
       ...currentParams,
-      status,
+      status: agree ? "ANALYZE,AGREEMENT" : status,
+      ...(agree ? { agree: "true" } : {}),
     }),
-    [currentParams, status],
+    [currentParams, status, agree],
   );
 
   const { tenders, pagination, add_data, isLoading, error } =
@@ -118,7 +121,8 @@ export default function ManagersTenderPage({ status }: Props) {
 
   // 4. Ефект для синхронізації фільтрів у SessionStorage (Кешування)
   useEffect(() => {
-    const persistKey = PERSIST_BASE_KEY + (status || "all");
+    const effectiveStatus = agree ? "agreement" : (status || "all");
+    const persistKey = PERSIST_BASE_KEY + effectiveStatus;
     if (searchParams.toString()) {
       sessionStorage.setItem(persistKey, searchParams.toString());
     } else {
@@ -131,7 +135,7 @@ export default function ManagersTenderPage({ status }: Props) {
         updateUrl(params);
       }
     }
-  }, [searchParams, updateUrl, status]);
+  }, [searchParams, updateUrl, status, agree]);
 
   // 5. Обробники
   const handleRemoveFilter = useCallback(
@@ -186,12 +190,13 @@ export default function ManagersTenderPage({ status }: Props) {
   );
 
   const handleReset = useCallback(() => {
-    const persistKey = PERSIST_BASE_KEY + (status || "all");
+    const effectiveStatus = agree ? "agreement" : (status || "all");
+    const persistKey = PERSIST_BASE_KEY + effectiveStatus;
     reset();
     resetFilters();
     sessionStorage.removeItem(persistKey);
     updateUrl({ page: 1 });
-  }, [reset, resetFilters, updateUrl, status]);
+  }, [reset, resetFilters, updateUrl, status, agree]);
 
   if (error) return <ErrorState />;
   if (isLoading || (status?.includes("AGREEMENT") && isProfileLoading))
@@ -378,6 +383,7 @@ export default function ManagersTenderPage({ status }: Props) {
                     key={item.id}
                     cargo={item}
                     onOpenDetails={() => router.push(`/log/tender/${item.id}`)}
+                    agree={agree}
                   />
                 ))}
               </div>

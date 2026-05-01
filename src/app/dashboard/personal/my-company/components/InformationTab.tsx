@@ -106,8 +106,8 @@ export function InformationTab() {
             </h2>
           </div>
 
-          <div className="overflow-hidden rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm">
-            <table className="w-full border-collapse">
+          <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar">
+            <table className="w-full border-collapse min-w-[500px]">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30">
                   <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
@@ -134,8 +134,8 @@ export function InformationTab() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-8 py-5 text-center">
-                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-100/50 dark:border-indigo-500/20">
+                    <td className="px-5 sm:px-8 py-4 sm:py-5 text-center">
+                      <span className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-100/50 dark:border-indigo-500/20">
                         {item.count}
                       </span>
                     </td>
@@ -155,7 +155,7 @@ export function InformationTab() {
             </h2>
           </div>
 
-          <div className="p-6 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6">
+          <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6">
             <div className="flex p-1.5 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10">
               <button
                 onClick={() => setGeoMode("intl")}
@@ -193,8 +193,8 @@ export function InformationTab() {
           </h2>
         </div>
 
-        <div className="p-8 rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8">
+        <div className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
             {DIRECTIONS.map((dir, idx) => (
               <div key={idx} className="space-y-5">
                 <div className="flex items-center justify-between group">

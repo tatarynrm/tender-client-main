@@ -62,6 +62,8 @@ export interface ITender {
   date_load2?: string | null;
   date_unload?: string | null;
   ids_members?: "ALL" | "CARRIER" | "MANAGER" | string | null;
+
+  close_status: "AGREE" | "ENABLE" | "DISABLE" | null;
 }
 export interface ITenderLoad {
   id: number;

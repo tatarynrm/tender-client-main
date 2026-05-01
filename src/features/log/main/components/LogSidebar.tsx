@@ -216,10 +216,10 @@ export default function LogSidebar({
 
         <div
           className={cn(
-            "ml-6 mt-1 flex flex-col gap-0.5 overflow-hidden transition-all duration-300 ease-in-out ",
+            "ml-6 mt-1 flex flex-col gap-0.5 transition-all duration-300 ease-in-out scrollbar-hide",
             openMenus[name]
-              ? "max-h-60 opacity-100"
-              : "max-h-0 opacity-0 pointer-events-none",
+              ? "max-h-80 opacity-100 overflow-y-auto"
+              : "max-h-0 opacity-0 pointer-events-none overflow-hidden",
           )}
         >
           {children.map((child) => renderLink(child, true))}

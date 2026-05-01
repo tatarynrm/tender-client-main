@@ -55,9 +55,11 @@ import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 export function TenderCardManagers({
   cargo,
   onOpenDetails,
+  agree = false,
 }: {
   cargo: ITender;
   onOpenDetails: () => void;
+  agree?: boolean;
 }) {
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
@@ -72,6 +74,11 @@ export function TenderCardManagers({
   const isAuthor = React.useMemo(() => {
     if (!profile || !cargo) return false;
 
+    const isIct = profile.role.is_ict;
+    const isAdmin = profile.role.is_admin;
+
+    if (isIct && isAdmin) return true;
+
     const pEmail = profile.email || (profile as any).usr_email || "";
     const cEmail = cargo.email || (cargo as any).usr_email || "";
     if (pEmail && cEmail && pEmail.toLowerCase() === cEmail.toLowerCase())
@@ -81,7 +88,7 @@ export function TenderCardManagers({
     if (cIdAuthor && profile.id === cIdAuthor) return true;
 
     const pName =
-      `${profile.person.name || ""} ${profile.person.surname || ""}`.trim();
+      `${profile.person?.name || ""} ${profile.person?.surname || ""}`.trim();
     const cName = cargo.author?.trim();
     if (pName && cName && pName.toLowerCase() === cName.toLowerCase())
       return true;
@@ -209,6 +216,22 @@ export function TenderCardManagers({
 
   return (
     <div className="w-full relative overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs flex flex-col group/card">
+      {cargo.close_status && (
+        <div
+          className={cn(
+            "absolute top-0 left-0 z-20 px-2 py-0.5 text-[9px] font-black uppercase rounded-br-lg shadow-sm flex items-center gap-1 text-white",
+            cargo.close_status === "AGREE"
+              ? "bg-amber-500"
+              : cargo.close_status === "ENABLE"
+                ? "bg-emerald-500"
+                : "bg-rose-500",
+          )}
+        >
+          {cargo.close_status === "AGREE" && "на погодженні"}
+          {cargo.close_status === "ENABLE" && "дозволено"}
+          {cargo.close_status === "DISABLE" && "відхилено"}
+        </div>
+      )}
       {isRef && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
           <Snowflake className="absolute -top-1 -right-1 text-blue-400/10 w-12 h-12 rotate-12" />
@@ -609,7 +632,11 @@ export function TenderCardManagers({
 
           {/* 12. Меню */}
           <div className="w-full xl:w-[36px] flex-shrink-0 flex items-center justify-center bg-zinc-50 dark:bg-white/5 border-l border-zinc-200 dark:border-white/10 transition-colors hover:bg-zinc-100 dark:hover:bg-white/10 py-3 xl:py-0">
-            <TenderActions tender={cargo} disabled={!isAuthor} />
+            <TenderActions
+              tender={cargo}
+              disabled={!isAuthor}
+              agreeMode={agree}
+            />
           </div>
         </div>
       </div>
@@ -692,6 +719,7 @@ export function TenderCardManagers({
               size={9}
             />
           </span>
+
           <span className="text-zinc-400 font-medium">
             публікація {formatTenderDate(cargo.time_start)}
           </span>

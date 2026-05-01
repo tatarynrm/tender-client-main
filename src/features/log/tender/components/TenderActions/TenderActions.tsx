@@ -12,6 +12,7 @@ import { ActiveActions } from "./ActiveActions";
 import { PlanActions } from "./PlanActions";
 import { AnalyzeActions } from "./AnalyzeActions";
 import { ClosedActions } from "./ClosedActions";
+import { AgreementActions } from "./AgreementActions";
 import { SendNotificationModal } from "./SendNotificationModal";
 import { MessageSquare } from "lucide-react";
 import { tenderManagerService } from "../../../services/tender.manager.service";
@@ -22,12 +23,14 @@ interface TenderActionsProps {
   tender: any;
   canDelete?: boolean;
   disabled?: boolean;
+  agreeMode?: boolean;
 }
 
 export default function TenderActions({
   tender,
   canDelete = true,
   disabled = false,
+  agreeMode = false,
 }: TenderActionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -62,7 +65,12 @@ export default function TenderActions({
       const target = event.target as HTMLElement;
       
       // Ігноруємо кліки всередині модалок статусів або сповіщень
-      if (target.closest('[data-status-modal]') || target.closest('[data-notification-modal]')) {
+      if (
+        target.closest("[data-status-modal]") ||
+        target.closest("[data-notification-modal]") ||
+        target.closest("[data-prolongation-modal]") ||
+        target.closest("[data-radix-popper-content-wrapper]")
+      ) {
         return;
       }
 
@@ -107,68 +115,83 @@ export default function TenderActions({
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex flex-col py-0.5">
-        {/* Рендер залежно від статусу через окремі файли */}
-        {tender.ids_status === "DRAFT" && (
-          <DraftActions
+        {agreeMode ? (
+          <AgreementActions
             tender={tender}
             itemClass={itemClass}
             textClass={textClass}
             config={config}
             onClose={handleClose}
           />
+        ) : (
+          <>
+            {tender.ids_status === "DRAFT" && (
+              <DraftActions
+                tender={tender}
+                itemClass={itemClass}
+                textClass={textClass}
+                config={config}
+                onClose={handleClose}
+              />
+            )}
+
+            {tender.ids_status === "ACTIVE" && (
+              <ActiveActions
+                tender={tender}
+                itemClass={itemClass}
+                textClass={textClass}
+                config={config}
+                onClose={handleClose}
+              />
+            )}
+            {tender.ids_status === "PLAN" && (
+              <PlanActions
+                tender={tender}
+                itemClass={itemClass}
+                textClass={textClass}
+                config={config}
+                onClose={handleClose}
+              />
+            )}
+            {tender.ids_status === "ANALYZE" && (
+              <AnalyzeActions
+                tender={tender}
+                itemClass={itemClass}
+                textClass={textClass}
+                config={config}
+                onClose={handleClose}
+              />
+            )}
+            {tender.ids_status === "CLOSED" && (
+              <ClosedActions
+                tender={tender}
+                itemClass={itemClass}
+                textClass={textClass}
+                config={config}
+                onClose={handleClose}
+              />
+            )}
+          </>
         )}
 
-        {tender.ids_status === "ACTIVE" && (
-          <ActiveActions
-            tender={tender}
-            itemClass={itemClass}
-            textClass={textClass}
-            config={config}
-            onClose={handleClose}
-          />
-        )}
-        {tender.ids_status === "PLAN" && (
-          <PlanActions
-            tender={tender}
-            itemClass={itemClass}
-            textClass={textClass}
-            config={config}
-            onClose={handleClose}
-          />
-        )}
-        {tender.ids_status === "ANALYZE" && (
-          <AnalyzeActions
-            tender={tender}
-            itemClass={itemClass}
-            textClass={textClass}
-            config={config}
-            onClose={handleClose}
-          />
-        )}
-        {tender.ids_status === "CLOSED" && (
-          <ClosedActions
-            tender={tender}
-            itemClass={itemClass}
-            textClass={textClass}
-            config={config}
-            onClose={handleClose}
-          />
-        )}
 
-
-        <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsNotificationModalOpen(true);
-            handleClose();
-          }}
-          className={cn(itemClass, "text-indigo-600")}
-        >
-          <MessageSquare size={config.icon - 2} />
-          <span className={textClass}>Надіслати сповіщення</span>
-        </button>
+        {!agreeMode && (
+          <>
+            <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsNotificationModalOpen(true);
+                handleClose();
+              }}
+              className={cn(itemClass, "text-indigo-600")}
+            >
+              <MessageSquare size={config.icon - 2} />
+              <span className={textClass}>Надіслати сповіщення</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -200,7 +200,7 @@ export const InputDateWithTime = <T extends FieldValues>({
           side="bottom"
           align="start"
           sideOffset={8}
-          className="z-[1000] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
+          className="z-[10001] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
         >
           <div className="flex divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
             <div className="p-4">
