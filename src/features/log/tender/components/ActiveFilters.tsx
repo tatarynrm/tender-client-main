@@ -12,32 +12,33 @@ interface ActiveFiltersProps {
 }
 
 const labelMap: Record<string, string> = {
-  country_from: "Звідки",
-  country_to: "Куди",
-  city_from: "Місто відправлення",
-  city_to: "Місто отримувач",
-  region_from: "Область звідки",
-  region_to: "Область куди",
-  trailer_type: "Тип причепу",
-  load_type: "Завантаження",
+  country_from: "Країна завантаження",
+  country_to: "Країна розвантаження",
+  city_from: "Місто завантаження",
+  city_to: "Місто розвантаження",
+  region_from: "Область завантаження",
+  region_to: "Область розвантаження",
+  trailer_type: "Тип транспорту",
+  load_type: "Вид завантаження",
   tender_type: "Тип тендеру",
-  manager: "Менеджер",
+  manager: "Відповідальний менеджер",
   company: "Замовник",
   status: "Статус",
-  members: "Хто бачить",
+  members: "Учасники",
   participate: "Моя участь",
-  participate_company: "Компанія",
-  winner_company: "Результат",
-  not_winner_company: "Результат",
-  not_participate_company: "Результат",
-  ids_status: "Статус",
-  not_happen: "Тендер",
-  transit: "Транзитні",
-  export: "Експорт",
-  import: "Імпорт",
-  regional: "Локальні",
-  international: "Міжнародні",
+  participate_company: "Участь компанії",
+  winner_company: "Мій статус",
+  not_winner_company: "Статус перемоги",
+  not_participate_company: "Статус участі",
+  ids_status: "Поточний статус",
+  not_happen: "Результат тендеру",
+  transit: "Транзит",
+  export: "Напрямок",
+  import: "Напрямок",
+  regional: "Напрямок",
+  international: "Напрямок",
   my: "Мої тендери",
+  sortBy: "Сортування",
 };
 
 export const ActiveFilters = ({
@@ -47,28 +48,41 @@ export const ActiveFilters = ({
   dropdowns,
 }: ActiveFiltersProps) => {
   const getDisplayValue = (key: string, value: string) => {
+    // Sorting labels
+    if (key === "sortBy") {
+      if (value === "time_start") {
+        const order = currentParams.sortOrder === "ASC" ? " (старі спочатку)" : " (нові спочатку)";
+        return `За часом публікації${order}`;
+      }
+      if (value === "time_end") {
+        const order = currentParams.sortOrder === "ASC" ? " (закінчуються швидше)" : " (закінчуються пізніше)";
+        return `За часом закінчення${order}`;
+      }
+    }
+
     // 0. Специфічні значення результатів
-    if (key === "winner_company" && value === "true") return "Ви виграли";
-    if (key === "not_winner_company" && value === "true")
-      return "Ви не перемогли";
-    if (key === "participate" && value === "true") return "Так";
-    if (key === "participate_company" && value === "true") return "Так";
-    if (key === "not_participate_company" && value === "true")
-      return "не приймали участі";
+    if (key === "winner_company" && value === "true") return "Перемога";
+    if (key === "not_winner_company" && value === "true") return "Без перемоги";
+    if (key === "participate" && value === "true") return "Приймаю участь";
+    if (key === "participate_company" && value === "true") return "Компанія бере участь";
+    if (key === "not_participate_company" && value === "true") return "Без участі";
 
-    if (key === "ids_status" && value === "ANALYZE") return "Аналізуємо";
+    if (key === "ids_status" && value === "ANALYZE") return "На аналізі";
     if (key === "not_happen" && value === "true") return "Не відбувся";
+    
+    if (key === "my" && value === "true") return "Лише мої";
 
-    if (key === "transit") {
-      const transitLabels: Record<string, string> = {
-        E: "Експорт",
-        I: "Імпорт",
-        R: "Локальні",
-        T: "Транзитні",
-        M: "Міжнародні",
-        true: "Так",
-      };
-      return transitLabels[value] || value;
+    if (key === "transit" || key === "export" || key === "import" || key === "regional" || key === "international") {
+      if (value === "true") {
+        const dirLabels: Record<string, string> = {
+          transit: "Транзит",
+          export: "Експорт",
+          import: "Імпорт",
+          regional: "Локальні",
+          international: "Міжнародні",
+        };
+        return dirLabels[key] || "Так";
+      }
     }
 
     // 1. Обробка загальних булевих значень
@@ -139,7 +153,7 @@ export const ActiveFilters = ({
   const groupedFilters = Object.entries(currentParams).reduce(
     (acc, [key, value]) => {
       // Ігноруємо технічні параметри та порожні значення
-      if (!value || value === "false" || key === "page" || key === "limit")
+      if (!value || value === "false" || key === "page" || key === "limit" || key === "sortOrder")
         return acc;
 
       const values = String(value).split(",").filter(Boolean);
@@ -160,54 +174,59 @@ export const ActiveFilters = ({
   if (groupKeys.length === 0) return null;
 
   return (
-    <div className="space-y-2 mt-2 mb-4  p-2 rounded-lg border border-dashed border-zinc-200">
-      <div className="flex items-center  border-b pb-1.5 border-zinc-200">
-        <span className="text-[9px] text-zinc-400 font-black uppercase tracking-tighter">
-          Активні фільтри
-        </span>
+    <div className="space-y-3 mt-4 mb-6 p-4 rounded-[1.5rem] border border-zinc-200/60 dark:border-white/10 bg-zinc-50/30 dark:bg-white/[0.02] backdrop-blur-sm animate-in fade-in slide-in-from-top-1 duration-500">
+      <div className="flex items-center justify-between border-b pb-2.5 border-zinc-200/60 dark:border-white/5">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+          <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-[0.1em]">
+            Активні фільтри
+          </span>
+        </div>
         <Button
           variant="ghost"
-          className="h-5 px-1.5 text-[10px] text-red-500 hover:bg-red-50 font-bold"
+          size="sm"
+          className="h-7 px-3 text-[10px] text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 font-black uppercase tracking-widest transition-all rounded-xl"
           onClick={onClear}
         >
+          <BrushCleaning className="w-3.5 h-3.5 mr-1.5" />
           Скинути все
         </Button>
       </div>
 
-      <div className="flex flex-col gap-1.5 pt-1">
+      <div className="flex flex-col gap-2.5 pt-1.5">
         {groupKeys.map((key) => (
-          <div key={key} className="flex flex-row items-start gap-2">
-            {/* Мітка категорії */}
-            <span className="text-[11px] font-bold text-zinc-400 min-w-[90px] pt-1 tracking-tight">
+          <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            {/* Категорія */}
+            <span className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest min-w-[120px]">
               {labelMap[key] || key}:
             </span>
 
             {/* Бейджі */}
-            <div className="flex flex-wrap gap-1 items-center flex-1">
+            <div className="flex flex-wrap gap-2 items-center flex-1">
               {groupedFilters[key].map((item, index) => (
                 <Badge
                   key={`${key}-${item.id}-${index}`}
                   variant="secondary"
-                  className="pl-2 pr-1 h-6 gap-1 border-orange-200 bg-white text-zinc-700 shadow-sm hover:bg-orange-50 transition-colors"
+                  className="pl-3 pr-1.5 h-7 gap-2 border-zinc-200/60 dark:border-white/5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 shadow-sm hover:border-orange-200 dark:hover:border-orange-500/40 transition-all rounded-xl group"
                 >
-                  <span className="text-[10px] font-medium">
+                  <span className="text-[10px] font-bold tracking-tight">
                     {item.display}
                   </span>
                   <button
                     onClick={() => onRemove(key, item.id)}
-                    className="hover:bg-orange-200 rounded-full p-0.5 transition-colors group"
+                    className="hover:bg-red-50 dark:hover:bg-red-500/20 rounded-lg p-0.5 transition-colors group/btn"
                   >
-                    <X className="h-3 w-3 text-zinc-400 group-hover:text-orange-600" />
+                    <X className="h-3 w-3 text-zinc-400 group-hover/btn:text-red-500" />
                   </button>
                 </Badge>
               ))}
 
-              {/* Кнопка швидкої очистки групи (мітла) */}
+              {/* Очистка групи */}
               {groupedFilters[key].length > 1 && (
                 <button
                   onClick={() => onRemove(key, "all")}
-                  title="Очистити категорію"
-                  className="p-1 hover:bg-orange-100 rounded-md transition-colors text-orange-400"
+                  title="Очистити групу"
+                  className="p-1.5 hover:bg-zinc-200/50 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-400 hover:text-orange-500"
                 >
                   <BrushCleaning size={14} />
                 </button>

@@ -24,6 +24,7 @@ import { EmptyTenders } from "./components/EmptyTenders";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { TenderCardManagers } from "./components/TenderCardManager";
 import { QuickFilterBtn } from "../../log/load/QuickFilterBtn";
+import { TenderSort } from "./components/TenderSort";
 
 interface Props {
   status?: string;
@@ -93,6 +94,8 @@ export default function ManagersTenderPage({ status, agree }: Props) {
       "international",
       "my",
       "participate",
+      "sortBy",
+      "sortOrder",
     ];
 
     filterKeys.forEach((key) => {
@@ -140,9 +143,16 @@ export default function ManagersTenderPage({ status, agree }: Props) {
   // 5. Обробники
   const handleRemoveFilter = useCallback(
     (key: string, valueToRemove: string) => {
-      removeFilter(key, valueToRemove, currentParams);
+      if (key === "sortBy") {
+        const newParams = { ...currentParams };
+        delete newParams.sortBy;
+        delete newParams.sortOrder;
+        updateUrl({ ...newParams, page: 1 });
+      } else {
+        removeFilter(key, valueToRemove, currentParams);
+      }
     },
-    [removeFilter, currentParams],
+    [removeFilter, currentParams, updateUrl],
   );
 
   const toggleParam = useCallback(
@@ -304,15 +314,25 @@ export default function ManagersTenderPage({ status, agree }: Props) {
             </div>
 
             {/* ── Right: List controls ───────────────────────────── */}
-            <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
-              <ItemsPerPage
-                options={[10, 20, 50, 100]}
-                defaultValue={currentParams.limit}
-                onChange={(newLimit) => {
-                  localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
-                  updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+            <div className="flex items-center gap-3">
+              <TenderSort
+                sortBy={currentParams.sortBy || "time_start"}
+                sortOrder={currentParams.sortOrder || "DESC"}
+                onChange={(sortBy, sortOrder) => {
+                  updateUrl({ ...currentParams, sortBy, sortOrder, page: 1 });
                 }}
               />
+              
+              <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
+                <ItemsPerPage
+                  options={[10, 20, 50, 100]}
+                  defaultValue={currentParams.limit}
+                  onChange={(newLimit) => {
+                    localStorage.setItem(LIMIT_STORAGE_KEY, String(newLimit));
+                    updateUrl({ ...currentParams, limit: newLimit, page: 1 });
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

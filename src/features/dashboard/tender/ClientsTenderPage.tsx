@@ -18,6 +18,7 @@ import { TenderFiltersSheet } from "./components/TenderFilters";
 import TenderLoader from "@/shared/components/Loaders/TenderLoader";
 import { TenderCardClients } from "./components/TenderCardClients";
 import { QuickFilterBtn } from "../../log/load/QuickFilterBtn";
+import { TenderSort } from "@/features/log/tender/components/TenderSort";
 
 interface Props {
   status?: string;
@@ -64,6 +65,8 @@ export default function ClientsTenderPage({
       regional: searchParams.get("regional") || "",
       transit: searchParams.get("transit") || "",
       international: searchParams.get("international") || "",
+      sortBy: searchParams.get("sortBy") || "",
+      sortOrder: searchParams.get("sortOrder") || "",
     }),
     [searchParams, participate_company, winner_company],
   );
@@ -152,6 +155,15 @@ export default function ClientsTenderPage({
 
   const handleRemoveFilter = useCallback(
     (key: string, valueToRemove: string) => {
+      if (key === "sortBy") {
+        const newFilters = { ...filters };
+        delete newFilters.sortBy;
+        delete newFilters.sortOrder;
+        setFilters(newFilters);
+        updateUrl({ ...newFilters, page: 1 });
+        return;
+      }
+
       let newValue: string | undefined;
       if (valueToRemove === "all") {
         newValue = undefined;
@@ -304,12 +316,21 @@ export default function ClientsTenderPage({
             </div>
 
             {/* ── Right: List controls ───────────────────────────── */}
-            <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-zinc-200 dark:border-white/10 shadow-sm">
-              <ItemsPerPage
-                options={[10, 20, 50, 100]}
-                defaultValue={currentParams.limit}
-                onChange={handleLimitChange}
+            <div className="flex items-center gap-3">
+              <TenderSort
+                sortBy={currentParams.sortBy || "time_start"}
+                sortOrder={currentParams.sortOrder || "DESC"}
+                onChange={(sortBy, sortOrder) => {
+                  updateUrl({ ...currentParams, sortBy, sortOrder, page: 1 });
+                }}
               />
+              <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-zinc-200 dark:border-white/10 shadow-sm">
+                <ItemsPerPage
+                  options={[10, 20, 50, 100]}
+                  defaultValue={currentParams.limit}
+                  onChange={handleLimitChange}
+                />
+              </div>
             </div>
           </div>
         </div>
