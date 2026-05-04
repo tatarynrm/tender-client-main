@@ -37,13 +37,19 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
         name: "",
         surname: "",
         last_name: "",
+        position: "",
         ids_sex: "M",
         person_role: {
           is_admin: false,
           is_manager: true,
         },
         person_phone: [
-          { phone: "", is_viber: true, is_telegram: true, is_whatsapp: false },
+          {
+            phone: "",
+            is_viber: false,
+            is_telegram: false,
+            is_whatsapp: false,
+          },
         ],
       },
     },
@@ -68,6 +74,7 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                 name: user.person?.name || "",
                 surname: user.person?.surname || "",
                 last_name: user.person?.last_name || "",
+                position: user.person?.position || "",
                 ids_sex: user.person?.ids_sex || "M",
                 person_role: {
                   is_admin: !!user.person?.person_role?.is_admin,
@@ -80,7 +87,14 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                       is_telegram: !!p.is_telegram,
                       is_whatsapp: !!p.is_whatsapp,
                     }))
-                  : [{ phone: "", is_viber: true, is_telegram: true, is_whatsapp: false }],
+                  : [
+                      {
+                        phone: "",
+                        is_viber: true,
+                        is_telegram: true,
+                        is_whatsapp: false,
+                      },
+                    ],
               },
             });
           }
@@ -192,6 +206,17 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
 
           <div className="space-y-2">
             <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">
+              Посада
+            </Label>
+            <Input
+              {...form.register("person.position")}
+              placeholder="Менеджер з логістики"
+              className="rounded-2xl"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">
               Email (Логін)
             </Label>
             <div className="relative">
@@ -222,7 +247,9 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                 </div>
                 <Switch
                   checked={form.watch("person.person_role.is_admin")}
-                  onCheckedChange={(val) => form.setValue("person.person_role.is_admin", val)}
+                  onCheckedChange={(val) =>
+                    form.setValue("person.person_role.is_admin", val)
+                  }
                 />
               </div>
               <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
@@ -236,7 +263,9 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                 </div>
                 <Switch
                   checked={form.watch("person.person_role.is_manager")}
-                  onCheckedChange={(val) => form.setValue("person.person_role.is_manager", val)}
+                  onCheckedChange={(val) =>
+                    form.setValue("person.person_role.is_manager", val)
+                  }
                 />
               </div>
             </div>
@@ -296,7 +325,9 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                               : "border-zinc-200 dark:border-white/10",
                           )}
                         >
-                          {form.watch(`person.person_phone.${index}.is_viber`) && (
+                          {form.watch(
+                            `person.person_phone.${index}.is_viber`,
+                          ) && (
                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           )}
                         </div>
@@ -315,12 +346,16 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                         <div
                           className={cn(
                             "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
-                            form.watch(`person.person_phone.${index}.is_telegram`)
+                            form.watch(
+                              `person.person_phone.${index}.is_telegram`,
+                            )
                               ? "bg-sky-500 border-sky-500 text-white"
                               : "border-zinc-200 dark:border-white/10",
                           )}
                         >
-                          {form.watch(`person.person_phone.${index}.is_telegram`) && (
+                          {form.watch(
+                            `person.person_phone.${index}.is_telegram`,
+                          ) && (
                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           )}
                         </div>
@@ -339,12 +374,16 @@ export function UserCreateModal({ onClose, userId }: UserCreateModalProps) {
                         <div
                           className={cn(
                             "w-4 h-4 rounded-md border flex items-center justify-center transition-all",
-                            form.watch(`person.person_phone.${index}.is_whatsapp`)
+                            form.watch(
+                              `person.person_phone.${index}.is_whatsapp`,
+                            )
                               ? "bg-green-500 border-green-500 text-white"
                               : "border-zinc-200 dark:border-white/10",
                           )}
                         >
-                          {form.watch(`person.person_phone.${index}.is_whatsapp`) && (
+                          {form.watch(
+                            `person.person_phone.${index}.is_whatsapp`,
+                          ) && (
                             <div className="w-1.5 h-1.5 rounded-full bg-white" />
                           )}
                         </div>

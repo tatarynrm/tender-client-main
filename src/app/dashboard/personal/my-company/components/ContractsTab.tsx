@@ -1,148 +1,252 @@
 "use client";
 
 import React from "react";
-import { 
-  Building, 
-  FileText, 
-  Download, 
+import {
+  Building,
+  FileText,
+  Download,
   ChevronRight,
   ShieldCheck,
   CreditCard,
-  History
+  History,
 } from "lucide-react";
-import { Button, Input, Label, Switch } from "@/shared/components/ui";
+import { Button, Input, Label, Switch, Skeleton } from "@/shared/components/ui";
+import { Loader2 } from "lucide-react";
+import { useMyCompany } from "../hooks/useMyCompany";
+import { format } from "date-fns";
+import { uk } from "date-fns/locale";
+import { cn } from "@/shared/utils";
+import { useProfile } from "@/shared/hooks";
 
 export function ContractsTab() {
+  const { profile } = useProfile();
+  const { company, isLoading } = useMyCompany(
+    profile?.company?.migrate_id as number,
+  );
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    try {
+      return format(new Date(dateStr), "dd.MM.yyyy", { locale: uk });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const currentYear = new Date().getFullYear();
+  const isYearActive = (dateStr: string) => {
+    if (!dateStr) return false;
+    try {
+      return new Date(dateStr).getFullYear() >= currentYear;
+    } catch (e) {
+      return false;
+    }
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-10">
       {/* SECTION: ORGANIZATION REQUISITES */}
-      <section className="p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 sm:space-y-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-5 sm:p-8 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
-          <Building className="w-48 h-48 sm:w-64 sm:h-64 -mr-10 -mt-10 sm:-mr-20 sm:-mt-20" />
+      <section className="p-6 sm:p-10 rounded-[2rem] sm:rounded-[3rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+          <Building className="w-64 h-64 -mr-20 -mt-20" />
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20">
-            <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+            <ShieldCheck className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
+            <h2 className="text-base font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-100">
               Реквізити організації
             </h2>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
               Офіційні дані для документообігу
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 relative z-10">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">Повна назва організації</Label>
-              <Input defaultValue="ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ 'ЛОГІТРАНС-ЗАХІД'" className="rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5 font-bold text-zinc-700 dark:text-zinc-300 h-12" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">ЄДРПОУ</Label>
-                <Input defaultValue="12345678" className="rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5 font-mono h-12" />
+              <div className="p-4 rounded-2xl bg-zinc-50/50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 font-bold text-zinc-800 dark:text-zinc-200 text-sm leading-relaxed">
+                {company?.company_name_full || company?.company_name || "-"}
               </div>
-              <div className="space-y-1.5">
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">ЄДРПОУ</Label>
+                <div className="p-4 rounded-2xl bg-zinc-50/50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 font-mono text-zinc-800 dark:text-zinc-200">
+                  {company?.edrpou || "-"}
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">ІПН</Label>
-                <Input defaultValue="1234567890123" className="rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5 font-mono h-12" />
+                <div className="p-4 rounded-2xl bg-zinc-50/50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 font-mono text-zinc-800 dark:text-zinc-200">
+                  {company?.ipn || "-"}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
+          <div className="lg:col-span-5 space-y-6">
+            <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">Скорочена назва</Label>
-              <Input defaultValue="ТОВ 'ЛТ-ЗАХІД'" className="rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5 font-bold text-zinc-700 dark:text-zinc-300 h-12" />
+              <div className="p-4 rounded-2xl bg-zinc-50/50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 font-bold text-zinc-800 dark:text-zinc-200">
+                {company?.company_name || "-"}
+              </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-zinc-500 ml-1 tracking-wider">Статус платника ПДВ</Label>
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/20">
-                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-                  <CreditCard className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <div className={cn(
+                "flex items-center gap-4 p-4 rounded-2xl border transition-colors",
+                company?.pdv_status 
+                  ? "bg-emerald-50/30 dark:bg-emerald-500/5 border-emerald-100/50 dark:border-emerald-500/20"
+                  : "bg-zinc-50/50 dark:bg-white/5 border-zinc-100 dark:border-white/5"
+              )}>
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm",
+                  company?.pdv_status ? "bg-emerald-100 dark:bg-emerald-500/20" : "bg-zinc-100 dark:bg-zinc-800"
+                )}>
+                  <CreditCard className={cn("w-5 h-5", company?.pdv_status ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-400")} />
                 </div>
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Платник ПДВ 20%</span>
+                <div>
+                  <p className={cn(
+                    "text-xs font-bold",
+                    company?.pdv_status ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-500"
+                  )}>
+                    {company?.pdv_status || "Невідомо"}
+                  </p>
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">Податковий статус</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* E-DOCS FLOW */}
-        <div className="pt-6 border-t border-zinc-100 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-          <div className="flex items-center justify-between p-5 rounded-3xl bg-zinc-50/30 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center border border-zinc-100 dark:border-white/5">
-                <span className="text-blue-500 font-black text-xs">M</span>
+        <div className="pt-8 border-t border-zinc-100 dark:border-white/5 grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+          <div className="flex items-center justify-between p-6 rounded-[2rem] bg-zinc-50/30 dark:bg-white/5 border border-zinc-100 dark:border-white/5 hover:bg-zinc-50/50 dark:hover:bg-white/10 transition-colors">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center border border-zinc-100 dark:border-white/5">
+                <span className="text-blue-500 font-black text-sm">M</span>
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Компанія використовує ЕДО "M.E.Doc"</p>
-                <p className="text-[9px] font-bold text-zinc-400 uppercase mt-0.5 tracking-wider">Автоматичне отримання документів</p>
+                <p className="text-xs font-black uppercase tracking-widest text-zinc-800 dark:text-zinc-200">EDO "M.E.Doc"</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">Автоматичне отримання</p>
               </div>
             </div>
-            <Switch defaultChecked />
+            <Switch checked={!!company?.use_medoc} className="data-[state=checked]:bg-blue-500" />
           </div>
 
-          <div className="flex items-center justify-between p-5 rounded-3xl bg-zinc-50/30 dark:bg-white/5 border border-zinc-100 dark:border-white/5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center border border-zinc-100 dark:border-white/5">
-                <span className="text-purple-500 font-black text-xs">V</span>
+          <div className="flex items-center justify-between p-6 rounded-[2rem] bg-zinc-50/30 dark:bg-white/5 border border-zinc-100 dark:border-white/5 hover:bg-zinc-50/50 dark:hover:bg-white/10 transition-colors">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center border border-zinc-100 dark:border-white/5">
+                <span className="text-purple-500 font-black text-sm">V</span>
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-widest text-zinc-700 dark:text-zinc-200">Компанія використовує ЕДО "Вчасно"</p>
-                <p className="text-[9px] font-bold text-zinc-400 uppercase mt-0.5 tracking-wider">Цифровий підпис та архів</p>
+                <p className="text-xs font-black uppercase tracking-widest text-zinc-800 dark:text-zinc-200">EDO "Вчасно"</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">Цифровий підпис та архів</p>
               </div>
             </div>
-            <Switch />
+            <Switch checked={!!company?.use_vchasno} className="data-[state=checked]:bg-purple-500" />
           </div>
         </div>
       </section>
 
-      {/* SECTION: CARRIER CONTRACT */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <FileText className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-            Договір з перевізником
-          </h2>
+      {/* SECTION: CARRIER CONTRACTS */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-100">
+                Договори з ICT
+              </h2>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">Перелік активних та архівних угод</p>
+            </div>
+          </div>
+          {company?.contract && (
+            <div className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-white/5 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-tighter">
+              Всього: {company.contract.length}
+            </div>
+          )}
         </div>
 
-        <div className="group relative">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-[1.5rem] sm:rounded-[2.5rem] blur opacity-[0.08] group-hover:opacity-[0.15] transition duration-1000"></div>
-          <div className="relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6 text-center sm:text-left">
-              <div className="w-16 h-16 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-white/5 shadow-inner">
-                <FileText className="w-8 h-8 text-indigo-500" />
+        <div className="grid grid-cols-1 gap-6">
+          {isLoading ? (
+            <div className="p-20 border border-zinc-100 dark:border-white/5 rounded-[3rem] bg-white dark:bg-zinc-950/40 flex flex-col items-center gap-5">
+              <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">Завантаження договорів...</span>
+            </div>
+          ) : !company?.contract || company.contract.length === 0 ? (
+            <div className="p-20 border border-zinc-200 border-dashed rounded-[3rem] flex flex-col items-center gap-5 text-center">
+              <div className="w-20 h-20 rounded-full bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center border border-zinc-100 dark:border-white/5 shadow-inner">
+                <History className="w-10 h-10 text-zinc-300" />
               </div>
-              <div className="space-y-4">
-                <div className="flex flex-wrap justify-center sm:justify-start gap-x-6 sm:gap-x-8 gap-y-3">
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Номер договору</p>
-                    <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">0124/2024-ІСТ-З</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Дата укладання</p>
-                    <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">01.04.2024</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Термін дії</p>
-                    <p className="text-sm font-black text-indigo-600 dark:text-indigo-400">До 01.04.2025</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 w-fit mx-auto sm:mx-0">
-                  <History className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Діючий договір</span>
-                </div>
+              <div>
+                <p className="text-sm font-black text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">Договори не знайдені</p>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Зверніться до менеджера для укладання договору</p>
               </div>
             </div>
+          ) : (
+            company.contract.map((contract: any, idx: number) => {
+              const active = isYearActive(contract.termin);
+              return (
+                <div key={idx} className="group relative">
+                  <div className={cn(
+                    "absolute -inset-0.5 rounded-[2rem] blur opacity-[0.05] group-hover:opacity-[0.12] transition duration-1000",
+                    active ? "bg-gradient-to-r from-indigo-500 to-emerald-500" : "bg-zinc-500"
+                  )}></div>
+                  <div className="relative p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm transition-all hover:translate-y-[-2px]">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-8">
+                      <div className={cn(
+                        "w-16 h-16 shrink-0 rounded-2xl flex items-center justify-center border shadow-inner transition-colors",
+                        active 
+                          ? "bg-indigo-50 dark:bg-indigo-500/10 border-indigo-100 dark:border-indigo-500/20" 
+                          : "bg-zinc-50 dark:bg-white/5 border-zinc-100 dark:border-white/5"
+                      )}>
+                        <FileText className={cn("w-8 h-8", active ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-400")} />
+                      </div>
+                      
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Фірма</p>
+                          <p className="text-sm font-black text-zinc-800 dark:text-zinc-100 leading-tight">{contract.firma}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Номер договору</p>
+                          <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">{contract.number}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Дата укладання</p>
+                          <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">{formatDate(contract.date)}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Термін дії</p>
+                          <p className={cn(
+                            "text-sm font-black", 
+                            active ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500"
+                          )}>
+                            {formatDate(contract.termin)}
+                          </p>
+                        </div>
+                      </div>
 
-            <Button className="w-full sm:w-auto h-14 sm:h-16 px-8 sm:px-10 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-[11px] flex items-center gap-3 shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
-              <Download className="w-5 h-5" />
-              Скачати договір
-            </Button>
-          </div>
+                      {active && (
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 w-fit shrink-0 self-start lg:self-center animate-in zoom-in duration-500">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span className="text-[10px] font-black uppercase tracking-[0.1em] text-emerald-700 dark:text-emerald-400">Діючий договір</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
     </div>

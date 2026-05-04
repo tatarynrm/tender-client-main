@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   MapPin,
   Plus,
@@ -13,14 +13,19 @@ import {
   Edit2,
 } from "lucide-react";
 import { Button, Input, Label, Switch } from "@/shared/components/ui";
-import { cn } from "@/shared/utils";
+import { Loader2, Globe, Building2 } from "lucide-react";
+import { useMyCompany } from "../hooks/useMyCompany";
 import { useCompanyUsers } from "../hooks/useCompanyUsers";
 import { UserCreateModal } from "./UserCreateModal";
-import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useProfile } from "@/shared/hooks";
+import { cn } from "@/shared/utils";
 
 export function GeneralTab() {
-  const { users, isLoading } = useCompanyUsers();
+  const { profile } = useProfile();
+  const { users, isLoading: isUsersLoading } = useCompanyUsers();
+  const { company, isLoading: isCompanyLoading } = useMyCompany(
+    profile?.company?.migrate_id as number,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<number | string | null>(
     null,
@@ -58,155 +63,66 @@ export function GeneralTab() {
           </Button> */}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-6">
-          {/* LEGAL ADDRESS */}
-          <div className="md:col-span-4 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-5">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400">
-              Юридична адреса
-            </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          {/* LEGAL ADDRESS CARD */}
+          <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+              <Building2 className="w-24 h-24 text-indigo-600" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+                Юридична адреса
+              </h3>
+            </div>
+
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Країна
-                </Label>
-                <Input
-                  defaultValue="Україна"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Область
-                </Label>
-                <Input
-                  defaultValue="Київська область"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Місто
-                </Label>
-                <Input
-                  defaultValue="Київ"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Вулиця та номер
-                </Label>
-                <Input
-                  defaultValue="вул. Промислова, 10"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                    Поштовий індекс
-                  </Label>
-                  <Input
-                    defaultValue="01001"
-                    className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                  />
+              {isCompanyLoading ? (
+                <div className="h-20 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                    Сайт
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      defaultValue="https://logitrans.ua"
-                      className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5 pr-8"
-                    />
-                    <ExternalLink className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  </div>
+              ) : (
+                <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                    {company?.address_legal || "Дані відсутні"}
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* PHYSICAL ADDRESS TOGGLE */}
-          <div className="md:col-span-4 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm flex flex-col justify-between">
-            <div className="space-y-6">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400">
+          {/* PHYSICAL ADDRESS CARD */}
+          <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+              <MapPin className="w-24 h-24 text-sky-600" />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              </div>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
                 Фактична адреса
               </h3>
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 border border-indigo-100/50 dark:border-indigo-500/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <Label className="text-xs font-bold text-zinc-800 dark:text-zinc-200 cursor-pointer">
-                    Співпадає з юридичною адресою
-                  </Label>
-                </div>
-                <Switch defaultChecked />
-              </div>
             </div>
 
-            <div className="mt-8 p-6 rounded-[1.5rem] bg-zinc-50/50 dark:bg-zinc-900/50 border border-dashed border-zinc-200 dark:border-white/10 flex flex-col items-center justify-center text-center space-y-3">
-              <div className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-zinc-400" />
-              </div>
-              <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 max-w-[200px]">
-                Фізична адреса співпадає з юридичною адресою компанії
-              </p>
-            </div>
-          </div>
-
-          {/* DOCUMENT ADDRESS */}
-          <div className="md:col-span-4 p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-5">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400">
-              Адреса для документів
-            </h3>
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Країна
-                </Label>
-                <Input
-                  defaultValue="Україна"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Область
-                </Label>
-                <Input
-                  defaultValue="Львівська область"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Місто
-                </Label>
-                <Input
-                  defaultValue="Львів"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Вулиця та номер
-                </Label>
-                <Input
-                  defaultValue="вул. Франка, 3"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase text-zinc-500 ml-1">
-                  Поштовий індекс
-                </Label>
-                <Input
-                  defaultValue="79000"
-                  className="rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-white/5"
-                />
-              </div>
+              {isCompanyLoading ? (
+                <div className="h-20 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                </div>
+              ) : (
+                <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                    {company?.address_fysical ||
+                      company?.address_legal ||
+                      "Дані відсутні"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -260,7 +176,7 @@ export function GeneralTab() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
-              {isLoading ? (
+              {isUsersLoading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-3">

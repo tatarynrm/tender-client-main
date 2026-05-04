@@ -50,6 +50,7 @@ const userSchema = z.object({
 
     // Залишаємо суворо: або рядок, або null (без автоматичних значень)
     last_name: z.string({ message: "По батькові має бути рядком" }).nullable(),
+    position: z.string().optional().nullable(),
 
     ids_sex: z.enum(["M", "W"], { message: "Вкажіть стать" }),
 
@@ -108,6 +109,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
           name: "",
           surname: "",
           last_name: defaultValues?.last_name || null, // Явно вказуємо null, якщо немає значення"",
+          position: defaultValues?.person?.position || "",
           ids_sex: "M",
           id_company: defaultValues?.company?.id || null,
           person_role: { is_admin: false, is_manager: false },
@@ -174,6 +176,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
           id_company: defaultValues.company?.id || defaultValues.id_company,
           last_name:
             defaultValues.person?.last_name || defaultValues.last_name || "",
+          position: defaultValues.person?.position || "",
           person_role: {
             is_admin: !!defaultValues.person?.person_role?.is_admin,
             is_manager: !!defaultValues.person?.person_role?.is_manager,
@@ -265,6 +268,12 @@ export default function UserForm({ defaultValues }: UserFormProps) {
                 label="По батькові"
               />
             </div>
+
+            <InputText
+              name="person.position"
+              control={control}
+              label="Посада"
+            />
             {/* Вибір статі */}
             <FormField
               control={control}

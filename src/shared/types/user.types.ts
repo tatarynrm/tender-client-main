@@ -8,7 +8,7 @@ export interface IUserProfile {
   department: IDepartment;
   is_blocked: boolean;
   // Додаємо нове поле. Воно може бути null, якщо користувач ще не підключив бота
-  person_telegram: IPersonTelegram | null; 
+  person_telegram: IPersonTelegram | null;
 }
 
 // Створюємо новий інтерфейс для Telegram-даних
@@ -27,7 +27,7 @@ export interface IUserRole {
 export interface IPerson {
   id: number;
   name: string;
-  ids_sex: 'M' | 'F' | string;
+  ids_sex: "M" | "F" | string;
   surname: string;
   birthday: string | null;
   last_name: string;
@@ -49,6 +49,7 @@ export interface ICompany {
   company_form: string;
   company_name: string;
   is_expedition: boolean;
+  migrate_id?: string | number;
 }
 
 export interface IDepartment {

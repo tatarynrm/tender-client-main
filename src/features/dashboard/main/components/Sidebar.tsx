@@ -122,11 +122,11 @@ const links: MenuItem[] = [
         href: "/dashboard/personal/profile",
         icon: UserRoundPen,
       },
-      {
-        name: "Документи",
-        href: "/dashboard/personal/documents",
-        icon: FileStack,
-      },
+      // {
+      //   name: "Документи",
+      //   href: "/dashboard/personal/documents",
+      //   icon: FileStack,
+      // },
     ],
   },
 ];
