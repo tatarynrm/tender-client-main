@@ -156,7 +156,7 @@ export default function ClientsTenderPage({
   const handleRemoveFilter = useCallback(
     (key: string, valueToRemove: string) => {
       if (key === "sortBy") {
-        const newFilters = { ...filters };
+        const newFilters = { ...filters } as any;
         delete newFilters.sortBy;
         delete newFilters.sortOrder;
         setFilters(newFilters);

@@ -144,7 +144,7 @@ export default function ManagersTenderPage({ status, agree }: Props) {
   const handleRemoveFilter = useCallback(
     (key: string, valueToRemove: string) => {
       if (key === "sortBy") {
-        const newParams = { ...currentParams };
+        const newParams = { ...currentParams } as any;
         delete newParams.sortBy;
         delete newParams.sortOrder;
         updateUrl({ ...newParams, page: 1 });
