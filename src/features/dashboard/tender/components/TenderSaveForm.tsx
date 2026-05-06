@@ -549,9 +549,9 @@ export default function TenderSaveForm({
   };
 
   return (
-    <Card className="max-w-3xl mx-auto p-3 mb-20">
+    <Card className="max-w-3xl mx-auto p-2 mb-10">
       <Form {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
           <div className="flex justify-between">
             <FormField
               control={control}
@@ -717,7 +717,7 @@ export default function TenderSaveForm({
           />
 
           {/* Routes */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {routeFields.map((field, idx) => (
               <div key={field.id} className="flex items-center gap-2 mb-2">
                 <FormField

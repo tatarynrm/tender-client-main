@@ -36,7 +36,6 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/log", icon: Home },
-  { name: "Що нового?", href: "/log/updates", icon: Sparkles },
   {
     name: "Екран заявок",
     icon: ScreenShare,
@@ -74,6 +73,7 @@ const links: MenuItem[] = [
 ];
 
 const defaultFooterLinks: MenuItem[] = [
+  { name: "Що нового?", href: "/log/updates", icon: Sparkles },
   { name: "Налаштування", href: "/log/settings", icon: Settings },
 ];
 

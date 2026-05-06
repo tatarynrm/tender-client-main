@@ -14,8 +14,8 @@ interface ActiveFiltersProps {
 const labelMap: Record<string, string> = {
   country_from: "Звідки",
   country_to: "Куди",
-  city_from: "Місто відправлення",
-  city_to: "Місто отримувач",
+  city_from: "Населений пункт",
+  city_to: "Населений пункт",
   region_from: "Область звідки",
   region_to: "Область куди",
   trailer_type: "Тип причепу",

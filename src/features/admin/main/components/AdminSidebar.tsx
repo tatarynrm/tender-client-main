@@ -38,7 +38,6 @@ type MenuItem = {
 
 const links: MenuItem[] = [
   { name: "Головна", href: "/admin", icon: Home },
-  { name: "Що нового?", href: "/admin/updates", icon: Sparkles },
   {
     name: "Користувачі",
     icon: Users,
@@ -237,6 +236,7 @@ export default function AdminSidebar({
   };
 
   const footerLinks: MenuItem[] = [
+    { name: "Що нового?", href: "/admin/updates", icon: Sparkles },
     { name: "Налаштування", href: "/admin/settings", icon: Settings },
   ];
 

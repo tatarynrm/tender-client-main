@@ -352,7 +352,7 @@ export default function ManagersTenderPage({ status, agree }: Props) {
           <div className="pb-6 scrollbar-thin">
             <div className="w-full xl:min-w-[1240px]">
               {/* STICKY HEADER ROW */}
-              <div className="sticky top-[-16px] z-20 hidden xl:flex w-full min-h-[38px] mb-2 font-bold text-zinc-500 dark:text-zinc-400 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] text-[10px] uppercase tracking-wider">
+              <div className="sticky top-[-16px] z-20 hidden xl:flex w-full min-h-[38px] mb-2 font-black text-zinc-700 dark:text-zinc-200 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] text-[10px] uppercase tracking-wider">
                 <div className="w-[60px] flex-shrink-0 flex items-center justify-center py-2">
                   №
                 </div>

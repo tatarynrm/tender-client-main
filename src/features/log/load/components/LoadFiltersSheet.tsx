@@ -28,7 +28,6 @@ import { cn } from "@/shared/utils";
 import { Dropdowns } from "../../types/load.type";
 import { ILoadData } from "@/shared/api/api.type";
 
-
 interface TenderFiltersProps<T extends Filters> {
   filters: T;
   setFilters: (updater: (prev: T) => T) => void;
@@ -195,7 +194,7 @@ export const LoadFiltersSheet = <T extends Filters>({
                   />
                   <Input
                     className="h-9 text-sm rounded-xl"
-                    placeholder="Місто відправлення"
+                    placeholder="Населений пункт"
                     value={filters.city_from ? String(filters.city_from) : ""}
                     onChange={(e) => updateField("city_from", e.target.value)}
                   />

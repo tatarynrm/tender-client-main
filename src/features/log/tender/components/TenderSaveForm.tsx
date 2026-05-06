@@ -2404,11 +2404,11 @@ export default function TenderSaveForm({
           <Form {...form}>
             <form
               onSubmit={handleSubmit(onSubmit, onInvalid)}
-              className="w-full scrollbar-thin bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-4 lg:p-6"
+              className="w-full scrollbar-thin bg-slate-50 dark:bg-slate-900/50 rounded-3xl p-3 lg:p-4"
             >
               <fieldset
                 disabled={isSubmitting || isPending}
-                className="flex flex-col gap-3 min-w-0 w-full p-0 m-0 border-none scrollbar-thin"
+                className="flex flex-col gap-2 min-w-0 w-full p-0 m-0 border-none scrollbar-thin"
               >
                 {/* TOP HEADER BLOCK */}
                 <div className="flex items-center justify-between mb-2">
@@ -2463,12 +2463,12 @@ export default function TenderSaveForm({
                 </div>
 
                 {/* CARD 1: TITLE & BASIC INFO */}
-                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 p-4 md:p-5">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 p-3 md:p-4">
                   <h1 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
                     Створення Тендера
                   </h1>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                     <FormField
                       control={control}
                       name="ids_type"
