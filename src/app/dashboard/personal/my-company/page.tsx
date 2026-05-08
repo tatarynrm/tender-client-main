@@ -90,7 +90,11 @@ export default function MyCompanyPage() {
           )}
           {activeTab === "information" && (
             <TabContentWrapper key="information">
-              <InformationTab />
+              <InformationTab 
+                transport={company?.transport} 
+                directions={company?.directions}
+                isLoading={isLoading}
+              />
             </TabContentWrapper>
           )}
         </AnimatePresence>

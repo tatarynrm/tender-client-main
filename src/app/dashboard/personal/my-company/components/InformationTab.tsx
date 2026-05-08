@@ -4,101 +4,55 @@ import React, { useState } from "react";
 import {
   Truck,
   Map,
-  Globe2,
   CheckCircle2,
-  Navigation,
   Activity,
+  Loader2,
 } from "lucide-react";
-import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 
-const FLEET_DATA = [
-  { type: "Тент", count: 5 },
-  { type: "Рефрижератор", count: 8 },
-  { type: "Зерновоз", count: 3 },
-  { type: "Контейнеровоз", count: 2 },
-];
+export interface TransportItem {
+  type: string;
+  objem: number;
+  vant: number;
+  kil: number;
+  comment: string | null;
+}
 
-const DIRECTIONS = [
-  {
-    region: "Західна Європа",
-    countries: [
-      "Франція",
-      "Бельгія",
-      "Нідерланди",
-      "Люксембург",
-      "Німеччина",
-      "Австрія",
-      "Ліхтенштейн",
-      "Швейцарія",
-    ],
-    checked: ["Франція", "Бельгія", "Нідерланди", "Німеччина"],
-  },
-  {
-    region: "Північна Європа",
-    countries: [
-      "Фінляндія",
-      "Швеція",
-      "Норвегія",
-      "Данія",
-      "Велика Британія",
-      "Ірландія",
-      "Ісландія",
-      "Естонія",
-    ],
-    checked: ["Данія", "Велика Британія"],
-  },
-  {
-    region: "Південна Європа",
-    countries: [
-      "Італія",
-      "Греція",
-      "Іспанія",
-      "Португалія",
-      "Сербія",
-      "Андорра",
-      "Сан-Марино",
-      "Хорватія",
-    ],
-    checked: ["Італія", "Іспанія", "Сербія", "Хорватія"],
-  },
-  {
-    region: "Східна Європа",
-    countries: [
-      "Україна",
-      "Молдова",
-      "Румунія",
-      "Болгарія",
-      "Угорщина",
-      "Чехія",
-      "Словаччина",
-      "Польща",
-    ],
-    checked: ["Україна", "Польща", "Чехія", "Словаччина"],
-  },
-  {
-    region: "СНД",
-    countries: [
-      "Білорусь",
-      "Вірменія",
-      "Грузія",
-      "Казахстан",
-      "Киргизстан",
-      "Узбекистан",
-      "Азербайджан",
-    ],
-    checked: [],
-  },
-];
+export interface Country {
+  kod: number;
+  country_name: string;
+  checked: number;
+}
 
-export function InformationTab() {
-  const [geoMode, setGeoMode] = useState<"intl" | "local">("intl");
+export interface Direction {
+  kod: number;
+  direction_name: string;
+  countries: Country[];
+}
+
+interface InformationTabProps {
+  transport?: TransportItem[];
+  directions?: Direction[];
+  isLoading?: boolean;
+}
+
+export function InformationTab({ transport, directions, isLoading }: InformationTabProps) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+        <span className="text-sm font-black uppercase tracking-widest text-zinc-400">
+          Завантаження даних...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* FLEET SECTION */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-12 space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Truck className="w-5 h-5 text-indigo-600" />
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
@@ -107,79 +61,76 @@ export function InformationTab() {
           </div>
 
           <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar">
-            <table className="w-full border-collapse min-w-[500px]">
+            <table className="w-full border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30">
                   <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
                     Тип транспорту
                   </th>
-                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-40">
+                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
+                    Об'єм (м³)
+                  </th>
+                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
+                    Вант-сть (т)
+                  </th>
+                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
                     Кількість
+                  </th>
+                  <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                    Коментар
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
-                {FLEET_DATA.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors"
-                  >
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                          <Activity className="w-4 h-4 text-zinc-400" />
-                        </div>
-                        <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                          {item.type}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-5 sm:px-8 py-4 sm:py-5 text-center">
-                      <span className="inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-100/50 dark:border-indigo-500/20">
-                        {item.count}
+                {!transport || transport.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-10 text-center">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                        Дані про автопарк відсутні
                       </span>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  transport.map((item, idx) => (
+                    <tr
+                      key={idx}
+                      className="hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <Activity className="w-4 h-4 text-zinc-400" />
+                          </div>
+                          <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                            {item.type}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className="text-sm font-black text-zinc-700 dark:text-zinc-300">
+                          {item.objem || "-"}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className="text-sm font-black text-zinc-700 dark:text-zinc-300">
+                          {item.vant || "-"}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-100/50 dark:border-indigo-500/20">
+                          {item.kil}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          {item.comment || "-"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* GEOGRAPHY SECTION */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Globe2 className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-              Географія перевезень
-            </h2>
-          </div>
-
-          <div className="p-5 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6">
-            <div className="flex p-1.5 rounded-2xl bg-zinc-100 dark:bg-white/5 border border-zinc-200/50 dark:border-white/10">
-              <button
-                onClick={() => setGeoMode("intl")}
-                className={cn(
-                  "flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
-                  geoMode === "intl"
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-y-[-1px]"
-                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
-                )}
-              >
-                Міжнародні
-              </button>
-              <button
-                onClick={() => setGeoMode("local")}
-                className={cn(
-                  "flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
-                  geoMode === "local"
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 translate-y-[-1px]"
-                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
-                )}
-              >
-                Локальні
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -189,57 +140,71 @@ export function InformationTab() {
         <div className="flex items-center gap-2 px-1">
           <Map className="w-5 h-5 text-indigo-600" />
           <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-            Компанія здійснює перевезення по напрямкам
+            Географія перевезень
           </h2>
         </div>
 
         <div className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8">
-            {DIRECTIONS.map((dir, idx) => (
-              <div key={idx} className="space-y-5">
-                <div className="flex items-center justify-between group">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-indigo-600 dark:text-indigo-400 transition-transform">
-                    {dir.region}
-                  </h3>
-                </div>
+          {!directions || directions.length === 0 ? (
+            <div className="py-10 text-center">
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                Дані про напрямки відсутні
+              </span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
+              {directions.map((dir, idx) => (
+                <div key={idx} className="space-y-5">
+                  <div className="flex items-center justify-between group">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-indigo-600 dark:text-indigo-400 transition-transform">
+                      {dir.direction_name}
+                    </h3>
+                  </div>
 
-                <div className="space-y-3">
-                  {dir.countries.map((country, cIdx) => {
-                    const isChecked = dir.checked.includes(country);
-                    return (
-                      <div
-                        key={cIdx}
-                        className="flex items-center gap-2.5 group/item cursor-pointer"
-                      >
-                        <div
-                          className={cn(
-                            "w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300",
-                            isChecked
-                              ? "bg-indigo-600 border-indigo-600 shadow-sm shadow-indigo-500/20"
-                              : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 group-hover/item:border-indigo-400",
-                          )}
-                        >
-                          {isChecked && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                          )}
-                        </div>
-                        <span
-                          className={cn(
-                            "text-[12px] font-medium transition-colors",
-                            isChecked
-                              ? "text-zinc-900 dark:text-zinc-100 font-bold"
-                              : "text-zinc-500 dark:text-zinc-500 group-hover/item:text-zinc-700 dark:group-hover/item:text-zinc-300",
-                          )}
-                        >
-                          {country}
-                        </span>
-                      </div>
-                    );
-                  })}
+                  <div className="space-y-3">
+                    {dir.countries.length === 0 ? (
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest opacity-50">
+                        Немає країн
+                      </span>
+                    ) : (
+                      dir.countries.map((country, cIdx) => {
+                        const isChecked = country.checked === 1;
+                        return (
+                          <div
+                            key={cIdx}
+                            className="flex items-center gap-2.5 group/item"
+                          >
+                            <div
+                              className={cn(
+                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300",
+                                isChecked
+                                  ? "bg-indigo-600 border-indigo-600 shadow-sm shadow-indigo-500/20"
+                                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 group-hover/item:border-indigo-400",
+                              )}
+                            >
+                              {isChecked && (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              )}
+                            </div>
+                            <span
+                              className={cn(
+                                "text-[12px] font-medium transition-colors",
+                                isChecked
+                                  ? "text-zinc-900 dark:text-zinc-100 font-bold"
+                                  : "text-zinc-500 dark:text-zinc-500 group-hover/item:text-zinc-700 dark:group-hover/item:text-zinc-300",
+                              )}
+                            >
+                              {country.country_name}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
