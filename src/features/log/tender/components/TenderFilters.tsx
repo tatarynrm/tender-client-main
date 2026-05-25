@@ -67,7 +67,7 @@ export const TenderFiltersSheet = <T extends Filters>({
         <Button
           variant="outline"
           size="sm"
-          className="border-orange-400 hover:bg-orange-50 transition-colors"
+          className=" transition-colors"
         >
           <Filter className="mr-2 h-4 w-4 text-orange-500" />
           Фільтри
@@ -125,18 +125,18 @@ export const TenderFiltersSheet = <T extends Filters>({
                     />
                     {(!filters.country_from ||
                       filters.country_from === "UA") && (
-                      <NativeSelect
-                        isMulti
-                        showSearch
-                        label="Область"
-                        value={filters.region_from}
-                        onChange={(v) => updateField("region_from", v)}
-                        options={dropdowns?.region_dropdown?.map((r) => ({
-                          ids: r.ids,
-                          value: r.short_name,
-                        }))}
-                      />
-                    )}
+                        <NativeSelect
+                          isMulti
+                          showSearch
+                          label="Область"
+                          value={filters.region_from}
+                          onChange={(v) => updateField("region_from", v)}
+                          options={dropdowns?.region_dropdown?.map((r) => ({
+                            ids: r.ids,
+                            value: r.short_name,
+                          }))}
+                        />
+                      )}
                   </div>
                   <Input
                     className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"

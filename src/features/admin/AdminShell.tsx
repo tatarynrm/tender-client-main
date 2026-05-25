@@ -32,10 +32,10 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
   const toggleSidebarState = () => setCloseSidebar((prev) => !prev);
 
   if (!mounted)
-    return <div className="h-screen bg-gray-100 dark:bg-slate-900" />;
+    return <div className="custom-app-bg h-screen" />;
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
+    <div className="custom-app-bg flex h-screen text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
       {/* BACKDROP (Оверлей для мобілки) */}
       <div
         onClick={() => setSidebarOpen(false)}
@@ -47,7 +47,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
       {/* ASIDE (Сайдбар) */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-99 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-99 w-64 transform custom-sidebar-bg shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна логіка: виїжджає при sidebarOpen */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -74,7 +74,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
           closeSidebarState={closeSidebar}
           profile={profile}
         />
-        <main className="flex-1 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900 transition-colors duration-300 scrollbar-thin">
+        <main className="custom-app-bg flex-1 overflow-y-auto p-4 transition-colors duration-300 scrollbar-thin">
           <div className="mx-auto w-full">{children}</div>
         </main>
       </div>

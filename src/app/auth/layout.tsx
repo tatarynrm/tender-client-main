@@ -12,5 +12,5 @@ export default async function AuthLayout({
   const profile = await getProfile();
 
   if (profile) redirect("/dashboard");
-  if (!profile) return <>{children}</>;
+  if (!profile) return <div className="custom-app-bg min-h-screen w-full">{children}</div>;
 }

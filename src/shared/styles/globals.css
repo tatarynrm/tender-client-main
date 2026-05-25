@@ -81,6 +81,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --app-bg: #cfddf7;
+  --sidebar-bg: #ffffff;
 }
 
 .dark {
@@ -115,6 +117,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --app-bg: #2e2f4a;
+  --sidebar-bg: #393c65;
 }
 
 @layer base {
@@ -123,8 +127,17 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: var(--app-bg);
   }
+}
+
+.custom-app-bg {
+  background-color: var(--app-bg) !important;
+}
+
+.custom-sidebar-bg {
+  background-color: var(--sidebar-bg) !important;
 }
 
 
@@ -228,25 +241,38 @@
 }
 
 /* CSS для приховування скролбару: Щоб скрол був чистим, ви можете додати в глобальний CSS: */
-.scrollbar-hide::-webkit-scrollbar { display: none; }
-.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 
 
 @layer utilities {
   @keyframes bounce-subtle {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-4px);
+    }
   }
 
   .animate-comment-glow {
     /* Додаємо анімацію */
     animation: bounce-subtle 0.5s ease-in-out 3;
-    
+
     /* Сяйво та колір бордера */
     border-color: #f59e0b !important;
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.5) !important;
-    
+
     /* Додатково, щоб було видно на темній темі */
     outline: 2px solid rgba(245, 158, 11, 0.3) !important;
     z-index: 50;
@@ -260,7 +286,7 @@ html {
 
 /* Додаємо відступ зверху, щоб заголовок не перекривав контент секції */
 section[id] {
-  scroll-margin-top: 80px; 
+  scroll-margin-top: 80px;
 }
 
 
@@ -271,8 +297,10 @@ section[id] {
 
 /* Якщо gridClass містить наприклад grid-cols-3, ми перевизначимо це для Masonry */
 .block-masonry {
-  display: block; /* Важливо змінити з grid на block */
-  column-gap: 1.5rem; /* аналог gap-6 */
+  display: block;
+  /* Важливо змінити з grid на block */
+  column-gap: 1.5rem;
+  /* аналог gap-6 */
 }
 
 /* Адаптивність: скільки колонок */
@@ -291,7 +319,8 @@ section[id] {
 /* Щоб картку не розривало між колонками */
 .break-inside-avoid {
   break-inside: avoid-column;
-  display: inline-block; /* допомагає деяким браузерам правильно рахувати висоту */
+  display: inline-block;
+  /* допомагає деяким браузерам правильно рахувати висоту */
   width: 100%;
 }
 
@@ -301,9 +330,12 @@ section[id] {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
 
@@ -323,8 +355,13 @@ section[id] {
 
 /* Бігуща строка в карточках */
 @keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 .animate-marquee-container {

@@ -34,11 +34,11 @@ export default function LogShell({
 
   // Запобігання Layout Shift (миготіння при завантаженні)
   if (!mounted) {
-    return <div className="h-screen bg-gray-100 dark:bg-slate-900" />;
+    return <div className="custom-app-bg h-screen" />;
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
+    <div className="custom-app-bg flex h-screen text-gray-900 dark:text-gray-100 transition-colors duration-300 overflow-hidden">
       {/* Мобільний Overlay */}
       <div
         onClick={() => setSidebarOpen(false)}
@@ -50,7 +50,7 @@ export default function LogShell({
       {/* Сайдбар */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-99 w-64 transform bg-white dark:bg-slate-800 shadow-lg transition-all duration-300 ease-in-out
+          fixed inset-y-0 left-0 z-99 w-64 transform custom-sidebar-bg shadow-lg transition-all duration-300 ease-in-out
           
           /* Мобільна поведінка */
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -74,7 +74,7 @@ export default function LogShell({
           closeSidebarState={closeSidebar}
           profile={profile}
         />
-        <main className="flex-1 min-h-0 overflow-y-auto p-4 bg-gray-100 dark:bg-slate-900 transition-colors duration-300">
+        <main className="custom-app-bg flex-1 min-h-0 overflow-y-auto p-4 transition-colors duration-300">
           <div className="mx-auto w-full">{children}</div>
         </main>
       </div>

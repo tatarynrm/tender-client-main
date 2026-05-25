@@ -11,7 +11,7 @@ export function useProfileLogoutMutation() {
     mutationFn: () => authService.logout(),
     onSuccess() {
       toast.success("Ви успішно вийшли з аккаунту");
-      router.push("/auth/login");
+      window.location.href = "/auth/login";
     },
     onError(error) {
       console.log(error);
