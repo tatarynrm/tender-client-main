@@ -104,6 +104,9 @@ export default function EmailBroadcastComponent() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
   // Debounce search queries to reduce database load
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -291,6 +294,26 @@ export default function EmailBroadcastComponent() {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || err.message || "Помилка при зупинці");
+    },
+  });
+
+  const deleteMailingMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedId) return;
+      const { data } = await api.delete(`/admin/mailing/${selectedId}`);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Розсилку успішно видалено");
+      setSelectedId(null);
+      setShowDeleteModal(false);
+      setDeleteConfirmText("");
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Помилка при видаленні розсилки");
+      setShowDeleteModal(false);
+      setDeleteConfirmText("");
     },
   });
 
@@ -616,7 +639,21 @@ export default function EmailBroadcastComponent() {
                     )}
                   </div>
                 </div>
-                {selectedDetails && getStatusBadge(selectedDetails.status)}
+                <div className="flex items-center gap-3">
+                  {selectedDetails && getStatusBadge(selectedDetails.status)}
+                  {selectedDetails && selectedDetails.status !== "RUNNING" && (
+                    <button
+                      onClick={() => {
+                        setDeleteConfirmText("");
+                        setShowDeleteModal(true);
+                      }}
+                      className="p-2 border border-rose-200 dark:border-rose-900/30 bg-rose-500/10 hover:bg-rose-500 hover:text-white text-rose-500 rounded-xl transition-all"
+                      title="Видалити розсилку"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Grid of Summary Stats */}
@@ -1264,6 +1301,61 @@ export default function EmailBroadcastComponent() {
               >
                 {startMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Підтвердити запуск
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl p-6 relative animate-in zoom-in-95 duration-300 flex flex-col gap-5">
+            <div className="pb-3 border-b border-slate-100 dark:border-white/5">
+              <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" /> Видалення розсилки
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-semibold uppercase tracking-wider">
+                Підтвердіть остаточне видалення кампанії
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 rounded-2xl text-xs leading-relaxed font-semibold">
+                Увага! Ця дія незворотна. Буде видалено розсилку «{selectedDetails?.item_name}» разом із усіма отримувачами ({selectedDetails?.stats.total || 0} адрес) та вкладеними файлами з диска.
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Введіть «ICT» для підтвердження видалення:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Введіть ICT..."
+                  className="w-full p-3 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-2xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none transition-all text-sm font-semibold tracking-wider text-center"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-white/5 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText("");
+                }}
+                className="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-bold text-xs"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => deleteMailingMutation.mutate()}
+                disabled={deleteConfirmText !== "ICT" || deleteMailingMutation.isPending}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-white/5 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-lg hover:shadow-rose-500/20 transition-all font-bold text-xs flex items-center gap-1.5"
+              >
+                {deleteMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Видалити кампанію
               </button>
             </div>
           </div>
