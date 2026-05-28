@@ -350,7 +350,7 @@ export default function HomePage() {
 
             <div className="lg:col-span-5 w-full">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                <div className="bg-[#F2F6FE] border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
                   <div className="font-sans font-extrabold text-[30px] text-[#0a2540] leading-none mb-1.5">
                     −8%
                   </div>
@@ -359,7 +359,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                <div className="bg-[#F2F6FE] border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
                   <div className="font-sans font-extrabold text-[30px] text-[#0a2540] leading-none mb-1.5">
                     312 шт
                   </div>
@@ -368,7 +368,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                <div className="bg-[#F2F6FE] border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
                   <div className="font-sans font-extrabold text-[30px] text-[#0a2540] leading-none mb-1.5">
                     40%
                   </div>
@@ -377,7 +377,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
+                <div className="bg-[#F2F6FE] border border-slate-200 border-b-[4px] border-b-[#4256D5] rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:scale-[1.02] transition-transform">
                   <div className="font-sans font-extrabold text-[30px] text-[#0a2540] leading-none mb-1.5">
                     14%
                   </div>
@@ -455,12 +455,12 @@ export default function HomePage() {
 
         <div className="bg-white border border-slate-100 rounded-[32px] p-8 md:p-12 shadow-sm relative z-10 reveal">
           {/* Connecting Line */}
-          <div className="absolute top-[68px] left-[10%] right-[10%] h-[1.5px] bg-[#4256D5]/20 z-0 hidden md:block"></div>
+          <div className="absolute top-[68px] left-[10%] right-[10%] h-[1.5px] bg-[#4256D5]/20 z-0 hidden md:block w-[calc(100%-35%)]"></div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
             {/* Step 1 */}
             <div className="flex flex-col items-start text-left">
-              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center shadow-[0_0_0_6px_rgba(66,86,213,0.08)] mb-6 transition-transform hover:scale-110 duration-200">
+              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center mb-6 transition-transform hover:scale-110 duration-200">
                 <span className="font-sans font-extrabold text-[20px] text-[#4256D5]">1</span>
               </div>
               <h3 className="font-sans font-bold text-[18px] text-[#0a2540] mb-2">Подайте заявку</h3>
@@ -471,7 +471,7 @@ export default function HomePage() {
 
             {/* Step 2 */}
             <div className="flex flex-col items-start text-left">
-              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center shadow-[0_0_0_6px_rgba(66,86,213,0.08)] mb-6 transition-transform hover:scale-110 duration-200">
+              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center  mb-6 transition-transform hover:scale-110 duration-200">
                 <span className="font-sans font-extrabold text-[20px] text-[#4256D5]">2</span>
               </div>
               <h3 className="font-sans font-bold text-[18px] text-[#0a2540] mb-2">Перевірка ICT</h3>
@@ -482,7 +482,7 @@ export default function HomePage() {
 
             {/* Step 3 */}
             <div className="flex flex-col items-start text-left">
-              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center shadow-[0_0_0_6px_rgba(66,86,213,0.08)] mb-6 transition-transform hover:scale-110 duration-200">
+              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center mb-6 transition-transform hover:scale-110 duration-200">
                 <span className="font-sans font-extrabold text-[20px] text-[#4256D5]">3</span>
               </div>
               <h3 className="font-sans font-bold text-[18px] text-[#0a2540] mb-2">Доступ підтверджено</h3>
@@ -493,7 +493,7 @@ export default function HomePage() {
 
             {/* Step 4 */}
             <div className="flex flex-col items-start text-left">
-              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center shadow-[0_0_0_6px_rgba(66,86,213,0.08)] mb-6 transition-transform hover:scale-110 duration-200">
+              <div className="w-14 h-14 bg-white border-2 border-[#4256D5] rounded-full flex items-center justify-center mb-6 transition-transform hover:scale-110 duration-200">
                 <span className="font-sans font-extrabold text-[20px] text-[#4256D5]">4</span>
               </div>
               <h3 className="font-sans font-bold text-[18px] text-[#0a2540] mb-2">Беріть участь у тендерах</h3>
@@ -723,12 +723,13 @@ const landingStyles = `
 }
 
 .btn-ghost {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: var(--text2);
   background: none;
-  border: none;
+  border: 2px solid #4256D5;
+  color: #4256D5;
   cursor: pointer;
   padding: 8px 16px;
   border-radius: 8px;
@@ -741,17 +742,16 @@ const landingStyles = `
 }
 
 .btn-primary {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: #fff;
-  background: var(--accent);
+  background: #4256D5;
   border: none;
   cursor: pointer;
   padding: 9px 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(13, 147, 224, 0.28);
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  
 }
 
 .btn-primary:hover {
@@ -1242,19 +1242,19 @@ const landingStyles = `
 }
 
 .why-num {
-  font-family: 'Lora', serif;
-  font-size: 56px;
-  font-weight: 400;
-  color:#A5BDE9 ;
+  font-family: 'Inter', serif;
+  font-size: 50px;
+  font-weight: 700;
+  color:#A5BDE9;
   line-height: 1;
   letter-spacing: -0.04em;
   margin-bottom: 12px;
 }
 
 .why-title {
-  font-family: 'Lora', serif;
-  font-size: 19px;
-  font-weight: 500;
+  font-family: 'Inter', serif;
+  font-size: 20px;
+  font-weight: 600;
   margin-bottom: 8px;
   color: var(--navy);
 }
