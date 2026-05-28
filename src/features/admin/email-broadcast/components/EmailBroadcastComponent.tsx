@@ -40,6 +40,7 @@ interface MailingItem {
   email_title?: string;
   email_content?: string;
   template_id?: string;
+  created_at?: string;
   stats: MailingStats;
   status: "IDLE" | "RUNNING" | "PAUSED" | "COMPLETED";
 }
@@ -82,18 +83,23 @@ export default function EmailBroadcastComponent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [itemName, setItemName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   const [emailTitle, setEmailTitle] = useState("");
   const [bodyText, setBodyText] = useState("");
   const [templateId, setTemplateId] = useState<string>("plain");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(50);
+
+  const [listSearch, setListSearch] = useState("");
+  const [debouncedListSearch, setDebouncedListSearch] = useState("");
+  const [listPage, setListPage] = useState<number>(1);
+  const [listLimit, setListLimit] = useState<number>(10);
 
   // Debounce search queries to reduce database load
   useEffect(() => {
@@ -107,6 +113,18 @@ export default function EmailBroadcastComponent() {
     };
   }, [searchQuery]);
 
+  // Debounce campaign list search queries
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedListSearch(listSearch);
+      setListPage(1); // reset list page 1 on search
+    }, 450);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [listSearch]);
+
   // Reset pagination state when campaign selection changes
   useEffect(() => {
     setPage(1);
@@ -114,14 +132,29 @@ export default function EmailBroadcastComponent() {
     setDebouncedSearch("");
   }, [selectedId]);
 
+  interface PaginatedMailings {
+    data: MailingItem[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }
+
   // Queries
-  const { data: mailings = [], isLoading: listLoading, refetch: refetchList } = useQuery<MailingItem[]>({
-    queryKey: ["mailings-list"],
+  const { data: mailingsData, isLoading: listLoading } = useQuery<PaginatedMailings>({
+    queryKey: ["mailings-list", listPage, listLimit, debouncedListSearch],
     queryFn: async () => {
-      const { data } = await api.get("/admin/mailing/list");
+      const { data } = await api.get("/admin/mailing/list", {
+        params: { page: listPage, limit: listLimit, search: debouncedListSearch },
+      });
       return data;
     },
   });
+
+  const mailings = mailingsData?.data || [];
+  const mailingsMeta = mailingsData?.meta;
 
   const { data: selectedDetails, isLoading: detailsLoading } = useQuery<MailingDetails>({
     queryKey: ["mailing-details", selectedId, page, limit, debouncedSearch],
@@ -155,20 +188,8 @@ export default function EmailBroadcastComponent() {
     if (!userSocket) return;
 
     const handleProgress = (data: { mailingId: number; itemName: string; status: any; stats: MailingStats }) => {
-      queryClient.setQueryData<MailingItem[]>(["mailings-list"], (oldList) => {
-        if (!oldList) return oldList;
-        return oldList.map((item) => {
-          if (item.id === data.mailingId) {
-            return {
-              ...item,
-              status: data.status,
-              stats: data.stats,
-            };
-          }
-          return item;
-        });
-      });
-
+      // Invalidate queries to refresh lists and details dynamically
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
       if (selectedId === data.mailingId) {
         queryClient.invalidateQueries({ queryKey: ["mailing-details", selectedId] });
       }
@@ -422,7 +443,7 @@ export default function EmailBroadcastComponent() {
             Email Розсилки
           </h1>
           <p className="text-xs text-slate-500 mt-1 font-bold uppercase tracking-wider">
-            Керування розсилками та відстеження статусу в реальному часі через BullMQ
+            Керування розсилками та відстеження статусу в реальному часі
           </p>
         </div>
         <button
@@ -436,9 +457,23 @@ export default function EmailBroadcastComponent() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* Left Column: List of mailings */}
         <div className="xl:col-span-4 bg-white/50 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-sm h-[calc(100vh-12rem)] flex flex-col gap-4">
-          <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-            Кампанії розсилки
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              Розсилки ({mailingsMeta?.total || 0})
+            </h2>
+          </div>
+
+          {/* Search input for mailings */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={listSearch}
+              onChange={(e) => setListSearch(e.target.value)}
+              placeholder="Пошук розсилки..."
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all font-semibold"
+            />
+          </div>
 
           <div className="flex-grow overflow-y-auto custom-scrollbar space-y-3 pr-1">
             {listLoading ? (
@@ -473,6 +508,18 @@ export default function EmailBroadcastComponent() {
                       {getStatusBadge(item.status)}
                     </div>
 
+                    {item.created_at && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold -mt-1">
+                        {new Date(item.created_at).toLocaleString("uk-UA", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+
                     <div className="flex items-center justify-between text-xs font-bold text-slate-500">
                       <span>Надіслано: {processed} / {total}</span>
                       <span>{pct}%</span>
@@ -492,6 +539,31 @@ export default function EmailBroadcastComponent() {
               })
             )}
           </div>
+
+          {/* Pagination for mailings */}
+          {mailingsMeta && mailingsMeta.totalPages > 1 && (
+            <div className="flex items-center justify-between text-xs pt-3 border-t border-slate-100 dark:border-white/5">
+              <button
+                type="button"
+                onClick={() => setListPage((p) => Math.max(p - 1, 1))}
+                disabled={listPage === 1}
+                className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg font-bold disabled:opacity-40 transition-colors cursor-pointer text-slate-700 dark:text-slate-300"
+              >
+                Назад
+              </button>
+              <span className="font-bold text-slate-600 dark:text-slate-400">
+                {listPage} / {mailingsMeta.totalPages || 1}
+              </span>
+              <button
+                type="button"
+                onClick={() => setListPage((p) => Math.min(p + 1, mailingsMeta.totalPages))}
+                disabled={listPage >= mailingsMeta.totalPages}
+                className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg font-bold disabled:opacity-40 transition-colors cursor-pointer text-slate-700 dark:text-slate-300"
+              >
+                Вперед
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right Column: detailed view & control panel */}
@@ -519,7 +591,23 @@ export default function EmailBroadcastComponent() {
                   <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                     {selectedDetails?.item_name}
                   </h2>
-                  <span className="text-xs text-slate-500">ID Розсилки: #{selectedDetails?.id}</span>
+                  <div className="flex items-center gap-3 mt-1 flex-wrap">
+                    <span className="text-xs text-slate-500 font-bold">ID: #{selectedDetails?.id}</span>
+                    {selectedDetails?.created_at && (
+                      <>
+                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-white/15" />
+                        <span className="text-xs text-slate-500 font-bold">
+                          Створено: {new Date(selectedDetails.created_at).toLocaleString("uk-UA", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 {selectedDetails && getStatusBadge(selectedDetails.status)}
               </div>
@@ -572,15 +660,14 @@ export default function EmailBroadcastComponent() {
                   <div className="w-full bg-slate-200 dark:bg-white/10 h-3 rounded-full overflow-hidden shadow-inner">
                     <div
                       style={{
-                        width: `${
-                          selectedDetails.stats.total > 0
-                            ? Math.round(
-                                ((selectedDetails.stats.done + selectedDetails.stats.failed) /
-                                  selectedDetails.stats.total) *
-                                  100
-                              )
-                            : 0
-                        }%`,
+                        width: `${selectedDetails.stats.total > 0
+                          ? Math.round(
+                            ((selectedDetails.stats.done + selectedDetails.stats.failed) /
+                              selectedDetails.stats.total) *
+                            100
+                          )
+                          : 0
+                          }%`,
                       }}
                       className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all duration-500"
                     />
@@ -640,7 +727,7 @@ export default function EmailBroadcastComponent() {
                         <h4 className="font-bold text-slate-800 dark:text-slate-200">
                           Надісланий лист:
                         </h4>
-                        
+
                         <div className="space-y-1">
                           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Тема листа:</span>
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/5">
@@ -702,7 +789,7 @@ export default function EmailBroadcastComponent() {
                               </button>
                             </div>
                           </div>
-                          
+
                           <div className="border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-950 p-4 flex justify-center items-center">
                             <div
                               className={cn(
@@ -713,8 +800,8 @@ export default function EmailBroadcastComponent() {
                               <iframe
                                 title="Email Live Preview"
                                 srcDoc={compileClientTemplate(
-                                  selectedDetails.template_id || "plain", 
-                                  selectedDetails.email_content || "", 
+                                  selectedDetails.template_id || "plain",
+                                  selectedDetails.email_content || "",
                                   selectedDetails.email_title || ""
                                 )}
                                 className="w-full min-h-[350px] bg-white"
@@ -929,7 +1016,7 @@ export default function EmailBroadcastComponent() {
                     <h3 className="font-bold text-slate-800 dark:text-slate-200">
                       Список адрес отримувачів ({addressesMeta?.total || 0})
                     </h3>
-                    
+
                     <div className="relative w-full sm:w-64">
                       <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                       <input
@@ -987,7 +1074,7 @@ export default function EmailBroadcastComponent() {
                       <span className="font-bold text-slate-500">
                         Показано з {Math.min((page - 1) * limit + 1, addressesMeta.total)} по {Math.min(page * limit, addressesMeta.total)} із {addressesMeta.total} отримувачів
                       </span>
-                      
+
                       <div className="flex items-center gap-4">
                         {/* Limit selector */}
                         <div className="flex items-center gap-1.5 font-bold text-slate-500">
