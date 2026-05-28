@@ -233,7 +233,7 @@ export default function ClientsTenderPage({
               />
 
               {/* ── Participation Filters ───────────────────────────────── */}
-              <div className="flex items-center p-1 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
+              <div className="flex items-center p-1 bg-white dark:bg-[#656A9D] rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
                 <QuickFilterBtn
                   label="Я беру участь"
                   isActive={currentParams.participate === "true"}
@@ -264,7 +264,7 @@ export default function ClientsTenderPage({
             </div>
 
             {/* ── Center: Direction quick filters ─────────────────────────── */}
-            <div className="flex flex-wrap items-center p-1 bg-zinc-100/50 dark:bg-white/5 rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
+            <div className="flex flex-wrap items-center p-1  bg-white dark:bg-[#656A9D] rounded-2xl border border-zinc-200 dark:border-white/10 shadow-sm gap-0.5">
               <QuickFilterBtn
                 label="Усі"
                 count={add_data?.car_count_all?.all}
@@ -324,7 +324,7 @@ export default function ClientsTenderPage({
                   updateUrl({ ...currentParams, sortBy, sortOrder, page: 1 });
                 }}
               />
-              <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-zinc-200 dark:border-white/10 shadow-sm">
+              <div className="flex items-center bg-white rounded-xl text-[#415A88]  dark:bg-[#3A3C65] dark:text-white ">
                 <ItemsPerPage
                   options={[10, 20, 50, 100]}
                   defaultValue={currentParams.limit}
@@ -349,7 +349,7 @@ export default function ClientsTenderPage({
         <div className="space-y-1 pb-20 scrollbar-thin">
           <div className="w-full xl:min-w-[1240px]">
             {/* STICKY HEADER ROW */}
-            <div className="sticky top-[-16px] z-20 hidden xl:flex w-full min-h-[38px] mb-2 font-black text-zinc-700 dark:text-zinc-200 divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-zinc-50/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800/60 rounded-xl shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] text-[10px] uppercase tracking-wider">
+            <div className="sticky top-[-16px] z-20 hidden xl:flex w-full min-h-[38px] mb-2 font-semibold text-black dark:text-white divide-x divide-zinc-200/80 dark:divide-zinc-800 bg-[#F3F7FF] dark:bg-[#7B84FB33] backdrop-blur-md border-2 border-[#7C98CB] dark:border-[#656A9D] rounded-xl shadow-[0_4px_12px_-4px_rgba(0,0,0,0.1)] text-[14px]">
               <div className="w-[60px] flex-shrink-0 flex items-center justify-center py-2">
                 №
               </div>

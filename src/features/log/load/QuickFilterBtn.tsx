@@ -18,13 +18,13 @@ export const QuickFilterBtn = ({
   <button
     onClick={onClick}
     className={cn(
-      "relative h-8 px-3 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 select-none outline-none",
+      "relative h-8 px-3 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 select-none outline-none text-[#415A88]",
       isActive
         ? "bg-background dark:bg-zinc-800 text-primary shadow-sm scale-[1.03] border border-border/50"
         : "text-muted-foreground hover:text-foreground hover:bg-background/50 border border-transparent",
     )}
   >
-    <span>{label}</span>
+    <span className="text-[#415A88] dark:text-white">{label}</span>
     {count !== undefined && (
       <span
         className={cn(

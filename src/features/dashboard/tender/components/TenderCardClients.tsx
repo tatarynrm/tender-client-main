@@ -159,7 +159,7 @@ export function TenderCardClients({
 
   console.log(profile);
   return (
-    <div className="w-full relative mb-1 overflow-hidden border-2 border-[#7C98CB] dark:border-[#656A9D] rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card mt-2">
+    <div className="w-full relative mb-1 overflow-hidden border-2 border-[#7C98CB] dark:border-[#656A9D] rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8]  font-sans text-xs group/card mt-2">
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 

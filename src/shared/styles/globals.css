@@ -117,8 +117,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --app-bg: #2e2f4a;
-  --sidebar-bg: #393c65;
+  --app-bg: #2E2F4A;
+  --sidebar-bg: #3a3c65;
 }
 
 @layer base {
