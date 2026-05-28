@@ -159,7 +159,7 @@ export function TenderCardClients({
 
   console.log(profile);
   return (
-    <div className="w-full relative mb-1 overflow-hidden border border-zinc-200 dark:border-white/10 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card mt-2">
+    <div className="w-full relative mb-1 overflow-hidden border-2 border-[#7C98CB] dark:border-[#656A9D] rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] dark:bg-slate-900/60 font-sans text-xs group/card mt-2">
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 
@@ -222,7 +222,7 @@ export function TenderCardClients({
         )}
 
         {isFinished && hasNoBids && !isWinByCompany && (
-          <div className="flex items-center gap-1.5 rounded-br-lg bg-amber-50/90 border-b border-r border-amber-200 px-2.5 py-1.5 backdrop-blur-md shadow-sm">
+          <div className="flex items-center gap-1.5 rounded-br-lg bg-amber-50/90 border-b border-r border-[#CFDDF7] px-2.5 py-1.5 backdrop-blur-md shadow-sm">
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
             <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 whitespace-nowrap">
               Не відбувся
@@ -234,7 +234,7 @@ export function TenderCardClients({
       {/* Main Grid Card */}
       <div className="bg-white dark:bg-slate-900 mx-px mt-px rounded-t-xl overflow-hidden flex flex-col">
         {/* ROW 1: 11 Columns - Optimized for XL+ desktop, stacking on tablet/mobile */}
-        <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-200/80 dark:divide-white/10">
+        <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-[#CFDDF7] dark:divide-[#2E2F4A]">
           {/* 1. № */}
           <div
             className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all xl:h-full border-r border-zinc-100 dark:border-white/5 group/number relative"
@@ -372,28 +372,28 @@ export function TenderCardClients({
                     {(isCustomsUp ||
                       isCustomsDown ||
                       pt.ids_point === "BORDER") && (
-                      <span
-                        className={cn(
-                          "text-[8px] uppercase font-black tracking-tight mb-0.5",
-                          isCustomsUp
-                            ? "text-emerald-600/70 dark:text-emerald-400/70"
+                        <span
+                          className={cn(
+                            "text-[8px] uppercase font-black tracking-tight mb-0.5",
+                            isCustomsUp
+                              ? "text-emerald-600/70 dark:text-emerald-400/70"
+                              : isCustomsDown
+                                ? "text-indigo-500/70 dark:text-indigo-400/70"
+                                : "text-zinc-400",
+                          )}
+                        >
+                          {isCustomsUp
+                            ? "Замитнення"
                             : isCustomsDown
-                              ? "text-indigo-500/70 dark:text-indigo-400/70"
-                              : "text-zinc-400",
-                        )}
-                      >
-                        {isCustomsUp
-                          ? "Замитнення"
-                          : isCustomsDown
-                            ? "Розмитнення"
-                            : "Кордон"}
-                        <MyTooltip
-                          text="Місце митного оформлення або перетину кордону"
-                          size={8}
-                          className="ml-1 inline-flex"
-                        />
-                      </span>
-                    )}
+                              ? "Розмитнення"
+                              : "Кордон"}
+                          <MyTooltip
+                            text="Місце митного оформлення або перетину кордону"
+                            size={8}
+                            className="ml-1 inline-flex"
+                          />
+                        </span>
+                      )}
                     <div className="flex items-center justify-center gap-1.5 font-bold text-zinc-600 dark:text-zinc-400 text-[10px] w-full">
                       {pt.ids_country && (
                         <Flag
@@ -405,7 +405,7 @@ export function TenderCardClients({
                       <span className="truncate">
                         {pt.ids_country ? `${pt.ids_country}-` : ""}
                         {pt.ids_country !== "UA" &&
-                        (ptAny.post_code || ptAny.zip_code) ? (
+                          (ptAny.post_code || ptAny.zip_code) ? (
                           <span className="text-indigo-500/70 mr-0.5">
                             {ptAny.post_code || ptAny.zip_code}
                           </span>
@@ -525,7 +525,7 @@ export function TenderCardClients({
                     {currencySymbol}
                   </span>
                   {cargo.price_step && (
-                    <span className="text-[10px] text-red-400 mt-0.5 leading-none flex items-center gap-1 font-bold">
+                    <span className="text-[12px] text-[#415A88] mt-0.5 leading-none flex items-center gap-1 font-regular font-normal">
                       крок {cargo.price_step}
                     </span>
                   )}
@@ -536,15 +536,15 @@ export function TenderCardClients({
                     e.stopPropagation();
                     handleManualPrice();
                   }}
-                  className="flex-1 cursor-pointer flex flex-col items-center justify-center bg-[#eef7ec] hover:bg-[#dcf3d9] dark:bg-emerald-900/20 p-2 text-center rounded-xl"
+                  className="flex-1 cursor-pointer flex flex-col items-center justify-center bg-[#E0FFF9]  dark:bg-[#275C7A] p-2 text-center "
                 >
                   <button
                     disabled={!isActive}
-                    className="text-[11px] font-extrabold text-[#2c5f2d]  uppercase leading-none cursor-pointer rounded-full px-3 py-1"
+                    className="text-[11px] font-extrabold text-[#2A8B7B] dark:text-[#8AE9E2]  uppercase leading-none cursor-pointer rounded-full px-3 py-1"
                   >
                     Ваша ціна
                   </button>
-                  <span className="text-[8px] text-[#2c5f2d]/70 font-bold uppercase mt-1 leading-none">
+                  <span className="text-[8px] text-[#2A8B7B] dark:text-[#8AE9E2] font-bold uppercase mt-1 leading-none">
                     поставити власну ставку
                   </span>
                 </div>
@@ -610,7 +610,8 @@ export function TenderCardClients({
                     handleManualPrice();
                   }}
                   disabled={!isActive}
-                  className="px-6 h-9 bg-[#6366f1] cursor-pointer hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
+                  // className="p-2 bg-[#4256D5] cursor-pointer hover:bg-[#3143B5] cursor-pointer hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
+                  className="p-2 bg-[#4256D5] cursor-pointer hover:bg-[#3143B5] disabled:opacity-50 flex items-center justify-center text-white font-bold text-[14px] uppercase tracking-wider transition-all  shadow-md shadow-indigo-100 dark:shadow-none"
                 >
                   Зробити ставку
                 </button>
@@ -622,7 +623,7 @@ export function TenderCardClients({
                   handleConfirmBid();
                 }}
                 disabled={!isActive}
-                className="px-6 h-9 bg-[#6366f1] cursor-pointer hover:bg-[#4f46e5] disabled:opacity-50 flex items-center justify-center text-white font-black text-[11px] uppercase tracking-wider transition-all rounded-[6px] shadow-md shadow-indigo-100 dark:shadow-none"
+                className="p-2 bg-[#4256D5] cursor-pointer hover:bg-[#3143B5] disabled:opacity-50 flex items-center justify-center text-white font-bold text-[14px] uppercase tracking-wider transition-all  shadow-md shadow-indigo-100 dark:shadow-none"
               >
                 Зробити ставку
               </button>

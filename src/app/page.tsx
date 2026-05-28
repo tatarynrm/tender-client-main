@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
   const { profile } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -78,7 +80,7 @@ export default function HomePage() {
     <div className="landing-body">
       {/* NAV */}
       <nav className={`landing-nav ${isScrolled ? 'scrolled' : ''}`}>
-        <div className="nav-logo">
+        <div className="nav-logo cursor-pointer" onClick={() => router.push("/")}>
           <img src="/images/logo/logo.png" alt="ICTender Logo" style={{ height: "100px", width: "auto", display: "block" }} />
         </div>
 

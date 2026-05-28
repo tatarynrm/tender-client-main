@@ -246,20 +246,20 @@ export default function ClientsTenderPage({
                 />
                 {(currentParams.participate === "true" ||
                   currentParams.participate_company === "true") && (
-                  <>
-                    <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
-                    <button
-                      onClick={() => {
-                        const { participate, participate_company, ...rest } =
-                          currentParams;
-                        updateUrl({ ...rest, page: 1 });
-                      }}
-                      className="h-8 px-2 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors uppercase"
-                    >
-                      Усі
-                    </button>
-                  </>
-                )}
+                    <>
+                      <div className="w-px h-4 bg-zinc-300 dark:bg-white/20 mx-0.5" />
+                      <button
+                        onClick={() => {
+                          const { participate, participate_company, ...rest } =
+                            currentParams;
+                          updateUrl({ ...rest, page: 1 });
+                        }}
+                        className="h-8 px-2 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors uppercase"
+                      >
+                        Усі
+                      </button>
+                    </>
+                  )}
               </div>
             </div>
 
@@ -378,7 +378,7 @@ export default function ClientsTenderPage({
                 Об'єм
               </div>
               <div className="flex-1 min-w-[120px] max-w-[140px] flex items-center justify-center py-2 text-center">
-                Додаткові умови
+                Додаткова інформація
               </div>
               <div className="w-[130px] flex-shrink-0 flex items-center justify-center py-2 text-center">
                 Ціни
