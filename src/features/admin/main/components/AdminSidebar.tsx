@@ -20,6 +20,7 @@ import {
   Bell,
   Send,
   Sparkles,
+  Mail,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -60,6 +61,7 @@ const links: MenuItem[] = [
     ],
   },
   { name: "Аналітика", href: "/admin/analytics", icon: BarChart },
+  { name: "Email розсилка", href: "/admin/email-broadcast", icon: Mail },
 
   {
     name: "Telegram",
