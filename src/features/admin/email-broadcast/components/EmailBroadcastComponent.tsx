@@ -101,6 +101,9 @@ export default function EmailBroadcastComponent() {
   const [listPage, setListPage] = useState<number>(1);
   const [listLimit, setListLimit] = useState<number>(10);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+
   // Debounce search queries to reduce database load
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -263,11 +266,15 @@ export default function EmailBroadcastComponent() {
     onSuccess: () => {
       toast.success("Розсилку запущено");
       setAttachments([]);
+      setShowConfirmModal(false);
+      setConfirmText("");
       queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
       queryClient.invalidateQueries({ queryKey: ["mailing-details", selectedId] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || err.message || "Помилка при запуску");
+      setShowConfirmModal(false);
+      setConfirmText("");
     },
   });
 
@@ -993,7 +1000,18 @@ export default function EmailBroadcastComponent() {
                       </div>
 
                       <button
-                        onClick={() => startMailingMutation.mutate()}
+                        onClick={() => {
+                          if (!emailTitle.trim()) {
+                            toast.error("Тема листа обов’язкова");
+                            return;
+                          }
+                          if (!bodyText.trim()) {
+                            toast.error("Текст листа обов’язковий");
+                            return;
+                          }
+                          setConfirmText("");
+                          setShowConfirmModal(true);
+                        }}
                         disabled={startMailingMutation.isPending}
                         className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg transition-all font-semibold active:scale-95 disabled:opacity-50 hover:scale-[1.01]"
                       >
@@ -1191,6 +1209,61 @@ export default function EmailBroadcastComponent() {
               >
                 {createMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Створити та імпортувати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl p-6 relative animate-in zoom-in-95 duration-300 flex flex-col gap-5">
+            <div className="pb-3 border-b border-slate-100 dark:border-white/5">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-500" /> Підтвердження розсилки
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-semibold uppercase tracking-wider">
+                Будь ласка, підтвердіть запуск відправки
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-2xl text-xs leading-relaxed font-semibold">
+                Увага! Запуск розсилки надішле листи на {selectedDetails?.stats.total || 0} адрес. Скасувати окремі листи буде неможливо.
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Введіть «ICT» для підтвердження:
+                </label>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Введіть ICT..."
+                  className="w-full p-3 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all text-sm font-semibold tracking-wider text-center"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-white/5 justify-end">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmText("");
+                }}
+                className="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-bold text-xs"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => startMailingMutation.mutate()}
+                disabled={confirmText !== "ICT" || startMailingMutation.isPending}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-white/5 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all font-bold text-xs flex items-center gap-1.5"
+              >
+                {startMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Підтвердити запуск
               </button>
             </div>
           </div>
