@@ -33,6 +33,14 @@ export interface IPerson {
   birthday: string | null;
   last_name: string;
   phone?: string;
+  person_role?: {
+    id: number;
+    is_ict?: boolean;
+    is_admin: boolean;
+    id_person: number;
+    is_manager: boolean;
+    is_head_department?: boolean;
+  };
 }
 
 export interface ICompany {

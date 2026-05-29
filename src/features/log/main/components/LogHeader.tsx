@@ -129,7 +129,7 @@ export default function LogHeader({
             if (currentMeeting.audienceType === 'all' || !currentMeeting.audienceType) {
               shouldShow = true;
             } else if (currentMeeting.audienceType === 'heads') {
-              if (profile?.role?.is_head_department) {
+              if (profile?.person?.person_role?.is_head_department) {
                 shouldShow = true;
               }
             } else if (currentMeeting.audienceType === 'selective') {

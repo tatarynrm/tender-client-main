@@ -60,7 +60,7 @@ export const CRMSocketActionProvider = ({
         if (data.audienceType === 'all' || !data.audienceType) {
           shouldShow = true;
         } else if (data.audienceType === 'heads') {
-          if (profile?.role?.is_head_department) {
+          if (profile?.person?.person_role?.is_head_department) {
             shouldShow = true;
           }
         } else if (data.audienceType === 'selective') {
