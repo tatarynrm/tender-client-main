@@ -72,7 +72,6 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
 
   const [isTogglingRole, setIsTogglingRole] = useState(false);
   const isHead = role?.is_head_department;
-
   const handleToggleHead = async () => {
     try {
       setIsTogglingRole(true);
@@ -314,7 +313,7 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
                   className={cn(
                     "h-11 rounded-xl border-zinc-200 dark:border-zinc-800 focus:ring-rose-500/20 focus:border-rose-500 transition-all text-center font-mono font-bold tracking-widest",
                     confirmPhrase === "ict" &&
-                      "bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-900 focus:border-emerald-500 focus:ring-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+                    "bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-900 focus:border-emerald-500 focus:ring-emerald-500/20 text-emerald-600 dark:text-emerald-400",
                   )}
                 />
               </div>
@@ -339,7 +338,7 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
               className={cn(
                 "rounded-xl font-bold h-11 px-6 shadow-lg shadow-rose-500/20 transition-all",
                 confirmPhrase !== "ict" &&
-                  "opacity-50 grayscale cursor-not-allowed shadow-none",
+                "opacity-50 grayscale cursor-not-allowed shadow-none",
               )}
             >
               {isDeleting ? (

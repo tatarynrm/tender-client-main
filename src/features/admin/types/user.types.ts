@@ -7,6 +7,7 @@ export interface UserPersonRole {
   is_admin: boolean;
   id_person: number;
   is_manager: boolean;
+  is_head_department?: boolean;
 }
 
 /**
