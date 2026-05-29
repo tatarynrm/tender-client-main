@@ -181,8 +181,20 @@ export function UpdatesPage({ category }: UpdatesPageProps) {
                         </div>
                       </div>
 
-                      <h3 className="text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white mb-6 group-hover:text-blue-500 transition-colors uppercase tracking-tight">
+                      <h3 className="flex items-center gap-3 text-2xl lg:text-3xl font-black text-zinc-900 dark:text-white mb-6 group-hover:text-blue-500 transition-colors uppercase tracking-tight">
                         {entry.title}
+                        {(() => {
+                          const diffTime = Math.abs(new Date().getTime() - new Date(entry.date).getTime());
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                          if (diffDays <= 4) {
+                            return (
+                              <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 rounded-md font-bold tracking-widest shadow-sm">
+                                NEW
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                       </h3>
                       
                       <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-base lg:text-lg font-medium whitespace-pre-wrap">
