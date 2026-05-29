@@ -34,13 +34,18 @@ import { Button, Input } from "@/shared/components/ui";
 import { useAdminUsers } from "../../hooks/useAdminUsers";
 import { toast } from "sonner";
 
+import { adminUserService } from "../../services/admin.user.service";
+import { useQueryClient } from "@tanstack/react-query";
+
 interface UserListItemProps {
   user: IUserAccount;
   isOnline: boolean;
+  isIctTab?: boolean;
 }
 
-export function UserListItem({ user, isOnline }: UserListItemProps) {
+export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { deleteUser, isDeleting } = useAdminUsers();
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -64,6 +69,25 @@ export function UserListItem({ user, isOnline }: UserListItemProps) {
     : isManager
       ? "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900"
       : "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:border-zinc-700";
+
+  const [isTogglingRole, setIsTogglingRole] = useState(false);
+  const isHead = role?.is_head_department;
+
+  const handleToggleHead = async () => {
+    try {
+      setIsTogglingRole(true);
+      await adminUserService.updateUserRole(user.id, { is_head_department: !isHead });
+      queryClient.invalidateQueries({ queryKey: ["ict-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success(
+        !isHead ? "Призначено начальником відділу" : "Знято з посади начальника відділу"
+      );
+    } catch (err) {
+      toast.error("Помилка зміни ролі");
+    } finally {
+      setIsTogglingRole(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (confirmPhrase !== "ict") {
@@ -142,7 +166,7 @@ export function UserListItem({ user, isOnline }: UserListItemProps) {
             </div>
           </div>
 
-          <div className="md:col-span-4 min-w-0">
+          <div className="md:col-span-3 min-w-0">
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                 <Building2 size={14} className="opacity-70 shrink-0" />
@@ -175,15 +199,36 @@ export function UserListItem({ user, isOnline }: UserListItemProps) {
             </div>
           </div>
 
-          <div className="md:col-span-2 hidden lg:flex flex-col justify-center">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-              <Calendar size={13} className="opacity-70" />
-              <span>{new Date(user.created_at).toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase font-medium">
-              <Clock size={11} className="opacity-70" />
-              <span>Реєстрація</span>
-            </div>
+          <div className="md:col-span-3 flex flex-col justify-center">
+            {isIctTab ? (
+              <label className="flex items-center gap-2 cursor-pointer w-fit">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={!!isHead}
+                    onChange={handleToggleHead}
+                    disabled={isTogglingRole}
+                  />
+                  <div className={cn("block w-10 h-6 rounded-full transition-colors", !!isHead ? "bg-indigo-500" : "bg-slate-300 dark:bg-slate-700")}></div>
+                  <div className={cn("dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform", !!isHead && "transform translate-x-4")}></div>
+                </div>
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {isTogglingRole ? "Оновлення..." : "Начальник відділу"}
+                </span>
+              </label>
+            ) : (
+              <div className="hidden lg:flex flex-col">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <Calendar size={13} className="opacity-70" />
+                  <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase font-medium">
+                  <Clock size={11} className="opacity-70" />
+                  <span>Реєстрація</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

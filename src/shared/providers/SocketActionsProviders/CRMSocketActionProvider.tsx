@@ -1,6 +1,7 @@
 "use client";
 
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
+import { useProfile } from "@/shared/hooks/useProfile";
 import { useSockets } from "../SocketProvider";
 import { toast } from "sonner";
 import { useEffect, ReactNode } from "react";
@@ -31,6 +32,7 @@ export const CRMSocketActionProvider = ({
   const { user: userSocket } = useSockets();
   const { logout } = useProfileLogoutMutation();
   const queryClient = useQueryClient();
+  const { profile } = useProfile();
 
   useEffect(() => {
     if (!userSocket) return;
@@ -53,10 +55,26 @@ export const CRMSocketActionProvider = ({
         // Тут логіка з queryClient.invalidateQueries
       },
       MEETING_STARTED: (data) => {
-        queryClient.setQueryData(['currentMeeting'], data);
-        toast.success("В ефірі відео-нарада! Ви можете приєднатись.", {
-          duration: 10000,
-        });
+        let shouldShow = false;
+
+        if (data.audienceType === 'all' || !data.audienceType) {
+          shouldShow = true;
+        } else if (data.audienceType === 'heads') {
+          if (profile?.role?.is_head_department) {
+            shouldShow = true;
+          }
+        } else if (data.audienceType === 'selective') {
+          if (data.targetIds?.includes(profile?.id)) {
+            shouldShow = true;
+          }
+        }
+
+        if (shouldShow) {
+          queryClient.setQueryData(['currentMeeting'], data);
+          toast.success("В ефірі відео-нарада! Ви можете приєднатись.", {
+            duration: 10000,
+          });
+        }
       },
       MEETING_STOPPED: () => {
         queryClient.setQueryData(['currentMeeting'], null);
@@ -79,7 +97,7 @@ export const CRMSocketActionProvider = ({
     return () => {
       userSocket.off("system_command", handleSystemCommand);
     };
-  }, [userSocket, logout]);
+  }, [userSocket, logout, profile, queryClient]);
 
   return <>{children}</>;
 };

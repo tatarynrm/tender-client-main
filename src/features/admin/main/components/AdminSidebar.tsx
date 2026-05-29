@@ -21,6 +21,7 @@ import {
   Send,
   Sparkles,
   Mail,
+  Video,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -88,6 +89,11 @@ const links: MenuItem[] = [
     name: "Відгуки та ідеї",
     href: "/admin/suggestions",
     icon: MessageSquare,
+  },
+  {
+    name: "Відео-нарада",
+    href: "/admin/meeting",
+    icon: Video,
   },
   {
     name: "Сповіщення",

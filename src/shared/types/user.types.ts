@@ -22,6 +22,7 @@ export interface IUserRole {
   is_ict: boolean;
   is_admin: boolean;
   is_manager: boolean;
+  is_head_department?: boolean;
 }
 
 export interface IPerson {

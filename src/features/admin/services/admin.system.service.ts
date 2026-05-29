@@ -11,8 +11,8 @@ export const adminSystemService = {
     return response.data;
   },
 
-  startMeeting: async () => {
-    const response = await api.post("/admin/system/meeting/start");
+  startMeeting: async (url?: string) => {
+    const response = await api.post("/admin/system/meeting/start", { url });
     return response.data;
   },
 

@@ -208,3 +208,11 @@ const useDeleteUser = (queryKey: string[]) => {
     },
   });
 };
+
+export const useIctUsers = () => {
+  return useQuery({
+    queryKey: ["ict-users"],
+    queryFn: () => adminUserService.getIctUsers(),
+    staleTime: 1000 * 60 * 5,
+  });
+};

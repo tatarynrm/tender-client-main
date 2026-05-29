@@ -10,8 +10,9 @@ import { UserListItem } from "@/features/admin/users/components/UserListItem";
 
 import { Button, Input } from "@/shared/components/ui";
 import LinkButton from "@/shared/components/Buttons/LinkButton";
-import { useAdminUsers } from "@/features/admin/hooks/useAdminUsers";
+import { useAdminUsers, useIctUsers } from "@/features/admin/hooks/useAdminUsers";
 import { useRouter } from "next/navigation";
+import { cn } from "@/shared/utils";
 
 // Схема з чіткими типами
 const userFilterSchema = z.object({
@@ -91,8 +92,10 @@ export default function UsersPage() {
   };
 
   const onlineUsers = useOnlineUsers();
+  const [activeTab, setActiveTab] = useState<"all" | "ict">("all");
+  const { data: ictUsersData, isLoading: isIctLoading } = useIctUsers();
 
-
+  const ictUsers = ictUsersData?.content || [];
 
   return (
     <div className="space-y-4 p-4 w-full">
@@ -113,74 +116,125 @@ export default function UsersPage() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-        <div className="relative w-full max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            {...register("email")}
-            placeholder="Пошук за email..."
-            className="pl-9 pr-9"
-          />
-          {emailValue && (
-            <button
-              type="button"
-              onClick={() => setValue("email", "")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-            >
-              <X className="w-4 h-4" />
-            </button>
+      <div className="flex gap-4 border-b border-zinc-200 dark:border-zinc-800 mb-6 pb-2">
+        <button
+          onClick={() => setActiveTab("all")}
+          className={cn(
+            "pb-2 px-1 text-sm font-semibold transition-colors border-b-2",
+            activeTab === "all"
+              ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500"
+              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
           )}
-        </div>
-
-        <div className="relative w-full max-w-[300px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            {...register("company")}
-            placeholder="EDRPOU / Назва компанії..."
-            className="pl-9 pr-9"
-          />
-          {companyValue && (
-            <button
-              type="button"
-              onClick={() => setValue("company", "")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          disabled={!emailValue && !companyValue}
         >
-          Скинути фільтри
-        </Button>
+          Усі користувачі
+        </button>
+        <button
+          onClick={() => setActiveTab("ict")}
+          className={cn(
+            "pb-2 px-1 text-sm font-semibold transition-colors border-b-2",
+            activeTab === "ict"
+              ? "border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500"
+              : "border-transparent text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+          )}
+        >
+          Користувачі ICT
+        </button>
       </div>
 
-      <div className="flex flex-col gap-3 mt-6">
-        {isLoading ? (
-          Array.from({ length: filters.limit }).map((_, i) => (
-            <div key={i} className="h-[80px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
-          ))
-        ) : users?.length > 0 ? (
-          users.map((user: any) => (
-            <UserListItem 
-              key={user.id} 
-              user={user} 
-              isOnline={onlineUsers.has(String(user.id_person))} 
-            />
-          ))
-        ) : (
-          <div className="py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
-            <UserIcon className="w-12 h-12 text-zinc-300 mb-3" />
-            <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Немає користувачів</p>
-            <p className="text-sm">Спробуйте змінити параметри пошуку або додайте нового користувача.</p>
+      {activeTab === "all" ? (
+        <>
+          <div className="flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <div className="relative w-full max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                {...register("email")}
+                placeholder="Пошук за email..."
+                className="pl-9 pr-9"
+              />
+              {emailValue && (
+                <button
+                  type="button"
+                  onClick={() => setValue("email", "")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="relative w-full max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                {...register("company")}
+                placeholder="EDRPOU / Назва компанії..."
+                className="pl-9 pr-9"
+              />
+              {companyValue && (
+                <button
+                  type="button"
+                  onClick={() => setValue("company", "")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              disabled={!emailValue && !companyValue}
+            >
+              Скинути фільтри
+            </Button>
           </div>
-        )}
-      </div>
+
+          <div className="flex flex-col gap-3 mt-6">
+            {isLoading ? (
+              Array.from({ length: filters.limit }).map((_, i) => (
+                <div key={i} className="h-[80px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
+              ))
+            ) : users?.length > 0 ? (
+              users.map((user: any) => (
+                <UserListItem
+                  key={user.id}
+                  user={user}
+                  isOnline={onlineUsers.has(String(user.id_person))}
+                />
+              ))
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
+                <UserIcon className="w-12 h-12 text-zinc-300 mb-3" />
+                <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Немає користувачів</p>
+                <p className="text-sm">Спробуйте змінити параметри пошуку або додайте нового користувача.</p>
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-col gap-3 mt-6">
+          {isIctLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-[80px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 animate-pulse rounded-xl" />
+            ))
+          ) : ictUsers?.length > 0 ? (
+            ictUsers.map((user: any) => (
+              <UserListItem
+                key={user.id}
+                user={user}
+                isOnline={onlineUsers.has(String(user.id_person))}
+                isIctTab={true}
+              />
+            ))
+          ) : (
+            <div className="py-16 flex flex-col items-center justify-center text-zinc-500 bg-white dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 border-dashed">
+              <UserIcon className="w-12 h-12 text-zinc-300 mb-3" />
+              <p className="text-lg font-medium text-zinc-600 dark:text-zinc-400">Немає ICT користувачів</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {pagination && (pagination.page_count > 1 || users?.length > 0) && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mt-6 shadow-sm">
@@ -196,7 +250,7 @@ export default function UsersPage() {
               ))}
             </select>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

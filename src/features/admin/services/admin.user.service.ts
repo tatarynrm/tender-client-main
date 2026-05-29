@@ -19,4 +19,13 @@ export const adminUserService = {
     const res = await api.post("/admin/user/delete", { id });
     return res.data;
   },
+  getIctUsers: async () => {
+    const res = await api.post<IApiResponse<IUserAccount[]>>("/users/user-list-ict");
+    // Ensure we handle { content: ... } wrapper
+    return res.data;
+  },
+  updateUserRole: async (id: number | string, data: { is_head_department?: boolean }) => {
+    const res = await api.patch(`/users/${id}/role`, data);
+    return res.data;
+  },
 };
