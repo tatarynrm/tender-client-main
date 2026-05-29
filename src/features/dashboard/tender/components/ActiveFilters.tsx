@@ -92,7 +92,7 @@ export const ActiveFilters = ({
   return (
     <div className="space-y-3 mt-2 mb-4 ">
       {/* Шапка з кнопкою очищення */}
-      <div className="flex items-center gap-10 border-b pb-1 border-zinc-100 bg-red-500">
+      <div className="flex items-center gap-10 border-b pb-1 border-zinc-100">
         <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
           Активні фільтри
         </span>
@@ -107,7 +107,7 @@ export const ActiveFilters = ({
       </div>
 
       {/* Рендер груп */}
-      <div className="flex flex-col gap-3 bg-red-500">
+      <div className="flex flex-col gap-3">
         {groupKeys.map((key) => (
           <div key={key} className="flex flex-row items-center gap-2">
             {/* Назва категорії */}
@@ -116,18 +116,18 @@ export const ActiveFilters = ({
             </span>
 
             {/* Список бейджів у рядок */}
-            <div className="flex flex-wrap gap-2 bg-black">
+            <div className="flex flex-wrap gap-2">
               {groupedFilters[key].map((item, index) => (
-                <Badge
-                  key={`${key}-${item.id}-${index}`}
-                  variant="secondary"
-                  className="pl-2 pr-1 py-1 gap-1 border-orange-100 bg-white text-orange-900 shadow-sm"
-                >
-                  <span className="font-semibold text-xs">{item.display}</span>
-                  <button
-                    onClick={() => onRemove(key, item.id)}
-                    className="ml-1 hover:bg-orange-100 rounded-full p-0.5 transition-colors text-orange-400 hover:text-orange-600"
+                  <Badge
+                    key={`${key}-${item.id}-${index}`}
+                    variant="secondary"
+                    className="pl-2 pr-1 py-1 gap-1 border-[#4256D5]/20 bg-white text-[#0a2540] shadow-sm"
                   >
+                    <span className="font-semibold text-xs">{item.display}</span>
+                    <button
+                      onClick={() => onRemove(key, item.id)}
+                      className="ml-1 hover:bg-[#e0eafb] rounded-full p-0.5 transition-colors text-[#4256D5] hover:text-[#3143b5]"
+                    >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </Badge>

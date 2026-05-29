@@ -4,13 +4,16 @@ import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hook
 import { useSockets } from "../SocketProvider";
 import { toast } from "sonner";
 import { useEffect, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // 1. Визначаємо перелік доступних команд
 export type SystemCommandType =
   | "FORCE_RELOAD"
   | "FORCE_LOGOUT"
   | "SHOW_NOTIFICATION"
-  | "UPDATE_CARGO_PRICE";
+  | "UPDATE_CARGO_PRICE"
+  | "MEETING_STARTED"
+  | "MEETING_STOPPED";
 
 // 2. Типізуємо структуру самої події
 interface SystemCommandPayload {
@@ -27,6 +30,7 @@ export const CRMSocketActionProvider = ({
 }: SocketActionProviderProps) => {
   const { user: userSocket } = useSockets();
   const { logout } = useProfileLogoutMutation();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!userSocket) return;
@@ -48,6 +52,16 @@ export const CRMSocketActionProvider = ({
         // console.log("Оновлення ціни для:", data?.id);
         // Тут логіка з queryClient.invalidateQueries
       },
+      MEETING_STARTED: (data) => {
+        queryClient.setQueryData(['currentMeeting'], data);
+        toast.success("В ефірі відео-нарада! Ви можете приєднатись.", {
+          duration: 10000,
+        });
+      },
+      MEETING_STOPPED: () => {
+        queryClient.setQueryData(['currentMeeting'], null);
+        toast.info("Відео-нараду завершено.");
+      }
     };
 
     // 4. Слухач з деструктуризацією та типізацією

@@ -80,7 +80,7 @@ const LoginForm = () => {
           <Button
             type="submit"
             disabled={(isShowTwoFactor && !isCodeValid) || isLoadingLogin}
-            className="w-full h-11 uppercase tracking-[0.2em] font-bold text-xs shadow-lg shadow-teal-500/10 active:scale-[0.98] transition-all"
+            className="w-full h-[52px] bg-[#4256D5] hover:bg-[#3143b5] text-white font-sans font-bold text-[15px] rounded-xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             {isLoadingLogin ? "Завантаження..." : isShowTwoFactor ? "Підтвердити" : "Увійти"}
           </Button>

@@ -25,6 +25,9 @@ import { WeatherWidget } from "../widgets/WeatherWidget";
 import { AirAlarmWidget } from "../widgets/AirAlarmWidget";
 import { CurrencyWidget } from "../widgets/CurrencyWidget";
 
+import { useQuery } from '@tanstack/react-query';
+import api from '@/shared/api/instance.api';
+
 // Уявімо, що ви вже імпортували ваші віджети:
 // import { FuelWidget } from "../widgets/FuelWidget";
 // import { WeatherWidget } from "../widgets/WeatherWidget";
@@ -41,6 +44,15 @@ export default function LogHeader({
   profile?: IUserProfile;
 }) {
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+
+  // --- Стейт та логіка для нарад ---
+  const { data: currentMeeting } = useQuery({
+    queryKey: ['currentMeeting'],
+    queryFn: async () => {
+      const res = await api.get('/systems/meeting/current');
+      return res.data;
+    },
+  });
 
   // --- Стейт та логіка для меню віджетів ---
   const [isWidgetsOpen, setIsWidgetsOpen] = useState(false);
@@ -110,6 +122,17 @@ export default function LogHeader({
       <div className="flex items-center gap-1.5 sm:gap-4">
         {/* Додаткові інструменти (зменшені на мобілці) */}
         <div className="flex items-center gap-1.5 mr-1 sm:mr-2">
+          {currentMeeting && currentMeeting.active !== false && currentMeeting.id && (
+            <Link
+              href={`/log/meeting?id=${currentMeeting.id}`}
+              className="relative flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all mr-2 group overflow-hidden"
+            >
+              <span className="absolute inset-0 w-full h-full bg-white/20 group-hover:animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+              <span className="relative z-10">Відео-нарада</span>
+            </Link>
+          )}
+
           <FeedbackButton />
         </div>
 

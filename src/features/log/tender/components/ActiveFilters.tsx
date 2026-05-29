@@ -177,7 +177,7 @@ export const ActiveFilters = ({
     <div className="space-y-3 mt-4 mb-6 p-4 rounded-[1.5rem] border border-zinc-200/60 dark:border-white/10 bg-zinc-50/30 dark:bg-white/[0.02] backdrop-blur-sm animate-in fade-in slide-in-from-top-1 duration-500">
       <div className="flex items-center justify-between border-b pb-2.5 border-zinc-200/60 dark:border-white/5">
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.4)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[#4256D5] shadow-[0_0_8px_rgba(66,86,213,0.4)]" />
           <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-black uppercase tracking-[0.1em]">
             Активні фільтри
           </span>
@@ -207,7 +207,7 @@ export const ActiveFilters = ({
                 <Badge
                   key={`${key}-${item.id}-${index}`}
                   variant="secondary"
-                  className="pl-3 pr-1.5 h-7 gap-2 border-zinc-200/60 dark:border-white/5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 shadow-sm hover:border-orange-200 dark:hover:border-orange-500/40 transition-all rounded-xl group"
+                  className="pl-3 pr-1.5 h-7 gap-2 border-zinc-200/60 dark:border-white/5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 shadow-sm hover:border-[#4256D5]/30 dark:hover:border-[#4256D5]/40 transition-all rounded-xl group"
                 >
                   <span className="text-[10px] font-bold tracking-tight">
                     {item.display}
@@ -226,7 +226,7 @@ export const ActiveFilters = ({
                 <button
                   onClick={() => onRemove(key, "all")}
                   title="Очистити групу"
-                  className="p-1.5 hover:bg-zinc-200/50 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-400 hover:text-orange-500"
+                  className="p-1.5 hover:bg-zinc-200/50 dark:hover:bg-white/5 rounded-xl transition-colors text-zinc-400 hover:text-[#4256D5]"
                 >
                   <BrushCleaning size={14} />
                 </button>

@@ -73,7 +73,7 @@ const NewPasswordForm = () => {
           />
 
 
-          <Button loading={isLoadingNew} disabled={isLoadingNew} type="submit">
+          <Button loading={isLoadingNew} disabled={isLoadingNew} type="submit" className="w-full h-[52px] bg-[#4256D5] hover:bg-[#3143b5] text-white font-sans font-bold text-[15px] rounded-xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]">
             Скинути пароль
           </Button>
         </form>

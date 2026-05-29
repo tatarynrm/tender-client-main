@@ -63,6 +63,38 @@ const triggerCommand = async (type: any, payload = {}) => {
             Broadcast Notification
           </button>
         </div>
+
+        <hr className="border-red-200 my-2" />
+        
+        <div className="grid grid-cols-2 gap-2">
+          <button 
+            onClick={async () => {
+              try {
+                await adminSystemService.startMeeting();
+                toast.success('Нараду успішно розпочато!');
+              } catch (e) {
+                toast.error('Помилка запуску наради');
+              }
+            }}
+            className="bg-emerald-600 text-white px-3 py-2 rounded hover:bg-emerald-700 font-bold"
+          >
+            Почати Відео-нараду
+          </button>
+          
+          <button 
+            onClick={async () => {
+              try {
+                await adminSystemService.stopMeeting();
+                toast.success('Нараду успішно завершено!');
+              } catch (e) {
+                toast.error('Помилка зупинки наради');
+              }
+            }}
+            className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 font-bold"
+          >
+            Завершити Нараду
+          </button>
+        </div>
       </div>
     </div>
   );

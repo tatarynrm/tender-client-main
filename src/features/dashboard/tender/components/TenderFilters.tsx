@@ -68,9 +68,9 @@ const updateField = (field: keyof T, value: any) => {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 border-orange-400 hover:bg-orange-50 transition-colors text-xs"
+          className="h-8 border-[#4256D5]/30 text-[#4256D5] hover:bg-[#e0eafb] hover:text-[#4256D5] transition-colors text-xs"
         >
-          <Filter className="mr-1.5 h-3.5 w-3.5 text-orange-500" />
+          <Filter className="mr-1.5 h-3.5 w-3.5 text-[#4256D5]" />
           Фільтри
         </Button>
       </SheetTrigger>
@@ -82,7 +82,7 @@ const updateField = (field: keyof T, value: any) => {
         {/* ФІКСОВАНА ШАПКА: компактніша */}
         <SheetHeader className="p-4 border-b bg-white dark:bg-zinc-950 shrink-0">
           <SheetTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-gray-50">
-            <Settings2 className="h-4 w-4 text-orange-500" />
+            <Settings2 className="h-4 w-4 text-[#4256D5]" />
             Параметри пошуку
           </SheetTitle>
         </SheetHeader>
@@ -111,17 +111,17 @@ const updateField = (field: keyof T, value: any) => {
                     className={cn(
                       "flex items-center justify-between px-3 py-2 rounded-xl border transition-all duration-200",
                       filters.participate
-                        ? "bg-white border-orange-500 shadow-sm"
+                        ? "bg-white border-[#4256D5] shadow-sm"
                         : "bg-white/50 border-zinc-100 hover:border-zinc-200"
                     )}
                   >
                     <div className="flex flex-col text-left">
-                      <span className={cn("text-[10px] font-bold", filters.participate ? "text-orange-600" : "text-zinc-600")}>
+                      <span className={cn("text-[10px] font-bold", filters.participate ? "text-[#4256D5]" : "text-zinc-600")}>
                         Я беру участь
                       </span>
                       <span className="text-[9px] text-zinc-400">Тендери зі ставками</span>
                     </div>
-                    {filters.participate && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+                    {filters.participate && <div className="w-2 h-2 bg-[#4256D5] rounded-full" />}
                   </button>
 
                   <button
@@ -258,8 +258,8 @@ const updateField = (field: keyof T, value: any) => {
 
             {/* 📍 СЕКЦІЯ: МАРШРУТ */}
             <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
-                <div className="flex items-center gap-2 pb-1 border-b border-orange-100/50">
-                  <MapPin className="h-4 w-4 text-orange-500" />
+                <div className="flex items-center gap-2 pb-1 border-b border-[#4256D5]/20">
+                  <MapPin className="h-4 w-4 text-[#4256D5]" />
                   <h3 className="text-[12px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
                     Географія
                   </h3>
@@ -268,7 +268,7 @@ const updateField = (field: keyof T, value: any) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* ЗВІДКИ */}
                     <div className="space-y-3">
-                        <span className="text-[10px] font-bold text-orange-600 uppercase tracking-[0.2em] pl-1">Звідки</span>
+                        <span className="text-[10px] font-bold text-[#4256D5] uppercase tracking-[0.2em] pl-1">Звідки</span>
                         <div className="grid grid-cols-2 gap-2">
                            <NativeSelect
                                 isMulti
@@ -296,7 +296,7 @@ const updateField = (field: keyof T, value: any) => {
                             )}
                         </div>
                         <Input
-                            className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                            className="h-9 text-xs border-zinc-200 focus-visible:ring-[#4256D5] rounded-xl bg-white"
                             placeholder="Місто..."
                             value={filters.city_from ? String(filters.city_from) : ""}
                             onChange={(e) => updateField("city_from", e.target.value)}
@@ -333,7 +333,7 @@ const updateField = (field: keyof T, value: any) => {
                             )}
                         </div>
                         <Input
-                            className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                            className="h-9 text-xs border-zinc-200 focus-visible:ring-[#4256D5] rounded-xl bg-white"
                             placeholder="Місто..."
                             value={filters.city_to ? String(filters.city_to) : ""}
                             onChange={(e) => updateField("city_to", e.target.value)}
@@ -395,7 +395,7 @@ const updateField = (field: keyof T, value: any) => {
               Очистити
             </Button>
             <Button
-              className="flex-[2] bg-orange-500 hover:bg-orange-600 h-10 text-xs font-bold rounded-xl"
+              className="flex-[2] bg-[#4256D5] hover:bg-[#3143b5] text-white h-10 text-xs font-bold rounded-xl"
               onClick={handleApply}
             >
               Застосувати

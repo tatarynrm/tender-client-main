@@ -69,7 +69,7 @@ export const TenderFiltersSheet = <T extends Filters>({
           size="sm"
           className=" transition-colors"
         >
-          <Filter className="mr-2 h-4 w-4 text-orange-500" />
+          <Filter className="mr-2 h-4 w-4 text-[#4256D5]" />
           Фільтри
         </Button>
       </SheetTrigger>
@@ -81,7 +81,7 @@ export const TenderFiltersSheet = <T extends Filters>({
         {/* ФІКСОВАНА ШАПКА: shrink-0 не дає їй стискатися */}
         <SheetHeader className="p-5 border-b shrink-0  ">
           <SheetTitle className="flex items-center gap-2 text-xl font-bold text-gray-800">
-            <Settings2 className="h-5 w-5 text-orange-500" />
+            <Settings2 className="h-5 w-5 text-[#4256D5]" />
             Параметри пошуку
           </SheetTitle>
         </SheetHeader>
@@ -98,8 +98,8 @@ export const TenderFiltersSheet = <T extends Filters>({
           <div className="p-4 space-y-5">
             {/* 📍 СЕКЦІЯ: МАРШРУТ (Звідки та Куди) */}
             <section className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border border-slate-100 dark:border-white/5 space-y-4">
-              <div className="flex items-center gap-2 pb-1 border-b border-orange-100/50">
-                <MapPin className="h-4 w-4 text-orange-500" />
+              <div className="flex items-center gap-2 pb-1 border-b border-[#4256D5]/20">
+                <MapPin className="h-4 w-4 text-[#4256D5]" />
                 <h3 className="text-[12px] font-black text-gray-700 dark:text-gray-200 uppercase tracking-tight">
                   Маршрут перевезення
                 </h3>
@@ -108,7 +108,7 @@ export const TenderFiltersSheet = <T extends Filters>({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* ЗВІДКИ */}
                 <div className="space-y-3">
-                  <span className="text-[10px] font-bold text-orange-600 uppercase tracking-widest pl-1">
+                  <span className="text-[10px] font-bold text-[#4256D5] uppercase tracking-widest pl-1">
                     Звідки:
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -139,7 +139,7 @@ export const TenderFiltersSheet = <T extends Filters>({
                       )}
                   </div>
                   <Input
-                    className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                    className="h-9 text-xs border-zinc-200 focus-visible:ring-[#4256D5] rounded-xl bg-white"
                     placeholder="МНаселений пункт ..."
                     value={filters.city_from ? String(filters.city_from) : ""}
                     onChange={(e) => updateField("city_from", e.target.value)}
@@ -178,7 +178,7 @@ export const TenderFiltersSheet = <T extends Filters>({
                     )}
                   </div>
                   <Input
-                    className="h-9 text-xs border-zinc-200 focus-visible:ring-orange-500 rounded-xl bg-white"
+                    className="h-9 text-xs border-zinc-200 focus-visible:ring-[#4256D5] rounded-xl bg-white"
                     placeholder="Місто отримувач..."
                     value={filters.city_to ? String(filters.city_to) : ""}
                     onChange={(e) => updateField("city_to", e.target.value)}
@@ -294,7 +294,7 @@ export const TenderFiltersSheet = <T extends Filters>({
               Очистити
             </Button>
             <Button
-              className="flex-[2] bg-orange-500 hover:bg-orange-600 h-10 text-xs font-bold rounded-xl"
+              className="flex-[2] bg-[#4256D5] hover:bg-[#3143b5] text-white h-10 text-xs font-bold rounded-xl"
               onClick={handleApply}
             >
               Застосувати

@@ -369,7 +369,7 @@ const RegisterForm = () => {
           <AppButton
             disabled={isLoadingRegister}
             type="submit"
-            className="w-full max-w-md mx-auto flex h-11 uppercase tracking-wider font-bold text-xs shadow-lg shadow-teal-500/10 cursor-pointer bg-[#718AF6]"
+            className="w-full max-w-md mx-auto flex h-[52px] bg-[#4256D5] hover:bg-[#3143b5] text-white font-sans font-bold text-[15px] rounded-xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Створити аккаунт
           </AppButton>

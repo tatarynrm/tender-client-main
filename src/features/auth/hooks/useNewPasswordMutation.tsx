@@ -22,10 +22,12 @@ export function useNewPasswordMutation() {
       passwordRecoveryService.newPassword(values, token),
 
     onSuccess() {
-      toast.success("Пароль успішно змінений", {
-        description: "Тепер ви можете увійти в свій аккаунт.",
+      toast.success("Ваш пароль успішно змінений", {
+        description: "Перенаправлення на головну сторінку...",
       });
-      router.push("/dashboard/settings");
+      setTimeout(() => {
+        router.push("/");
+      }, 3000);
     },
 
     onError(error: any) {

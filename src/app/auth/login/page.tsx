@@ -14,7 +14,7 @@ export default function LoginPage() {
     <div className="flex flex-col">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="logo mb-6">
-          <Logo />
+          <Logo variant="dark" />
         </div>
         <div className="flex flex-1 items-center justify-center ">
           <LoginForm />

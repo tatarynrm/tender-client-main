@@ -8,23 +8,29 @@ import { useRouter } from "next/navigation";
 interface LogoProps {
   width?: number;
   height?: number;
+  variant?: 'light' | 'dark' | 'auto';
 }
 
-const Logo: React.FC<LogoProps> = ({ width = 140, height = 200 }) => {
+const Logo: React.FC<LogoProps> = ({ width = 140, height = 200, variant = 'auto' }) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   useEffect(() => {
-    setMounted(true); // після того як компонент змонтовано, можна використовувати theme
+    setMounted(true);
   }, []);
 
-  if (!mounted) return null; // не рендеримо поки не визначена тема
+  if (!mounted) return null;
 
-  // const logoSrc =
-  //   theme === "dark" ? "/images/logo/logo-white.png" : "/images/logo/logo.png";
-
-  const logoSrc =
-    "/images/logo/logo-white.png"
+  let logoSrc = "/images/logo/logo-white.png";
+  
+  if (variant === 'dark') {
+    logoSrc = "/images/logo/logo.png";
+  } else if (variant === 'light') {
+    logoSrc = "/images/logo/logo-white.png";
+  } else {
+    // auto
+    logoSrc = theme === "dark" ? "/images/logo/logo-white.png" : "/images/logo/logo.png";
+  }
 
   return (
     <Image

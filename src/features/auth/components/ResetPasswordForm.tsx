@@ -52,7 +52,7 @@ const ResetPasswordForm = () => {
             type="submit"
             loading={isLoadingReset}
             disabled={isLoadingReset}
-            className="w-full h-11 uppercase tracking-[0.2em] font-bold text-xs shadow-lg shadow-teal-500/10 transition-all active:scale-[0.98]"
+            className="w-full h-[52px] bg-[#4256D5] hover:bg-[#3143b5] text-white font-sans font-bold text-[15px] rounded-xl shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             Надіслати інструкції
           </Button>
