@@ -29,7 +29,7 @@ export default function AdminMeetingPage() {
 
   const startMeeting = useMutation({
     mutationFn: (data: { url: string; audienceType: 'all' | 'heads' | 'selective'; targetIds: number[] }) => 
-      api.post("/systems/meeting/start", data).then(res => res.data),
+      api.post("/admin/system/meeting/start", data).then(res => res.data),
     onSuccess: (data) => {
       toast.success("Нараду успішно розпочато!");
       queryClient.setQueryData(["currentMeeting"], data);
