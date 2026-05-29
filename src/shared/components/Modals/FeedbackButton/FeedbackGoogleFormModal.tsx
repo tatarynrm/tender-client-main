@@ -26,14 +26,12 @@ export const FeedbackButton = ({ className }: FeedbackButtonProps) => {
       size="sm"
       onClick={handleOpenModal}
       className={cn(
-        "group relative gap-2 border-indigo-200/50 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100/80 hover:text-indigo-800 dark:bg-indigo-900/10 dark:border-indigo-900/20 dark:text-indigo-400 font-bold transition-all px-3 py-2 md:px-6 md:py-5 rounded-xl hover:scale-[1.03] active:scale-[0.98] shadow-sm hover:shadow-indigo-500/10",
+        "gap-2 border-indigo-200/50 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100/80 hover:text-indigo-800 dark:bg-indigo-900/10 dark:border-indigo-900/20 dark:text-indigo-400 font-bold transition-all px-3 py-2 md:px-6 md:py-5 rounded-xl shadow-sm hover:shadow-indigo-500/10",
         className,
       )}
     >
-      <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-
-      <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
-      <span className="hidden md:inline">ВІДГУКИ!!!!!</span>
+      <Sparkles className="w-4 h-4 text-indigo-500" />
+      <span className="hidden md:inline">Відгуки</span>
     </Button>
   );
 };

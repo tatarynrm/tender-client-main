@@ -234,7 +234,17 @@ export default function AdminMeetingPage() {
                 </div>
 
                 <button
-                  onClick={() => startMeeting.mutate({ url: meetingUrl, audienceType, targetIds })}
+                  onClick={() => {
+                    let finalTargetIds = targetIds;
+                    if (audienceType === 'heads') {
+                      finalTargetIds = ictUsers
+                        .filter((u: any) => u.person?.person_role?.is_head_department)
+                        .map((u: any) => u.id);
+                    } else if (audienceType === 'all') {
+                      finalTargetIds = ictUsers.map((u: any) => u.id);
+                    }
+                    startMeeting.mutate({ url: meetingUrl, audienceType, targetIds: finalTargetIds });
+                  }}
                   disabled={startMeeting.isPending || !meetingUrl.trim() || (audienceType === 'selective' && targetIds.length === 0)}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(37,99,235,0.4)]"
                 >

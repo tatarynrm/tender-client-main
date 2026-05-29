@@ -59,12 +59,9 @@ export const CRMSocketActionProvider = ({
 
         if (data.audienceType === 'all' || !data.audienceType) {
           shouldShow = true;
-        } else if (data.audienceType === 'heads') {
-          if (profile?.person?.person_role?.is_head_department) {
-            shouldShow = true;
-          }
-        } else if (data.audienceType === 'selective') {
-          if (data.targetIds?.includes(profile?.id)) {
+        } else if (data.audienceType === 'heads' || data.audienceType === 'selective') {
+          const pId = Number(profile?.id);
+          if (data.targetIds?.map(Number).includes(pId)) {
             shouldShow = true;
           }
         }

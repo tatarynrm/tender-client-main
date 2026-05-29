@@ -128,12 +128,9 @@ export default function LogHeader({
             let shouldShow = false;
             if (currentMeeting.audienceType === 'all' || !currentMeeting.audienceType) {
               shouldShow = true;
-            } else if (currentMeeting.audienceType === 'heads') {
-              if (profile?.person?.person_role?.is_head_department) {
-                shouldShow = true;
-              }
-            } else if (currentMeeting.audienceType === 'selective') {
-              if (currentMeeting.targetIds?.includes(profile?.id)) {
+            } else if (currentMeeting.audienceType === 'heads' || currentMeeting.audienceType === 'selective') {
+              const pId = Number(profile?.id);
+              if (currentMeeting.targetIds?.map(Number).includes(pId)) {
                 shouldShow = true;
               }
             }
