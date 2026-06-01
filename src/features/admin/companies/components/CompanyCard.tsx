@@ -17,7 +17,15 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ICompany } from "../../types/company.types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { CompanyActivityTimeline } from "./CompanyActivityTimeline";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Activity } from "lucide-react";
 
 interface CompanyCardProps {
   company: ICompany;
@@ -25,6 +33,7 @@ interface CompanyCardProps {
 
 export function CompanyCard({ company }: CompanyCardProps) {
   const router = useRouter();
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
 
   const stars = useMemo(() => {
     const r = Number(company.rating || 0);
@@ -62,6 +71,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
       : statusConfig.active;
 
   return (
+    <>
     <Card
       onClick={() => router.push(`/admin/companies/edit/${company.id}`)}
       className="group relative flex items-stretch rounded-xl border border-border bg-card transition-all hover:ring-1 hover:ring-primary/30 hover:shadow-lg cursor-pointer active:scale-[0.98] overflow-hidden"
@@ -153,12 +163,43 @@ export function CompanyCard({ company }: CompanyCardProps) {
             )}
           </div>
 
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground hover:bg-primary hover:text-white transition-all shadow-sm z-10"
+               onClick={(e) => {
+                 e.stopPropagation();
+                 setIsActivityLogOpen(true);
+               }}>
+            <Activity size={16} />
+          </div>
+
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
             <ExternalLink size={16} />
           </div>
         </div>
       </div>
     </Card>
+
+    {/* Activity Log Modal */}
+    <Dialog open={isActivityLogOpen} onOpenChange={setIsActivityLogOpen}>
+      <DialogContent 
+        width="max-w-[100vw]" 
+        className="flex flex-col !max-w-[100vw] w-screen !h-[100dvh] !max-h-[100dvh] !rounded-none border-none p-0 gap-0 overflow-hidden [&>div.custom-scrollbar]:flex [&>div.custom-scrollbar]:flex-col [&>div.custom-scrollbar]:h-full [&>div.custom-scrollbar]:p-0"
+      >
+        <div className="flex flex-col h-full w-full">
+          <DialogHeader className="p-4 sm:p-6 shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <Activity size={24} className="text-emerald-500" />
+              Активність компанії ({company.company_name})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 sm:px-12 bg-zinc-50 dark:bg-zinc-950">
+            <div className="max-w-7xl mx-auto w-full">
+              {isActivityLogOpen && <CompanyActivityTimeline companyId={company.id} />}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

@@ -67,3 +67,21 @@ export interface IDepartment {
   root_company: number;
   department_name: string;
 }
+
+export interface IUserActivity {
+  id: string | number;
+  id_usr: number;
+  company_id?: number;
+  action: string;
+  path?: string;
+  duration?: number;
+  ip_address?: string;
+  usr_agent?: string;
+  metadata?: any;
+  created_at: string;
+}
+
+export interface IUserActivityResponse {
+  activities: IUserActivity[];
+  nextCursor: string | null;
+}

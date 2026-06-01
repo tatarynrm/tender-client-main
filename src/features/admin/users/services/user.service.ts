@@ -17,6 +17,14 @@ class UserService {
 
     return data;
   }
+
+  public async getUserActivities(userId: number, cursor?: string | null, limit: number = 20) {
+    const { data } = await api.get(`/admin/user/${userId}/activities`, {
+      params: { cursor, limit }
+    });
+    
+    return data;
+  }
 }
 
 export const userService = new UserService();

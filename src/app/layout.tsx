@@ -45,6 +45,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { UserActivityTracker } from "@/shared/components/UserActivityTracker";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -76,7 +78,7 @@ export default async function RootLayout({
           zIndex={2000} // поверх всіх елементів
           showForHashAnchor={true} // якщо переходиш на хеш-лінк, теж показує
         />
-
+        <UserActivityTracker />
         <MainProvider profile={profile ?? null}>{children}</MainProvider>
       </body>
     </html>

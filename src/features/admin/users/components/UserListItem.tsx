@@ -13,7 +13,9 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  Activity,
 } from "lucide-react";
+import { UserActivityTimeline } from "./UserActivityTimeline";
 import { useRouter } from "next/navigation";
 import { IUserAccount } from "../../types/user.types";
 import {
@@ -50,6 +52,7 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmPhrase, setConfirmPhrase] = useState("");
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
 
   const fullName =
     `${user.person?.surname || ""} ${user.person?.name || ""} ${user.person?.last_name || ""}`.trim() ||
@@ -255,6 +258,13 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
                 <span>Редагувати</span>
               </DropdownMenuItem>
               <DropdownMenuItem
+                onClick={() => setIsActivityLogOpen(true)}
+                className="flex items-center gap-2.5 py-2 px-3 rounded-lg cursor-pointer text-sm font-medium"
+              >
+                <Activity size={16} className="text-emerald-500" />
+                <span>Активність</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => setIsDeleteDialogOpen(true)}
                 className="flex items-center gap-2.5 py-2 px-3 rounded-lg cursor-pointer text-sm font-medium text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-900/20"
               >
@@ -351,6 +361,27 @@ export function UserListItem({ user, isOnline, isIctTab }: UserListItemProps) {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Activity Log Modal */}
+      <Dialog open={isActivityLogOpen} onOpenChange={setIsActivityLogOpen}>
+        <DialogContent 
+          width="max-w-[100vw]" 
+          className="flex flex-col !max-w-[100vw] w-screen !h-[100dvh] !max-h-[100dvh] !rounded-none border-none p-0 gap-0 overflow-hidden [&>div.custom-scrollbar]:flex [&>div.custom-scrollbar]:flex-col [&>div.custom-scrollbar]:h-full [&>div.custom-scrollbar]:p-0"
+        >
+          <div className="flex flex-col h-full w-full">
+            <DialogHeader className="p-4 sm:p-6 shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+              <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+                <Activity size={24} className="text-emerald-500" />
+                Журнал активності ({fullName})
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 sm:px-12 bg-zinc-50 dark:bg-zinc-950">
+              <div className="max-w-7xl mx-auto w-full">
+                {isActivityLogOpen && <UserActivityTimeline userId={user.id} />}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
