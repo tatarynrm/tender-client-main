@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { UserActivityBadge } from "../../users/components/UserActivityBadge";
 import { ActivityCharts } from "../../users/components/ActivityCharts";
+import { UserActivityTimeline } from "../../users/components/UserActivityTimeline";
 import { Button } from "@/shared/components/ui/button";
 import { format } from "date-fns";
-import { Activity, Code, Globe, Loader2, MonitorSmartphone, User } from "lucide-react";
+import { Activity, Code, Globe, Loader2, MonitorSmartphone, User, ChevronRight } from "lucide-react";
 import { translateActivityPath } from "@/shared/utils/activity.utils";
 import {
   Dialog,
@@ -15,7 +16,9 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import api from "@/shared/api/instance.api";
-import { IUserActivityResponse } from "@/shared/types/user.types";
+import { IUserActivitiesResponse, ICompanyActivitySummary } from "@/shared/types/user.types";
+import { adminCompanyService } from "../../services/admin.company.service";
+import { cn } from "@/shared/utils";
 
 interface CompanyActivityTimelineProps {
   companyId: number;
@@ -25,11 +28,12 @@ const fetchCompanyActivities = async (companyId: number, cursor?: string | null,
   const { data } = await api.get(`/admin/company/${companyId}/activities`, {
     params: { cursor, limit }
   });
-  return data as IUserActivityResponse;
+  return data as IUserActivitiesResponse;
 };
 
 export function CompanyActivityTimeline({ companyId }: CompanyActivityTimelineProps) {
   const [selectedMetadata, setSelectedMetadata] = useState<any | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const {
     data,
@@ -38,13 +42,18 @@ export function CompanyActivityTimeline({ companyId }: CompanyActivityTimelinePr
     isFetchingNextPage,
     isPending,
     isError,
-  } = useInfiniteQuery<IUserActivityResponse, Error>({
+  } = useInfiniteQuery<IUserActivitiesResponse, Error>({
     queryKey: ["company-activities", companyId],
     queryFn: async ({ pageParam }) => {
       return fetchCompanyActivities(companyId, pageParam as string | null, 15);
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     initialPageParam: null,
+  });
+
+  const { data: managersSummary, isPending: isSummaryPending } = useQuery<ICompanyActivitySummary[]>({
+    queryKey: ["company-activities-summary", companyId],
+    queryFn: () => adminCompanyService.getCompanyActivitiesSummary(companyId),
   });
 
   if (isPending) {
@@ -74,95 +83,182 @@ export function CompanyActivityTimeline({ companyId }: CompanyActivityTimelinePr
       ) : (
         <>
           <ActivityCharts activities={activities} />
-          <div className="relative border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 space-y-8 pb-4">
-          {activities.map((activity) => (
-            <div key={activity.id} className="relative pl-6">
-              {/* Timeline dot */}
-              <div className="absolute -left-[9px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 ring-4 ring-white dark:ring-zinc-950">
-                <div className="h-2 w-2 rounded-full bg-zinc-400 dark:bg-zinc-500" />
-              </div>
 
-              <div className="flex flex-col gap-2 bg-white dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800/50 shadow-sm">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <Activity size={16} className="text-zinc-400" />
-                    <UserActivityBadge action={activity.action} />
-                  </div>
-                  <div className="text-xs text-zinc-500 font-medium">
-                    {format(new Date(activity.created_at), "dd.MM.yyyy HH:mm:ss")}
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-8">
+            {/* Ліва колонка: Список менеджерів */}
+            <div className="lg:col-span-4 space-y-4">
+              <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                Топ активних користувачів
+              </h3>
+
+              {isSummaryPending ? (
+                <div className="flex justify-center p-4">
+                  <Loader2 className="animate-spin text-zinc-400" size={24} />
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 sm:col-span-2">
-                    <User size={14} className="opacity-70" />
-                    <span>User ID: {activity.id_usr}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    <Globe size={14} className="opacity-70" />
-                    <span className="truncate">{activity.ip_address || "Невідомий IP"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    <MonitorSmartphone size={14} className="opacity-70" />
-                    <span className="truncate" title={activity.usr_agent || ""}>
-                      {activity.usr_agent ? activity.usr_agent.split(" ")[0] : "Невідомий пристрій"}
+              ) : managersSummary && managersSummary.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setSelectedUserId(null)}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-xl border text-left transition-all",
+                      selectedUserId === null
+                        ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30 shadow-sm"
+                        : "bg-white border-zinc-200 hover:border-indigo-300 dark:bg-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-700"
+                    )}
+                  >
+                    <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">
+                      Загальна активність компанії
                     </span>
+                    {selectedUserId === null && <ChevronRight size={16} className="text-indigo-500" />}
+                  </button>
+
+                  {managersSummary.map((manager, idx) => {
+                    const fullName = [manager.surname, manager.name, manager.last_name].filter(Boolean).join(" ") || "Без імені";
+                    const isSelected = selectedUserId === manager.id_usr;
+                    return (
+                      <button
+                        key={manager.id_usr}
+                        onClick={() => setSelectedUserId(manager.id_usr)}
+                        className={cn(
+                          "flex items-center justify-between p-3 rounded-xl border text-left transition-all",
+                          isSelected
+                            ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-500/10 dark:border-indigo-500/30 shadow-sm"
+                            : "bg-white border-zinc-200 hover:border-indigo-300 dark:bg-zinc-900/50 dark:border-zinc-800 dark:hover:border-zinc-700"
+                        )}
+                      >
+                        <div className="flex flex-col gap-1 min-w-0 pr-2">
+                          <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate">
+                            {idx + 1}. {fullName}
+                          </span>
+                          <span className="text-xs text-zinc-500 flex items-center gap-1">
+                            <Activity size={12} />
+                            {manager.activity_count} дій
+                          </span>
+                        </div>
+                        {isSelected && <ChevronRight size={16} className="text-indigo-500 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-sm text-zinc-500">Користувачів не знайдено</div>
+              )}
+            </div>
+
+            {/* Права колонка: Таймлайн (Загальний або конкретного користувача) */}
+            <div className="lg:col-span-8 bg-white dark:bg-zinc-900/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-6">
+              {selectedUserId ? (
+                <div>
+                  <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                    <User size={20} className="text-indigo-500" />
+                    Активність користувача
+                  </h3>
+                  <UserActivityTimeline userId={selectedUserId} />
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                    <Globe size={20} className="text-emerald-500" />
+                    Загальний журнал дій компанії
+                  </h3>
+                  <div className="relative border-l-2 border-zinc-200 dark:border-zinc-800 ml-4 space-y-8 pb-4">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="relative pl-6">
+                        {/* Timeline dot */}
+                        <div className="absolute -left-[9px] top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800 ring-4 ring-white dark:ring-zinc-950">
+                          <div className="h-2 w-2 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                        </div>
+
+                        <div className="flex flex-col gap-2 bg-zinc-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800/80 shadow-sm">
+                          <div className="flex items-center justify-between gap-4 flex-wrap">
+                            <div className="flex items-center gap-3">
+                              <Activity size={16} className="text-zinc-400" />
+                              <UserActivityBadge action={activity.action} />
+                            </div>
+                            <div className="text-xs text-zinc-500 font-medium">
+                              {format(new Date(activity.created_at), "dd.MM.yyyy HH:mm:ss")}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 sm:col-span-2">
+                              <User size={14} className="opacity-70" />
+                              <span>
+                                {activity.surname
+                                  ? `${activity.surname} ${activity.name || ""} ${activity.last_name || ""}`
+                                  : `User ID: ${activity.id_usr}`}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                              <Globe size={14} className="opacity-70" />
+                              <span className="truncate">{activity.ip_address || "Невідомий IP"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                              <MonitorSmartphone size={14} className="opacity-70" />
+                              <span className="truncate" title={activity.usr_agent || ""}>
+                                {activity.usr_agent ? activity.usr_agent.split(" ")[0] : "Невідомий пристрій"}
+                              </span>
+                            </div>
+
+                            {activity.path && (
+                              <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+                                <Code size={14} className="opacity-70" />
+                                <span className="font-medium bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-indigo-600 dark:text-indigo-400">
+                                  {translateActivityPath(activity.path)}
+                                </span>
+                                {activity.duration ? (
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-2">
+                                    ({activity.duration} сек)
+                                  </span>
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+
+                          {activity.metadata && (
+                            <div className="mt-3">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-[11px] gap-1.5 rounded-lg border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                onClick={() => setSelectedMetadata(activity.metadata)}
+                              >
+                                <Code size={12} />
+                                Деталі
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
-                  {activity.path && (
-                    <div className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400 sm:col-span-2">
-                      <Code size={14} className="opacity-70" />
-                      <span className="font-medium bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-indigo-600 dark:text-indigo-400">
-                        {translateActivityPath(activity.path)}
-                      </span>
-                      {activity.duration ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-2">
-                          ({activity.duration} сек)
-                        </span>
-                      ) : null}
+                  {hasNextPage && (
+                    <div className="flex justify-center pt-4">
+                      <Button
+                        variant="ghost"
+                        className="w-full sm:w-auto rounded-xl bg-zinc-100/50 hover:bg-zinc-100 dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                      >
+                        {isFetchingNextPage ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 size={16} className="animate-spin opacity-70" />
+                            <span>Завантаження...</span>
+                          </div>
+                        ) : (
+                          "Завантажити ще"
+                        )}
+                      </Button>
                     </div>
                   )}
                 </div>
-
-                {activity.metadata && (
-                  <div className="mt-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 text-[11px] gap-1.5 rounded-lg border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                      onClick={() => setSelectedMetadata(activity.metadata)}
-                    >
-                      <Code size={12} />
-                      Деталі
-                    </Button>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          ))}
           </div>
         </>
-      )}
-
-      {hasNextPage && (
-        <div className="flex justify-center pt-2">
-          <Button
-            variant="ghost"
-            className="w-full sm:w-auto rounded-xl bg-zinc-100/50 hover:bg-zinc-100 dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-          >
-            {isFetchingNextPage ? (
-              <div className="flex items-center gap-2">
-                <Loader2 size={16} className="animate-spin opacity-70" />
-                <span>Завантаження...</span>
-              </div>
-            ) : (
-              "Завантажити ще"
-            )}
-          </Button>
-        </div>
       )}
 
       {/* Metadata Modal */}

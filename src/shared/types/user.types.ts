@@ -69,9 +69,9 @@ export interface IDepartment {
 }
 
 export interface IUserActivity {
-  id: string | number;
-  id_usr: number;
-  company_id?: number;
+  id: string;
+  id_usr: string;
+  company_id?: string;
   action: string;
   path?: string;
   duration?: number;
@@ -79,9 +79,20 @@ export interface IUserActivity {
   usr_agent?: string;
   metadata?: any;
   created_at: string;
+  surname?: string;
+  name?: string;
+  last_name?: string;
 }
 
-export interface IUserActivityResponse {
+export interface ICompanyActivitySummary {
+  id_usr: string;
+  surname: string | null;
+  name: string | null;
+  last_name: string | null;
+  activity_count: number;
+}
+
+export interface IUserActivitiesResponse {
   activities: IUserActivity[];
   nextCursor: string | null;
 }

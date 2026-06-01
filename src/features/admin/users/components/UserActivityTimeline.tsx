@@ -7,7 +7,7 @@ import { UserActivityBadge } from "./UserActivityBadge";
 import { ActivityCharts } from "./ActivityCharts";
 import { Button } from "@/shared/components/ui/button";
 import { format } from "date-fns";
-import { Activity, Code, Globe, Loader2, MonitorSmartphone } from "lucide-react";
+import { Activity, Code, Globe, Loader2, MonitorSmartphone, User } from "lucide-react";
 import { translateActivityPath } from "@/shared/utils/activity.utils";
 import {
   Dialog,
@@ -16,10 +16,10 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 
-import { IUserActivityResponse } from "@/shared/types/user.types";
+import { IUserActivitiesResponse } from "@/shared/types/user.types";
 
 interface UserActivityTimelineProps {
-  userId: number;
+  userId: number | string;
 }
 
 export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
@@ -32,7 +32,7 @@ export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
     isFetchingNextPage,
     isPending,
     isError,
-  } = useInfiniteQuery<IUserActivityResponse, Error>({
+  } = useInfiniteQuery<IUserActivitiesResponse, Error>({
     queryKey: ["user-activities", userId],
     queryFn: async ({ pageParam }) => {
       return userService.getUserActivities(userId, pageParam as string | null, 10);
@@ -96,6 +96,14 @@ export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
                     <MonitorSmartphone size={14} className="opacity-70" />
                     <span className="truncate" title={activity.usr_agent || ""}>
                       {activity.usr_agent ? activity.usr_agent.split(" ")[0] : "Невідомий пристрій"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 sm:col-span-2">
+                    <User size={14} className="opacity-70" />
+                    <span>
+                      {activity.surname 
+                        ? `${activity.surname} ${activity.name || ""} ${activity.last_name || ""}` 
+                        : `User ID: ${activity.id_usr}`}
                     </span>
                   </div>
                   {activity.path && (

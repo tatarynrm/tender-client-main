@@ -18,6 +18,10 @@ export const translateActivityPath = (path: string): string => {
     "/dashboard/tender/win": "Дашборд: Виграні тендери",
     "/dashboard/tender/closed": "Дашборд: Закриті тендери",
     "/dashboard/tender/plan": "Дашборд: Заплановані тендери",
+    "/log/tender/closed": "Логи: Закриті тендери",
+    "/log/tender/agreement": "Логи: Договори",
+    "/log/tender/plan": "Логи: Заплановані тендери",
+    "/admin/analytics": "Аналітика",
   };
 
   // Exact match
@@ -44,6 +48,10 @@ export const translateAction = (action: string): string => {
     "UPDATE": "Оновлення",
     "DELETE": "Видалення",
     "DOWNLOAD": "Завантаження",
+    "CHANGE_PASSWORD": "Зміна пароля",
+    "BUTTON_CLICK": "Натискання кнопки",
+    "BID": "Ставка",
+    "FILE_DOWNLOAD": "Завантаження файлу",
   };
 
   return actionMap[action] || action;
