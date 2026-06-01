@@ -22,7 +22,7 @@ export default function Header({
 }) {
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
-      
+
       {/* Ліва частина: Управління та Профіль */}
       <div className="flex items-center gap-6">
         {/* Кнопка мобільного меню */}
@@ -82,19 +82,19 @@ export default function Header({
 
       {/* Права частина: Налаштування, Повідомлення та Дії */}
       <div className="flex items-center gap-2 sm:gap-4">
-        
+
         {/* Системний блок: Налаштування + Повідомлення + Тема */}
         <div className="flex items-center p-1 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5">
-          <GlobalSettings />
+          {/* <GlobalSettings /> */}
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
-          <NotificationMenu />
+          {/* <NotificationMenu /> */}
           <div className="w-[1px] h-4 bg-slate-300 dark:bg-slate-700 mx-1" />
-          <ToggleTheme />
+          {/* <ToggleTheme /> */}
         </div>
 
         {/* Меню профілю */}
         <div className="relative pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">
-          <DynamicHeaderMenu  />
+          {/* <DynamicHeaderMenu  /> */}
         </div>
       </div>
     </header>

@@ -127,14 +127,14 @@ export function ManagerActivityBreakdown({ activities }: Props) {
       </div>
 
       <Dialog open={!!selectedManager} onOpenChange={(open) => !open && setSelectedManager(null)}>
-        <DialogContent className="sm:max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
+        <DialogContent className="sm:max-w-3xl p-0 overflow-hidden border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950">
           <DialogHeader className="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800">
             <DialogTitle className="flex items-center gap-2">
               <User size={18} className="text-indigo-500" />
               Активність менеджера: <span className="text-indigo-600">{selectedManager?.fullName}</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="overflow-y-auto p-4 custom-scrollbar max-h-[75vh]">
             {selectedManager && (
               <UserActivityTimeline userId={Number(selectedManager.id)} />
             )}

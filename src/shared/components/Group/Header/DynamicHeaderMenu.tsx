@@ -45,13 +45,13 @@ export default function DynamicHeaderMenu() {
     {
       match: "/dashboard",
       items: [
-        { href: "/dashboard/users", label: "Новий користувач", icon: UserPlus },
-        { href: "/dashboard/vehicles/add", label: "Додати тягач", icon: Truck },
-        {
-          href: "/dashboard/trailers/add",
-          label: "Додати причіп",
-          icon: Container,
-        },
+        // { href: "/dashboard/users", label: "Новий користувач", icon: UserPlus },
+        // { href: "/dashboard/vehicles/add", label: "Додати тягач", icon: Truck },
+        // {
+        //   href: "/dashboard/trailers/add",
+        //   label: "Додати причіп",
+        //   icon: Container,
+        // },
       ],
     },
   ];
