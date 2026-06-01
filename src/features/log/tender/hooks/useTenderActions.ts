@@ -25,6 +25,20 @@ export function useTenderActions(
         id_tender: tenderId,
         ...payload,
       });
+
+      let actionType = "PLACED_BID";
+      if (payload.ids_redemption_price === "redemption") actionType = "PLACED_BID_BUYOUT";
+      else if (payload.ids_redemption_price === "offer") actionType = "PLACED_BID_CUSTOM";
+      else if (payload.ids_redemption_price === "reduction") actionType = "PLACED_BID_STEP";
+      
+      try {
+        api.post("/activities/track", {
+          action: actionType,
+          path: `/log/tender/active`,
+          metadata: { tenderId, price: payload.price_proposed, type: payload.ids_redemption_price }
+        }).catch(() => {});
+      } catch(e) {}
+
       toast.success("Дію виконано успішно");
       closeModal();
       // Тут можна додати refresh логіку

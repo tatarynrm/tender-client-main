@@ -53,6 +53,13 @@ export const loadService = {
     id?: number | string;
   }) => {
     const { data } = await api.post("/crm/load/save-comment", payload);
+    try {
+      api.post("/activities/track", {
+        action: "ADDED_COMMENT",
+        path: `/log/load/active`, // Approximate path
+        metadata: { tenderId: payload.id_crm_load, notes: payload.notes }
+      }).catch(() => {});
+    } catch (e) {}
     return data;
   },
 

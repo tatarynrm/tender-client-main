@@ -1,3 +1,4 @@
+import api from "@/shared/api/instance.api";
 import { useMutation } from "@tanstack/react-query";
 import { authService } from "../services";
 import { TypeLoginSchema } from "../schemes";
@@ -85,6 +86,14 @@ export function useLoginMutation(
 
           console.log("🔌 Socket reconnected with user:", user.id);
         }
+        
+        // Track login activity
+        try {
+          api.post("/activities/track", {
+            action: "LOGIN",
+            path: "/login"
+          }).catch(() => {});
+        } catch (e) {}
       }
       toast.success("Успішний вхід!");
 

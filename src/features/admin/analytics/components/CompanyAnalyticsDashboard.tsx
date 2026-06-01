@@ -7,6 +7,7 @@ import api from "@/shared/api/instance.api";
 import { IUserActivitiesResponse, ICompanyActivitySummary } from "@/shared/types/user.types";
 import { Loader2, TrendingUp, Clock, MousePointerClick, UserCheck } from "lucide-react";
 import { translateActivityPath, translateAction } from "@/shared/utils/activity.utils";
+import { ManagerActivityBreakdown } from "./ManagerActivityBreakdown";
 
 interface Props {
   companyId: number;
@@ -153,7 +154,10 @@ export function CompanyAnalyticsDashboard({ companyId }: Props) {
 
       {/* Main Charts */}
       {activities.length > 0 ? (
-        <ActivityCharts activities={activities} />
+        <>
+          <ActivityCharts activities={activities} />
+          <ManagerActivityBreakdown activities={activities} />
+        </>
       ) : (
         <div className="text-center p-8 text-zinc-500 dark:text-zinc-400 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl">
           Немає записів активності для створення графіків.

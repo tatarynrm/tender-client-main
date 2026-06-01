@@ -5,6 +5,7 @@ import { LogOut } from "lucide-react";
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
 import { useModalStore } from "@/shared/stores/useModalStore";
 import { useSockets } from "@/shared/providers/SocketProvider";
+import api from "@/shared/api/instance.api";
 
 interface LogoutButtonProps {
   onBeforeOpen?: () => void;
@@ -16,6 +17,14 @@ export function LogoutButton({ onBeforeOpen }: LogoutButtonProps) {
   const { user: userSocket, chat, tender, load } = useSockets();
 
   const handleConfirmLogout = () => {
+    // Track logout activity
+    try {
+      api.post("/activities/track", {
+        action: "LOGOUT",
+        path: "/logout"
+      }).catch(() => {});
+    } catch (e) {}
+
     const allSockets = [userSocket, chat, tender, load];
     allSockets.forEach(socket => {
       if (socket && typeof socket.disconnect === 'function') {

@@ -21,6 +21,13 @@ export const translateActivityPath = (path: string): string => {
     "/log/tender/closed": "Логи: Закриті тендери",
     "/log/tender/agreement": "Логи: Договори",
     "/log/tender/plan": "Логи: Заплановані тендери",
+    "/log/tender/draft": "Логи: Чернетки",
+    "/log/tender/analyze": "Логи: Аналіз",
+    "/log": "Головна (Логи)",
+    "/log/load/active": "Логи: Активні заявки",
+    "/log/load/archive": "Логи: Архів заявок",
+    "/log/files": "Логи: Документи",
+    "/log/map": "Логи: Карта",
     "/admin/analytics": "Аналітика",
   };
 
@@ -42,7 +49,7 @@ export const translateAction = (action: string): string => {
   
   const actionMap: Record<string, string> = {
     "PAGE_VIEW": "Перегляд сторінки",
-    "LOGIN": "Авторизація",
+    "LOGIN": "Вхід",
     "LOGOUT": "Вихід",
     "CREATE": "Створення",
     "UPDATE": "Оновлення",
@@ -52,6 +59,11 @@ export const translateAction = (action: string): string => {
     "BUTTON_CLICK": "Натискання кнопки",
     "BID": "Ставка",
     "FILE_DOWNLOAD": "Завантаження файлу",
+    "ADDED_COMMENT": "Коментар",
+    "PLACED_BID": "Ставка",
+    "PLACED_BID_BUYOUT": "Викуп",
+    "PLACED_BID_CUSTOM": "Своя ціна",
+    "PLACED_BID_STEP": "Крок"
   };
 
   return actionMap[action] || action;
