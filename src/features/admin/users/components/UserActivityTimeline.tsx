@@ -22,6 +22,14 @@ interface UserActivityTimelineProps {
   userId: number | string;
 }
 
+const formatDuration = (seconds: number) => {
+  if (seconds < 60) return `${seconds} сек`;
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return s > 0 ? `${m} хв ${s} сек` : `${m} хв`;
+};
+
+
 export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
   const [selectedMetadata, setSelectedMetadata] = useState<any | null>(null);
 
@@ -114,7 +122,7 @@ export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
                       </span>
                       {activity.duration ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-2">
-                          ({activity.duration} сек)
+                          ({formatDuration(activity.duration)})
                         </span>
                       ) : null}
                     </div>

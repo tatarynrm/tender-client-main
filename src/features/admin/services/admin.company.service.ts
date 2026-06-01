@@ -11,6 +11,6 @@ export const adminCompanyService = {
   createCompany: (data: any) => 
     api.post("/admin/company/save", data).then(res => res.data),
     
-  getCompanyActivitiesSummary: (companyId: number) =>
-    api.get(`/admin/company/${companyId}/activities/summary`).then(res => res.data),
+  getCompanyActivitiesSummary: (companyId: number, params?: { startDate?: string; endDate?: string }) =>
+    api.get(`/admin/company/${companyId}/activities/summary`, { params }).then(res => res.data),
 };
