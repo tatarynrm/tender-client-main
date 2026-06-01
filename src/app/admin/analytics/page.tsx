@@ -10,7 +10,7 @@ export default async function AnalyticsPage() {
   }
 
   // Ensure the user is associated with a company
-  if (!profile.id_company) {
+  if (!profile.company?.id) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="text-center bg-white dark:bg-zinc-900 rounded-2xl p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm max-w-md">
@@ -36,7 +36,7 @@ export default async function AnalyticsPage() {
         </p>
       </div>
 
-      <CompanyAnalyticsDashboard companyId={Number(profile.id_company)} />
+      <CompanyAnalyticsDashboard companyId={Number(profile.company.id)} />
     </div>
   );
 }
