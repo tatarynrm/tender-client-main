@@ -8,6 +8,7 @@ import {
   PieChart,
   CheckCircle2,
   Loader2,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 
@@ -148,19 +149,21 @@ export function InformationTab({ transport, directions, isLoading }: Information
               Дані про напрямки відсутні
             </div>
           ) : (
-            directions.map((dir, i) => (
+            directions
+              .filter((dir) => !dir.direction_name.toLowerCase().includes("азія"))
+              .map((dir, i) => (
               <div
                 key={i}
                 className="border border-[#D0DDF0] dark:border-zinc-800 rounded-xl p-4 flex flex-col bg-white dark:bg-zinc-900/50"
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <PieChart className="w-5 h-5 text-slate-900 dark:text-zinc-100 fill-slate-900 dark:fill-zinc-100" />
+                  <Globe className="w-5 h-5 text-slate-900 dark:text-zinc-100" />
                   <h3 className="text-[14px] font-bold text-slate-900 dark:text-zinc-100">
                     {dir.direction_name}
                   </h3>
                 </div>
                 <div className="flex flex-col gap-3">
-                  {dir.countries.slice(0, 10).map((c, idx) => (
+                  {dir.countries.map((c, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       {c.checked ? (
                         <CheckCircle2 className="w-[18px] h-[18px] text-[#4863D4] fill-[#4863D4] stroke-white shrink-0" />
@@ -179,11 +182,6 @@ export function InformationTab({ transport, directions, isLoading }: Information
                       </span>
                     </div>
                   ))}
-                  {dir.countries.length > 10 && (
-                    <div className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 cursor-pointer hover:text-slate-600 transition-colors">
-                      Ще {dir.countries.length - 10} країни ˅
-                    </div>
-                  )}
                 </div>
               </div>
             ))
