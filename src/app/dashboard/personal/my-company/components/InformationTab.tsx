@@ -151,6 +151,18 @@ export function InformationTab({ transport, directions, isLoading }: Information
           ) : (
             directions
               .filter((dir) => !dir.direction_name.toLowerCase().includes("азія"))
+              .sort((a, b) => {
+                const orderMap: Record<string, number> = {
+                  "Західна Європа": 1,
+                  "Північна Європа": 2,
+                  "Південна Європа": 3,
+                  "Східна Європа": 4,
+                  "СНД": 5,
+                };
+                const orderA = orderMap[a.direction_name] || 99;
+                const orderB = orderMap[b.direction_name] || 99;
+                return orderA - orderB;
+              })
               .map((dir, i) => (
               <div
                 key={i}
