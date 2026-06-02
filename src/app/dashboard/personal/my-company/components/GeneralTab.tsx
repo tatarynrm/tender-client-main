@@ -4,16 +4,13 @@ import React, { useState } from "react";
 import {
   MapPin,
   Plus,
-  UserPlus,
-  MessageSquare,
-  Mail,
-  Phone,
-  ShieldCheck,
-  ExternalLink,
-  Edit2,
+  Users,
+  Send,
+  Instagram,
+  Facebook,
+  Loader2,
 } from "lucide-react";
-import { Button, Input, Label, Switch } from "@/shared/components/ui";
-import { Loader2, Globe, Building2 } from "lucide-react";
+import { Button } from "@/shared/components/ui";
 import { useMyCompany } from "../hooks/useMyCompany";
 import { useCompanyUsers } from "../hooks/useCompanyUsers";
 import { UserCreateModal } from "./UserCreateModal";
@@ -27,9 +24,7 @@ export function GeneralTab() {
     profile?.company?.migrate_id as number,
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<number | string | null>(
-    null,
-  );
+  const [editingUserId, setEditingUserId] = useState<number | string | null>(null);
 
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
@@ -37,230 +32,189 @@ export function GeneralTab() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500 pb-10">
       {(isCreateModalOpen || editingUserId) && (
         <UserCreateModal
           onClose={handleCloseModal}
           userId={editingUserId || undefined}
         />
       )}
+      
       {/* SECTION: ADDRESSES */}
-      <section className="space-y-4">
-        <div className="flex flex-col">
+      <section className="bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-black dark:text-white" />
-            <h2 className="text-sm font-bold uppercase  text-black dark:text-white">
+            <MapPin className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
               Адреси
             </h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-            {/* LEGAL ADDRESS CARD */}
-            <div className="p-6 sm:p-8 rounded-[30px] border border-[#414b76] dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-                <Building2 className="w-24 h-24 text-indigo-600" />
-              </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-[8px] border-[#4863D4] text-[#4863D4] hover:bg-blue-50 hover:text-[#4863D4] dark:border-blue-500/50 dark:text-blue-400 dark:hover:bg-blue-500/10 text-[12px] uppercase tracking-wide font-bold h-9 px-4 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Додати адресу
+          </Button>
+        </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
-                  Юридична адреса
-                </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* LEGAL ADDRESS CARD */}
+          <div className="border border-[#D0DDF0] dark:border-zinc-800 rounded-[10px] p-6 flex flex-col bg-[#F8FAFF] dark:bg-zinc-900/50">
+            <h3 className="text-[13px] font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide mb-6">
+              Юридична адреса
+            </h3>
+            <div className="relative">
+              <div className="absolute -top-2 left-3 bg-[#F8FAFF] dark:bg-zinc-900 px-1 z-10">
+                <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                  Адреса
+                </span>
               </div>
-
-              <div className="space-y-4">
+              <div className="border border-[#D0DDF0] dark:border-zinc-700 rounded-lg p-3.5 min-h-[50px] text-[14px] text-[#4863D4] dark:text-blue-400 font-medium bg-white dark:bg-zinc-950">
                 {isCompanyLoading ? (
-                  <div className="h-20 flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
-                  </div>
+                  <Loader2 className="w-4 h-4 text-[#4863D4] animate-spin" />
                 ) : (
-                  <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
-                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
-                      {company?.address_legal || "Дані відсутні"}
-                    </p>
-                  </div>
+                  company?.address_legal || "Дані відсутні"
                 )}
               </div>
             </div>
+          </div>
 
-            {/* PHYSICAL ADDRESS CARD */}
-            <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-                <MapPin className="w-24 h-24 text-sky-600" />
+          {/* DOCUMENT ADDRESS CARD */}
+          <div className="border border-[#D0DDF0] dark:border-zinc-800 rounded-[10px] p-6 flex flex-col bg-[#F8FAFF] dark:bg-zinc-900/50">
+            <h3 className="text-[13px] font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-wide mb-6">
+              Адреса для документів
+            </h3>
+            <div className="relative">
+              <div className="absolute -top-2 left-3 bg-[#F8FAFF] dark:bg-zinc-900 px-1 z-10">
+                <span className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
+                  Адреса
+                </span>
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                </div>
-                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
-                  Фактична адреса
-                </h3>
-              </div>
-
-              <div className="space-y-4">
+              <div className="border border-[#D0DDF0] dark:border-zinc-700 rounded-lg p-3.5 min-h-[50px] text-[14px] text-[#4863D4] dark:text-blue-400 font-medium bg-white dark:bg-zinc-950">
                 {isCompanyLoading ? (
-                  <div className="h-20 flex items-center justify-center">
-                    <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
-                  </div>
+                  <Loader2 className="w-4 h-4 text-[#4863D4] animate-spin" />
                 ) : (
-                  <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
-                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
-                      {company?.address_fysical ||
-                        company?.address_legal ||
-                        "Дані відсутні"}
-                    </p>
-                  </div>
+                  company?.address_fysical || company?.address_legal || "Дані відсутні"
                 )}
               </div>
             </div>
           </div>
         </div>
-
-
       </section>
 
       {/* SECTION: USERS */}
-      <section className="space-y-4">
-
-        {/* dsda */}
-        <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar p-2">
-          <div className="flex items-center justify-between flex-col gap-4 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <UserPlus className="w-5 h-5 " />
-              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-                Користувачі
-              </h2>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="rounded-full border-indigo-200 dark:border-indigo-500/20  dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-[10px] font-[#4256D5] uppercase tracking-widest h-9 font-semibold"
-            >
-              <Plus className="w-3.5 h-3.5 mr-2" />
-              Додати користувача
-            </Button>
+      <section className="bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
+              Користувачі
+            </h2>
           </div>
-          <table className="w-full border-collapse min-w-[900px]">
-            <thead>
-              <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30">
-                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="rounded-[8px] border-[#4863D4] text-[#4863D4] hover:bg-blue-50 hover:text-[#4863D4] dark:border-blue-500/50 dark:text-blue-400 dark:hover:bg-blue-500/10 text-[12px] uppercase tracking-wide font-bold h-9 px-4 transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Додати користувача
+          </Button>
+        </div>
+
+        <div className="border border-[#D0DDF0] dark:border-zinc-800 rounded-[10px] overflow-x-auto">
+          <table className="w-full text-left min-w-[900px]">
+            <thead className="bg-[#F8FAFF] dark:bg-zinc-900/50">
+              <tr>
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-[#D0DDF0] dark:border-zinc-800">
                   Ім'я
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
                   Роль
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
                   Телефон
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
-                  Email
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
+                  Емейл
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
-                  Права доступу
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
+                  Права Доступу
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black  tracking-widest text-black">
+                <th className="py-4 px-6 text-[13px] font-bold text-slate-800 dark:text-zinc-200 border-b border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
                   Месенджери
-                </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black  tracking-widest text-black">
-                  Дії
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+            <tbody>
               {isUsersLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                        Завантаження списку...
-                      </span>
-                    </div>
+                  <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-zinc-400">
+                    Завантаження списку...
                   </td>
                 </tr>
-              ) : users?.length === 0 ? (
+              ) : !users || users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                      Користувачі не знайдені
-                    </span>
+                  <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-zinc-400">
+                    Користувачі не знайдені
                   </td>
                 </tr>
               ) : (
-                users?.map((user: any) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-indigo-500/20">
-                          {user.person?.name?.substring(0, 1)}
-                          {user.person?.surname?.substring(0, 1)}
+                users.map((user: any, idx: number) => {
+                  const circleColors = [
+                    "bg-[#4863D4]", // Blue
+                    "bg-[#48D470]", // Green
+                    "bg-[#F59E0B]", // Orange
+                    "bg-[#8B5CF6]", // Purple
+                  ];
+                  const dotColor = circleColors[idx % circleColors.length];
+
+                  return (
+                    <tr
+                      key={user.id}
+                      className="border-b border-[#D0DDF0] dark:border-zinc-800 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
+                      onClick={() => setEditingUserId(user.id)}
+                    >
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className={cn("w-6 h-6 rounded-full shrink-0", dotColor)}></div>
+                          <span className="text-[14px] text-[#4863D4] dark:text-blue-400 font-medium whitespace-nowrap">
+                            {user.person?.surname} {user.person?.name} {user.person?.last_name}
+                          </span>
                         </div>
-                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                          {user.person?.surname} {user.person?.name}{" "}
-                          {user.person?.last_name}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
-                      {user.role_name || "Користувач"}
-                    </td>
-                    <td className="px-6 py-4 text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
-                      {user.person?.phone}
-                    </td>
-                    <td className="px-6 py-4 text-[13px] font-medium text-zinc-600 dark:text-zinc-400">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                          user.is_admin
-                            ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20"
-                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700",
-                        )}
-                      >
+                      </td>
+                      <td className="py-4 px-6 text-[14px] text-slate-500 dark:text-zinc-400 border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
+                        {user.role_name || "Користувач"}
+                      </td>
+                      <td className="py-4 px-6 text-[14px] text-slate-500 dark:text-zinc-400 border-l border-[#D0DDF0] dark:border-zinc-800 text-center whitespace-nowrap">
+                        {user.person?.phone || "—"}
+                      </td>
+                      <td className="py-4 px-6 text-[14px] text-slate-500 dark:text-zinc-400 border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
+                        {user.email}
+                      </td>
+                      <td className="py-4 px-6 text-[14px] text-slate-500 dark:text-zinc-400 border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
                         {user.is_admin ? "Адміністратор" : "Користувач"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        {user.person?.person_telegram ? (
-                          <div
-                            className="p-2 rounded-lg bg-sky-50 dark:bg-sky-500/10 text-sky-600"
-                            title="Telegram підключено"
-                          >
-                            <MessageSquare size={14} />
+                      </td>
+                      <td className="py-4 px-6 border-l border-[#D0DDF0] dark:border-zinc-800">
+                        <div className="flex items-center justify-center gap-2.5">
+                          {user.person?.person_telegram && (
+                            <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
+                              <Send size={15} className="-ml-0.5 mt-0.5" />
+                            </div>
+                          )}
+                          <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
+                            <Instagram size={16} />
                           </div>
-                        ) : (
-                          <div
-                            className="p-2 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-300"
-                            title="Месенджери не підключені"
-                          >
-                            <MessageSquare size={14} />
+                          <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
+                            <Facebook size={16} />
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingUserId(user.id)}
-                          className="h-8 w-8 p-0 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-zinc-400 hover:text-indigo-600 transition-colors"
-                        >
-                          <Edit2 size={14} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
