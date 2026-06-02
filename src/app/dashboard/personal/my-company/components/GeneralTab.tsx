@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui";
+import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
 import { useMyCompany } from "../hooks/useMyCompany";
 import { useCompanyUsers } from "../hooks/useCompanyUsers";
 import { UserCreateModal } from "./UserCreateModal";
@@ -20,6 +21,7 @@ import { cn } from "@/shared/utils";
 export function GeneralTab() {
   const { profile } = useProfile();
   const { users, isLoading: isUsersLoading } = useCompanyUsers();
+  const onlineUsers = useOnlineUsers();
   const { company, isLoading: isCompanyLoading } = useMyCompany(
     profile?.company?.migrate_id as number,
   );
@@ -163,13 +165,8 @@ export function GeneralTab() {
                 </tr>
               ) : (
                 users.map((user: any, idx: number) => {
-                  const circleColors = [
-                    "bg-[#4863D4]", // Blue
-                    "bg-[#48D470]", // Green
-                    "bg-[#F59E0B]", // Orange
-                    "bg-[#8B5CF6]", // Purple
-                  ];
-                  const dotColor = circleColors[idx % circleColors.length];
+                  const isOnline = onlineUsers.has(String(user.id));
+                  const dotColor = isOnline ? "bg-[#48D470]" : "bg-[#4863D4]";
 
                   return (
                     <tr
