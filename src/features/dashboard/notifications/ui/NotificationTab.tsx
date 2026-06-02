@@ -17,6 +17,8 @@ import {
   FileText,
   BarChart,
   MailWarning,
+  Move,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/shared/utils";
@@ -439,11 +441,11 @@ export function NotificationsTab() {
                 className="space-y-6 animate-in fade-in duration-500 overflow-visible"
               >
                 {/* SECTION: DIRECTIONS */}
-                <section className="p-4 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden">
-                  <div className="flex items-center gap-3 mb-4">
+                <section className="p-5 border border-[#D0DDF0] rounded-[24px] bg-[#EEF4FB] dark:bg-zinc-900/40 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center gap-2">
-                      <Globe className="w-5 h-5 text-zinc-900 dark:text-white" />
-                      <h2 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+                      <Move className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+                      <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
                         Напрямки сповіщень
                       </h2>
                     </div>
@@ -497,36 +499,27 @@ export function NotificationsTab() {
                         <div
                           key={i}
                           className={cn(
-                            "p-2 rounded-[1.5rem] transition-all duration-300 border",
+                            "p-4 rounded-[16px] transition-all duration-300 border flex flex-col gap-4",
                             isActive
-                              ? "bg-white dark:bg-zinc-900 border-indigo-500/30 shadow-sm"
-                              : "bg-zinc-50/30 dark:bg-zinc-900/10 border-transparent opacity-60",
+                              ? "bg-white dark:bg-zinc-900 border-[#D0DDF0]"
+                              : "bg-white dark:bg-zinc-900 border-[#D0DDF0] opacity-80",
                           )}
                         >
-                          <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center gap-2">
                             <Controller
                               name={dir.id_active as any}
                               control={control}
                               render={({ field }) => (
                                 <div
                                   id={dir.id_active}
-                                  className={cn(
-                                    "relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2",
-                                    field.value
-                                      ? "bg-indigo-600 shadow-lg shadow-indigo-500/20"
-                                      : "bg-zinc-200 dark:bg-zinc-800",
-                                  )}
+                                  className="cursor-pointer"
                                   onClick={() => field.onChange(!field.value)}
                                 >
-                                  <motion.div
-                                    className="h-3.5 w-3.5 rounded-full bg-white shadow-sm"
-                                    animate={{ x: field.value ? 18 : 3 }}
-                                    transition={{
-                                      type: "spring",
-                                      stiffness: 500,
-                                      damping: 30,
-                                    }}
-                                  />
+                                  {field.value ? (
+                                    <CheckCircle2 className="w-[20px] h-[20px] text-[#4863D4] fill-[#4863D4] stroke-white" />
+                                  ) : (
+                                    <CheckCircle2 className="w-[20px] h-[20px] text-slate-300 dark:text-zinc-600 stroke-[1.5]" />
+                                  )}
                                 </div>
                               )}
                             />
@@ -538,7 +531,7 @@ export function NotificationsTab() {
                                   !watch(dir.id_active as any),
                                 )
                               }
-                              className="font-black uppercase text-[11px] text-zinc-900 dark:text-zinc-100 cursor-pointer tracking-widest select-none"
+                              className="font-bold uppercase text-[12px] text-slate-800 dark:text-zinc-100 cursor-pointer tracking-wide select-none"
                             >
                               {dir.label}
                             </Label>
@@ -576,17 +569,17 @@ export function NotificationsTab() {
                   </div>
                 </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-stretch mt-4">
                   {/* SECTION: TRAILERS */}
-                  <div className="lg:col-span-4 space-y-4">
-                    <section className="p-4 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm h-full">
-                      <div className="flex items-center gap-2 mb-6">
-                        <Truck className="w-5 h-5 text-zinc-900 dark:text-white" />
-                        <h2 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white">
+                  <div className="lg:col-span-4 h-full">
+                    <section className="p-5 border border-[#D0DDF0] rounded-[24px] bg-white dark:bg-zinc-950/40 shadow-sm h-full">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Truck className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+                        <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
                           Тип транспорту
                         </h2>
                       </div>
-                      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-white/5 shadow-inner p-1">
+                      <div className="w-full">
                         {renderMultiSelect(
                           "tender_notify_trailer",
                           trailers,

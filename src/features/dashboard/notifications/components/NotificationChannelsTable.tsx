@@ -54,18 +54,18 @@ export function NotificationChannelsTable({
   }, [userSocket, profile, setProfile]);
 
   return (
-    <section className="p-3 border border-zinc-200/60 dark:border-white/10 rounded-[2rem] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 overflow-visible">
+    <section className="p-5 border border-[#D0DDF0] rounded-[24px] bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 overflow-visible h-full">
       <div className="flex items-center justify-between mb-4 px-2">
-        <div className="flex items-center gap-3">
-          <Bell className="w-5 h-5 text-zinc-900 dark:text-white" />
-          <h2 className="text-sm font-black uppercase tracking-wider text-zinc-900 dark:text-white leading-none">
+        <div className="flex items-center gap-2">
+          <Bell className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+          <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide leading-none">
             {title}
           </h2>
         </div>
 
         <div>
           {!isTelegramLinked ? (
-            <div className="[&>button]:bg-[#2fbcd6] [&>button]:hover:bg-[#269cb3] [&>button]:text-white [&>button]:px-5 [&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-[11px] [&>button]:font-black [&>button]:uppercase [&>button]:tracking-widest [&>button]:transition-all [&>button]:shadow-sm">
+            <div className="[&>button]:bg-[#54A0FF] [&>button]:hover:bg-[#4889E0] [&>button]:text-white [&>button]:px-5 [&>button]:py-2.5 [&>button]:rounded-xl [&>button]:text-[12px] [&>button]:font-bold [&>button]:transition-all [&>button]:shadow-sm">
               <TelegramConnectButton email={profile?.email} token={null} />
             </div>
           ) : (
@@ -83,33 +83,33 @@ export function NotificationChannelsTable({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-zinc-100 dark:border-white/5 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
+      <div className="rounded-[16px] border border-[#D0DDF0] dark:border-white/5 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
         <div className="overflow-x-auto w-full scrollbar-thin">
           <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="text-[10px] font-black uppercase text-zinc-500 h-14">
-                <th className="p-4 text-left bg-zinc-50/50 dark:bg-zinc-800/30 border-b dark:border-white/5 sticky left-0 z-10">
+                <th className="p-4 text-left bg-white border-b border-[#D0DDF0] dark:border-white/5 sticky left-0 z-10">
                   Подія
                 </th>
                 {[
                   {
                     id: "to_telegram",
-                    label: "Telegram",
-                    bg: isTelegramLinked ? "bg-[#b8ccf3]" : "bg-zinc-100",
-                    textColor: "text-zinc-600",
+                    label: "TELEGRAM",
+                    bg: "bg-[#DDE5FF]",
+                    textColor: "text-[#4863D4]",
                     disabled: !isTelegramLinked,
                   },
                   {
                     id: "to_email",
-                    label: "Email",
-                    bg: "bg-[#7c9ff6]",
+                    label: "EMAIL",
+                    bg: "bg-[#4863D4]",
                     textColor: "text-white",
                     disabled: false,
                   },
                   {
                     id: "to_web",
                     label: "WEB",
-                    bg: "bg-[#2b4fa4]",
+                    bg: "bg-[#33467A]",
                     textColor: "text-white",
                     disabled: false,
                   },
@@ -127,10 +127,10 @@ export function NotificationChannelsTable({
                           onClick={() => toggleAll(col.id as any, true)}
                           className="flex items-center gap-1.5 group cursor-pointer"
                         >
-                          <div className="w-3 h-3 rounded-full border border-white/50 flex items-center justify-center group-hover:bg-white/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white opacity-0 group-active:opacity-100" />
+                          <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center transition-colors", col.id === "to_telegram" ? "border-[#4863D4]/50 group-hover:bg-[#4863D4]/10" : "border-white/50 group-hover:bg-white/20")}>
+                            <div className={cn("w-1.5 h-1.5 rounded-full opacity-0 group-active:opacity-100", col.id === "to_telegram" ? "bg-[#4863D4]" : "bg-white")} />
                           </div>
-                          <span className="text-[10px] opacity-80">Всі</span>
+                          <span className="text-[10px] opacity-80 capitalize">Всі</span>
                         </button>
                         <button
                           type="button"
@@ -138,10 +138,10 @@ export function NotificationChannelsTable({
                           onClick={() => toggleAll(col.id as any, false)}
                           className="flex items-center gap-1.5 group cursor-pointer"
                         >
-                          <div className="w-3 h-3 rounded-full border border-white/30 flex items-center justify-center group-hover:bg-white/10">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white/50 opacity-0 group-active:opacity-100" />
+                          <div className={cn("w-3 h-3 rounded-full border flex items-center justify-center transition-colors", col.id === "to_telegram" ? "border-[#4863D4]/30 group-hover:bg-[#4863D4]/5" : "border-white/30 group-hover:bg-white/10")}>
+                            <div className={cn("w-1.5 h-1.5 rounded-full opacity-0 group-active:opacity-100", col.id === "to_telegram" ? "bg-[#4863D4]/50" : "bg-white/50")} />
                           </div>
-                          <span className="text-[10px] opacity-70">
+                          <span className="text-[10px] opacity-70 capitalize">
                             Жодного
                           </span>
                         </button>
@@ -157,7 +157,7 @@ export function NotificationChannelsTable({
                   key={index}
                   className="hover:bg-blue-50/50 dark:hover:bg-blue-900/5 transition-colors h-14"
                 >
-                  <td className="p-2 px-6 text-[13px] font-medium text-zinc-700 dark:text-zinc-300 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border-r dark:border-white/5 sticky left-0 z-10">
+                  <td className="p-2 px-6 text-[13px] font-medium text-[#4863D4] dark:text-blue-400 bg-white dark:bg-zinc-900/50 border-r border-[#D0DDF0] border-b dark:border-white/5 sticky left-0 z-10">
                     {item.value}
                   </td>
                   {(["to_telegram", "to_email", "to_web"] as const).map(
@@ -167,7 +167,7 @@ export function NotificationChannelsTable({
                       return (
                         <td
                           key={field}
-                          className="p-2 text-center border-l border-zinc-50 dark:border-white/5"
+                          className="p-2 text-center border-l border-[#D0DDF0] border-b dark:border-white/5"
                         >
                           <div className="flex justify-center">
                             <Controller
@@ -176,21 +176,21 @@ export function NotificationChannelsTable({
                               render={({ field: cb }) => (
                                 <div
                                   className={cn(
-                                    "w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all",
+                                    "w-[20px] h-[20px] rounded-full flex items-center justify-center cursor-pointer transition-all",
                                     isDisabled
-                                      ? "opacity-20 cursor-not-allowed border-zinc-200"
+                                      ? "opacity-20 cursor-not-allowed border-2 border-zinc-200"
                                       : cb.value
-                                        ? "bg-indigo-600 border-indigo-600"
-                                        : "border-zinc-200 dark:border-zinc-700 hover:border-indigo-400",
+                                        ? "bg-[#4863D4]"
+                                        : "border-2 border-slate-300 dark:border-zinc-700 hover:border-[#4863D4]",
                                   )}
                                   onClick={() =>
                                     !isDisabled && cb.onChange(!cb.value)
                                   }
                                 >
                                   {cb.value && !isDisabled && (
-                                    <div className="text-white text-[10px] font-black">
-                                      ✓
-                                    </div>
+                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
                                   )}
                                 </div>
                               )}
