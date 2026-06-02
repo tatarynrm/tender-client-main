@@ -9,6 +9,7 @@ import { IUserActivitiesResponse, ICompanyActivitySummary } from "@/shared/types
 import { Loader2, TrendingUp, Clock, MousePointerClick, UserCheck, Filter } from "lucide-react";
 import { translateActivityPath, translateAction } from "@/shared/utils/activity.utils";
 import { ManagerActivityBreakdown } from "./ManagerActivityBreakdown";
+import { IctManagersActivityWidget } from "./IctManagersActivityWidget";
 
 interface Props {
   companyId: number;
@@ -130,6 +131,8 @@ export function CompanyAnalyticsDashboard({ companyId }: Props) {
 
   return (
     <div className="space-y-6">
+      <IctManagersActivityWidget />
+
       {/* Date Filter */}
       <div className="bg-white dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">

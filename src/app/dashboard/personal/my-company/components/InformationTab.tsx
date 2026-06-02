@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import {
   Truck,
-  Map,
+  Globe2,
+  Move,
+  PieChart,
   CheckCircle2,
-  Activity,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
@@ -37,11 +38,13 @@ interface InformationTabProps {
 }
 
 export function InformationTab({ transport, directions, isLoading }: InformationTabProps) {
+  const [activeGeo, setActiveGeo] = useState<"international" | "local">("international");
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-        <span className="text-sm font-black uppercase tracking-widest text-zinc-400">
+        <Loader2 className="w-10 h-10 text-[#4863D4] animate-spin" />
+        <span className="text-sm font-bold uppercase tracking-wide text-slate-500">
           Завантаження даних...
         </span>
       </div>
@@ -49,82 +52,43 @@ export function InformationTab({ transport, directions, isLoading }: Information
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="flex flex-col gap-6 w-full animate-in fade-in duration-500 pb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* FLEET SECTION */}
-        <div className="lg:col-span-12 space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <Truck className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
+        <div className="lg:col-span-3 bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 flex flex-col shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
               Автомобільний парк
             </h2>
           </div>
-
-          <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar">
-            <table className="w-full border-collapse min-w-[800px]">
-              <thead>
-                <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30">
-                  <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+          <div className="border border-[#D0DDF0] dark:border-zinc-800 rounded-[10px] overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-[#F8FAFF] dark:bg-zinc-900/50">
+                <tr>
+                  <th className="py-3 px-4 text-left text-[14px] font-semibold text-slate-800 dark:text-zinc-200 border-r border-[#D0DDF0] dark:border-zinc-800">
                     Тип транспорту
                   </th>
-                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
-                    Об'єм (м³)
-                  </th>
-                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
-                    Вант-сть (т)
-                  </th>
-                  <th className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400 w-32">
+                  <th className="py-3 px-4 text-center text-[14px] font-semibold text-slate-800 dark:text-zinc-200">
                     Кількість
-                  </th>
-                  <th className="px-8 py-5 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                    Коментар
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-white/5">
+              <tbody>
                 {!transport || transport.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-10 text-center">
-                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                        Дані про автопарк відсутні
-                      </span>
+                    <td colSpan={2} className="py-6 text-center text-slate-500 dark:text-zinc-400 text-sm">
+                      Дані відсутні
                     </td>
                   </tr>
                 ) : (
-                  transport.map((item, idx) => (
-                    <tr
-                      key={idx}
-                      className="hover:bg-zinc-50/50 dark:hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                            <Activity className="w-4 h-4 text-zinc-400" />
-                          </div>
-                          <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                            {item.type}
-                          </span>
-                        </div>
+                  transport.map((t, idx) => (
+                    <tr key={idx} className="border-t border-[#D0DDF0] dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors">
+                      <td className="py-3 px-4 text-[14px] font-medium text-[#4863D4] dark:text-blue-400 border-r border-[#D0DDF0] dark:border-zinc-800">
+                        {t.type}
                       </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className="text-sm font-black text-zinc-700 dark:text-zinc-300">
-                          {item.objem || "-"}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className="text-sm font-black text-zinc-700 dark:text-zinc-300">
-                          {item.vant || "-"}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-100/50 dark:border-indigo-500/20">
-                          {item.kil}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                          {item.comment || "-"}
-                        </span>
+                      <td className="py-3 px-4 text-center text-[14px] font-medium text-[#4863D4] dark:text-blue-400">
+                        {t.kil}
                       </td>
                     </tr>
                   ))
@@ -133,80 +97,99 @@ export function InformationTab({ transport, directions, isLoading }: Information
             </table>
           </div>
         </div>
+
+        {/* GEOGRAPHY SECTION */}
+        <div className="lg:col-span-2 bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 flex flex-col shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe2 className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+            <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
+              Географія перевезень
+            </h2>
+          </div>
+          <div className="flex bg-white dark:bg-zinc-900 border border-[#D0DDF0] dark:border-zinc-700 rounded-[10px] overflow-hidden">
+            <button
+              onClick={() => setActiveGeo("international")}
+              className={cn(
+                "flex-1 py-3.5 text-[13px] font-bold uppercase tracking-wide transition-colors",
+                activeGeo === "international"
+                  ? "bg-[#4863D4] text-white"
+                  : "bg-transparent text-[#4863D4] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800"
+              )}
+            >
+              Міжнародні
+            </button>
+            <button
+              onClick={() => setActiveGeo("local")}
+              className={cn(
+                "flex-1 py-3.5 text-[13px] font-bold uppercase tracking-wide transition-colors",
+                activeGeo === "local"
+                  ? "bg-[#4863D4] text-white"
+                  : "bg-transparent text-[#4863D4] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800"
+              )}
+            >
+              Локальні
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* DIRECTIONS GRID */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2 px-1">
-          <Map className="w-5 h-5 text-indigo-600" />
-          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-            Географія перевезень
+      {/* DIRECTIONS SECTION */}
+      <div className="bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-6">
+          <Move className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+          <h2 className="text-[13px] font-bold text-slate-800 dark:text-zinc-100 uppercase tracking-wide">
+            Компанія здійснює перевезення по напрямках
           </h2>
         </div>
 
-        <div className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {!directions || directions.length === 0 ? (
-            <div className="py-10 text-center">
-              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                Дані про напрямки відсутні
-              </span>
+            <div className="col-span-full py-10 text-center text-slate-500 dark:text-zinc-400 text-sm">
+              Дані про напрямки відсутні
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8">
-              {directions.map((dir, idx) => (
-                <div key={idx} className="space-y-5">
-                  <div className="flex items-center justify-between group">
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-indigo-600 dark:text-indigo-400 transition-transform">
-                      {dir.direction_name}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-3">
-                    {dir.countries.length === 0 ? (
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest opacity-50">
-                        Немає країн
-                      </span>
-                    ) : (
-                      dir.countries.map((country, cIdx) => {
-                        const isChecked = country.checked === 1;
-                        return (
-                          <div
-                            key={cIdx}
-                            className="flex items-center gap-2.5 group/item"
-                          >
-                            <div
-                              className={cn(
-                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300",
-                                isChecked
-                                  ? "bg-indigo-600 border-indigo-600 shadow-sm shadow-indigo-500/20"
-                                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 group-hover/item:border-indigo-400",
-                              )}
-                            >
-                              {isChecked && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                              )}
-                            </div>
-                            <span
-                              className={cn(
-                                "text-[12px] font-medium transition-colors",
-                                isChecked
-                                  ? "text-zinc-900 dark:text-zinc-100 font-bold"
-                                  : "text-zinc-500 dark:text-zinc-500 group-hover/item:text-zinc-700 dark:group-hover/item:text-zinc-300",
-                              )}
-                            >
-                              {country.country_name}
-                            </span>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
+            directions.map((dir, i) => (
+              <div
+                key={i}
+                className="border border-[#D0DDF0] dark:border-zinc-800 rounded-xl p-4 flex flex-col bg-white dark:bg-zinc-900/50"
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <PieChart className="w-5 h-5 text-slate-900 dark:text-zinc-100 fill-slate-900 dark:fill-zinc-100" />
+                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-zinc-100">
+                    {dir.direction_name}
+                  </h3>
                 </div>
-              ))}
-            </div>
+                <div className="flex flex-col gap-3">
+                  {dir.countries.slice(0, 10).map((c, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      {c.checked ? (
+                        <CheckCircle2 className="w-[18px] h-[18px] text-[#4863D4] fill-[#4863D4] stroke-white shrink-0" />
+                      ) : (
+                        <CheckCircle2 className="w-[18px] h-[18px] text-slate-300 dark:text-zinc-600 stroke-[1.5] shrink-0" />
+                      )}
+                      <span
+                        className={cn(
+                          "text-[14px] truncate",
+                          c.checked
+                            ? "text-[#4863D4] dark:text-blue-400 font-medium"
+                            : "text-slate-500 dark:text-zinc-400"
+                        )}
+                      >
+                        {c.country_name}
+                      </span>
+                    </div>
+                  ))}
+                  {dir.countries.length > 10 && (
+                    <div className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 cursor-pointer hover:text-slate-600 transition-colors">
+                      Ще {dir.countries.length - 10} країни ˅
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
           )}
         </div>
-      </section>
+      </div>
     </div>
   );
 }

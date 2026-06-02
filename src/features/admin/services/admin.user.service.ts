@@ -24,6 +24,10 @@ export const adminUserService = {
     // Ensure we handle { content: ... } wrapper
     return res.data;
   },
+  getIctActivitySummary: async () => {
+    const res = await api.get("/admin/user/ict-activity-summary");
+    return res.data;
+  },
   updateUserRole: async (id: number | string, data: { is_head_department?: boolean }) => {
     const res = await api.patch(`/users/${id}/role`, data);
     return res.data;
