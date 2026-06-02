@@ -32,9 +32,9 @@ export default function MyProfilePage() {
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 bg-zinc-100/50 dark:bg-white/5 p-1 rounded-2xl border border-zinc-200/50 dark:border-white/10">
-        <AppTabs tabs={profileTabs} queryParam="tab" />
-      </div>
+
+      <AppTabs tabs={profileTabs} queryParam="tab" />
+
 
       <div className="min-h-[400px]">
         {activeTab === "notifications" && (

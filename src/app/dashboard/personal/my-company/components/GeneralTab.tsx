@@ -46,131 +46,125 @@ export function GeneralTab() {
       )}
       {/* SECTION: ADDRESSES */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
+            <MapPin className="w-5 h-5 text-black dark:text-white" />
+            <h2 className="text-sm font-bold uppercase  text-black dark:text-white">
               Адреси
             </h2>
           </div>
-          {/* <Button 
-            variant="outline" 
-            size="sm" 
-            className="rounded-full border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest h-9"
-          >
-            <Plus className="w-3.5 h-3.5 mr-2" />
-            Додати адресу
-          </Button> */}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {/* LEGAL ADDRESS CARD */}
-          <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-              <Building2 className="w-24 h-24 text-indigo-600" />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+            {/* LEGAL ADDRESS CARD */}
+            <div className="p-6 sm:p-8 rounded-[30px] border border-[#414b76] dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                <Building2 className="w-24 h-24 text-indigo-600" />
               </div>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
-                Юридична адреса
-              </h3>
-            </div>
 
-            <div className="space-y-4">
-              {isCompanyLoading ? (
-                <div className="h-20 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 </div>
-              ) : (
-                <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
-                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
-                    {company?.address_legal || "Дані відсутні"}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* PHYSICAL ADDRESS CARD */}
-          <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
-              <MapPin className="w-24 h-24 text-sky-600" />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+                  Юридична адреса
+                </h3>
               </div>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
-                Фактична адреса
-              </h3>
+
+              <div className="space-y-4">
+                {isCompanyLoading ? (
+                  <div className="h-20 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
+                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                      {company?.address_legal || "Дані відсутні"}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {isCompanyLoading ? (
-                <div className="h-20 flex items-center justify-center">
-                  <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+            {/* PHYSICAL ADDRESS CARD */}
+            <div className="p-6 sm:p-8 rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm space-y-6 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-500">
+                <MapPin className="w-24 h-24 text-sky-600" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-500/10 flex items-center justify-center">
+                  <MapPin className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                 </div>
-              ) : (
-                <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
-                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
-                    {company?.address_fysical ||
-                      company?.address_legal ||
-                      "Дані відсутні"}
-                  </p>
-                </div>
-              )}
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+                  Фактична адреса
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {isCompanyLoading ? (
+                  <div className="h-20 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 text-indigo-600 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-white/5">
+                    <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                      {company?.address_fysical ||
+                        company?.address_legal ||
+                        "Дані відсутні"}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+
       </section>
 
       {/* SECTION: USERS */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between flex-col gap-4 sm:flex-row">
-          <div className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
-              Користувачі
-            </h2>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="rounded-full border-indigo-200 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest h-9"
-          >
-            <Plus className="w-3.5 h-3.5 mr-2" />
-            Додати користувача
-          </Button>
-        </div>
 
-        <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar">
+
+        <div className="overflow-x-auto rounded-[1.5rem] sm:rounded-[2rem] border border-zinc-200/60 dark:border-white/10 bg-white dark:bg-zinc-950/40 shadow-sm custom-scrollbar p-2">
+          <div className="flex items-center justify-between flex-col gap-4 sm:flex-row">
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 " />
+              <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-200">
+                Користувачі
+              </h2>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="rounded-full border-indigo-200 dark:border-indigo-500/20  dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-[10px] font-[#4256D5] uppercase tracking-widest h-9 font-semibold"
+            >
+              <Plus className="w-3.5 h-3.5 mr-2" />
+              Додати користувача
+            </Button>
+          </div>
           <table className="w-full border-collapse min-w-[900px]">
             <thead>
               <tr className="border-b border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-zinc-900/30">
-                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
                   Ім'я
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
                   Роль
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
                   Телефон
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-left text-[10px] font-black  tracking-widest text-black">
                   Права доступу
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-center text-[10px] font-black  tracking-widest text-black">
                   Месенджери
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                <th className="px-6 py-4 text-center text-[10px] font-black  tracking-widest text-black">
                   Дії
                 </th>
               </tr>

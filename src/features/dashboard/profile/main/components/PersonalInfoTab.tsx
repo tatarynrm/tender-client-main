@@ -4,12 +4,11 @@ import React from "react";
 import { useProfile } from "@/shared/hooks";
 import {
   User,
-  Briefcase,
+  Contact,
   Mail,
   Phone,
   ShieldCheck,
   Lock,
-  UserCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChangePasswordDialog } from "./ChangePasswordDialog";
@@ -36,14 +35,14 @@ export function PersonalInfoTab() {
 
   const fields = [
     {
-      label: "Імя та прізвище",
+      label: "Ім'я та прізвище",
       value: `${profile.person.name} ${profile.person.surname}`,
-      icon: UserCircle,
+      icon: User,
     },
     {
       label: "Посада",
       value: profile.department?.department_name || "Менеджер логіст",
-      icon: Briefcase,
+      icon: Contact,
     },
     {
       label: "E-mail",
@@ -53,7 +52,7 @@ export function PersonalInfoTab() {
     },
     {
       label: "Номер телефону",
-      value: profile.person.phone || "+380504308661",
+      value: profile.person.phone || "(067) 443-43-70",
       icon: Phone,
     },
     {
@@ -67,62 +66,53 @@ export function PersonalInfoTab() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full"
+      className="w-full pb-10"
     >
-      <div className="bg-white dark:bg-zinc-950/40 rounded-[2.5rem] border border-zinc-200 dark:border-white/10 p-10 lg:p-12 shadow-sm relative overflow-hidden">
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] rounded-full -mr-32 -mt-32" />
-
-        <div className="flex items-center gap-4 mb-8 relative z-10">
-          <div className="w-6 h-6 flex items-center justify-center">
-            <User className="w-5 h-5 text-zinc-800 dark:text-zinc-200" />
-          </div>
-          <h2 className="text-sm font-black uppercase tracking-tight text-zinc-900 dark:text-white">
-            ОСОБИСТА ІНФОРМАЦІЯ
+      <div className="bg-white dark:bg-zinc-950 rounded-2xl border border-[#D0DDF0] dark:border-zinc-800 p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <User className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-800 dark:text-zinc-100">
+            Особиста інформація
           </h2>
         </div>
 
-        <div className="relative z-10 p-8 lg:p-10 rounded-[2.5rem] border border-zinc-100/80 dark:border-white/5 bg-zinc-50/10 dark:bg-zinc-900/10">
-          <div className="space-y-6 max-w-4xl">
-            {fields.map((field, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-12 group"
-              >
-                <div className="flex items-center gap-4 w-56 shrink-0">
-                  <div className="flex items-center justify-center">
-                    <field.icon className="w-5 h-5 text-zinc-900 dark:text-zinc-100" />
-                  </div>
-                  <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">
-                    {field.label}
-                  </span>
-                </div>
+        <div className="border border-[#D0DDF0] dark:border-zinc-800 rounded-xl p-6 flex flex-col gap-4 bg-[#F8FAFF] dark:bg-zinc-900/50 sm:bg-white sm:dark:bg-zinc-950">
+          {fields.map((field, idx) => (
+            <div
+              key={idx}
+              className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6"
+            >
+              <div className="flex items-center gap-4 sm:w-64 shrink-0">
+                <field.icon className="w-5 h-5 text-slate-800 dark:text-zinc-200" />
+                <span className="text-[14px] font-bold text-slate-800 dark:text-zinc-200">
+                  {field.label}
+                </span>
+              </div>
 
-                <div className="flex-1 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-white/10 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-300 shadow-sm transition-all">
+              <div className="flex-1 min-w-0">
+                <div className="w-full border border-[#D0DDF0] dark:border-zinc-700 rounded-[8px] p-2.5 px-4 bg-white dark:bg-zinc-900 shadow-sm">
                   <span
                     className={cn(
-                      "font-semibold",
+                      "text-[14px] font-semibold truncate block",
                       field.isEmail
-                        ? "text-blue-500"
-                        : "text-zinc-600 dark:text-zinc-400",
+                        ? "text-[#4863D4] dark:text-blue-400"
+                        : "text-slate-600 dark:text-zinc-300"
                     )}
                   >
                     {field.value}
                   </span>
                 </div>
               </div>
-            ))}
-
-            <div className="pt-4">
-              <ChangePasswordDialog>
-                <button className="flex items-center gap-3 text-blue-500 hover:text-blue-600 font-bold text-sm transition-all group">
-                  <div className="flex items-center justify-center">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  Змінити пароль
-                </button>
-              </ChangePasswordDialog>
             </div>
+          ))}
+
+          <div className="pt-2">
+            <ChangePasswordDialog>
+              <button className="flex items-center gap-4 sm:w-64 shrink-0 text-[#4863D4] hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-bold text-[14px] transition-colors group">
+                <Lock className="w-5 h-5" />
+                <span>Змінити пароль</span>
+              </button>
+            </ChangePasswordDialog>
           </div>
         </div>
       </div>

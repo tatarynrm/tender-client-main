@@ -29,7 +29,7 @@ export const AppTabs = ({
 }: AppTabsProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Визначаємо активний таб: або з пропсів, або з URL, або перший зі списку
   const currentTab = activeTab || searchParams.get(queryParam) || tabs[0]?.id;
 
@@ -45,7 +45,7 @@ export const AppTabs = ({
   };
 
   return (
-    <div className={cn("flex p-1 gap-1 bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-200/30 dark:border-zinc-800/50 rounded-2xl w-fit", className)}>
+    <div className={cn("flex p-1 gap-1  border border-[#7D99CB] dark:border-zinc-800/50 rounded-2xl w-full flex ", className)}>
       <LayoutGroup id={`tabs-${queryParam}`}>
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
@@ -54,9 +54,9 @@ export const AppTabs = ({
               key={tab.id}
               onClick={() => handleTabClick(tab.id)}
               className={cn(
-                "relative px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-300 outline-none",
-                isActive 
-                  ? "text-teal-600 dark:text-teal-400" 
+                "relative px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors duration-300 outline-none cursor-pointer",
+                isActive
+                  ? "text-[#4256D5] dark:text-teal-400"
                   : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300"
               )}
             >
@@ -68,7 +68,7 @@ export const AppTabs = ({
                   transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                 />
               )}
-              
+
               <span className="relative z-10 flex items-center gap-2">
                 {tab.label}
                 {tab.count !== undefined && (
