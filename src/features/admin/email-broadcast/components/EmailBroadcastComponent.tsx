@@ -20,6 +20,7 @@ import {
   Smartphone,
   Monitor,
   Layout,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
@@ -67,10 +68,27 @@ interface MailingDetails extends MailingItem {
 }
 
 const templatesList = [
-  { id: "plain", name: "Простий текст", desc: "Стандартне чисте оформлення для ділових листів", color: "bg-slate-500" },
-  { id: "corporate", name: "Корпоративний синій", desc: "Преміум дизайн з градієнтною шапкою та футером", color: "bg-blue-600" },
-  { id: "newsletter", name: "Стильний дайджест", desc: "Темно-синій банер з категоріями, ідеальний для новин", color: "bg-slate-900" },
-  { id: "minimal", name: "Теплий мінімалізм", desc: "Елегантний дизайн з лініями та золотистим акцентом", color: "bg-amber-600" },
+  { id: "adaptive", name: "Автоматичний (Системний)", desc: "Підлаштовується під темну/світлу тему отримувача", color: "bg-gradient-to-r from-slate-200 to-slate-800" },
+  { id: "plain", name: "Простий текст", desc: "Стандартне чисте оформлення", color: "bg-slate-500" },
+  { id: "corporate", name: "Корпоративний синій", desc: "Преміум дизайн з градієнтною шапкою", color: "bg-blue-600" },
+  { id: "newsletter", name: "Стильний дайджест", desc: "Темно-синій банер з категоріями", color: "bg-slate-900" },
+  { id: "minimal", name: "Теплий мінімалізм", desc: "Елегантний дизайн з золотистим акцентом", color: "bg-amber-600" },
+  { id: "tech", name: "Технологічний (Tech)", desc: "Сучасний темний дизайн з індиго акцентами", color: "bg-indigo-600" },
+  { id: "eco", name: "Еко Природний", desc: "Світлий дизайн з м'якими зеленими відтінками", color: "bg-emerald-600" },
+  { id: "alert", name: "Термінове (Alert)", desc: "Привертає увагу, червоні відтінки", color: "bg-rose-600" },
+  { id: "elegant", name: "Елегантний Монохром", desc: "Стильний чорно-білий дизайн", color: "bg-zinc-800" },
+  { id: "creative", name: "Креативний Яскравий", desc: "Градієнт рожевий/фіолетовий, соковитий", color: "bg-fuchsia-500" },
+  { id: "medical", name: "Чистий (Медичний)", desc: "Світло-блакитний, вселяє довіру", color: "bg-cyan-500" },
+  { id: "education", name: "Академічний", desc: "Класичний синій з жовтим акцентом", color: "bg-sky-700" },
+  { id: "finance", name: "Фінансовий", desc: "Глибокий зелений та золотий, діловий стиль", color: "bg-teal-700" },
+  { id: "realestate", name: "Нерухомість", desc: "Морський синій та бежевий", color: "bg-stone-700" },
+  { id: "holiday", name: "Зимовий (Holiday)", desc: "Світло-блакитний з сніжним настроєм", color: "bg-sky-300" },
+  { id: "summer", name: "Літній Світлий", desc: "Жовтий, оптимістичний та теплий", color: "bg-yellow-400" },
+  { id: "pastel", name: "Ніжний пастельний", desc: "Рожеві та світлі відтінки, дуже м'яко", color: "bg-pink-300" },
+  { id: "retro", name: "Ретро / Вінтаж", desc: "Коричневі та бежеві відтінки, вінтажний вайб", color: "bg-orange-800" },
+  { id: "cyberpunk", name: "Кіберпанк", desc: "Неонові кольори на темному фоні", color: "bg-purple-900" },
+  { id: "luxury", name: "Luxury Золото", desc: "Чорний з розкішними золотими акцентами", color: "bg-yellow-600" },
+  { id: "hitech", name: "Hi-Tech Світлий", desc: "Білий, сірі лінії та світло-сині деталі", color: "bg-blue-400" }
 ];
 
 export default function EmailBroadcastComponent() {
@@ -81,8 +99,10 @@ export default function EmailBroadcastComponent() {
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creationMode, setCreationMode] = useState<"file" | "manual">("file");
   const [itemName, setItemName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newEmail, setNewEmail] = useState("");
 
   const [emailTitle, setEmailTitle] = useState("");
   const [bodyText, setBodyText] = useState("");
@@ -106,6 +126,13 @@ export default function EmailBroadcastComponent() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  const [selectedMailings, setSelectedMailings] = useState<Set<number>>(new Set());
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadMode, setUploadMode] = useState<"append" | "replace">("append");
 
   // Debounce search queries to reduce database load
   useEffect(() => {
@@ -174,20 +201,38 @@ export default function EmailBroadcastComponent() {
     enabled: !!selectedId,
   });
 
-  // Sync inputs with selected mailing details
+  // Sync inputs with selected mailing details ONLY when the selected campaign changes
+  useEffect(() => {
+    if (selectedDetails && selectedDetails.id !== selectedId) {
+      // This is a safety check but usually selectedDetails matches selectedId
+      // We will actually rely on a separate ref or a simpler approach:
+      // When selectedId changes, the effect runs, but we can't just depend on selectedDetails.
+    }
+  }, []);
+
+  const [initializedId, setInitializedId] = useState<number | null>(null);
+
   useEffect(() => {
     if (selectedDetails) {
-      setEmailTitle(selectedDetails.email_title || "");
-      setBodyText(selectedDetails.email_content || "");
-      setTemplateId(selectedDetails.template_id || "plain");
+      if (selectedDetails.id !== initializedId) {
+        setEmailTitle(selectedDetails.email_title || "");
+        setBodyText(selectedDetails.email_content || "");
+        setTemplateId(selectedDetails.template_id || "plain");
+        setAttachments([]);
+        setActiveTab("edit");
+        setInitializedId(selectedDetails.id);
+      }
     } else {
-      setEmailTitle("");
-      setBodyText("");
-      setTemplateId("plain");
+      if (initializedId !== null) {
+        setEmailTitle("");
+        setBodyText("");
+        setTemplateId("plain");
+        setAttachments([]);
+        setActiveTab("edit");
+        setInitializedId(null);
+      }
     }
-    setAttachments([]);
-    setActiveTab("edit");
-  }, [selectedDetails]);
+  }, [selectedDetails, initializedId]);
 
   // Socket Integration for Live Updates
   useEffect(() => {
@@ -222,11 +267,13 @@ export default function EmailBroadcastComponent() {
   const createMailingMutation = useMutation({
     mutationFn: async () => {
       if (!itemName.trim()) throw new Error("Назва розсилки не може бути порожньою");
-      if (!selectedFile) throw new Error("Будь ласка, оберіть Excel файл");
+      if (creationMode === "file" && !selectedFile) throw new Error("Будь ласка, оберіть Excel файл");
 
       const formData = new FormData();
       formData.append("item_name", itemName);
-      formData.append("file", selectedFile);
+      if (creationMode === "file" && selectedFile) {
+        formData.append("file", selectedFile);
+      }
 
       const { data } = await api.post("/admin/mailing/create", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -238,11 +285,45 @@ export default function EmailBroadcastComponent() {
       setShowCreateModal(false);
       setItemName("");
       setSelectedFile(null);
+      setCreationMode("file");
       queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
       setSelectedId(data.mailingId);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || err.message || "Помилка при створенні розсилки");
+    },
+  });
+
+  const addAddressMutation = useMutation({
+    mutationFn: async (email: string) => {
+      if (!selectedId) return;
+      const { data } = await api.post(`/admin/mailing/${selectedId}/address`, { email });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Адресу успішно додано");
+      setNewEmail("");
+      queryClient.invalidateQueries({ queryKey: ["mailing-details", selectedId] });
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Помилка при додаванні адреси");
+    },
+  });
+
+  const removeAddressMutation = useMutation({
+    mutationFn: async (addressId: number) => {
+      if (!selectedId) return;
+      const { data } = await api.delete(`/admin/mailing/${selectedId}/address/${addressId}`);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Адресу видалено");
+      queryClient.invalidateQueries({ queryKey: ["mailing-details", selectedId] });
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Помилка при видаленні адреси");
     },
   });
 
@@ -316,106 +397,124 @@ export default function EmailBroadcastComponent() {
       setDeleteConfirmText("");
     },
   });
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async () => {
+      const ids = Array.from(selectedMailings);
+      if (ids.length === 0) return;
+      const { data } = await api.post("/admin/mailing/bulk-delete", { ids });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Вибрані розсилки видалено");
+      setSelectedMailings(new Set());
+      setShowBulkDeleteModal(false);
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
+      if (selectedId && selectedMailings.has(selectedId)) {
+        setSelectedId(null);
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Помилка при масовому видаленні");
+      setShowBulkDeleteModal(false);
+    },
+  });
+
+  const uploadAddressesMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedId) return;
+      if (!uploadFile) throw new Error("Виберіть файл");
+
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("mode", uploadMode);
+
+      const { data } = await api.post(`/admin/mailing/${selectedId}/upload-addresses`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Адреси успішно завантажено");
+      setShowUploadModal(false);
+      setUploadFile(null);
+      queryClient.invalidateQueries({ queryKey: ["mailing-details", selectedId] });
+      queryClient.invalidateQueries({ queryKey: ["mailings-list"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Помилка при завантаженні адрес");
+    },
+  });
+
+
+  const toggleMailingSelection = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSet = new Set(selectedMailings);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedMailings(newSet);
+  };
+
+  const handleSelectAllMailings = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedMailings(new Set(mailings.map((m: any) => m.id)));
+    } else {
+      setSelectedMailings(new Set());
+    }
+  };
 
   // Client Side Template Preview Compiler
   const compileClientTemplate = (tempId: string, content: string, title: string) => {
     const year = new Date().getFullYear();
+    const t = title || "Тема листа";
+    const c = content || "Напишіть текст повідомлення...";
     switch (tempId) {
-      case "corporate":
-        return `<html>
-<head>
-  <style>
-    body { font-family: sans-serif; color: #1e293b; background-color: #f1f5f9; margin: 0; padding: 20px; }
-    .container { max-width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .header { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 24px 20px; text-align: center; color: #ffffff; }
-    .header h1 { margin: 0; font-size: 20px; font-weight: 800; }
-    .content { padding: 24px 20px; line-height: 1.6; font-size: 14px; }
-    .footer { background-color: #f8fafc; padding: 16px 20px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>${title || "Тема листа"}</h1>
-    </div>
-    <div class="content">
-      ${content || "Напишіть текст повідомлення..."}
-    </div>
-    <div class="footer">
-      <p>© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-      case "newsletter":
-        return `<html>
-<head>
-  <style>
-    body { font-family: sans-serif; color: #334155; background-color: #fafafa; margin: 0; padding: 20px; }
-    .container { max-width: 100%; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #f1f5f9; }
-    .badge { display: inline-block; background-color: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 12px; }
-    .banner { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 30px 20px; color: #ffffff; }
-    .banner h1 { margin: 0; font-size: 22px; font-weight: 800; }
-    .content { padding: 24px 20px; line-height: 1.6; font-size: 14px; }
-    .footer { background-color: #0f172a; padding: 20px; text-align: center; font-size: 10px; color: #94a3b8; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="banner">
-      <div class="badge">Новини та Оновлення</div>
-      <h1>${title || "Тема листа"}</h1>
-    </div>
-    <div class="content">
-      ${content || "Напишіть текст повідомлення..."}
-    </div>
-    <div class="footer">
-      <p>Ви отримали цей лист, оскільки зареєстровані в ICTender.</p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-      case "minimal":
-        return `<html>
-<head>
-  <style>
-    body { font-family: sans-serif; color: #2c3e50; background-color: #fdfbf7; margin: 0; padding: 20px; }
-    .container { max-width: 100%; padding: 10px; }
-    .title { font-size: 18px; font-weight: 600; color: #1a252f; margin-bottom: 16px; border-left: 3px solid #d4af37; padding-left: 10px; }
-    .content { line-height: 1.6; font-size: 14px; color: #34495e; }
-    .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #f1ece4; font-size: 11px; color: #95a5a6; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2 class="title">${title || "Тема листа"}</h2>
-    <div class="content">
-      ${content || "Напишіть текст повідомлення..."}
-    </div>
-    <div class="footer">
-      З повагою, Група компаній ІСТ-Захід.
-    </div>
-  </div>
-</body>
-</html>`;
-
+      case "adaptive":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><style>:root { color-scheme: light dark; } @media (prefers-color-scheme: dark) { body, .container { background-color: #0f172a !important; color: #f8fafc !important; } .container { border-color: #334155 !important; } h1, h2, p, span, div { color: #f8fafc !important; } hr { border-top-color: #334155 !important; } .footer p { color: #94a3b8 !important; } }</style></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; background-color: #f1f5f9; margin: 0; padding: 20px;"><div class="container" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; line-height: 1.6;"><h2 style="margin-top: 0;">${t}</h2>${c}<hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 25px; margin-bottom: 20px;"><div class="footer"><p style="font-size: 11px; color: #64748b; text-align: center; margin: 0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
       case "plain":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; line-height: 1.6;"><h2>${t}</h2>${c}<hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 30px; margin-bottom: 20px;"><p style="font-size: 11px; color: #94a3b8; text-align: center;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></body></html>`;
+      case "corporate":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b; background-color: #f1f5f9; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;"><div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); background-color: #1e3a8a; padding: 40px 30px; text-align: center; color: #ffffff;"><h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">${t}</h1></div><div style="padding: 40px 30px; line-height: 1.7; font-size: 15px;">${c}</div><div style="background-color: #f8fafc; padding: 24px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;"><p style="margin:0 0 10px 0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "newsletter":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #334155; background-color: #fafafa; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;"><div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); background-color: #0f172a; padding: 50px 40px; color: #ffffff;"><div style="display: inline-block; background-color: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px;">Новини та Оновлення</div><h1 style="margin: 0; font-size: 28px; font-weight: 800; line-height: 1.2;">${t}</h1></div><div style="padding: 40px; line-height: 1.8; font-size: 15px;">${c}</div><div style="background-color: #0f172a; padding: 30px; text-align: center; font-size: 11px; color: #94a3b8;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "minimal":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #2c3e50; background-color: #fdfbf7; margin: 0; padding: 50px 20px;"><div style="max-width: 580px; margin: 0 auto; padding: 20px;"><h2 style="font-size: 22px; font-weight: 600; color: #1a252f; margin-bottom: 24px; border-left: 3px solid #d4af37; padding-left: 12px;">${t}</h2><div style="line-height: 1.6; font-size: 15px; color: #34495e; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">${c}</div><div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #f1ece4; font-size: 12px; color: #95a5a6; text-align: center;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "tech":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', sans-serif; color: #cbd5e1; background-color: #0f172a; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden;"><div style="padding: 30px; border-bottom: 1px solid #334155;"><h1 style="margin: 0; font-size: 24px; color: #f8fafc; font-weight: 700;"><span style="color: #6366f1; margin-right: 10px;">&gt;</span>${t}</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 14px;">${c}</div><div style="padding: 20px 30px; background-color: #0b1120; font-size: 11px; text-align: center; color: #64748b;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "eco":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: Arial, sans-serif; color: #3f614a; background-color: #f0f8f4; margin: 0; padding: 30px 15px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 2px solid #e0efe6; overflow: hidden;"><div style="background-color: #d1e8db; padding: 30px; text-align: center;"><h1 style="margin: 0; font-size: 22px; color: #1f402c;">🌿 ${t}</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 15px;">${c}</div><div style="background-color: #e0efe6; padding: 20px; text-align: center; font-size: 11px; color: #5a7d67;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "alert":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', sans-serif; color: #1f2937; background-color: #fdf2f2; margin: 0; padding: 30px 15px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border-left: 6px solid #e11d48; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow: hidden;"><div style="padding: 20px 30px; background-color: #fff1f2; border-bottom: 1px solid #ffe4e6;"><h1 style="margin: 0; font-size: 22px; color: #be123c;">⚠️ ${t}</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 15px;">${c}</div><div style="padding: 15px 30px; background-color: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center; font-size: 11px; color: #6b7280;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "elegant":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Times New Roman', serif; color: #000000; background-color: #ffffff; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; border: 1px solid #000000; padding: 40px;"><div style="text-align: center; border-bottom: 2px solid #000000; padding-bottom: 20px; margin-bottom: 30px;"><h1 style="margin: 0; font-size: 28px; font-weight: normal; letter-spacing: 2px; text-transform: uppercase;">${t}</h1></div><div style="line-height: 1.8; font-size: 16px;">${c}</div><div style="margin-top: 40px; border-top: 1px solid #e5e5e5; padding-top: 20px; text-align: center; font-size: 11px; font-family: Arial, sans-serif; color: #666666;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "creative":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1f2937; background-color: #fdf4ff; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 25px rgba(217, 70, 239, 0.1);"><div style="background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%); background-color: #d946ef; padding: 50px 30px; text-align: center; color: #ffffff;"><h1 style="margin: 0; font-size: 26px; font-weight: 900;">${t}</h1></div><div style="padding: 40px 30px; line-height: 1.7; font-size: 15px;">${c}</div><div style="background-color: #fdf4ff; padding: 20px; text-align: center; font-size: 12px; color: #c026d3;"><p style="margin:0;">✨ © ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "medical":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #334155; background-color: #ecfeff; margin: 0; padding: 30px 15px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border-top: 4px solid #06b6d4; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);"><div style="padding: 30px 30px 10px;"><h1 style="margin: 0; font-size: 24px; color: #0891b2; font-weight: 600;">${t}</h1></div><div style="padding: 20px 30px 40px; line-height: 1.6; font-size: 15px;">${c}</div><div style="background-color: #f8fafc; padding: 15px 30px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; border-radius: 0 0 8px 8px;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "education":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: Georgia, serif; color: #333333; background-color: #f4f7f9; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #c8d8e4;"><div style="background-color: #034f84; padding: 35px 30px; text-align: center; border-bottom: 4px solid #f7cac9;"><h1 style="margin: 0; font-size: 24px; color: #ffffff; font-weight: normal;">${t}</h1></div><div style="padding: 40px 30px; line-height: 1.8; font-size: 16px;">${c}</div><div style="background-color: #f4f7f9; padding: 20px; text-align: center; font-size: 11px; font-family: Arial, sans-serif; color: #777777; border-top: 1px solid #c8d8e4;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "finance":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #111827; background-color: #f3f4f6; margin: 0; padding: 30px 15px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);"><div style="padding: 30px; border-bottom: 2px solid #0f766e; background-color: #f8fafc; border-radius: 4px 4px 0 0;"><h1 style="margin: 0; font-size: 22px; color: #0f766e;">${t}</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 14px;">${c}</div><div style="padding: 20px 30px; background-color: #111827; color: #9ca3af; font-size: 11px; text-align: center; border-radius: 0 0 4px 4px;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "realestate":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #3e3e3e; background-color: #ece8e1; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;"><div style="background-color: #1c3d5a; padding: 40px 30px; text-align: center;"><h1 style="margin: 0; font-size: 26px; color: #fdfbf7; font-weight: 300; letter-spacing: 1px;">${t}</h1></div><div style="padding: 40px 30px; line-height: 1.6; font-size: 15px;">${c}</div><div style="background-color: #f3f0ea; padding: 25px 30px; text-align: center; font-size: 12px; color: #827e77;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "holiday":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; color: #0f172a; background-color: #e0f2fe; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 4px solid #bae6fd; overflow: hidden;"><div style="background-color: #38bdf8; padding: 30px; text-align: center; color: #ffffff;"><h1 style="margin: 0; font-size: 28px;">❄️ ${t} ❄️</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 15px;">${c}</div><div style="background-color: #f0f9ff; padding: 15px; text-align: center; font-size: 12px; color: #0284c7;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "summer":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #422006; background-color: #fef08a; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; box-shadow: 0 8px 20px rgba(234, 179, 8, 0.3); overflow: hidden;"><div style="background-color: #facc15; padding: 35px 30px; text-align: center;"><h1 style="margin: 0; font-size: 26px; color: #713f12; font-weight: 800;">☀️ ${t}</h1></div><div style="padding: 40px 30px; line-height: 1.7; font-size: 16px;">${c}</div><div style="background-color: #fef9c3; padding: 20px; text-align: center; font-size: 12px; color: #854d0e;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "pastel":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; color: #4a4a4a; background-color: #fce7f3; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 24px; overflow: hidden;"><div style="background-color: #fbcfe8; padding: 40px 30px; text-align: center;"><h1 style="margin: 0; font-size: 24px; color: #be185d; font-weight: bold;">${t}</h1></div><div style="padding: 40px 30px; line-height: 1.7; font-size: 15px;">${c}</div><div style="padding: 20px; text-align: center; font-size: 11px; color: #9d174d;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "retro":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Courier New', Courier, monospace; color: #45301f; background-color: #d7ccc8; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #efebe9; border: 2px dashed #8d6e63; padding: 30px;"><div style="text-align: center; border-bottom: 2px solid #8d6e63; padding-bottom: 20px; margin-bottom: 20px;"><h1 style="margin: 0; font-size: 24px; font-weight: bold; text-transform: uppercase; color: #3e2723;">${t}</h1></div><div style="line-height: 1.6; font-size: 15px;">${c}</div><div style="margin-top: 30px; text-align: center; font-size: 12px; color: #5d4037;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "cyberpunk":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Verdana', sans-serif; color: #0ff; background-color: #000; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #111; border: 1px solid #f0f; box-shadow: 0 0 10px #f0f; padding: 30px;"><div style="text-align: left; border-bottom: 2px solid #ff0; padding-bottom: 10px; margin-bottom: 20px;"><h1 style="margin: 0; font-size: 24px; color: #f0f; text-transform: uppercase; letter-spacing: 2px;">${t}</h1></div><div style="line-height: 1.6; font-size: 14px; color: #ccc;">${c}</div><div style="margin-top: 30px; text-align: right; font-size: 10px; color: #ff0; border-top: 1px dashed #333; padding-top: 10px;"><p style="margin:0;">SYSTEM.YEAR: ${year} // ICT-WEST. ALL RIGHTS RESERVED.</p></div></div></body></html>`;
+      case "luxury":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: 'Times New Roman', Times, serif; color: #e5e7eb; background-color: #000000; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #111827; border: 1px solid #d4af37; padding: 40px;"><div style="text-align: center; margin-bottom: 40px;"><h1 style="margin: 0; font-size: 28px; color: #d4af37; font-weight: normal; letter-spacing: 3px; text-transform: uppercase;">${t}</h1></div><div style="line-height: 1.8; font-size: 15px; color: #d1d5db;">${c}</div><div style="margin-top: 50px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #374151; padding-top: 20px;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
+      case "hitech":
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937; background-color: #e5e7eb; margin: 0; padding: 40px 20px;"><div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><div style="padding: 25px 30px; border-bottom: 1px solid #f3f4f6;"><h1 style="margin: 0; font-size: 20px; color: #111827; font-weight: 600;">${t}</h1></div><div style="padding: 30px; line-height: 1.6; font-size: 14px;">${c}</div><div style="background-color: #f9fafb; padding: 15px 30px; text-align: left; font-size: 11px; color: #6b7280; border-top: 1px solid #f3f4f6;"><p style="margin:0;">© ${year} Група компаній ІСТ-Захід. Усі права захищено.</p></div></div></body></html>`;
       default:
-        return `<html>
-<head>
-  <style>
-    body { font-family: sans-serif; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 10px; }
-    .container { max-width: 100%; background-color: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; line-height: 1.6; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    ${content || "Напишіть текст повідомлення..."}
-  </div>
-</body>
-</html>`;
+        return c;
     }
   };
 
@@ -505,6 +604,27 @@ export default function EmailBroadcastComponent() {
             />
           </div>
 
+          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-2 rounded-xl border border-slate-200 dark:border-white/5">
+            <label className="flex items-center gap-2 cursor-pointer px-2">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 bg-white"
+                checked={mailings.length > 0 && selectedMailings.size === mailings.length}
+                onChange={handleSelectAllMailings}
+                disabled={mailings.length === 0}
+              />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Вибрати всі</span>
+            </label>
+            {selectedMailings.size > 0 && (
+              <button
+                onClick={() => setShowBulkDeleteModal(true)}
+                className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-1 bg-red-50 dark:bg-red-500/10 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Видалити ({selectedMailings.size})
+              </button>
+            )}
+          </div>
+
           <div className="flex-grow overflow-y-auto custom-scrollbar space-y-3 pr-1">
             {listLoading ? (
               <div className="flex items-center justify-center py-20 text-slate-400">
@@ -532,9 +652,19 @@ export default function EmailBroadcastComponent() {
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">
-                        {item.item_name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 bg-white cursor-pointer"
+                            checked={selectedMailings.has(item.id)}
+                            onChange={(e) => toggleMailingSelection(item.id, e as any)}
+                          />
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm line-clamp-1">
+                          {item.item_name}
+                        </span>
+                      </div>
                       {getStatusBadge(item.status)}
                     </div>
 
@@ -721,8 +851,8 @@ export default function EmailBroadcastComponent() {
 
               {/* CONTROL INTERFACE */}
               {selectedDetails && (
-                <div className="p-5 bg-white border border-slate-200 dark:border-white/5 dark:bg-slate-900/50 rounded-[2rem] space-y-5 shadow-sm">
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <div className="p-4 bg-white border border-slate-200 dark:border-white/5 dark:bg-slate-900/50 rounded-[1.5rem] space-y-4 shadow-sm">
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 text-sm">
                     <Mail className="w-4 h-4 text-blue-500" /> Створення та керування повідомленням
                   </h3>
 
@@ -873,27 +1003,27 @@ export default function EmailBroadcastComponent() {
                       </div>
 
                       {/* Visual Template Selector */}
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                           Виберіть стиль оформлення (HTML Шаблон)
                         </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <div className="max-h-[180px] overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
                           {templatesList.map((t) => (
                             <div
                               key={t.id}
                               onClick={() => setTemplateId(t.id)}
                               className={cn(
-                                "p-3 rounded-xl border-2 text-left cursor-pointer transition-all flex flex-col gap-1 hover:scale-[1.02]",
+                                "p-2 rounded-lg border-2 text-left cursor-pointer transition-all flex flex-col gap-0.5 hover:scale-[1.02]",
                                 templateId === t.id
                                   ? "border-blue-500 bg-blue-500/5 shadow-sm"
                                   : "border-slate-200 dark:border-white/5 bg-transparent hover:bg-slate-50 dark:hover:bg-white/5"
                               )}
                             >
                               <div className="flex items-center gap-1.5">
-                                <span className={cn("w-2.5 h-2.5 rounded-full", t.color)} />
-                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{t.name}</span>
+                                <span className={cn("w-2 h-2 rounded-full flex-shrink-0", t.color)} />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{t.name}</span>
                               </div>
-                              <span className="text-[10px] text-slate-400 leading-normal">{t.desc}</span>
+                              <span className="text-[9px] text-slate-400 leading-tight line-clamp-2">{t.desc}</span>
                             </div>
                           ))}
                         </div>
@@ -1072,17 +1202,54 @@ export default function EmailBroadcastComponent() {
                       Список адрес отримувачів ({addressesMeta?.total || 0})
                     </h3>
 
-                    <div className="relative w-full sm:w-64">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Пошук емейла..."
-                        className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
-                      />
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="relative w-full sm:w-56">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Пошук емейла..."
+                          className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                        />
+                      </div>
+                      {selectedDetails.status !== "RUNNING" && (
+                        <button
+                          onClick={() => setShowUploadModal(true)}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 rounded-xl text-xs font-bold transition-all border border-emerald-200 dark:border-emerald-500/20 whitespace-nowrap"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> З файлу
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {selectedDetails.status !== "RUNNING" && (
+                    <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                      <Mail className="w-4 h-4 text-slate-400 ml-2 flex-shrink-0" />
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="Введіть нову email адресу..."
+                        className="flex-1 bg-transparent border-none text-xs focus:ring-0 px-2 outline-none dark:text-white font-semibold"
+                      />
+                      <button
+                        onClick={() => {
+                          if (!newEmail.trim()) {
+                            toast.error("Введіть email");
+                            return;
+                          }
+                          addAddressMutation.mutate(newEmail);
+                        }}
+                        disabled={addAddressMutation.isPending}
+                        className="flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                      >
+                        {addAddressMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                        Додати email
+                      </button>
+                    </div>
+                  )}
 
                   <div className="border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-inner max-h-60 overflow-y-auto custom-scrollbar">
                     <table className="w-full border-collapse text-left text-xs">
@@ -1090,6 +1257,7 @@ export default function EmailBroadcastComponent() {
                         <tr>
                           <th className="p-3">Email адреса</th>
                           <th className="p-3">Статус</th>
+                          {selectedDetails.status !== "RUNNING" && <th className="p-3 text-right">Дії</th>}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -1117,6 +1285,24 @@ export default function EmailBroadcastComponent() {
                                 </span>
                               )}
                             </td>
+                            {selectedDetails.status !== "RUNNING" && (
+                              <td className="p-3 text-right">
+                                {(addr.ids_status === "PENDING" || addr.ids_status === "FAILED") && (
+                                  <button
+                                    onClick={() => removeAddressMutation.mutate(addr.id)}
+                                    disabled={removeAddressMutation.isPending}
+                                    className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
+                                    title="Видалити"
+                                  >
+                                    {removeAddressMutation.isPending && removeAddressMutation.variables === addr.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                )}
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -1188,11 +1374,33 @@ export default function EmailBroadcastComponent() {
                 <FileSpreadsheet className="w-5 h-5 text-emerald-500" /> Нова кампанія розсилки
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Введіть назву та завантажте Excel-файл зі списком адрес для розсилки.
+                Введіть назву та оберіть спосіб завантаження отримувачів.
               </p>
             </div>
 
             <div className="space-y-4">
+              <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setCreationMode("file")}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+                    creationMode === "file" ? "bg-white dark:bg-slate-800 shadow-sm text-blue-600" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  )}
+                >
+                  З Excel файлу
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreationMode("manual")}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-all",
+                    creationMode === "manual" ? "bg-white dark:bg-slate-800 shadow-sm text-blue-600" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  )}
+                >
+                  Вручну (пуста)
+                </button>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Назва розсилки
@@ -1206,26 +1414,28 @@ export default function EmailBroadcastComponent() {
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Excel Файл отримувачів
-                </label>
-                <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-500/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer relative">
-                  <input
-                    type="file"
-                    accept=".xlsx, .xls"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                  <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <span className="block text-sm font-bold text-slate-600 dark:text-slate-300">
-                    {selectedFile ? selectedFile.name : "Оберіть або перетягніть Excel файл"}
-                  </span>
-                  <span className="text-[10px] text-slate-400 block mt-1">
-                    Підтримуються файли .xlsx або .xls
-                  </span>
+              {creationMode === "file" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Excel Файл отримувачів
+                  </label>
+                  <div className="border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-500/50 hover:bg-slate-50 dark:hover:bg-white/5 transition-all cursor-pointer relative">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                    <span className="block text-sm font-bold text-slate-600 dark:text-slate-300">
+                      {selectedFile ? selectedFile.name : "Оберіть або перетягніть Excel файл"}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Підтримуються файли .xlsx або .xls
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-white/5 justify-end">
@@ -1245,7 +1455,7 @@ export default function EmailBroadcastComponent() {
                 className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-400 text-white rounded-xl shadow-lg hover:shadow-emerald-500/20 transition-all font-bold text-xs flex items-center gap-1.5"
               >
                 {createMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Створити та імпортувати
+                {creationMode === "file" ? "Створити та імпортувати" : "Створити розсилку"}
               </button>
             </div>
           </div>
@@ -1356,6 +1566,142 @@ export default function EmailBroadcastComponent() {
               >
                 {deleteMailingMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Видалити кампанію
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl p-6 relative animate-in zoom-in-95 duration-300 flex flex-col gap-5">
+            <div className="pb-3 border-b border-slate-100 dark:border-white/5">
+              <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <Trash2 className="w-5 h-5" /> Масове видалення
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-semibold uppercase tracking-wider">
+                Підтвердіть остаточне видалення {selectedMailings.size} кампаній
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 rounded-2xl text-xs leading-relaxed font-semibold">
+                Увага! Ця дія незворотна. Усі вибрані розсилки ({selectedMailings.size} шт.) будуть видалені разом із усіма їх отримувачами та вкладеними файлами.
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Введіть «ICT» для підтвердження видалення:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Введіть ICT..."
+                  className="w-full p-3 border border-slate-200 dark:border-white/10 dark:bg-slate-900 rounded-2xl focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 focus:outline-none transition-all text-sm font-semibold tracking-wider text-center"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-white/5 justify-end">
+              <button
+                onClick={() => {
+                  setShowBulkDeleteModal(false);
+                  setDeleteConfirmText("");
+                }}
+                className="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-bold text-xs"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => bulkDeleteMutation.mutate()}
+                disabled={deleteConfirmText !== "ICT" || bulkDeleteMutation.isPending}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 dark:disabled:bg-white/5 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-lg hover:shadow-rose-500/20 transition-all font-bold text-xs flex items-center gap-1.5"
+              >
+                {bulkDeleteMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Видалити всі ({selectedMailings.size})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Addresses Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl p-6 relative animate-in zoom-in-95 duration-300 flex flex-col gap-5">
+            <div className="pb-3 border-b border-slate-100 dark:border-white/5">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-500" /> Завантаження адрес
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-semibold uppercase tracking-wider">
+                Завантажте список отримувачів з Excel файлу
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Файл Excel (.xlsx)</label>
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Режим завантаження</label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                    <input
+                      type="radio"
+                      name="uploadMode"
+                      value="append"
+                      checked={uploadMode === "append"}
+                      onChange={() => setUploadMode("append")}
+                      className="text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-white">Додати до існуючих</div>
+                      <div className="text-[10px] text-slate-500 leading-tight">Нові адреси будуть додані в кінець списку. Існуючі залишаться.</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-white/5">
+                    <input
+                      type="radio"
+                      name="uploadMode"
+                      value="replace"
+                      checked={uploadMode === "replace"}
+                      onChange={() => setUploadMode("replace")}
+                      className="text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-white">Замінити невідправлені</div>
+                      <div className="text-[10px] text-slate-500 leading-tight">Всі адреси, які ще НЕ були надіслані, будуть видалені і замінені новими з файлу.</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-white/5 justify-end">
+              <button
+                onClick={() => {
+                  setShowUploadModal(false);
+                  setUploadFile(null);
+                }}
+                className="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all font-bold text-xs"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => uploadAddressesMutation.mutate()}
+                disabled={!uploadFile || uploadAddressesMutation.isPending}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 dark:disabled:bg-white/5 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-lg hover:shadow-emerald-500/20 transition-all font-bold text-xs flex items-center gap-1.5"
+              >
+                {uploadAddressesMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                Завантажити
               </button>
             </div>
           </div>
