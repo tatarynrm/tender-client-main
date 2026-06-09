@@ -179,9 +179,6 @@ const UsersPreRegister = () => {
 
               {/* Права частина: Кнопки пагінації */}
               <div className="flex items-center gap-4">
-                 <span className="text-sm text-slate-500 dark:text-zinc-400 hidden sm:inline">
-                   Сторінка {filters.page || 1} {((pagination as any).total_pages || pagination.page_count) ? `з ${((pagination as any).total_pages || pagination.page_count)}` : ''}
-                 </span>
                  <div className="flex gap-2">
                    <AppButton 
                      size="sm" 
