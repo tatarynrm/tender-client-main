@@ -5,11 +5,10 @@ import {
   MapPin,
   Plus,
   Users,
-  Send,
-  Instagram,
-  Facebook,
   Loader2,
+  Pencil,
 } from "lucide-react";
+import { FaViber, FaWhatsapp, FaTelegramPlane } from "react-icons/fa";
 import { Button } from "@/shared/components/ui";
 import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
 import { useMyCompany } from "../hooks/useMyCompany";
@@ -25,6 +24,9 @@ export function GeneralTab() {
   const { company, isLoading: isCompanyLoading } = useMyCompany(
     profile?.company?.migrate_id as number,
   );
+  
+  const isAdmin = profile?.role?.is_admin || profile?.person?.person_role?.is_admin;
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<number | string | null>(null);
 
@@ -41,7 +43,7 @@ export function GeneralTab() {
           userId={editingUserId || undefined}
         />
       )}
-      
+
       {/* SECTION: ADDRESSES */}
       <section className="bg-white dark:bg-zinc-950 border border-[#D0DDF0] dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-6">
@@ -168,18 +170,32 @@ export function GeneralTab() {
                   const isOnline = onlineUsers.has(String(user.id));
                   const dotColor = isOnline ? "bg-[#48D470]" : "bg-[#4863D4]";
 
+                  const telegramPhone = user.person?.person_phone?.find((p: any) => p.is_telegram)?.phone;
+                  const viberPhone = user.person?.person_phone?.find((p: any) => p.is_viber)?.phone;
+                  const whatsappPhone = user.person?.person_phone?.find((p: any) => p.is_whatsapp)?.phone;
+
                   return (
                     <tr
                       key={user.id}
-                      className="border-b border-[#D0DDF0] dark:border-zinc-800 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors cursor-pointer"
-                      onClick={() => setEditingUserId(user.id)}
+                      className="border-b border-[#D0DDF0] dark:border-zinc-800 last:border-0 hover:bg-slate-50 dark:hover:bg-zinc-900 transition-colors"
                     >
                       <td className="py-4 px-6">
-                        <div className="flex items-center gap-4">
-                          <div className={cn("w-6 h-6 rounded-full shrink-0", dotColor)}></div>
-                          <span className="text-[14px] text-[#4863D4] dark:text-blue-400 font-medium whitespace-nowrap">
-                            {user.person?.surname} {user.person?.name} {user.person?.last_name}
-                          </span>
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className={cn("w-6 h-6 rounded-full shrink-0", dotColor)}></div>
+                            <span className="text-[14px] text-[#4863D4] dark:text-blue-400 font-medium whitespace-nowrap">
+                              {user.person?.surname} {user.person?.name} {user.person?.last_name}
+                            </span>
+                          </div>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setEditingUserId(user.id)}
+                              className="text-slate-400 hover:text-[#4863D4] transition-colors p-1"
+                              title="Редагувати користувача"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-6 text-[14px] text-slate-500 dark:text-zinc-400 border-l border-[#D0DDF0] dark:border-zinc-800 text-center">
@@ -196,17 +212,34 @@ export function GeneralTab() {
                       </td>
                       <td className="py-4 px-6 border-l border-[#D0DDF0] dark:border-zinc-800">
                         <div className="flex items-center justify-center gap-2.5">
-                          {user.person?.person_telegram && (
-                            <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
-                              <Send size={15} className="-ml-0.5 mt-0.5" />
-                            </div>
+                          {telegramPhone && (
+                            <a
+                              href={`https://t.me/${telegramPhone.replace('+', '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity"
+                            >
+                              <FaTelegramPlane size={16} />
+                            </a>
                           )}
-                          <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
-                            <Instagram size={16} />
-                          </div>
-                          <div className="w-[30px] h-[30px] rounded-[8px] bg-[#4863D4] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity">
-                            <Facebook size={16} />
-                          </div>
+                          {viberPhone && (
+                            <a
+                              href={`viber://chat?number=%2B${viberPhone.replace('+', '')}`}
+                              className="w-[30px] h-[30px] rounded-[8px] bg-[#7360F2] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity"
+                            >
+                              <FaViber size={16} />
+                            </a>
+                          )}
+                          {whatsappPhone && (
+                            <a
+                              href={`https://wa.me/${whatsappPhone.replace('+', '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-[30px] h-[30px] rounded-[8px] bg-[#25D366] flex items-center justify-center text-white shadow-sm hover:opacity-90 transition-opacity"
+                            >
+                              <FaWhatsapp size={16} />
+                            </a>
+                          )}
                         </div>
                       </td>
                     </tr>
