@@ -10,21 +10,22 @@ import { cn } from "@/shared/utils";
 
 const UsersPreRegister = () => {
   // 1. Стан для фільтрів
-  const [filters, setFilters] = useState<PreRegisterFilters>(() => {
-    let savedPerPage = 50;
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("adminPreRegPerPage");
-      if (saved) savedPerPage = Number(saved);
-    }
-    return {
-      search: "",
-      country: "all",
-      user_exist: "all",
-      company_exist: "all",
-      page: 1,
-      per_page: savedPerPage,
-    };
+  const [filters, setFilters] = useState<PreRegisterFilters>({
+    search: "",
+    country: "all",
+    user_exist: "all",
+    company_exist: "all",
+    page: 1,
+    per_page: 50,
   });
+
+  // Завантажуємо збережене значення per_page після монтування (щоб уникнути помилок гідратації)
+  React.useEffect(() => {
+    const saved = localStorage.getItem("adminPreRegPerPage");
+    if (saved) {
+      setFilters(prev => ({ ...prev, per_page: Number(saved) }));
+    }
+  }, []);
 
   // 2. Отримуємо дані з хука
   const { 
@@ -159,7 +160,7 @@ const UsersPreRegister = () => {
               {/* Ліва частина: Всього та вибір кількості на сторінці */}
               <div className="flex items-center gap-4">
                 <span className="text-sm text-slate-500 dark:text-zinc-400">
-                  Всього: <span className="font-medium text-slate-900 dark:text-white">{pagination.total_records || pagination.total || 0}</span>
+                  Всього: <span className="font-medium text-slate-900 dark:text-white">{(pagination as any).total_records || (pagination as any).total || pagination.rows_all || 0}</span>
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-slate-500 dark:text-zinc-400 hidden sm:inline">Показувати по:</span>
@@ -179,7 +180,7 @@ const UsersPreRegister = () => {
               {/* Права частина: Кнопки пагінації */}
               <div className="flex items-center gap-4">
                  <span className="text-sm text-slate-500 dark:text-zinc-400 hidden sm:inline">
-                   Сторінка {filters.page || 1} {pagination.total_pages ? `з ${pagination.total_pages}` : ''}
+                   Сторінка {filters.page || 1} {((pagination as any).total_pages || pagination.page_count) ? `з ${((pagination as any).total_pages || pagination.page_count)}` : ''}
                  </span>
                  <div className="flex gap-2">
                    <AppButton 
@@ -193,7 +194,7 @@ const UsersPreRegister = () => {
                    <AppButton 
                      size="sm" 
                      variant="outline"
-                     disabled={pagination.total_pages ? filters.page >= pagination.total_pages : users.length < (filters.per_page || 50)}
+                     disabled={((pagination as any).total_pages || pagination.page_count) ? (filters.page || 1) >= ((pagination as any).total_pages || pagination.page_count) : users.length < (filters.per_page || 50)}
                      onClick={() => updateFilter("page", (filters.page || 1) + 1)}
                    >
                      Далі
