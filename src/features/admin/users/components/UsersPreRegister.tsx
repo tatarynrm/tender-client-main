@@ -10,13 +10,20 @@ import { cn } from "@/shared/utils";
 
 const UsersPreRegister = () => {
   // 1. Стан для фільтрів
-  const [filters, setFilters] = useState<PreRegisterFilters>({
-    search: "",
-    country: "all",
-    user_exist: "all",
-    company_exist: "all",
-    page: 1,
-    per_page: 50,
+  const [filters, setFilters] = useState<PreRegisterFilters>(() => {
+    let savedPerPage = 50;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("adminPreRegPerPage");
+      if (saved) savedPerPage = Number(saved);
+    }
+    return {
+      search: "",
+      country: "all",
+      user_exist: "all",
+      company_exist: "all",
+      page: 1,
+      per_page: savedPerPage,
+    };
   });
 
   // 2. Отримуємо дані з хука
@@ -32,6 +39,9 @@ const UsersPreRegister = () => {
 
   // 3. Хендлери оновлення (використовуємо useCallback для оптимізації)
   const updateFilter = useCallback((key: keyof PreRegisterFilters, val: any) => {
+    if (key === "per_page") {
+      localStorage.setItem("adminPreRegPerPage", String(val));
+    }
     setFilters((prev) => ({ 
       ...prev, 
       [key]: val,
@@ -40,13 +50,18 @@ const UsersPreRegister = () => {
   }, []);
 
   const resetFilters = () => {
+    let savedPerPage = 50;
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("adminPreRegPerPage");
+      if (saved) savedPerPage = Number(saved);
+    }
     setFilters({
       search: "",
       country: "all",
       user_exist: "all",
       company_exist: "all",
       page: 1,
-      per_page: 50,
+      per_page: savedPerPage,
     });
   };
 
@@ -140,25 +155,50 @@ const UsersPreRegister = () => {
         {/* FOOTER / ПАГІНАЦІЯ */}
         {pagination && (
            <div className="px-6 py-4 border-t bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
-      
-              {/* Тут твій компонент пагінації */}
-              <div className="flex gap-2">
-                 <AppButton 
-                   size="sm" 
-                   variant="outline" 
-                   disabled={filters.page === 1}
-                   onClick={() => updateFilter("page", (filters.page || 1) - 1)}
-                 >
-                   Назад
-                 </AppButton>
-                 <AppButton 
-                   size="sm" 
-                   variant="outline"
-                   disabled={users.length < (filters.per_page || 50)}
-                   onClick={() => updateFilter("page", (filters.page || 1) + 1)}
-                 >
-                   Далі
-                 </AppButton>
+              
+              {/* Ліва частина: Всього та вибір кількості на сторінці */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-500 dark:text-zinc-400">
+                  Всього: <span className="font-medium text-slate-900 dark:text-white">{pagination.total_records || pagination.total || 0}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 dark:text-zinc-400 hidden sm:inline">Показувати по:</span>
+                  <select
+                    className="border border-slate-200 dark:border-zinc-700 rounded-md text-sm bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 p-1 outline-none focus:border-teal-500 transition-colors cursor-pointer"
+                    value={filters.per_page || 50}
+                    onChange={(e) => updateFilter("per_page", Number(e.target.value))}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Права частина: Кнопки пагінації */}
+              <div className="flex items-center gap-4">
+                 <span className="text-sm text-slate-500 dark:text-zinc-400 hidden sm:inline">
+                   Сторінка {filters.page || 1} {pagination.total_pages ? `з ${pagination.total_pages}` : ''}
+                 </span>
+                 <div className="flex gap-2">
+                   <AppButton 
+                     size="sm" 
+                     variant="outline" 
+                     disabled={filters.page === 1}
+                     onClick={() => updateFilter("page", (filters.page || 1) - 1)}
+                   >
+                     Назад
+                   </AppButton>
+                   <AppButton 
+                     size="sm" 
+                     variant="outline"
+                     disabled={pagination.total_pages ? filters.page >= pagination.total_pages : users.length < (filters.per_page || 50)}
+                     onClick={() => updateFilter("page", (filters.page || 1) + 1)}
+                   >
+                     Далі
+                   </AppButton>
+                 </div>
               </div>
            </div>
         )}

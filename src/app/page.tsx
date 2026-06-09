@@ -570,8 +570,11 @@ export default function HomePage() {
           <div className="footer-col">
             <h4>Контакти</h4>
             <ul>
-              <li><a href="tel:+380503703781">+380 50 370 37 81</a></li>
-              <li><a href="mailto:info@ict.lviv.ua">info@ict.lviv.ua</a></li>
+              <li><a href="tel:+380504308661">(050) 430-86-61</a></li>
+              <li><a href="tel:+380503348200">(050) 334-82-00</a></li>
+              <li><a href="tel:+380503703778">(050) 370-37-78</a></li>
+              <li><a href="tel:+380504304623">(050) 430-46-23</a></li>
+              <li className="mt-2"><a href="mailto:tender.support@ict.lviv.ua">tender.support@ict.lviv.ua</a></li>
             </ul>
           </div>
 

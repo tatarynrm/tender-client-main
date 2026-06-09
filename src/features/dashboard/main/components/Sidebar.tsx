@@ -47,6 +47,7 @@ const links: MenuItem[] = [
   {
     name: "Кабінет перевізника",
     icon: Car,
+    status: "inactive",
     children: [
       { name: "Головна", href: "/dashboard/cabinet/main", icon: HousePlug },
       {
@@ -167,19 +168,28 @@ export default function Sidebar({
     const active = isActive(href) || activeParent;
     const isInactive = status === "inactive";
 
-    if (!children) {
-      if (isInactive) {
-        return (
-          <div
-            key={name}
-            className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 dark:text-slate-500 opacity-50 cursor-not-allowed relative border border-transparent"
-            title={info}
-          >
+    if (isInactive) {
+      return (
+        <div
+          key={name}
+          className={`flex items-center justify-between px-3 py-2 rounded-xl text-sm text-slate-400 dark:text-slate-500 opacity-70 cursor-not-allowed border border-transparent ${isChild ? "ml-4" : ""}`}
+          title={info}
+        >
+          <div className="flex items-center gap-3 relative w-full">
             {Icon && <Icon className="w-5 h-5" />}
-            <span className="font-medium">{name}</span>
+            <span className="font-medium relative">
+              {name}
+              <span className="absolute -top-3.5 -right-10 px-1.5 py-[2px] text-[9px] uppercase font-bold tracking-wider text-green-700 bg-green-100 dark:bg-green-500/20 dark:text-green-400 rounded-md animate-pulse border border-green-200 dark:border-green-500/30 whitespace-nowrap z-10">
+                в розробці
+              </span>
+            </span>
           </div>
-        );
-      }
+          {children && <ChevronRight className="w-4 h-4 opacity-40" />}
+        </div>
+      );
+    }
+
+    if (!children) {
 
       return (
         <Link
