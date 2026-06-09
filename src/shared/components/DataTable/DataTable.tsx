@@ -139,49 +139,6 @@ export function DataTable<TData>({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-slate-700 text-sm">
-        <div className="flex items-center gap-6">
-          <div>
-            Сторінка <b>{currentPage}</b> з {pageCount}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">Рядків на сторінці:</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(val) => onPageSizeChange?.(Number(val))}
-            >
-              <SelectTrigger className="w-[70px] h-8">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent>
-                {[10, 20, 50, 100].map((v) => (
-                  <SelectItem key={v} value={String(v)}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange?.(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange?.(currentPage + 1)}
-            disabled={currentPage === pageCount}
-          >
-            Вперед
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }
