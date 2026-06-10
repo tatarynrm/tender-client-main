@@ -239,8 +239,8 @@ export const useAdminOnlineUsers = (filters: UserFilters = {}) => {
   });
 
   return {
-    users: data?.content?.list || data?.content || [],
-    pagination: data?.content?.pagination || data?.props?.pagination,
+    users: data?.content || [],
+    pagination: data?.props?.pagination,
     isLoading,
     error,
     refetch,
