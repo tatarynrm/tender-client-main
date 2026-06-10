@@ -50,6 +50,7 @@ const links: MenuItem[] = [
         icon: KeyRound,
       },
       { name: "Усі користувачі", href: "/admin/users", icon: Users },
+      { name: "Користувачі онлайн", href: "/admin/users/online", icon: Users },
       { name: "Створити", href: "/admin/users/save", icon: UserRoundPlus },
     ],
   },

@@ -98,9 +98,11 @@ export const useSockets = () => {
 
 import { useAdminNotificationStore } from "../stores/useAdminNotificationStore";
 import { AdminNotificationModal } from "../components/Modals/AdminNotificationModal";
+import { useGlobalHeartbeat } from "../hooks/useGlobalHeartbeat";
 
 const SocketEventsManager = () => {
   useSocketEvents();
+  useGlobalHeartbeat();
   const { isOpen, message, type, closeNotification } = useAdminNotificationStore();
 
   return (

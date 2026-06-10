@@ -50,12 +50,7 @@ export const useOnlineUsers = () => {
       onConnect();
     }
 
-    const heartbeatInterval = setInterval(() => {
-      if (userSocket.connected) userSocket.emit("heartbeat");
-    }, 45000);
-
     return () => {
-      clearInterval(heartbeatInterval);
       userSocket.off("user_status_change", handleStatusChange);
       userSocket.off("connect", onConnect);
       userSocket.off("reconnect", onConnect);

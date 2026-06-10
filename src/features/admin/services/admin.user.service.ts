@@ -7,6 +7,10 @@ export const adminUserService = {
     const res = await api.get<IApiResponse<IUserAccount[]>>(`/admin/user/list?${params.toString()}`);
     return res.data;
   },
+  getOnlineUsers: async (params: URLSearchParams) => {
+    const res = await api.get<IApiResponse<IUserAccount[]>>(`/admin/user/online-list?${params.toString()}`);
+    return res.data;
+  },
   getOneUser: async (id: number) => {
     const res = await api.get(`/admin/user/one/${id}`);
     return res.data.content;

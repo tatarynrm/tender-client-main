@@ -216,3 +216,34 @@ export const useIctUsers = () => {
     staleTime: 1000 * 60 * 5,
   });
 };
+
+export const useAdminOnlineUsers = (filters: UserFilters = {}) => {
+  const params = useMemo(() => {
+    const p = new URLSearchParams();
+    Object.entries(filters).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== "" && val !== "all") {
+        p.set(key, String(val));
+      }
+    });
+    return p;
+  }, [filters]);
+
+  const queryKey = useMemo(() => ["admin-online-users", params.toString()], [params]);
+
+  const { data, isLoading, error, refetch } = useQuery<
+    IApiResponse<IUserAccount[]>
+  >({
+    queryKey,
+    queryFn: () => adminUserService.getOnlineUsers(params),
+    staleTime: 1000 * 10, // 10 seconds to keep it real-time
+  });
+
+  return {
+    users: data?.content?.list || data?.content || [],
+    pagination: data?.content?.pagination || data?.props?.pagination,
+    isLoading,
+    error,
+    refetch,
+    queryKey,
+  };
+};
