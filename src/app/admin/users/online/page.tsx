@@ -33,7 +33,7 @@ export default function OnlineUsersPage() {
           </h2>
           <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1.5">
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            Зараз онлайн: <span className="font-bold text-emerald-600">{pagination?.total_items || users?.length || 0}</span>
+            Зараз онлайн: <span className="font-bold text-emerald-600">{pagination?.rows_all || users?.length || 0}</span>
           </p>
         </div>
       </div>
