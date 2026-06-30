@@ -69,7 +69,7 @@ export const CarrierDashboard = () => {
     ? new Date(data.work_begin).getFullYear()
     : 2014;
 
-  const firstPaymentDate = data.debt_payment?.[0]?.date;
+  const firstPaymentDate = (data.debt_payment as any)?.[0]?.date;
 
   const waitingPayments = Array.isArray(data.waiting_payment)
     ? data.waiting_payment
