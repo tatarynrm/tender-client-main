@@ -85,21 +85,21 @@ export const CurrencyWidget = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-sm divide-x divide-slate-100 dark:divide-white/5 overflow-hidden transition-all hover:border-blue-400 active:scale-[0.98]",
+          "w-full flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-full shadow-sm divide-x divide-slate-100 dark:divide-white/5 overflow-hidden transition-all hover:border-blue-400 active:scale-[0.98]",
           isRateLoading && "opacity-70",
         )}
       >
-        <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-          <DollarSign size={13} className="text-emerald-500" />
-          <span className="text-xs font-black tabular-nums">{rates.usd}</span>
+        <div className="flex items-center gap-1.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <span className="text-sm font-bold text-blue-600">$</span>
+          <span className="text-sm font-bold text-slate-700 tabular-nums">{rates.usd}</span>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-          <Euro size={13} className="text-blue-500" />
-          <span className="text-xs font-black tabular-nums">{rates.eur}</span>
+        <div className="flex items-center gap-1.5 px-4 py-2 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+          <span className="text-sm font-bold text-blue-600">€</span>
+          <span className="text-sm font-bold text-slate-700 tabular-nums">{rates.eur}</span>
         </div>
-        <div className="px-2 py-1.5 flex items-center bg-slate-50/50 dark:bg-white/[0.02]">
+        <div className="px-3 py-2 flex items-center bg-slate-50/50 dark:bg-white/[0.02]">
           <ChevronDown
-            size={10}
+            size={14}
             className={cn(
               "text-slate-400 transition-transform duration-300",
               isOpen && "rotate-180",

@@ -28,7 +28,9 @@ export const HeaderWidgetContainer = () => {
         <FuelWidget />
       </div> */}
 
-      <AirAlarmWidget />
+      <div className="w-full lg:w-auto">
+        <AirAlarmWidget />
+      </div>
     </div>
   );
 };

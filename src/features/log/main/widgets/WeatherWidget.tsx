@@ -136,14 +136,14 @@ export const WeatherWidget = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-sm hover:border-blue-400 transition-all",
+          "w-full flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-full shadow-sm hover:border-blue-400 transition-all",
           loading && "opacity-70",
         )}
       >
         <WeatherIcon code={weather.code} />
         <div className="flex items-center gap-2 overflow-hidden">
-          <span className="text-xs font-black">{weather.temp}</span>
-          <span className="text-[10px] text-slate-400 font-bold uppercase truncate max-w-[100px]">
+          <span className="text-sm font-bold text-slate-700">{weather.temp}</span>
+          <span className="text-sm text-slate-400 font-medium truncate max-w-[100px]">
             {weather.city}
           </span>
           <ChevronDown

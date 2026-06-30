@@ -8,35 +8,26 @@ export const AirAlarmWidget = () => {
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   return (
-    <div className="relative w-full">
-      {/* Кнопка в хедері */}
+    <div className="relative">
       <button
         onClick={() => setIsMapOpen(true)}
         className={cn(
-          "flex w-full items-center gap-2.5 px-3 py-0.5 rounded-xl border transition-all active:scale-95 shadow-sm",
-          "bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10 hover:border-red-400 dark:hover:border-red-500 group",
+          "flex items-center gap-2 px-4 py-2 rounded-full border border-red-300 dark:border-red-500/30 transition-all active:scale-95 shadow-sm",
+          "bg-white dark:bg-slate-900 hover:border-red-500 dark:hover:border-red-500 group",
         )}
       >
-        <div className="p-1 bg-red-50 dark:bg-red-500/10 rounded-lg group-hover:bg-red-500 group-hover:text-white transition-colors">
-          <ShieldAlert
-            size={14}
-            className="text-red-500 group-hover:text-white"
-          />
+        <div className="flex items-center justify-center p-0.5 rounded-full text-red-500">
+          <ShieldAlert size={16} className="text-red-500" />
         </div>
 
-        <div className="flex flex-col items-start leading-none">
-          <span className="text-[10px] font-black uppercase tracking-tight text-slate-700 dark:text-slate-200">
+        <div className="flex flex-col items-start leading-none gap-0.5">
+          <span className="text-xs font-bold text-red-500 uppercase tracking-tight">
             Карта тривог
           </span>
-          <span className="text-[8px] opacity-60 font-bold uppercase text-slate-500 dark:text-slate-400">
+          <span className="text-[9px] font-medium text-blue-500">
             Україна
           </span>
         </div>
-
-        <Map
-          size={12}
-          className="ml-1 opacity-30 group-hover:opacity-100 transition-opacity"
-        />
       </button>
 
       {/* Модальне вікно (рендер на весь екран) */}
