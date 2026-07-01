@@ -27,6 +27,12 @@ import {
   ArrowBigRight,
   Crown,
   Sparkles,
+  Handshake,
+  BarChart2,
+  Truck,
+  Package,
+  DollarSign,
+  FileText,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -47,34 +53,13 @@ const links: MenuItem[] = [
   {
     name: "Мій кабінет",
     icon: Car,
-    status: "inactive",
     children: [
-      { name: "Головна", href: "/dashboard/cabinet/main", icon: HousePlug },
-      {
-        name: "Мої перевезення",
-        href: "/dashboard/cabinet/transportations",
-        icon: Shield,
-      },
-      {
-        name: "Графік оплат",
-        href: "/dashboard/cabinet/pay",
-        icon: ShieldPlus,
-      },
-      {
-        name: "Відправлені АВР",
-        href: "/dashboard/cabinet/sended-documents",
-        icon: FileArchive,
-      },
-      {
-        name: "Мій автопарк",
-        href: "/dashboard/cabinet/car-park",
-        icon: FaCar,
-      },
-      {
-        name: "Персонал",
-        href: "/dashboard/cabinet/employees",
-        icon: PersonStandingIcon,
-      },
+      { name: "Співпраця", href: "/dashboard/cabinet/main", icon: Handshake },
+      { name: "Тендери", href: "/dashboard/cabinet/tenders", icon: BarChart2 },
+      { name: "Перевезення", href: "/dashboard/cabinet/transportations", icon: Truck },
+      { name: "Замовлення", href: "/dashboard/cabinet/orders", icon: Package },
+      { name: "Фінанси", href: "/dashboard/cabinet/finances", icon: DollarSign },
+      { name: "Документи", href: "/dashboard/cabinet/documents", icon: FileText },
     ],
   },
   {

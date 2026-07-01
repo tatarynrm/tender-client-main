@@ -1,7 +1,16 @@
 import api from "@/shared/api/instance.api";
 
+export interface IManager {
+  kod_os: number;
+  imja: string;
+  prizv: string;
+  phone: string;
+  email: string;
+}
+
 export interface IActiveTransport {
   kod_zay: number;
+  firma?: string;
   zay_num: string;
   zav_date: string;
   zav_town: string;
@@ -9,14 +18,13 @@ export interface IActiveTransport {
   rozv_town: string;
   rozv_country: string;
   am: string;
-  am_mark: string;
+  am_mark: string | null;
   pr: string | null;
   pr_mark: string | null;
   pr_type: string;
   driver: string;
   driver_phone: string;
-  manager: string;
-  manager_phone: string;
+  manager: IManager;
   fraht?: number;
   valut?: string;
   valut_code?: string;
@@ -24,9 +32,10 @@ export interface IActiveTransport {
 }
 
 export interface ILastEvent {
-  date: string;
+  code: string;
   label: string;
-  info: string;
+  date: string | null;
+  info: string | null;
 }
 
 export interface ICarrierStatistic {
@@ -39,12 +48,15 @@ export interface ICarrierStatistic {
   doc_waiting: number;
   debt_payment: {
     valut: string;
+    valut_code?: string;
     ids?: string;
     sum: number;
     zay_count: number;
   }[];
   waiting_payment: {
     valut: string;
+    valut_code?: string;
+    date_opl?: string;
     ids?: string;
     sum: number;
     zay_count: number;
@@ -55,6 +67,7 @@ export interface ICarrierStatistic {
     current_month: number;
   }[];
   last_events?: ILastEvent[];
+  zay_list_10?: IActiveTransport[];
   [key: string]: any;
 }
 

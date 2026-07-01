@@ -69,32 +69,33 @@ export const CarrierDashboard = () => {
     ? new Date(data.work_begin).getFullYear()
     : 2014;
 
-  const firstPaymentDate = (data.debt_payment as any)?.[0]?.date;
-
-  const waitingPayments = Array.isArray(data.waiting_payment)
-    ? data.waiting_payment
-    : data.waiting_payment
-      ? [data.waiting_payment as any]
-      : [];
-
-  const firstPayments = Array.isArray(data.debt_payment)
+  const expectedIncomes = Array.isArray(data.debt_payment)
     ? data.debt_payment
     : data.debt_payment
       ? [data.debt_payment as any]
       : [];
 
-  console.log("Дані з бекенду (waitingPayments):", waitingPayments);
-  console.log("Дані з бекенду (firstPayments):", firstPayments);
+  const plannedPayments = Array.isArray(data.waiting_payment)
+    ? data.waiting_payment
+    : data.waiting_payment
+      ? [data.waiting_payment as any]
+      : [];
+
+  const plannedPaymentDate = plannedPayments[0]?.date_opl;
+
+  console.log("Дані з бекенду (expectedIncomes):", expectedIncomes);
+  console.log("Дані з бекенду (plannedPayments):", plannedPayments);
 
   // Dynamically find the array of active transports
   const activeTransports: IActiveTransport[] = Array.isArray(data)
     ? (data as unknown as IActiveTransport[])
-    : ((Object.values(data).find(
-        (val) => Array.isArray(val) && val.length > 0 && "kod_zay" in val[0]
-      ) ||
+    : ((data.zay_list_10 ||
         data.zay_list ||
         data.page_main ||
         data.active_transports ||
+        Object.values(data).find(
+          (val) => Array.isArray(val) && val.length > 0 && "kod_zay" in val[0]
+        ) ||
         []) as IActiveTransport[]);
 
   return (
@@ -121,10 +122,10 @@ export const CarrierDashboard = () => {
           <div className="text-sm text-blue-100 flex gap-2 md:justify-end">
             <span>Очікування надходжень</span>
             <div className="flex flex-col items-start md:items-end">
-              {waitingPayments.length ? (
-                waitingPayments.map((payment, idx) => (
+              {expectedIncomes.length ? (
+                expectedIncomes.map((payment, idx) => (
                   <span key={idx} className="font-bold text-white whitespace-nowrap">
-                    {payment.sum.toLocaleString("uk-UA")} {payment.ids || payment.code || payment.valut}
+                    {payment.sum.toLocaleString("uk-UA")} {payment.ids || payment.code || payment.valut_code || payment.valut}
                   </span>
                 ))
               ) : (
@@ -175,10 +176,10 @@ export const CarrierDashboard = () => {
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#D4DEF8] flex items-center gap-4">
           <div className="flex flex-col items-center justify-center w-1/3 border-r border-[#D4DEF8] pr-2">
             <span className="text-[40px] font-bold text-[#3B52B4] leading-none">
-              {firstPaymentDate ? format(parseISO(firstPaymentDate), "d") : "28"}
+              {plannedPaymentDate ? format(parseISO(plannedPaymentDate), "d") : "28"}
             </span>
             <span className="text-sm font-bold text-[#3B52B4] mt-1">
-              {firstPaymentDate ? format(parseISO(firstPaymentDate), "MMMM", { locale: uk }) : "червня"}
+              {plannedPaymentDate ? format(parseISO(plannedPaymentDate), "MMMM", { locale: uk }) : "червня"}
             </span>
           </div>
           <div className="flex flex-col w-2/3 pl-2 justify-center">
@@ -186,10 +187,10 @@ export const CarrierDashboard = () => {
               Запланована дата<br/>та сума оплати
             </span>
             <div className="flex flex-col">
-              {firstPayments.length ? (
-                firstPayments.map((fp, idx) => (
-                  <span key={idx} className={`text-lg font-bold ${firstPaymentDate ? 'text-emerald-500' : 'text-emerald-500'} whitespace-nowrap leading-none`}>
-                    {fp.sum.toLocaleString("uk-UA")} {fp.ids || fp.code || fp.valut}
+              {plannedPayments.length ? (
+                plannedPayments.map((fp, idx) => (
+                  <span key={idx} className={`text-lg font-bold ${plannedPaymentDate ? 'text-emerald-500' : 'text-emerald-500'} whitespace-nowrap leading-none`}>
+                    {fp.sum.toLocaleString("uk-UA")} {fp.ids || fp.code || fp.valut_code || fp.valut}
                   </span>
                 ))
               ) : (
@@ -274,8 +275,10 @@ export const CarrierDashboard = () => {
               data.last_events.map((event, idx) => (
                 <div key={idx} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                   <div className="flex flex-col gap-1">
-                    <span className="text-sm font-bold text-[#3B52B4]">{event.info}</span>
-                    <span className="text-xs text-[#8BA6EB] font-medium">{format(parseISO(event.date), "dd.MM.yy")}</span>
+                    <span className="text-sm font-bold text-[#3B52B4]">{event.info || "Подія"}</span>
+                    {event.date && (
+                      <span className="text-xs text-[#8BA6EB] font-medium">{format(parseISO(event.date), "dd.MM.yy")}</span>
+                    )}
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-[10px] font-bold ${
@@ -323,7 +326,7 @@ export const CarrierDashboard = () => {
                     {transport.zav_date
                       ? format(parseISO(transport.zav_date), "dd.MM.yyyy")
                       : ""}{" "}
-                    {transport.manager}
+                    {typeof transport.manager === "object" ? `${transport.manager?.imja || ""} ${transport.manager?.prizv || ""}` : transport.manager}
                   </span>
                 </div>
                 <div className="flex flex-col w-1/3 px-2">
