@@ -71,10 +71,31 @@ export interface ICarrierStatistic {
   [key: string]: any;
 }
 
+export interface ICarrierCooperation {
+  kod_per: number;
+  zay_count_all: number;
+  work_begin: string;
+  work_end: string;
+  oborot: number;
+  work_len_days: number;
+  zay_list_active: any[];
+  dog_list_active: any[];
+  direction_list_mn: any[];
+  direction_list_reg: any[];
+  [key: string]: any;
+}
+
 class CarrierStatisticService {
   async getCarrierStatistic(mid: string | number): Promise<ICarrierStatistic> {
     const response = await api.get<ICarrierStatistic>(
       `/oracle/carrier-statistic/${mid}`
+    );
+    return response.data;
+  }
+
+  async getCarrierCooperation(mid: string | number): Promise<ICarrierCooperation> {
+    const response = await api.get<ICarrierCooperation>(
+      `/oracle/carrier-cooperation/${mid}`
     );
     return response.data;
   }
