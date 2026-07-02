@@ -99,6 +99,18 @@ class CarrierStatisticService {
     );
     return response.data;
   }
+
+  async getCarrierContacts(mid: string | number): Promise<any> {
+    try {
+      const response = await api.get<any>(
+        `/oracle/carrier-contacts/${mid}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch contacts", error);
+      return null;
+    }
+  }
 }
 
 export const carrierStatisticService = new CarrierStatisticService();
