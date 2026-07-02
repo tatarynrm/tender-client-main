@@ -36,4 +36,8 @@ export const adminUserService = {
     const res = await api.patch(`/users/${id}/role`, data);
     return res.data;
   },
+  impersonateCompany: async (id_company: number) => {
+    const res = await api.post("/admin/user/impersonate", { id_company });
+    return res.data;
+  },
 };

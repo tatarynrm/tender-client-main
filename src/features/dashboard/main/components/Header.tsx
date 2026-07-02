@@ -8,6 +8,11 @@ import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMen
 import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 import NotificationMenu from "./NotificationMenu";
 import { cn } from "@/shared/utils";
+import ImpersonateCompanyDialog from "./ImpersonateCompanyDialog";
+import { Button } from "@/shared/components/ui/button";
+import { adminUserService } from "@/features/admin/services/admin.user.service";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export default function Header({
   onMenuClick,
@@ -20,6 +25,20 @@ export default function Header({
   closeSidebarState?: boolean;
   profile?: IUserProfile;
 }) {
+  const [returningToIct, setReturningToIct] = useState(false);
+
+  const handleReturnToIct = async () => {
+    try {
+      setReturningToIct(true);
+      await adminUserService.impersonateCompany(1); // 1 - ID ICT
+      toast.success("Повернено до ICT! Перезавантаження...");
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Помилка");
+      setReturningToIct(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 flex items-center justify-between px-6 py-3 bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 transition-all duration-300">
 
@@ -78,6 +97,22 @@ export default function Header({
             {profile?.person.surname} {profile?.person.name?.charAt(0)}.{profile?.person.last_name?.charAt(0)}.
           </span>
         </div>
+
+        {/* Impersonate Actions (Only for ICT Admins) */}
+        {profile?.role?.is_ict && profile?.role?.is_admin && profile?.company?.id === 1 && (
+          <ImpersonateCompanyDialog />
+        )}
+        {profile?.role?.is_ict && profile?.role?.is_admin && profile?.company?.id !== 1 && (
+          <Button
+            variant="default"
+            size="sm"
+            className="ml-2"
+            onClick={handleReturnToIct}
+            disabled={returningToIct}
+          >
+            {returningToIct ? "Зачекайте..." : "Повернутись до ICT"}
+          </Button>
+        )}
       </div>
 
       {/* Права частина: Налаштування, Повідомлення та Дії */}
