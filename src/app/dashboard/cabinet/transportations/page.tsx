@@ -1,372 +1,368 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import { format } from "date-fns";
-import { Button } from "@/shared/components/ui/button";
-import api from "@/shared/api/instance.api";
-import Loading from "@/shared/components/ui/Loading";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useProfile } from "@/shared/hooks/useProfile";
+import { carrierStatisticService, IActiveTransport } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { Info } from "lucide-react";
-import GridColumnSelector from "@/shared/components/GridColumnSelector/GridColumnSelector";
-import { useGridColumns } from "@/shared/hooks/useGridColumns";
+import { User, Phone } from "lucide-react";
+import { Pagination } from "@/shared/components/Pagination/Pagination";
+import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
-interface TransportData {
-  KOD: number;
-  LINE1: string;
-  LINE2: string;
-  LINE3: string;
-  BORGP: number;
-  PERSUMA: number;
-  IDV: string;
-  DATDOCP: string | null;
-  DATPOPLPLAN: string | null;
-  DATPOPLFAKT: string | null;
-  PERNEKOMPLEKT: any;
-  PERAKTPRET: any;
+interface TransportationStats {
+  zay_count_all: number;
+  zay_count_month: number;
+  zay_count_closed: number;
+  zay_count_plan: number;
+  zay_count_active: number;
+  zay_count_doc_wait: number;
+  zay_count_problem: number;
 }
-const TransData: TransportData[] = [
-  {
-    KOD: 4856011,
-    LINE1: "25/09 Моршин - 26/09 Миргород",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 33500,
-    PERSUMA: 33500,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4860251,
-    LINE1: "28/09 Миргород - 29/09 Київ",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ3729ЕО Сергієнко Олександр Петрович",
-    BORGP: 9000,
-    PERSUMA: 9000,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4861861,
-    LINE1: "29/09 Київ - 29/09 Бровари",
-    LINE2: "тара 21 т.",
-    LINE3: "ВІ3729ЕО Сергієнко Олександр Петрович",
-    BORGP: 1300,
-    PERSUMA: 1300,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4860271,
-    LINE1: "29/09 Моршин - 01/10 Миргород",
-    LINE2: "вода мінеральна 21.8 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 33500,
-    PERSUMA: 33500,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4861131,
-    LINE1: "29/09 Миргород - 30/09 Київ",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "КА1406ІМ Ішов Ігор Миколайович",
-    BORGP: 9000,
-    PERSUMA: 9000,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4860261,
-    LINE1: "29/09 Миргород - 30/09 Київ",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ6608СХ Апостол Леонід Борисович",
-    BORGP: 9000,
-    PERSUMA: 9000,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4861951,
-    LINE1: "01/10 Моршин - 02/10 Миргород",
-    LINE2: "вода мінеральна 21.8 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 33700,
-    PERSUMA: 33700,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4863801,
-    LINE1: "04/10 Миргород - 05/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: "2025-10-09T21:00:00.000Z",
-    DATPOPLPLAN: "2025-10-23T21:00:00.000Z",
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4867481,
-    LINE1: "08/10 Миргород - 09/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4868661,
-    LINE1: "10/10 Миргород - 11/10 Київ",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ8877СЕ Марченко Володимир Володимирович",
-    BORGP: 8750,
-    PERSUMA: 8750,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4869921,
-    LINE1: "11/10 Київ - 11/10 Миргород",
-    LINE2: "тара 21 т.",
-    LINE3: "ВІ8877СЕ Марченко Володимир Володимирович",
-    BORGP: 8250,
-    PERSUMA: 8250,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4869011,
-    LINE1: "12/10 Миргород - 13/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4870831,
-    LINE1: "15/10 Миргород - 17/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4871781,
-    LINE1: "19/10 Миргород - 20/10 Київ",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ8877СЕ Марченко Володимир Володимирович",
-    BORGP: 8750,
-    PERSUMA: 8750,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4872931,
-    LINE1: "20/10 Київ - 20/10 Миргород",
-    LINE2: "тара 21 т.",
-    LINE3: "ВІ8877СЕ Марченко Володимир Володимирович",
-    BORGP: 8250,
-    PERSUMA: 8250,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4872511,
-    LINE1: "20/10 Миргород - 21/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4876961,
-    LINE1: "24/10 Миргород - 25/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-  {
-    KOD: 4877521,
-    LINE1: "26/10 Миргород - 27/10 Моршин",
-    LINE2: "вода мінеральна Аляска 21 т.",
-    LINE3: "ВІ7520ІО Ільїн Олег Васильович",
-    BORGP: 21000,
-    PERSUMA: 21000,
-    IDV: "грн",
-    DATDOCP: null,
-    DATPOPLPLAN: null,
-    DATPOPLFAKT: null,
-    PERNEKOMPLEKT: null,
-    PERAKTPRET: null,
-  },
-];
+
+
+import { Suspense } from "react";
+
 export default function CabinetPage() {
-  const [data, setData] = useState<TransportData[]>(TransData || []);
-  const [loading, setLoading] = useState(true);
-  const [gridCols, setGridCols, gridClass, columnOptions] = useGridColumns(
-    "dashboardGridCols",
-    3
+  return (
+    <Suspense fallback={<Loader />}>
+      <CabinetPageContent />
+    </Suspense>
   );
+}
+
+function CabinetPageContent() {
+  const { profile, isProfileLoading } = useProfile();
+  const [stats, setStats] = useState<TransportationStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [transports, setTransports] = useState<IActiveTransport[]>([]);
+  const [loadingTransports, setLoadingTransports] = useState(false);
+  const [defaultLimit, setDefaultLimit] = useState(10);
+
   useEffect(() => {
-    api
-      .post<TransportData[]>("http://localhost:4000/ict-drivers-cabinet")
-      //   .then((res) => setData(res.data))
-      .then((res) => setData(TransData))
-      .finally(() => setLoading(false));
+    const savedLimit = localStorage.getItem("transportations_limit");
+    if (savedLimit) setDefaultLimit(Number(savedLimit));
   }, []);
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    return format(d, "dd.MM.yyyy");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get("tab") || "in_progress";
+  const page = Number(searchParams.get("page") || 1);
+  const currentLimit = Number(searchParams.get("limit") || defaultLimit);
+
+  const updateUrl = useCallback((newParams: Record<string, any>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(newParams).forEach(([key, value]) => {
+      params.set(key, String(value));
+    });
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, router]);
+
+  const setActiveTab = (tabId: string) => {
+    updateUrl({ tab: tabId, page: 1 });
   };
 
+  const handlePageChange = (p: number) => {
+    updateUrl({ page: p });
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    localStorage.setItem("transportations_limit", String(newLimit));
+    setDefaultLimit(newLimit);
+    updateUrl({ limit: newLimit, page: 1 });
+  };
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (profile?.company?.migrate_id) {
+        try {
+          const res = await carrierStatisticService.getCarrierTransportations(
+            profile.company.migrate_id
+          );
+          if (res) {
+            setStats(res);
+          }
+        } catch (error) {
+          console.error("Failed to fetch transportations stats", error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (!isProfileLoading) {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [profile, isProfileLoading]);
+
+  useEffect(() => {
+    const fetchTransports = async () => {
+      if (!profile?.company?.migrate_id) return;
+      setLoadingTransports(true);
+      
+      const tabToStatusMap: Record<string, string> = {
+        plan: "PLAN",
+        in_progress: "ACTIVE",
+        doc_wait: "DOC_WAIT",
+        problem: "PROBLEM",
+        closed: "CLOSED",
+      };
+      
+      const status = tabToStatusMap[activeTab];
+      if (!status) {
+        setTransports([]);
+        setLoadingTransports(false);
+        return;
+      }
+
+      try {
+        const res = await carrierStatisticService.getCarrierTransportationList(
+          profile.company.migrate_id,
+          status,
+          page,
+          currentLimit
+        );
+        setTransports(res || []);
+      } catch (error) {
+        console.error("Failed to fetch transports", error);
+      } finally {
+        setLoadingTransports(false);
+      }
+    };
+    
+    fetchTransports();
+  }, [profile, activeTab, page, currentLimit]);
+
+  if (isProfileLoading || loading) return <Loader />;
+
+  const tabs = [
+    { id: "plan", label: "Заплановані", count: stats?.zay_count_plan || 0 },
+    { id: "in_progress", label: "В роботі", count: stats?.zay_count_active || 0 },
+    { id: "doc_wait", label: "Очікуються документи", count: stats?.zay_count_doc_wait || 0 },
+    { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
+    { id: "pay_wait", label: "Очікують оплати", count: 3 }, // Placeholder based on design
+    { id: "closed", label: "Завершені", count: stats?.zay_count_closed || 0 },
+  ];
+
   return (
-    <div className="p-2 space-y-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-          Панель вантажів
-        </h2>
-        <div className="flex gap-2">
-          <GridColumnSelector
-            gridCols={gridCols}
-            setGridCols={setGridCols}
-            columnOptions={columnOptions}
+    <div className="w-full space-y-6">
+      {/* Top Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1 */}
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col items-center justify-center p-6 py-8">
+          <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_all || 0}</div>
+          <div className="text-sm font-semibold text-[#3B52B4] border-t border-blue-100 w-full text-center pt-2">Всього рейсів за весь час</div>
+        </div>
+        
+        {/* Card 2 */}
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col items-center justify-center p-6 py-8">
+          <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_month || 0}</div>
+          <div className="text-sm font-semibold text-[#3B52B4] border-t border-blue-100 w-full text-center pt-2">Цього місяця</div>
+        </div>
+
+        {/* Card 3 (Empty) */}
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 py-8">
+          {/* Future use */}
+        </div>
+      </div>
+
+      {/* Tabs and Controls */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 mt-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Статус рейсів</span>
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 ${
+                  activeTab === tab.id
+                    ? "bg-[#3B52B4] text-white border-[#3B52B4]"
+                    : "bg-white text-[#3B52B4] border-blue-200 hover:bg-blue-50"
+                }`}
+              >
+                {tab.label}
+                <span className={`text-xs ml-1 font-bold ${activeTab === tab.id ? "text-blue-200" : "text-blue-300"}`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center bg-white rounded-xl text-[#415A88] border border-blue-100 shadow-sm p-1 px-2 shrink-0">
+          <span className="text-xs font-semibold text-gray-500 mr-2 ml-1">Відображати:</span>
+          <ItemsPerPage
+            options={[10, 20, 50, 100]}
+            defaultValue={currentLimit}
+            onChange={handleLimitChange}
           />
         </div>
       </div>
- 
-        <div
-          className={`grid ${gridClass} gap-3 transition-all duration-300 ease-in-out`}
-        >
-          {data.map((item) => (
-            <Card
-              key={item.KOD}
-              className="bg-gray-50 dark:bg-gray-900 shadow-lg"
-            >
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold">
-                  {item.LINE1}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                <p>
-                  <span className="font-semibold">Продукт:</span> {item.LINE2}
-                </p>
-                <p>
-                  <span className="font-semibold">Водій:</span> {item.LINE3}
-                </p>
-                <p>
-                  <span className="font-semibold">Сума:</span>{" "}
-                  {item.PERSUMA.toLocaleString()} {item.IDV}
-                </p>
-                <p>
-                  <span className="font-semibold">Дата документа:</span>{" "}
-                  {formatDate(item.DATDOCP)}
-                </p>
-                <p>
-                  <span className="font-semibold">Планована дата:</span>{" "}
-                  {formatDate(item.DATPOPLPLAN)}
-                </p>
-                <p>
-                  <span className="font-semibold">Фактична дата:</span>{" "}
-                  {formatDate(item.DATPOPLFAKT)}
-                </p>
-                <div className="mt-2 flex justify-end">
-                  <Button size="icon" className="bg-transparent">
-                    <Info color="teal" size={30} />
-                  </Button>
+
+      {/* Transports List */}
+      <div className="flex flex-col gap-3 mt-4">
+        {loadingTransports ? (
+          <>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col overflow-hidden animate-pulse">
+                {/* Top row */}
+                <div className="flex flex-col md:flex-row justify-between p-4 px-5">
+                  <div className="flex flex-col gap-3 md:w-[40%]">
+                    <div className="h-5 bg-gray-200 rounded-md w-3/4"></div>
+                    <div className="h-3 bg-blue-100 rounded w-1/4"></div>
+                    
+                    <div className="flex items-center gap-4 mt-1">
+                      <div className="h-4 bg-gray-100 rounded w-16"></div>
+                      <div className="h-4 bg-gray-100 rounded w-20"></div>
+                      <div className="h-4 bg-gray-100 rounded w-24"></div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row md:w-[60%] justify-between items-center mt-4 md:mt-0">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-2 bg-gray-100 rounded w-16"></div>
+                      <div className="h-6 bg-orange-50 rounded-full w-24"></div>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-2 bg-gray-100 rounded w-16"></div>
+                      <div className="h-6 bg-teal-50 rounded-full w-24"></div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 pr-2">
+                      <div className="h-2 bg-gray-100 rounded w-10"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-     
+
+                {/* Bottom row */}
+                <div className="border-t border-blue-50 px-5 py-3 flex items-center gap-6">
+                  <div className="h-4 bg-gray-100 rounded w-32"></div>
+                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : transports.length === 0 ? (
+          <div className="flex justify-center py-8 text-gray-500 font-medium">
+            Немає перевезень у цій вкладці
+          </div>
+        ) : (
+          transports.map((item) => {
+            const formatDate = (dateStr: string) => {
+              if (!dateStr) return "";
+              const date = new Date(dateStr);
+              return date
+                .toLocaleDateString("uk-UA", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+                .replace(/\./g, ".");
+            };
+
+            let paymentStatus = item.status_opl || "ОЧІКУЄ ОПЛАТИ";
+            if (item.code_status_opl === "DOC_OCH") paymentStatus = "ОЧІКУЮТЬСЯ ДОКУМЕНТИ";
+            else if (item.code_status_opl === "OPL_PLAN") paymentStatus = "ЗАПЛАНОВАНО";
+            else if (item.code_status_opl === "OPL") paymentStatus = "ОПЛАЧЕНО";
+
+            let paymentColor = "bg-orange-100 text-orange-600";
+            if (paymentStatus === "ЗАПЛАНОВАНО") paymentColor = "bg-blue-100 text-blue-600";
+            if (paymentStatus === "ОПЛАЧЕНО") paymentColor = "bg-indigo-100 text-indigo-600";
+            if (paymentStatus === "ОЧІКУЮТЬСЯ ДОКУМЕНТИ") paymentColor = "bg-gray-100 text-gray-600";
+
+            const tripStatus = item.status_detail_name || item.status_name || "В ДОРОЗІ";
+            let tripColor = "bg-teal-100 text-teal-600";
+            if (item.code_status_detail === "ACTIVE") tripColor = "bg-emerald-100 text-emerald-600";
+            if (item.code_status_detail === "PLAN") tripColor = "bg-blue-100 text-blue-600";
+            if (item.code_status_detail === "CLOSED") tripColor = "bg-gray-100 text-gray-600";
+
+            return (
+              <div
+                key={item.kod_zay}
+                onClick={() => router.push(`/dashboard/cabinet/transportations/${item.kod_zay}`)}
+                className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col overflow-hidden cursor-pointer hover:shadow-md hover:border-blue-200 transition"
+              >
+                {/* Top row */}
+                <div className="flex flex-col md:flex-row justify-between p-4 px-5">
+                  <div className="flex flex-col gap-2 md:w-[40%]">
+                    <div className="font-bold text-base text-gray-800">
+                      {item.zav_town?.split(",")[0]} → {item.rozv_town?.split(",")[0]}
+                    </div>
+                    <div className="text-xs text-blue-400 font-medium">#{item.zay_num}</div>
+
+                    <div className="flex items-center gap-4 text-xs text-gray-500 font-medium mt-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-400">📅</span> {formatDate(item.zav_date)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-400">⚖️</span> {item.vant_ton} Т{" "}
+                        <span className="ml-1">{item.vant_name}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-400">📍</span> {item.zav_country} → {item.rozv_country}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row md:w-[60%] justify-between items-center mt-4 md:mt-0">
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] text-blue-300 mb-1">Статус оплати</span>
+                      <span
+                        className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${paymentColor}`}
+                      >
+                        {paymentStatus}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] text-blue-300 mb-1">Статус рейсу</span>
+                      <span
+                        className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${tripColor}`}
+                      >
+                        {tripStatus}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-end pr-2">
+                      <span className="text-[10px] font-bold text-gray-800 tracking-widest">ФРАХТ</span>
+                      <span className="text-lg font-bold text-gray-800 leading-tight mt-1">
+                        {item.fraht} {item.valut}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom row (Driver info) */}
+                <div className="border-t border-blue-50 px-5 py-2.5 flex items-center gap-6 text-xs text-blue-400">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <User size={14} className="text-gray-400" /> {item.driver}
+                  </div>
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Phone size={14} className="text-blue-300" /> {item.driver_phone}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Bottom Controls */}
+      {(() => {
+        const totalItems = tabs.find((t) => t.id === activeTab)?.count || 0;
+        const pageCount = Math.ceil(totalItems / currentLimit);
+        if (pageCount > 1) {
+          return (
+            <div className="pb-8">
+              <Pagination
+                page={page}
+                pageCount={pageCount}
+                onChange={handlePageChange}
+              />
+            </div>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 }

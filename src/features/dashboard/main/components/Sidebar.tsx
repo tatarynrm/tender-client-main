@@ -57,7 +57,7 @@ const links: MenuItem[] = [
     children: [
       { name: "Співпраця", href: "/dashboard/cabinet/main", icon: Handshake },
       // { name: "Тендери", href: "/dashboard/cabinet/tenders", icon: BarChart2 },
-      // { name: "Перевезення", href: "/dashboard/cabinet/transportations", icon: Truck },
+      { name: "Перевезення", href: "/dashboard/cabinet/transportations?tab=in_progress", icon: Truck },
       // { name: "Замовлення", href: "/dashboard/cabinet/orders", icon: Package },
       // { name: "Фінанси", href: "/dashboard/cabinet/finances", icon: DollarSign },
       { name: "Контакти ICT", href: "/dashboard/cabinet/contacts", icon: Contact },
@@ -145,8 +145,9 @@ export default function Sidebar({
 
   const isActive = (href?: string) => {
     if (!href) return false;
-    if (href === "/dashboard") return pathname === "/dashboard";
-    return pathname === href || pathname.startsWith(href + "/");
+    const pathOnly = href.split("?")[0];
+    if (pathOnly === "/dashboard") return pathname === "/dashboard";
+    return pathname === pathOnly || pathname.startsWith(pathOnly + "/");
   };
 
   const renderLink = (link: MenuItem, isChild = false) => {
