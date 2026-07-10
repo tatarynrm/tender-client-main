@@ -17,6 +17,7 @@ interface TransportationStats {
   zay_count_active: number;
   zay_count_doc_wait: number;
   zay_count_problem: number;
+  zay_count_opl_wait?: number;
 }
 
 
@@ -103,6 +104,7 @@ function CabinetPageContent() {
         in_progress: "ACTIVE",
         doc_wait: "DOC_WAIT",
         problem: "PROBLEM",
+        pay_wait: "OPL_WAIT",
         closed: "CLOSED",
       };
       
@@ -138,7 +140,7 @@ function CabinetPageContent() {
     { id: "in_progress", label: "В роботі", count: stats?.zay_count_active || 0 },
     { id: "doc_wait", label: "Очікуються документи", count: stats?.zay_count_doc_wait || 0 },
     { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
-    { id: "pay_wait", label: "Очікують оплати", count: 3 }, // Placeholder based on design
+    { id: "pay_wait", label: "Очікують оплати", count: stats?.zay_count_opl_wait || 0 },
     { id: "closed", label: "Завершені", count: stats?.zay_count_closed || 0 },
   ];
 
