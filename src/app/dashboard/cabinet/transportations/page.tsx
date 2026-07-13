@@ -5,9 +5,15 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { carrierStatisticService, IActiveTransport } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { User, Phone } from "lucide-react";
+import { User, Phone, Truck, Mail, ChevronLeft } from "lucide-react";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
 
 interface TransportationStats {
   zay_count_all: number;
@@ -98,7 +104,7 @@ function CabinetPageContent() {
     const fetchTransports = async () => {
       if (!profile?.company?.migrate_id) return;
       setLoadingTransports(true);
-      
+
       const tabToStatusMap: Record<string, string> = {
         plan: "PLAN",
         in_progress: "ACTIVE",
@@ -107,7 +113,7 @@ function CabinetPageContent() {
         pay_wait: "OPL_WAIT",
         closed: "CLOSED",
       };
-      
+
       const status = tabToStatusMap[activeTab];
       if (!status) {
         setTransports([]);
@@ -129,7 +135,7 @@ function CabinetPageContent() {
         setLoadingTransports(false);
       }
     };
-    
+
     fetchTransports();
   }, [profile, activeTab, page, currentLimit]);
 
@@ -153,7 +159,7 @@ function CabinetPageContent() {
           <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_all || 0}</div>
           <div className="text-sm font-semibold text-[#3B52B4] border-t border-blue-100 w-full text-center pt-2">Всього рейсів за весь час</div>
         </div>
-        
+
         {/* Card 2 */}
         <div className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col items-center justify-center p-6 py-8">
           <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_month || 0}</div>
@@ -175,11 +181,10 @@ function CabinetPageContent() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 ${
-                  activeTab === tab.id
-                    ? "bg-[#3B52B4] text-white border-[#3B52B4]"
-                    : "bg-white text-[#3B52B4] border-blue-200 hover:bg-blue-50"
-                }`}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 ${activeTab === tab.id
+                  ? "bg-[#3B52B4] text-white border-[#3B52B4]"
+                  : "bg-white text-[#3B52B4] border-blue-200 hover:bg-blue-50"
+                  }`}
               >
                 {tab.label}
                 <span className={`text-xs ml-1 font-bold ${activeTab === tab.id ? "text-blue-200" : "text-blue-300"}`}>
@@ -211,7 +216,7 @@ function CabinetPageContent() {
                   <div className="flex flex-col gap-3 md:w-[40%]">
                     <div className="h-5 bg-gray-200 rounded-md w-3/4"></div>
                     <div className="h-3 bg-blue-100 rounded w-1/4"></div>
-                    
+
                     <div className="flex items-center gap-4 mt-1">
                       <div className="h-4 bg-gray-100 rounded w-16"></div>
                       <div className="h-4 bg-gray-100 rounded w-20"></div>
@@ -236,9 +241,13 @@ function CabinetPageContent() {
                 </div>
 
                 {/* Bottom row */}
-                <div className="border-t border-blue-50 px-5 py-3 flex items-center gap-6">
-                  <div className="h-4 bg-gray-100 rounded w-32"></div>
-                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                <div className="border-t border-blue-50 px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-6">
+                    <div className="h-4 bg-gray-100 rounded w-24"></div>
+                    <div className="h-4 bg-gray-100 rounded w-32"></div>
+                    <div className="h-4 bg-gray-100 rounded w-24"></div>
+                  </div>
+                  <div className="h-8 bg-gray-100 rounded-full w-32 hidden sm:block"></div>
                 </div>
               </div>
             ))}
@@ -333,13 +342,55 @@ function CabinetPageContent() {
                   </div>
                 </div>
 
-                {/* Bottom row (Driver info) */}
-                <div className="border-t border-blue-50 px-5 py-2.5 flex items-center gap-6 text-xs text-blue-400">
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <User size={14} className="text-gray-400" /> {item.driver}
+                {/* Bottom row (Driver info & Manager) */}
+                <div className="border-t border-blue-50 px-5 py-2.5 flex items-center justify-between text-xs text-blue-400">
+                  <div className="flex flex-wrap items-center gap-4 md:gap-6">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <Truck size={14} className="text-gray-400" /> 
+                      <span className="uppercase text-gray-700">{item.am}</span>
+                      {item.pr && <span className="uppercase text-gray-500">/ {item.pr}</span>}
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <User size={14} className="text-gray-400" /> {item.driver}
+                    </div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <Phone size={14} className="text-blue-300" /> {item.driver_phone}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <Phone size={14} className="text-blue-300" /> {item.driver_phone}
+
+                  <div className="flex items-center shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-blue-100 hover:bg-blue-50 transition outline-none">
+                          <div className="p-1 border border-blue-100 rounded-full">
+                            <User size={12} className="text-blue-300" />
+                          </div>
+                          <span className="text-[12px] font-medium text-blue-500 hidden sm:block">
+                            {item.manager?.imja} {item.manager?.prizv}
+                          </span>
+                          <span className="text-[12px] font-medium text-blue-500 sm:hidden">
+                            Менеджер
+                          </span>
+                          <ChevronLeft size={14} className="text-blue-300 -rotate-90" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 rounded-xl border-blue-100 shadow-sm p-1 bg-white">
+                        <DropdownMenuItem 
+                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600" 
+                          onClick={(e) => { e.stopPropagation(); if (item.manager?.email) window.location.href = `mailto:${item.manager.email}`; }}
+                        >
+                          <Mail size={16} className="text-blue-300" />
+                          <span className="text-xs font-medium truncate">{item.manager?.email || "Немає email"}</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600" 
+                          onClick={(e) => { e.stopPropagation(); if (item.manager?.phone) window.location.href = `tel:${item.manager.phone.replace(/[^0-9+]/g, '')}`; }}
+                        >
+                          <Phone size={16} className="text-blue-300" />
+                          <span className="text-xs font-medium">{item.manager?.phone || "Немає телефону"}</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
