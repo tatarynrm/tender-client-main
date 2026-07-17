@@ -97,6 +97,11 @@ const links: MenuItem[] = [
     ],
   },
   {
+    name: "Замовлення",
+    icon: Package,
+    href: "/dashboard/orders",
+  },
+  {
     name: "Персональні дані",
     icon: User,
     children: [

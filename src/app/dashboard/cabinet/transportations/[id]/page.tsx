@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { carrierStatisticService, ITransportationDetails } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { 
-  ChevronLeft, MapPin, Map as MapIcon, User, 
+import {
+  ChevronLeft, MapPin, Map as MapIcon, User,
   Truck, Package, FileText, Download, DollarSign, Box,
   Check, Mail, Phone
 } from "lucide-react";
@@ -21,7 +21,7 @@ export default function TransportationDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { profile, isProfileLoading } = useProfile();
-  
+
   const [data, setData] = useState<ITransportationDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,14 +29,14 @@ export default function TransportationDetailsPage() {
   useEffect(() => {
     const fetchDetails = async () => {
       if (!profile?.company?.migrate_id || !params.id) return;
-      
+
       try {
         const id = Number(params.id);
         const res = await carrierStatisticService.getCarrierTransportationOne(
-          profile.company.migrate_id, 
+          profile.company.migrate_id,
           id
         );
-        
+
         if (res) {
           setData(res);
         } else {
@@ -62,7 +62,7 @@ export default function TransportationDetailsPage() {
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <h2 className="text-2xl font-bold text-[#303f5f] mb-2">Упс!</h2>
         <p className="text-[#7c8eb5] mb-6">{error || "Дані не знайдено"}</p>
-        <button 
+        <button
           onClick={() => router.push('/dashboard/cabinet/transportations')}
           className="px-6 py-2 bg-[#5B79ED] text-white rounded-full font-medium hover:bg-blue-600 transition"
         >
@@ -101,14 +101,14 @@ export default function TransportationDetailsPage() {
     <div className="w-full pb-20">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5 relative">
-        <button 
+        <button
           onClick={() => router.back()}
           className="flex items-center gap-1.5 px-4 py-1.5 bg-transparent rounded-full border border-[#D9E2F2] text-[#8B9EC7] text-sm font-medium hover:bg-white transition z-10"
         >
           <ChevronLeft size={16} />
           Назад
         </button>
-        
+
         <div className="absolute left-0 right-0 flex justify-center pointer-events-none hidden md:flex">
           <h1 className="text-xl font-extrabold text-[#51648B] uppercase tracking-wide flex items-center gap-2">
             {data.zav_town?.split(",")[0]} <span>→</span> {data.rozv_town?.split(",")[0]}
@@ -132,15 +132,15 @@ export default function TransportationDetailsPage() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 rounded-xl border-[#D9E2F2] shadow-sm p-1 bg-white">
-              <DropdownMenuItem 
-                className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] focus:bg-[#F4F7FB] text-[#51648B]" 
+              <DropdownMenuItem
+                className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] focus:bg-[#F4F7FB] text-[#51648B]"
                 onClick={() => { if (data.manager?.email) window.location.href = `mailto:${data.manager.email}`; }}
               >
                 <Mail size={16} className="text-[#8B9EC7]" />
                 <span className="text-xs font-medium">{data.manager?.email || "Немає email"}</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] focus:bg-[#F4F7FB] text-[#51648B]" 
+              <DropdownMenuItem
+                className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] focus:bg-[#F4F7FB] text-[#51648B]"
                 onClick={() => { if (data.manager?.phone) window.location.href = `tel:${data.manager.phone.replace(/[^0-9+]/g, '')}`; }}
               >
                 <Phone size={16} className="text-[#8B9EC7]" />
@@ -156,10 +156,10 @@ export default function TransportationDetailsPage() {
         <div className="flex items-center justify-between relative px-2">
           {/* Background line */}
           <div className="absolute left-8 right-8 top-3.5 h-[2px] bg-[#E5EDF6] -z-0"></div>
-          
+
           {/* Active line filler */}
-          <div 
-            className="absolute left-8 top-3.5 h-[2px] bg-[#5B79ED] -z-0 transition-all duration-500" 
+          <div
+            className="absolute left-8 top-3.5 h-[2px] bg-[#5B79ED] -z-0 transition-all duration-500"
             style={{ width: `${(steps.filter(s => s.active).length - 1) / (steps.length - 1) * 100}%`, maxWidth: 'calc(100% - 4rem)' }}
           ></div>
 
@@ -182,10 +182,10 @@ export default function TransportationDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        
+
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-5">
-          
+
           {/* ПУНКТИ МАРШРУТУ */}
           <div className="bg-white rounded-[20px] border border-[#D9E2F2] p-6">
             <div className="flex items-center gap-2 mb-6 text-[#51648B]">
@@ -206,7 +206,7 @@ export default function TransportationDetailsPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-xs">
                   <div>
                     <div className="text-[#8B9EC7] font-medium text-[11px] mb-1">Юр. особа</div>
@@ -263,7 +263,7 @@ export default function TransportationDetailsPage() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-xs">
                   <div>
                     <div className="text-[#8B9EC7] font-medium text-[11px] mb-1">Юр. особа</div>
@@ -322,7 +322,7 @@ export default function TransportationDetailsPage() {
                 <span className="font-bold text-[#303f5f] text-xs">#{data.zay_num}</span>
               </div>
             </div>
-            
+
             {/* Customs */}
             {(data as any).customs && (
               <div className="mt-4 p-5 bg-[#FFF9F2] rounded-2xl border border-[#FFE8CC]">
@@ -382,7 +382,7 @@ export default function TransportationDetailsPage() {
 
         {/* RIGHT COLUMN */}
         <div className="flex flex-col gap-5">
-          
+
           {/* ЕКІПАЖ */}
           <div className="bg-white rounded-[20px] border border-[#D9E2F2] p-6">
             <div className="flex items-center gap-2 mb-6 text-[#51648B]">
