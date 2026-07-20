@@ -264,17 +264,17 @@ export default function TenderFullInfoModal({
                       <User size={18} />
                     </div>
                     <div className="overflow-hidden">
-                      <div className="text-sm font-black text-zinc-900 dark:text-white leading-none capitalize truncate">{tender.author}</div>
+                      <div className="text-sm font-black text-zinc-900 dark:text-white leading-none capitalize truncate">{tender.author || "Менеджер ICT"}</div>
                       <div className="text-[10px] font-bold text-zinc-400 mt-1.5 uppercase tracking-widest">менеджер ICT</div>
                     </div>
                   </div>
-                  <a href={`tel:${tender.usr_phone?.[0]?.phone}`} className="w-full bg-[#f8fafc] dark:bg-white/5 p-4 px-6 rounded-2xl flex items-center gap-4 text-sm font-black text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition-colors h-[52px]">
+                  <a href={tender.usr_phone?.[0]?.phone ? `tel:${tender.usr_phone[0].phone}` : undefined} className="w-full bg-[#f8fafc] dark:bg-white/5 p-4 px-6 rounded-2xl flex items-center gap-4 text-sm font-black text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition-colors h-[52px]">
                     <Phone size={18} className="text-[#6366f1] shrink-0" />
-                    <span className="truncate">{tender.usr_phone?.[0]?.phone || "+38 0XX XXX XX XX"}</span>
+                    <span className="truncate">{tender.usr_phone?.[0]?.phone || "Немає телефону"}</span>
                   </a>
-                  <a href={`mailto:${tender.email}`} className="w-full bg-[#f8fafc] dark:bg-white/5 p-4 px-6 rounded-2xl flex items-center gap-4 text-sm font-black text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition-colors h-[52px]">
+                  <a href={tender.email ? `mailto:${tender.email}` : `mailto:manager@ict.lviv.ua`} className="w-full bg-[#f8fafc] dark:bg-white/5 p-4 px-6 rounded-2xl flex items-center gap-4 text-sm font-black text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition-colors h-[52px]">
                     <Mail size={18} className="text-[#6366f1] shrink-0" />
-                    <span className="truncate">{tender.email || "ip@ict.lviv.ua"}</span>
+                    <span className="truncate">{tender.email || "manager@ict.lviv.ua"}</span>
                   </a>
                 </div>
               </div>

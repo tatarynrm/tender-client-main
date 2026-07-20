@@ -292,7 +292,7 @@ export default function ManagersTenderFullPage({
                   <User size={16} className="text-slate-400" />
                   <div className="flex flex-col">
                     <span className="text-[13px] font-bold text-slate-900 dark:text-white leading-none">
-                      {tender.author}
+                      {tender.author || "Менеджер ICT"}
                     </span>
                     <span className="text-[10px] font-medium text-slate-400 mt-0.5">
                       менеджер ICT
@@ -302,7 +302,7 @@ export default function ManagersTenderFullPage({
                 <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
                   <Phone size={16} className="text-slate-400" />
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white">
-                    {tender.usr_phone?.[0]?.phone || "+380..."}
+                    {tender.usr_phone?.[0]?.phone || "Немає телефону"}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">

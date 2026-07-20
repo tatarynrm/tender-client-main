@@ -126,7 +126,7 @@ export default function TransportationDetailsPage() {
                   <User size={12} className="text-[#8B9EC7]" />
                 </div>
                 <span className="text-[13px] font-medium text-[#51648B]">
-                  {data.manager?.imja} {data.manager?.prizv}
+                  {data.manager?.imja ? `${data.manager.imja} ${data.manager.prizv || ''}`.trim() : (typeof data.manager === 'string' && data.manager ? data.manager : (data.manager_name || "Менеджер ICT"))}
                 </span>
                 <ChevronLeft size={14} className="text-[#8B9EC7] -rotate-90 ml-1" />
               </button>
@@ -152,12 +152,12 @@ export default function TransportationDetailsPage() {
       </div>
 
       {/* Stepper */}
-      <div className="bg-white rounded-[20px] border border-[#D9E2F2] p-5 mb-5 overflow-hidden">
+      {/* <div className="bg-white rounded-[20px] border border-[#D9E2F2] p-5 mb-5 overflow-hidden">
         <div className="flex items-center justify-between relative px-2">
-          {/* Background line */}
+   
           <div className="absolute left-8 right-8 top-3.5 h-[2px] bg-[#E5EDF6] -z-0"></div>
 
-          {/* Active line filler */}
+       
           <div
             className="absolute left-8 top-3.5 h-[2px] bg-[#5B79ED] -z-0 transition-all duration-500"
             style={{ width: `${(steps.filter(s => s.active).length - 1) / (steps.length - 1) * 100}%`, maxWidth: 'calc(100% - 4rem)' }}
@@ -179,7 +179,7 @@ export default function TransportationDetailsPage() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
