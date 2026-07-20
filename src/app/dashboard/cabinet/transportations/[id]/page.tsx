@@ -126,7 +126,7 @@ export default function TransportationDetailsPage() {
                   <User size={12} className="text-[#8B9EC7]" />
                 </div>
                 <span className="text-[13px] font-medium text-[#51648B]">
-                  {data.manager?.imja ? `${data.manager.imja} ${data.manager.prizv || ''}`.trim() : (typeof data.manager === 'string' && data.manager ? data.manager : (data.manager_name || "Менеджер ICT"))}
+                  {data.manager?.imja ? `${data.manager.imja} ${data.manager.prizv || ''}`.trim() : (typeof data.manager === 'string' && data.manager ? data.manager : ((data as any)?.manager_name || "Менеджер ICT"))}
                 </span>
                 <ChevronLeft size={14} className="text-[#8B9EC7] -rotate-90 ml-1" />
               </button>
