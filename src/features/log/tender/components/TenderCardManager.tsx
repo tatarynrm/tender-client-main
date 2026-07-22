@@ -463,6 +463,13 @@ export function TenderCardManagers({
                 </span>
               </div>
             )}
+            {(cargo.palet_count || (cargo as any).paletCount) && (
+              <div className="flex items-center gap-1">
+                <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                  {cargo.palet_count ?? (cargo as any).paletCount} пал.
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 8. Нотатки */}

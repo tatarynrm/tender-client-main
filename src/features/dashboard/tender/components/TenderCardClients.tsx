@@ -475,7 +475,14 @@ export function TenderCardClients({
                   </span>
                 </div>
               )}
-              {!cargo.volume && !cargo.weight && (
+              {(cargo.palet_count || (cargo as any).paletCount) && (
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-zinc-800 dark:text-white text-[12px]">
+                    {cargo.palet_count ?? (cargo as any).paletCount} пал.
+                  </span>
+                </div>
+              )}
+              {!cargo.volume && !cargo.weight && !(cargo.palet_count || (cargo as any).paletCount) && (
                 <span className="text-zinc-500">—</span>
               )}
             </div>

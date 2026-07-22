@@ -9,6 +9,8 @@ export interface ITender {
 
   volume: number | null;
   weight: number | null;
+  palet_count?: number | null;
+  paletCount?: number | null;
 
   ids_type: "GENERAL" | string;
   ids_status: "WAITING" | string;
