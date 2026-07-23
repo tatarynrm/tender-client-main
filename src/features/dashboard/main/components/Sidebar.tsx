@@ -59,7 +59,7 @@ const links: MenuItem[] = [
       // { name: "Тендери", href: "/dashboard/cabinet/tenders", icon: BarChart2 },
       { name: "Перевезення", href: "/dashboard/cabinet/transportations?tab=in_progress", icon: Truck },
       // { name: "Замовлення", href: "/dashboard/cabinet/orders", icon: Package },
-      // { name: "Фінанси", href: "/dashboard/cabinet/finances", icon: DollarSign },
+      { name: "Фінанси", href: "/dashboard/cabinet/finances", icon: DollarSign },
       { name: "Контакти ICT", href: "/dashboard/cabinet/contacts", icon: Contact },
       // { name: "Документи", href: "/dashboard/cabinet/documents", icon: FileText },
     ],
