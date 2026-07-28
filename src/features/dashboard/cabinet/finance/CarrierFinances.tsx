@@ -24,6 +24,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { financeService, IFinanceStatistic, IInvoice, IContactPerson } from "./services/finance.service";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+
+import { Pagination } from "@/shared/components/Pagination/Pagination";
+import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
 // Custom date formatter: ISO string -> dd.mm.yyyy
 const formatDate = (dateStr?: string | null) => {
@@ -48,179 +57,56 @@ const formatCurrency = (val?: number) => {
 // Action Dropdown for contact person (phone/email/copy)
 const ContactDropdown = ({
   economist,
-  manager,
-  economistLabel = "Економіст",
-  managerLabel = "Менеджер рейсу"
 }: {
   economist?: IContactPerson | null;
-  manager?: IContactPerson | null;
-  economistLabel?: string;
-  managerLabel?: string;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const economistName = economist?.imja
+    ? `${economist.imja} ${economist.prizv || ""}`.trim()
+    : "Економіст";
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
-
-  const handleCopy = (value: string, label: string) => {
-    navigator.clipboard.writeText(value);
-    setCopiedText(label);
-    toast.success(`Скопійовано: ${value}`);
-    setTimeout(() => setCopiedText(null), 2000);
-  };
-
-  const primaryName = economist?.imja
-    ? `${economist.imja} ${economist.prizv}`
-    : manager?.imja
-      ? `${manager.imja} ${manager.prizv}`
-      : "Контактна особа";
+  const economistEmail = economist?.email || "Немає email";
+  const economistPhone = economist?.phone || "Немає телефону";
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-300 py-1.5 px-4 rounded-full text-xs font-bold transition-all shadow-sm flex-shrink-0 cursor-pointer"
-      >
-        <User className="w-3.5 h-3.5 text-slate-400" />
-        <span className="truncate max-w-[140px] sm:max-w-[200px]">{primaryName}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 bottom-full mb-2 w-72 sm:w-80 bg-white dark:bg-slate-900 border border-[#C7D2FE] dark:border-slate-800 shadow-xl rounded-2xl z-30 p-4 overflow-hidden"
-          >
-            <div className="space-y-4">
-              {/* Economist Section */}
-              {economist && (
-                <div className="flex flex-col gap-1 pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] uppercase tracking-wider text-[#8BA6EB] font-extrabold">
-                    {economistLabel}
-                  </span>
-                  <span className="font-bold text-[#3B52B4] dark:text-blue-400 text-sm">
-                    {economist.imja} {economist.prizv}
-                  </span>
-                  {economist.department && (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {economist.department}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2 mt-1.5">
-                    {economist.phone ? (
-                      <a
-                        href={`tel:${economist.phone.replace(/[^0-9+]/g, "")}`}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                        title="Зателефонувати"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                      </a>
-                    ) : (
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-300 dark:text-slate-700 cursor-not-allowed">
-                        <Phone className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-
-                    {economist.email ? (
-                      <>
-                        <a
-                          href={`mailto:${economist.email}`}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                          title="Написати email"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          onClick={() => handleCopy(economist.email!, "eco_email")}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                          title="Скопіювати email"
-                        >
-                          {copiedText === "eco_email" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-300 dark:text-slate-700 cursor-not-allowed">
-                        <Mail className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Manager Section */}
-              {manager && (
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] uppercase tracking-wider text-[#8BA6EB] font-extrabold">
-                    {managerLabel}
-                  </span>
-                  <span className="font-bold text-[#3B52B4] dark:text-blue-400 text-sm">
-                    {manager.imja} {manager.prizv}
-                  </span>
-                  {manager.department && (
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                      {manager.department}
-                    </span>
-                  )}
-                  <div className="flex items-center gap-2 mt-1.5">
-                    {manager.phone ? (
-                      <a
-                        href={`tel:${manager.phone.replace(/[^0-9+]/g, "")}`}
-                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                        title="Зателефонувати"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                      </a>
-                    ) : (
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-300 dark:text-slate-700 cursor-not-allowed">
-                        <Phone className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-
-                    {manager.email ? (
-                      <>
-                        <a
-                          href={`mailto:${manager.email}`}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                          title="Написати email"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                        </a>
-                        <button
-                          onClick={() => handleCopy(manager.email!, "mgr_email")}
-                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E5EDFB] dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 hover:bg-[#3B52B4] hover:text-white dark:hover:bg-blue-600 transition-colors"
-                          title="Скопіювати email"
-                        >
-                          {copiedText === "mgr_email" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-900 text-slate-300 dark:text-slate-700 cursor-not-allowed">
-                        <Mail className="w-3.5 h-3.5" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 rounded-full border border-[#D9E2F2] dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition outline-none cursor-pointer">
+          <div className="p-1 border border-[#D9E2F2] dark:border-slate-500 rounded-full">
+            <User size={12} className="text-[#51648B] dark:text-slate-300" />
+          </div>
+          <span className="text-[13px] font-medium text-[#51648B] dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]">
+            {economistName}
+          </span>
+          <ChevronLeft size={14} className="text-[#8B9EC7] -rotate-90 ml-0.5" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-xl border-[#D9E2F2] dark:border-slate-700 shadow-sm p-1 bg-white dark:bg-slate-800">
+        <DropdownMenuItem
+          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] dark:hover:bg-slate-700 focus:bg-[#F4F7FB] dark:focus:bg-slate-700 text-[#51648B] dark:text-slate-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (economistEmail && economistEmail !== "Немає email") {
+              window.location.href = `mailto:${economistEmail}`;
+            }
+          }}
+        >
+          <Mail size={16} className="text-[#8B9EC7]" />
+          <span className="text-xs font-medium truncate">{economistEmail}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] dark:hover:bg-slate-700 focus:bg-[#F4F7FB] dark:focus:bg-slate-700 text-[#51648B] dark:text-slate-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (economistPhone && economistPhone !== "Немає телефону") {
+              window.location.href = `tel:${economistPhone.replace(/[^0-9+]/g, "")}`;
+            }
+          }}
+        >
+          <Phone size={16} className="text-[#8B9EC7]" />
+          <span className="text-xs font-medium">{economistPhone}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
@@ -263,7 +149,12 @@ export const CarrierFinances = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
-  const perPage = 20;
+  const [perPage, setPerPage] = useState(10);
+
+  const handleLimitChange = (newLimit: number) => {
+    setPerPage(newLimit);
+    setCurrentPage(1);
+  };
 
   const mid = profile?.company?.migrate_id;
 
@@ -319,7 +210,7 @@ export const CarrierFinances = () => {
     };
 
     if (mid) fetchList();
-  }, [mid, activeTab, paidPeriod, currentPage]);
+  }, [mid, activeTab, paidPeriod, currentPage, perPage]);
 
   // When active tab changes, reset to page 1
   const handleTabChange = (tab: "PLAN" | "OPL_CUR" | "OPL_PREV" | "PROTERM" | "BORG") => {
@@ -338,19 +229,7 @@ export const CarrierFinances = () => {
     setCurrentPage(1);
   };
 
-  // Click card helper: switches active tab automatically to reflect selection
-  const handleMetricCardClick = (cardType: "BORG" | "PROTERM" | "PLAN" | "OPL") => {
-    if (cardType === "BORG") {
-      handleTabChange("BORG");
-    } else if (cardType === "PROTERM") {
-      handleTabChange("PROTERM");
-    } else if (cardType === "PLAN") {
-      handleTabChange("PLAN");
-    } else if (cardType === "OPL") {
-      setPaidPeriod("CUR");
-      handleTabChange("OPL_CUR");
-    }
-  };
+
 
   // Helper info text depending on active tab
   const getHelperText = () => {
@@ -397,20 +276,14 @@ export const CarrierFinances = () => {
   }
 
   return (
-    <div className="w-full  ">
+    <div className="w-full  pb-20">
 
       {/* 4 Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
         {/* Total Debt (BORG) Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => handleMetricCardClick("BORG")}
-          className={`bg-white dark:bg-slate-900 border cursor-pointer rounded-[24px] p-5 flex flex-col items-center justify-center transition-all ${
-            activeTab === "BORG"
-              ? "border-[#3B52B4] ring-4 ring-[#3B52B4]/10 shadow-md"
-              : "border-blue-200/80 dark:border-slate-800 hover:shadow-md"
-          }`}
+        <div
+          className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
@@ -424,17 +297,11 @@ export const CarrierFinances = () => {
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Загальна заборгованість
           </span>
-        </motion.div>
+        </div>
 
         {/* Overdue (PROTERM) Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => handleMetricCardClick("PROTERM")}
-          className={`bg-white dark:bg-slate-900 border cursor-pointer rounded-[24px] p-5 flex flex-col items-center justify-center transition-all ${
-            activeTab === "PROTERM"
-              ? "border-[#E53E3E] ring-4 ring-red-500/10 shadow-md"
-              : "border-red-200 dark:border-red-950/30 hover:shadow-md"
-          }`}
+        <div
+          className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-950/30 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#E53E3E] dark:text-red-400">
@@ -448,17 +315,11 @@ export const CarrierFinances = () => {
           <span className="text-xs sm:text-sm text-[#E53E3E] dark:text-red-400 font-bold mt-2 text-center select-none">
             Протермінована
           </span>
-        </motion.div>
+        </div>
 
         {/* Planned (PLAN) Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => handleMetricCardClick("PLAN")}
-          className={`bg-white dark:bg-slate-900 border cursor-pointer rounded-[24px] p-5 flex flex-col items-center justify-center transition-all ${
-            activeTab === "PLAN"
-              ? "border-[#3B52B4] ring-4 ring-[#3B52B4]/10 shadow-md"
-              : "border-blue-200/80 dark:border-slate-800 hover:shadow-md"
-          }`}
+        <div
+          className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
@@ -470,19 +331,13 @@ export const CarrierFinances = () => {
           </div>
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
-            Плановано
+            Плановано до оплати в поточному місяці
           </span>
-        </motion.div>
+        </div>
 
         {/* Paid (OPL_CUR) Card */}
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          onClick={() => handleMetricCardClick("OPL")}
-          className={`bg-white dark:bg-slate-900 border cursor-pointer rounded-[24px] p-5 flex flex-col items-center justify-center transition-all ${
-            activeTab === "OPL_CUR"
-              ? "border-[#3B52B4] ring-4 ring-[#3B52B4]/10 shadow-md"
-              : "border-blue-200/80 dark:border-slate-800 hover:shadow-md"
-          }`}
+        <div
+          className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-black text-[#3B52B4] dark:text-blue-400">
@@ -496,7 +351,7 @@ export const CarrierFinances = () => {
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Оплачено поточний місяць
           </span>
-        </motion.div>
+        </div>
 
       </div>
 
@@ -505,95 +360,115 @@ export const CarrierFinances = () => {
         <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-2">
           Статус рахунків
         </span>
-        <div className="flex flex-wrap gap-2">
-          
-          {/* Planned Payments Tab */}
-          <button
-            onClick={() => handleTabChange("PLAN")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${
-              activeTab === "PLAN"
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+
+            {/* Planned Payments Tab */}
+            <button
+              onClick={() => handleTabChange("PLAN")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PLAN"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            <span>Графік оплати</span>
-            <span className={`text-xs ml-1 font-bold ${activeTab === "PLAN" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-              {statistic?.plan_rah_count || 0}
-            </span>
-          </button>
+                }`}
+            >
+              <span>У графіку оплат</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "PLAN" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
+                {statistic?.plan_rah_count || 0}
+              </span>
+            </button>
 
-          {/* Paid Orders Tab */}
-          <button
-            onClick={() => handleTabChange(paidPeriod === "CUR" ? "OPL_CUR" : "OPL_PREV")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${
-              activeTab === "OPL_CUR" || activeTab === "OPL_PREV"
+            {/* Paid Orders Tab */}
+            <button
+              onClick={() => handleTabChange(paidPeriod === "CUR" ? "OPL_CUR" : "OPL_PREV")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "OPL_CUR" || activeTab === "OPL_PREV"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            <span>Оплачені замовлення</span>
-            <span className={`text-xs ml-1 font-bold ${activeTab === "OPL_CUR" || activeTab === "OPL_PREV" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-              {(paidPeriod === "CUR" ? statistic?.opl_cur_rah_count : statistic?.opl_prev_rah_count) || 0}
-            </span>
-          </button>
+                }`}
+            >
+              <span>Оплачені </span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "OPL_CUR" || activeTab === "OPL_PREV" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
+                {(paidPeriod === "CUR" ? statistic?.opl_cur_rah_count : statistic?.opl_prev_rah_count) || 0}
+              </span>
+            </button>
 
-          {/* Overdue Flights / Problems Tab */}
-          <button
-            onClick={() => handleTabChange("PROTERM")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${
-              activeTab === "PROTERM"
+            {/* Overdue Flights / Problems Tab */}
+            <button
+              onClick={() => handleTabChange("PROTERM")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PROTERM"
                 ? "bg-[#E53E3E] text-white border-[#E53E3E]"
                 : "bg-white dark:bg-slate-900 text-[#E53E3E] dark:text-red-400 border-red-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            <span>Проблемні рейси</span>
-            <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-              {statistic?.proterm_rah_count || 0}
-            </span>
-          </button>
+                }`}
+            >
+              <span>Проблемні рейси</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
+                {statistic?.proterm_rah_count || 0}
+              </span>
+            </button>
+            {/* Overdue Flights / Problems Tab */}
+            <button
+              onClick={() => handleTabChange("PROTERM")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PROTERM"
+                ? "bg-[#E53E3E] text-white border-[#E53E3E]"
+                : "bg-white dark:bg-slate-900 text-[#E53E3E] dark:text-red-400 border-red-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800"
+                }`}
+            >
+              <span>Невиставлені рахунки</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
+                {statistic?.proterm_rah_count || 0}
+              </span>
+            </button>
 
-          {/* BORG Tab */}
-          <button
-            onClick={() => handleTabChange("BORG")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${
-              activeTab === "BORG"
+            {/* BORG Tab */}
+            {/* <button
+              onClick={() => handleTabChange("BORG")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "BORG"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            <span>Вся заборгованість</span>
-            <span className={`text-xs ml-1 font-bold ${activeTab === "BORG" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-              {statistic?.all_rah_count || 0}
-            </span>
-          </button>
+                }`}
+            >
+              <span>Вся заборгованість</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "BORG" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
+                {statistic?.all_rah_count || 0}
+              </span>
+            </button> */}
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <span className="text-xs text-slate-400 dark:text-slate-500 font-bold select-none">Відображати по:</span>
+            <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl text-[#415A88] dark:text-white">
+              <ItemsPerPage
+                options={[10, 20, 50, 100]}
+                defaultValue={perPage}
+                onChange={handleLimitChange}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Small descriptive text below active tab */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-2 mt-1 select-none">
-          <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
+          {/* <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
             {getHelperText()}
-          </span>
+          </span> */}
 
           {/* Month Switcher visible only when Paid tab is active */}
           {(activeTab === "OPL_CUR" || activeTab === "OPL_PREV") && (
             <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg shadow-sm gap-1">
               <button
                 onClick={() => handlePaidPeriodChange("CUR")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  paidPeriod === "CUR"
-                    ? "bg-[#3B52B4] text-white"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
+                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${paidPeriod === "CUR"
+                  ? "bg-[#3B52B4] text-white"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
               >
                 Поточний місяць ({statistic?.opl_cur_rah_count || 0})
               </button>
               <button
                 onClick={() => handlePaidPeriodChange("PREV")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
-                  paidPeriod === "PREV"
-                    ? "bg-[#3B52B4] text-white"
-                    : "text-slate-400 hover:text-slate-600"
-                }`}
+                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${paidPeriod === "PREV"
+                  ? "bg-[#3B52B4] text-white"
+                  : "text-slate-400 hover:text-slate-600"
+                  }`}
               >
                 Попередній місяць ({statistic?.opl_prev_rah_count || 0})
               </button>
@@ -624,7 +499,7 @@ export const CarrierFinances = () => {
             const isPaid = activeTab === "OPL_CUR" || activeTab === "OPL_PREV" || actualPaidDate !== null;
             const statusDateText = isPaid
               ? `Оплачено ${formatDate(actualPaidDate || invoice.dat_opl_plan || firstPerev?.opl_plan_date)}`
-              : `Планова ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}`;
+              : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
 
             // Badges
             // Check document completeness
@@ -651,13 +526,13 @@ export const CarrierFinances = () => {
                 <div className="flex-1 p-6 flex flex-col gap-3 min-w-0">
                   {/* Bill title */}
                   <h3 className="text-[#3B52B4] dark:text-blue-400 text-lg font-black tracking-tight leading-tight select-all">
-                    №{invoice.rah_num} від {formatDate(invoice.rah_dat)}
+                    Рахунок №{invoice.rah_num} від {formatDate(invoice.rah_dat)}
                   </h3>
 
                   {/* Route & order numbers */}
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-extrabold text-[#8BA6EB] dark:text-blue-400/80 uppercase tracking-wide">
-                      {routeText} {firstPerev?.zay_num ? `#${firstPerev.zay_num}` : ""}
+                      Заявка № {firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}{routeText}
                     </span>
                   </div>
 
@@ -723,7 +598,6 @@ export const CarrierFinances = () => {
                   {/* Dropdown for Contacts */}
                   <ContactDropdown
                     economist={invoice.economist}
-                    manager={firstPerev?.manager}
                   />
 
                 </div>
@@ -745,29 +619,12 @@ export const CarrierFinances = () => {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-4 mt-4 px-2">
-          <span className="text-xs text-slate-400 dark:text-slate-500 font-bold select-none">
-            Всього: {totalRows}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-xs text-[#3B52B4] dark:text-blue-400 font-extrabold select-none">
-              {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+        <div className="flex items-center justify-center border-t border-slate-200 dark:border-slate-800 pt-4 mt-4 px-2">
+          <Pagination
+            page={currentPage}
+            pageCount={totalPages}
+            onChange={setCurrentPage}
+          />
         </div>
       )}
 

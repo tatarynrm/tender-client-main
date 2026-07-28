@@ -80,10 +80,7 @@ export default function OrdersPage({ profile }: { profile: any }) {
   return (
     <div className="flex flex-col gap-5 w-full  mx-auto pb-10">
       <div className="flex items-center gap-4 pt-2">
-        <button className="flex items-center gap-2 px-5 h-[42px] bg-white dark:bg-slate-800 text-[#5168D9] dark:text-[#849CC8] rounded-[15px] border border-[#C5D3F0] dark:border-slate-700 shadow-sm hover:bg-[#f4f7ff] dark:hover:bg-slate-700 transition-all font-semibold text-[14px]">
-          <Filter className="w-4 h-4" />
-          Фільтри
-        </button>
+
 
         <div className="flex-1 relative h-[42px]">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
