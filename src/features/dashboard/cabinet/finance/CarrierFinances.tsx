@@ -349,7 +349,7 @@ export const CarrierFinances = () => {
           </div>
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
-            Оплачено поточний місяць
+            Оплачено у поточному місяці
           </span>
         </div>
 
@@ -399,7 +399,7 @@ export const CarrierFinances = () => {
                 : "bg-white dark:bg-slate-900 text-[#E53E3E] dark:text-red-400 border-red-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800"
                 }`}
             >
-              <span>Проблемні рейси</span>
+              <span>Рахунки, що потребують врегулювання</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
                 {statistic?.proterm_rah_count || 0}
               </span>
