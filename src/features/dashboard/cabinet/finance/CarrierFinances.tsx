@@ -279,7 +279,7 @@ export const CarrierFinances = () => {
     <div className="w-full  pb-20">
 
       {/* 4 Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
 
         {/* Total Debt (BORG) Card */}
         <div
@@ -300,7 +300,7 @@ export const CarrierFinances = () => {
         </div>
 
         {/* Overdue (PROTERM) Card */}
-        <div
+        {/* <div
           className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-950/30 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
@@ -315,7 +315,7 @@ export const CarrierFinances = () => {
           <span className="text-xs sm:text-sm text-[#E53E3E] dark:text-red-400 font-bold mt-2 text-center select-none">
             Протермінована
           </span>
-        </div>
+        </div> */}
 
         {/* Planned (PLAN) Card */}
         <div
