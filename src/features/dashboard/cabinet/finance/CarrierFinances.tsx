@@ -276,7 +276,7 @@ export const CarrierFinances = () => {
   }
 
   return (
-    <div className="w-full  pb-20">
+    <div className="w-full  pb-10">
 
       {/* 4 Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
@@ -295,7 +295,7 @@ export const CarrierFinances = () => {
           </div>
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
-            Загальна заборгованість
+            Усього до оплати по виставлених рахунках
           </span>
         </div>
 
