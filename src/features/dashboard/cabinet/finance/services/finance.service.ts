@@ -1,21 +1,31 @@
 import api from "@/shared/api/instance.api";
 
 export interface IFinanceStatistic {
-  all_borg: number;
-  all_zay_count: number;
-  all_rah_count: number;
-  proterm_borg: number;
-  proterm_zay_count: number;
-  proterm_rah_count: number;
-  plan_opl: number;
-  plan_zay_count: number;
-  plan_rah_count: number;
-  opl_prev_suma: number;
-  opl_prev_zay_count: number;
-  opl_prev_rah_count: number;
-  opl_cur_suma: number;
-  opl_cur_zay_count: number;
-  opl_cur_rah_count: number;
+  all_borg?: number;
+  all_zay_count?: number;
+  all_rah_count?: number;
+  proterm_borg?: number;
+  proterm_zay_count?: number;
+  proterm_rah_count?: number;
+  problem_rah_count?: number;
+  plan_opl?: number;
+  plan_zay_count?: number;
+  plan_rah_count?: number;
+  opl_prev_suma?: number;
+  opl_prev_zay_count?: number;
+  opl_prev_rah_count?: number;
+  opl_cur_suma?: number;
+  opl_cur_zay_count?: number;
+  opl_cur_rah_count?: number;
+
+  borg_all?: number;
+  plan_curr_month?: number;
+  opl_curr_month?: number;
+  grafik_rah_count?: number;
+  grafik_month_number?: number | string;
+  opl_two_month_rah_count?: number;
+  opl_curr_month_rah_count?: number;
+  opl_prev_month_rah_count?: number;
 }
 
 export interface IContactPerson {
@@ -86,6 +96,12 @@ export interface IInvoice {
   dat_opl: string | null;
   grafik_dat: string | null;
   economist: IContactPerson;
+  suma?: number;
+  sumaopl?: number;
+  borg?: number;
+  valut?: string;
+  valut_code?: string;
+  problem_info?: string | any | null;
   perev_list: IPerevItem[];
 }
 
@@ -102,6 +118,17 @@ export interface IFinanceListResponse {
   };
 }
 
+export type FinanceStatusType =
+  | "GRAFIK"
+  | "OPL_CURR_MONTH"
+  | "OPL_PREV_MONTH"
+  | "PROBLEM"
+  | "BORG"
+  | "PLAN"
+  | "OPL_PREV"
+  | "OPL_CUR"
+  | "PROTERM";
+
 class FinanceService {
   async getFinanceStatistic(mid: string | number): Promise<IFinanceStatistic | null> {
     try {
@@ -117,7 +144,7 @@ class FinanceService {
 
   async getFinanceList(
     mid: string | number,
-    status: "BORG" | "PROTERM" | "PLAN" | "OPL_PREV" | "OPL_CUR",
+    status: FinanceStatusType,
     page: number = 1,
     perPage: number = 20
   ): Promise<IFinanceListResponse | null> {

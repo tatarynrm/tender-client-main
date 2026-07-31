@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   DollarSign,
   Calendar,
@@ -33,6 +34,8 @@ import {
 
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
+
+type TabType = "GRAFIK" | "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "PROBLEM" | "BORG";
 
 // Custom date formatter: ISO string -> dd.mm.yyyy
 const formatDate = (dateStr?: string | null) => {
@@ -134,22 +137,61 @@ const SkeletonInvoice = () => (
 
 export const CarrierFinances = () => {
   const { profile, isProfileLoading } = useProfile();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const tabParam = searchParams.get("tab") || searchParams.get("status");
+  const initialTab: TabType = (
+    ["GRAFIK", "OPL_CURR_MONTH", "OPL_PREV_MONTH", "PROBLEM", "BORG"].includes(tabParam || "")
+      ? tabParam
+      : "GRAFIK"
+  ) as TabType;
+
+  const initialPaidPeriod: "CUR" | "PREV" = initialTab === "OPL_PREV_MONTH" ? "PREV" : "CUR";
+  const initialPage = Number(searchParams.get("page")) || 1;
+
   const [statistic, setStatistic] = useState<IFinanceStatistic | null>(null);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
   const [loadingStat, setLoadingStat] = useState(true);
   const [loadingList, setLoadingList] = useState(true);
 
   // Tabs management
-  // Available tabs: PLAN, OPL_CUR (or OPL_PREV), PROTERM, BORG
-  const [activeTab, setActiveTab] = useState<"PLAN" | "OPL_CUR" | "OPL_PREV" | "PROTERM" | "BORG">("PLAN");
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   // Sub-status for paid tab to toggle between current month and previous month
-  const [paidPeriod, setPaidPeriod] = useState<"CUR" | "PREV">("CUR");
+  const [paidPeriod, setPaidPeriod] = useState<"CUR" | "PREV">(initialPaidPeriod);
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [perPage, setPerPage] = useState(10);
+
+  // Helper to sync state to URL
+  const updateUrlParams = useCallback((newTab: TabType, newPage: number = 1) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", newTab);
+    if (newPage > 1) {
+      params.set("page", String(newPage));
+    } else {
+      params.delete("page");
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, router, pathname]);
+
+  // Sync state when URL searchParams change externally (e.g. back/forward navigation or shared link)
+  useEffect(() => {
+    const currentTabInUrl = searchParams.get("tab") || searchParams.get("status");
+    if (currentTabInUrl && ["GRAFIK", "OPL_CURR_MONTH", "OPL_PREV_MONTH", "PROBLEM", "BORG"].includes(currentTabInUrl)) {
+      setActiveTab(currentTabInUrl as TabType);
+      if (currentTabInUrl === "OPL_PREV_MONTH") setPaidPeriod("PREV");
+      if (currentTabInUrl === "OPL_CURR_MONTH") setPaidPeriod("CUR");
+    }
+    const pageInUrl = Number(searchParams.get("page"));
+    if (pageInUrl && pageInUrl > 0) {
+      setCurrentPage(pageInUrl);
+    }
+  }, [searchParams]);
 
   const handleLimitChange = (newLimit: number) => {
     setPerPage(newLimit);
@@ -184,9 +226,9 @@ export const CarrierFinances = () => {
       try {
         setLoadingList(true);
         // Map UI paidPeriod selection to the correct status string
-        let targetStatus: "PLAN" | "OPL_CUR" | "OPL_PREV" | "PROTERM" | "BORG" = activeTab;
-        if (activeTab === "OPL_CUR" || activeTab === "OPL_PREV") {
-          targetStatus = paidPeriod === "CUR" ? "OPL_CUR" : "OPL_PREV";
+        let targetStatus: TabType = activeTab;
+        if (activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH") {
+          targetStatus = paidPeriod === "CUR" ? "OPL_CURR_MONTH" : "OPL_PREV_MONTH";
         }
 
         const listData = await financeService.getFinanceList(mid, targetStatus, currentPage, perPage);
@@ -212,34 +254,34 @@ export const CarrierFinances = () => {
     if (mid) fetchList();
   }, [mid, activeTab, paidPeriod, currentPage, perPage]);
 
-  // When active tab changes, reset to page 1
-  const handleTabChange = (tab: "PLAN" | "OPL_CUR" | "OPL_PREV" | "PROTERM" | "BORG") => {
+  // When active tab changes, reset to page 1 and update URL
+  const handleTabChange = (tab: TabType) => {
+    if (tab === "OPL_CURR_MONTH" || tab === "OPL_PREV_MONTH") {
+      setPaidPeriod(tab === "OPL_CURR_MONTH" ? "CUR" : "PREV");
+    }
     setActiveTab(tab);
     setCurrentPage(1);
+    updateUrlParams(tab, 1);
   };
 
-  const handlePaidPeriodChange = (period: "CUR" | "PREV") => {
-    setPaidPeriod(period);
-    // If the active tab isn't already paid-related, switch to it
-    if (activeTab !== "OPL_CUR" && activeTab !== "OPL_PREV") {
-      setActiveTab(period === "CUR" ? "OPL_CUR" : "OPL_PREV");
-    } else {
-      setActiveTab(period === "CUR" ? "OPL_CUR" : "OPL_PREV");
-    }
+  const handlePaidPeriodChange = (period: "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "CUR" | "PREV") => {
+    const isCur = period === "OPL_CURR_MONTH" || period === "CUR";
+    const targetTab: TabType = isCur ? "OPL_CURR_MONTH" : "OPL_PREV_MONTH";
+    setPaidPeriod(isCur ? "CUR" : "PREV");
+    setActiveTab(targetTab);
     setCurrentPage(1);
+    updateUrlParams(targetTab, 1);
   };
-
-
 
   // Helper info text depending on active tab
   const getHelperText = () => {
     switch (activeTab) {
-      case "PLAN":
-        return "Заплановані виплати натисніть для повної інформації";
-      case "PROTERM":
+      case "GRAFIK":
+        return "Заплановані виплати у графіку";
+      case "PROBLEM":
         return "Протерміновані виплати з виявленими затримками або проблемами";
-      case "OPL_CUR":
-      case "OPL_PREV":
+      case "OPL_CURR_MONTH":
+      case "OPL_PREV_MONTH":
         return `Оплачені замовлення за ${paidPeriod === "CUR" ? "поточний" : "попередній"} місяць`;
       case "BORG":
         return "Загальний список діючої заборгованості за перевезення";
@@ -287,7 +329,7 @@ export const CarrierFinances = () => {
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.all_borg || 0).toLocaleString("uk-UA")}
+              {Math.round(statistic?.borg_all || 0).toLocaleString("uk-UA")}
             </span>
             <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
               грн
@@ -323,7 +365,7 @@ export const CarrierFinances = () => {
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.plan_opl || 0).toLocaleString("uk-UA")}
+              {Math.round(statistic?.plan_curr_month || 0).toLocaleString("uk-UA")}
             </span>
             <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
               грн
@@ -341,7 +383,7 @@ export const CarrierFinances = () => {
         >
           <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
             <span className="text-2xl sm:text-3xl font-black text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.opl_cur_suma || 0).toLocaleString("uk-UA")}
+              {Math.round(statistic?.opl_curr_month || 0).toLocaleString("uk-UA")}
             </span>
             <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
               грн
@@ -365,72 +407,57 @@ export const CarrierFinances = () => {
 
             {/* Planned Payments Tab */}
             <button
-              onClick={() => handleTabChange("PLAN")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PLAN"
+              onClick={() => handleTabChange("GRAFIK")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "GRAFIK"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
                 }`}
             >
               <span>У графіку оплат</span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "PLAN" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-                {statistic?.plan_rah_count || 0}
+              <span className={`text-xs ml-1 font-bold ${activeTab === "GRAFIK" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
+                {statistic?.grafik_rah_count || 0}
               </span>
             </button>
 
             {/* Paid Orders Tab */}
             <button
-              onClick={() => handleTabChange(paidPeriod === "CUR" ? "OPL_CUR" : "OPL_PREV")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "OPL_CUR" || activeTab === "OPL_PREV"
+              onClick={() => handleTabChange("OPL_CURR_MONTH")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
                 }`}
             >
-              <span>Оплачені </span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "OPL_CUR" || activeTab === "OPL_PREV" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-                {(paidPeriod === "CUR" ? statistic?.opl_cur_rah_count : statistic?.opl_prev_rah_count) || 0}
-              </span>
+              <span>Оплачені ({statistic?.opl_two_month_rah_count || 0})</span>
             </button>
 
             {/* Overdue Flights / Problems Tab */}
             <button
-              onClick={() => handleTabChange("PROTERM")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PROTERM"
+              onClick={() => handleTabChange("PROBLEM")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PROBLEM"
                 ? "bg-[#E53E3E] text-white border-[#E53E3E]"
                 : "bg-white dark:bg-slate-900 text-[#E53E3E] dark:text-red-400 border-red-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800"
                 }`}
             >
               <span>Рахунки, що потребують врегулювання</span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.proterm_rah_count || 0}
+              <span className={`text-xs ml-1 font-bold ${activeTab === "PROBLEM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
+                {statistic?.problem_rah_count || 0}
               </span>
             </button>
             {/* Overdue Flights / Problems Tab */}
             <button
-              onClick={() => handleTabChange("PROTERM")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PROTERM"
+              onClick={() => handleTabChange("BORG")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "BORG"
                 ? "bg-[#E53E3E] text-white border-[#E53E3E]"
                 : "bg-white dark:bg-slate-900 text-[#E53E3E] dark:text-red-400 border-red-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-slate-800"
                 }`}
             >
-              <span>Невиставлені рахунки</span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "PROTERM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.proterm_rah_count || 0}
+              <span>Невиставлені перевезення</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "BORG" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
+                {statistic?.all_zay_count || statistic?.all_rah_count || statistic?.all_borg || 0}
               </span>
             </button>
 
-            {/* BORG Tab */}
-            {/* <button
-              onClick={() => handleTabChange("BORG")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "BORG"
-                ? "bg-[#3B52B4] text-white border-[#3B52B4]"
-                : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
-                }`}
-            >
-              <span>Вся заборгованість</span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "BORG" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-                {statistic?.all_rah_count || 0}
-              </span>
-            </button> */}
+
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto">
@@ -452,25 +479,25 @@ export const CarrierFinances = () => {
           </span> */}
 
           {/* Month Switcher visible only when Paid tab is active */}
-          {(activeTab === "OPL_CUR" || activeTab === "OPL_PREV") && (
+          {(activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH") && (
             <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg shadow-sm gap-1">
               <button
-                onClick={() => handlePaidPeriodChange("CUR")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${paidPeriod === "CUR"
+                onClick={() => handlePaidPeriodChange("OPL_CURR_MONTH")}
+                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${activeTab === "OPL_CURR_MONTH" || paidPeriod === "CUR"
                   ? "bg-[#3B52B4] text-white"
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
-                Поточний місяць ({statistic?.opl_cur_rah_count || 0})
+                Поточний місяць ({statistic?.opl_curr_month_rah_count || 0})
               </button>
               <button
-                onClick={() => handlePaidPeriodChange("PREV")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${paidPeriod === "PREV"
+                onClick={() => handlePaidPeriodChange("OPL_PREV_MONTH")}
+                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${activeTab === "OPL_PREV_MONTH" || paidPeriod === "PREV"
                   ? "bg-[#3B52B4] text-white"
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
-                Попередній місяць ({statistic?.opl_prev_rah_count || 0})
+                Попередній місяць ({statistic?.opl_prev_month_rah_count || 0})
               </button>
             </div>
           )}
@@ -484,9 +511,11 @@ export const CarrierFinances = () => {
           [...Array(3)].map((_, i) => <SkeletonInvoice key={i} />)
         ) : invoices.length > 0 ? (
           invoices.map((invoice, idx) => {
-            // Standard currency totals calculation
-            const invoiceSum = invoice.perev_list?.reduce((sum, item) => sum + (item.fraht || 0), 0) || 0;
-            const currencyLabel = invoice.perev_list?.[0]?.valut?.toUpperCase() || "ГРН";
+            // Currency & sum totals calculation directly from invoice object
+            const totalSum = invoice.suma ?? (invoice.perev_list?.reduce((sum, item) => sum + (item.fraht || 0), 0) || 0);
+            const paidSum = invoice.sumaopl ?? 0;
+            const debtSum = invoice.borg ?? 0;
+            const currencyLabel = (invoice.valut || invoice.valut_code || invoice.perev_list?.[0]?.valut || "ГРН").toUpperCase();
 
             // Grab first transport route to display
             const firstPerev = invoice.perev_list?.[0];
@@ -495,10 +524,10 @@ export const CarrierFinances = () => {
               : "Напрямок не вказано";
 
             // Status dates
-            const actualPaidDate = invoice.dat_opl || firstPerev?.opl_fakt_date || null;
-            const isPaid = activeTab === "OPL_CUR" || activeTab === "OPL_PREV" || actualPaidDate !== null;
+            const actualPaidDate = invoice.dat_opl;
+            const isPaid = Boolean(actualPaidDate);
             const statusDateText = isPaid
-              ? `Оплачено ${formatDate(actualPaidDate || invoice.dat_opl_plan || firstPerev?.opl_plan_date)}`
+              ? `Оплачено ${formatDate(actualPaidDate)}`
               : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
 
             // Badges
@@ -546,14 +575,7 @@ export const CarrierFinances = () => {
                         </strong>
                       </span>
                     )}
-                    {invoice.grafik_dat && (
-                      <span className="text-[#8BA6EB]">
-                        В графіку з{" "}
-                        <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
-                          {formatDate(invoice.grafik_dat)}
-                        </strong>
-                      </span>
-                    )}
+
                   </div>
 
                   {/* Legal entity info */}
@@ -564,35 +586,49 @@ export const CarrierFinances = () => {
                     </strong>
                   </div>
 
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <span className={`px-3 py-1 rounded-full text-[11px] font-bold ${docCompleteness.style}`}>
-                      {docCompleteness.text}
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-[11px] font-bold ${taxInvoiceRegistered.style}`}>
-                      {taxInvoiceRegistered.text}
-                    </span>
-                    {firstPerev?.status_ruh && (
-                      <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-blue-50 dark:bg-slate-800 text-[#3B52B4] dark:text-blue-400 border border-[#C7D2FE]/60 dark:border-slate-700">
-                        {firstPerev.status_ruh}
-                      </span>
-                    )}
-                  </div>
+                  {/* Problem Info Banner */}
+                  {invoice.problem_info && (
+                    <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-medium mt-1">
+                      <AlertTriangle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-extrabold text-[11px] uppercase tracking-wide text-rose-600 dark:text-rose-400">
+                          Причина врегулювання:
+                        </span>
+                        <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                          {typeof invoice.problem_info === "string"
+                            ? invoice.problem_info
+                            : JSON.stringify(invoice.problem_info)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                 </div>
 
                 {/* Right Side: Money & Actions */}
                 <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center lg:items-end justify-between gap-4 shrink-0">
 
-                  {/* Amount / Dates */}
+                  {/* Amount / Paid / Dates / Borg */}
                   <div className="space-y-1 w-full text-center lg:text-right flex flex-col lg:items-end">
                     <span className="text-xl sm:text-2xl font-black text-[#3B52B4] dark:text-blue-400 select-all">
-                      {Math.round(invoiceSum).toLocaleString("uk-UA")} {currencyLabel}
+                      {Math.round(totalSum).toLocaleString("uk-UA")} {currencyLabel}
                     </span>
-                    <span className={`text-xs font-bold flex items-center justify-center lg:justify-end gap-1.5 ${isPaid ? "text-emerald-600 dark:text-emerald-400" : activeTab === "PROTERM" ? "text-red-500" : "text-[#8BA6EB]"
+                    {/* Partial payment details if not fully paid */}
+                    {debtSum > 0 && paidSum > 0 && (
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 select-all">
+                        Оплачено: {Math.round(paidSum).toLocaleString("uk-UA")} {currencyLabel}
+                      </span>
+                    )}
+                    <span className={`text-xs font-bold flex items-center justify-center lg:justify-end gap-1.5 ${isPaid ? "text-emerald-600 dark:text-emerald-400" : activeTab === "PROBLEM" ? "text-red-500" : "text-[#8BA6EB]"
                       }`}>
                       {statusDateText}
                     </span>
+                    {/* Debt at the very bottom */}
+                    {debtSum > 0 && (
+                      <span className="text-xs font-bold text-red-500 dark:text-red-400 select-all">
+                        Борг: {Math.round(debtSum).toLocaleString("uk-UA")} {currencyLabel}
+                      </span>
+                    )}
                   </div>
 
                   {/* Dropdown for Contacts */}
@@ -623,7 +659,10 @@ export const CarrierFinances = () => {
           <Pagination
             page={currentPage}
             pageCount={totalPages}
-            onChange={setCurrentPage}
+            onChange={(newPage: number) => {
+              setCurrentPage(newPage);
+              updateUrlParams(activeTab, newPage);
+            }}
           />
         </div>
       )}
