@@ -47,7 +47,7 @@ export const CarrierCooperation = () => {
     const beginDate = parseISO(data.work_begin);
     const years = differenceInYears(new Date(), beginDate);
     const months = differenceInMonths(new Date(), beginDate) % 12;
-    durationStr = `${years} р. ${months} місяці`;
+    durationStr = `${years} років ${months} місяців`;
   }
 
   // Форматування обороту
@@ -55,7 +55,7 @@ export const CarrierCooperation = () => {
     if (!val) return "0 грн";
     const num = Number(val);
     if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(0)} м. грн`;
+      return `${(num / 1000000).toFixed(0)} млн грн`;
     } else if (num >= 1000) {
       return `${(num / 1000).toFixed(0)} тис. грн`;
     }
@@ -90,7 +90,7 @@ export const CarrierCooperation = () => {
           <span className="text-3xl font-bold text-[#3B52B4] leading-none">
             {data.zay_count_all || 0}
           </span>
-          <span className="text-xs font-medium text-slate-500">Рейсів виконано за весь час</span>
+          <span className="text-xs font-medium text-slate-500">Рейсів виконано з початку співпраці</span>
         </div>
 
         {/* Card 2 */}
@@ -98,7 +98,7 @@ export const CarrierCooperation = () => {
           <span className="text-3xl font-bold text-[#3B52B4] leading-none">
             {formatOborot(data.oborot)}
           </span>
-          <span className="text-xs font-medium text-slate-500">Загальний оборот</span>
+          <span className="text-xs font-medium text-slate-500">Загальний оборот з початку співпраці</span>
         </div>
 
         {/* Card 3 */}
@@ -107,7 +107,7 @@ export const CarrierCooperation = () => {
             {durationStr || data.work_len_days || "—"}
           </span>
           <span className="text-xs font-medium text-slate-500">
-            Тривалість з {data.work_begin ? format(parseISO(data.work_begin), "dd.MM.yyyy") : ""}
+            Співпраця з {data.work_begin ? format(parseISO(data.work_begin), "dd.MM.yyyy") : ""}
           </span>
         </div>
 
@@ -175,13 +175,15 @@ export const CarrierCooperation = () => {
                   <span className="text-[#8BA6EB] text-[10px]">автопролонгація</span>
                 </div>
               </div>
-              <div className="flex justify-between border-b border-slate-50 pb-2">
-                <span className="text-[#8BA6EB]">Документообіг</span>
-                <span className="font-bold text-slate-700">
-                  {activeDog?.edo_vchasno === 1 ? "ЕДО «Вчасно»" : activeDog?.edo_medok === 1 ? "ЕДО «M.E.Doc»" : "Паперовий"}
-                </span>
-              </div>
-
+              {activeDog?.edo_vchasno === 1 ? "ЕДО «Вчасно»" : activeDog?.edo_medok === 1 &&
+                <div className="flex justify-between border-b border-slate-50 pb-2">
+                  <span className="text-[#8BA6EB]">Документообіг</span>
+                  <span className="font-bold text-slate-700">
+                    {activeDog?.edo_vchasno === 1 ? "ЕДО «Вчасно»" : activeDog?.edo_medok === 1 ? "ЕДО «M.E.Doc»" : "Паперовий"}
+                  </span>
+                </div>
+              }
+              {/* 
               <div className="flex justify-between items-center border-b border-slate-50 pb-2 cursor-pointer group">
                 <div className="flex items-center gap-2">
                   <Info className="w-3.5 h-3.5 text-red-400" />
@@ -196,7 +198,7 @@ export const CarrierCooperation = () => {
                   <span className="font-bold text-slate-700 group-hover:text-[#3B52B4] transition-colors">Компенсації перевізнику від ICT</span>
                 </div>
                 <ChevronDown className="w-4 h-4 text-slate-400" />
-              </div>
+              </div> */}
 
               {/* <div className="flex justify-between items-center pt-1">
                 <span className="text-[#8BA6EB]">Повний текст договору</span>
@@ -266,8 +268,8 @@ export const CarrierCooperation = () => {
             <span
               onClick={() => setActiveDirectionTab('reg')}
               className={`px-4 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-colors ${activeDirectionTab === 'reg'
-                  ? "bg-[#EEF2FF] text-[#3B52B4] border-[#C7D2FE]"
-                  : "bg-white text-[#8BA6EB] font-medium border-slate-200 hover:bg-slate-50"
+                ? "bg-[#EEF2FF] text-[#3B52B4] border-[#C7D2FE]"
+                : "bg-white text-[#8BA6EB] font-medium border-slate-200 hover:bg-slate-50"
                 }`}
             >
               Регіональні
@@ -275,8 +277,8 @@ export const CarrierCooperation = () => {
             <span
               onClick={() => setActiveDirectionTab('mn')}
               className={`px-4 py-1.5 rounded-full text-xs font-bold border cursor-pointer transition-colors ${activeDirectionTab === 'mn'
-                  ? "bg-[#EEF2FF] text-[#3B52B4] border-[#C7D2FE]"
-                  : "bg-white text-[#8BA6EB] font-medium border-slate-200 hover:bg-slate-50"
+                ? "bg-[#EEF2FF] text-[#3B52B4] border-[#C7D2FE]"
+                : "bg-white text-[#8BA6EB] font-medium border-slate-200 hover:bg-slate-50"
                 }`}
             >
               Міжнародні
@@ -291,7 +293,7 @@ export const CarrierCooperation = () => {
 
                 return (
                   <div key={idx} className="flex items-center gap-4">
-                    <span className="font-bold text-slate-700 text-sm w-[150px] truncate" title={title}>
+                    <span className="font-bold text-slate-700 text-sm w-[300px] truncate" title={title}>
                       {title}
                     </span>
                     <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">

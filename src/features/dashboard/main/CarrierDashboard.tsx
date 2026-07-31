@@ -90,13 +90,13 @@ export const CarrierDashboard = () => {
   const activeTransports: IActiveTransport[] = Array.isArray(data)
     ? (data as unknown as IActiveTransport[])
     : ((data.zay_list_10 ||
-        data.zay_list ||
-        data.page_main ||
-        data.active_transports ||
-        Object.values(data).find(
-          (val) => Array.isArray(val) && val.length > 0 && "kod_zay" in val[0]
-        ) ||
-        []) as IActiveTransport[]);
+      data.zay_list ||
+      data.page_main ||
+      data.active_transports ||
+      Object.values(data).find(
+        (val) => Array.isArray(val) && val.length > 0 && "kod_zay" in val[0]
+      ) ||
+      []) as IActiveTransport[]);
 
   return (
     <div className="flex flex-col gap-4 mt-4 w-full">
@@ -120,7 +120,7 @@ export const CarrierDashboard = () => {
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/3 md:items-end md:text-right">
           <div className="text-sm text-blue-100 flex gap-2 md:justify-end">
-            <span>Очікування надходжень</span>
+            <span>Очікувані надходження</span>
             <div className="flex flex-col items-start md:items-end">
               {expectedIncomes.length ? (
                 expectedIncomes.map((payment, idx) => (
@@ -168,7 +168,7 @@ export const CarrierDashboard = () => {
           </div>
           <div className="flex items-center gap-4 pt-3">
             <span className="text-3xl font-bold text-[#3B52B4] w-8 text-center">{data.doc_no_set}</span>
-            <span className="text-sm font-bold text-[#3B52B4]">Некомплектні документи</span>
+            <span className="text-sm font-bold text-[#3B52B4]">Документи до врегулювання</span>
           </div>
         </div>
 
@@ -184,7 +184,7 @@ export const CarrierDashboard = () => {
           </div>
           <div className="flex flex-col w-2/3 pl-2 justify-center">
             <span className="text-sm font-bold text-[#3B52B4] leading-tight mb-2">
-              Запланована дата<br/>та сума оплати
+              Запланована дата<br />та сума оплати
             </span>
             <div className="flex flex-col">
               {plannedPayments.length ? (
@@ -281,13 +281,12 @@ export const CarrierDashboard = () => {
                     )}
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${
-                      event.label.toLowerCase().includes("oplata") || event.label.toLowerCase().includes("оплата")
-                        ? "bg-[#D1FAE5] text-[#059669]"
-                        : event.label.toLowerCase().includes("docin") || event.label.toLowerCase().includes("документ")
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${event.label.toLowerCase().includes("oplata") || event.label.toLowerCase().includes("оплата")
+                      ? "bg-[#D1FAE5] text-[#059669]"
+                      : event.label.toLowerCase().includes("docin") || event.label.toLowerCase().includes("документ")
                         ? "bg-[#FFEDD5] text-[#D97706]"
                         : "bg-[#E0E7FF] text-[#3B52B4]"
-                    }`}
+                      }`}
                   >
                     {event.label === 'OPLATA' ? 'Оплата' : event.label === 'DOCIN' ? 'Документ' : event.label}
                   </span>
@@ -339,15 +338,14 @@ export const CarrierDashboard = () => {
                 </div>
                 <div className="flex items-center justify-end w-1/3 pl-2 gap-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${
-                      transport.status && (transport.status.toLowerCase().includes("активн") || transport.status.toLowerCase().includes("робот"))
-                        ? "bg-[#E0E7FF] text-[#3B52B4]"
-                        : transport.status && transport.status.toLowerCase().includes("документ")
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap ${transport.status_detail_name && (transport.status_detail_name.toLowerCase().includes("активн") || transport.status_detail_name.toLowerCase().includes("робот"))
+                      ? "bg-[#E0E7FF] text-[#3B52B4]"
+                      : transport.status_detail_name && transport.status_detail_name.toLowerCase().includes("документ")
                         ? "bg-[#FFEDD5] text-[#D97706]"
                         : "bg-[#D1FAE5] text-[#059669]"
-                    }`}
+                      }`}
                   >
-                    {transport.status || "Доставлено"}
+                    {transport.status_detail_name || "Доставлено"}
                   </span>
                   <span className="text-lg font-bold text-emerald-500 whitespace-nowrap w-32 text-right">
                     {transport.fraht ? `${transport.fraht.toLocaleString("uk-UA")} ${transport.valut_code || transport.valut || ""}` : "—"}
