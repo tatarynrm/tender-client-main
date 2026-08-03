@@ -95,7 +95,6 @@ export default function UserForm({ defaultValues }: UserFormProps) {
   const router = useRouter();
   // Визначаємо, чи ми редагуємо, чи створюємо
   const isEditMode = !!defaultValues?.id;
-  console.log(defaultValues, "DEFAULT VALUES");
 
   // 1. Ініціалізація форми з використанням useMemo (як у CargoForm)
   const form = useForm<UserFormValues>({
@@ -211,12 +210,6 @@ export default function UserForm({ defaultValues }: UserFormProps) {
       },
     });
   };
-  useEffect(() => {
-    if (formState.errors) {
-      console.log("Form errors:", formState.errors);
-    }
-  }, [formState.errors]); // Слідкуємо за змінами форми для дебагу
-
   return (
     <div className="max-w-4xl mx-auto pb-20">
       <Form {...form}>

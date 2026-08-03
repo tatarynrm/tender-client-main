@@ -132,14 +132,12 @@ export function CargoCarRemoveModal({
       date_canceled: format(data.date_canceled, "yyyy-MM-dd"),
     };
 
-    console.log(payload, "PAYLOAD");
 
     await onSubmit(payload);
     onOpenChange(false);
   };
 
   /* ===================== RENDER ===================== */
-  console.log(form.formState.errors);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

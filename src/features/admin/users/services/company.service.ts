@@ -6,7 +6,6 @@ import { TypeCreateCompanySchema } from "../schemas/create-company.schema";
 class CompanyService {
   // 🔹 Створення нової компанії
   public async createNewCompany(values: TypeCreateCompanySchema) {
-    console.log(values,'values from dto');
     
     const { data } = await api.post("/company/create", values);
     return data;

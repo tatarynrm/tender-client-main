@@ -13,8 +13,8 @@ export function useProfileLogoutMutation() {
       toast.success("Ви успішно вийшли з аккаунту");
       window.location.href = "/auth/login";
     },
-    onError(error) {
-      console.log(error);
+    onError() {
+      toast.error("Не вдалося вийти з аккаунту");
     },
   });
 

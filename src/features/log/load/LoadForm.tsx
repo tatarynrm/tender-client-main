@@ -646,7 +646,6 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   // API Hooks
   const { saveCargo } = useLoads({});
   const { data: copyData } = useLoadById(copyId);
-  console.log(defaultValues, "DEFAULT VALUES");
 
   // Form Initialization
   const form = useForm<CargoServerFormValues>({
@@ -1055,7 +1054,6 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
         formData.append("audio", audioBlob, "voice_command.webm");
       }
 
-      console.log('--- SENDING AI ANALYZE REQUEST ---', formData);
       
       const { data } = await api.post("/ai/logistics/parse-cargo", formData);
 

@@ -35,7 +35,6 @@ export const useOnlineUsers = () => {
     };
 
     const onConnect = () => {
-      console.log("🟢 Connected/Reconnected to /user (global tracking)");
       userSocket.emit("heartbeat");
       fetchOnlineList();
     };

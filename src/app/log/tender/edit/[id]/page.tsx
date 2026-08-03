@@ -17,7 +17,6 @@ export default function EditCargoPage() {
     const fetchData = async () => {
       try {
         const { data } = await api.get(`/tender/${id}`);
-        console.log(data, "DATA");
 
         setData(data.content[0]);
       } catch (err) {

@@ -40,7 +40,6 @@ export const CRMSocketActionProvider = ({
     // 3. Об'єкт команд з типізованими ключами
     const commands: Record<SystemCommandType, (data?: any) => void> = {
       FORCE_RELOAD: () => {
-        console.log("FORCE");
 
         window.location.reload();
       },

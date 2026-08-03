@@ -1941,7 +1941,6 @@ export default function TenderSaveForm({
       }
     }, 80);
   };
-  console.log(form.formState.errors, "ERROR");
 
   return (
     <div className="gap-2 w-full overflow-x-hidden pb-40 scrollbar-thin">

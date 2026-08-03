@@ -50,7 +50,6 @@ const RegistrationPage = () => {
     // reset();
   };
 useEffect(()=>{
-console.log(formState.errors,'ERROR');
 
 const getUsrtList = async ()=>{
   try {
@@ -58,7 +57,6 @@ const getUsrtList = async ()=>{
     // console.log(data,'DATA');
     
   } catch (error) {
-    console.log(error);
     
   }
 }

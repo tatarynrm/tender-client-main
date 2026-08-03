@@ -125,7 +125,6 @@ const RegisterForm = () => {
   const { register, isLoadingRegister } = userRegisterMutation();
 
   const onSubmit = (values: TypeRegisterSchema) => {
-    console.log(values, "VALUES");
 
     register(
       { values },
@@ -149,7 +148,6 @@ const RegisterForm = () => {
     };
     getPreRegisterData();
   }, []);
-  console.log(form.formState.errors, "ERRORS");
 
   return (
     <AuthWrapper

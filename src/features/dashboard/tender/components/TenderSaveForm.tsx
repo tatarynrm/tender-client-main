@@ -475,7 +475,6 @@ export default function TenderSaveForm({
 
   const onSubmit: SubmitHandler<TenderFormValues> = async (data) => {
     const values = data as any;
-    console.log(values, "VALUES");
 
     const parseNum = (v: any) => {
       if (v === "" || v === undefined || v === null) return undefined;
@@ -530,7 +529,6 @@ export default function TenderSaveForm({
         formData.append("files", file);
       });
 
-      console.log("--- SENDING TENDER SAVE REQUEST ---");
       await api.post("/tender/save", formData);
 
       toast.success(isEdit ? "Тендер відредаговано!" : "Тендер створено!");
@@ -744,7 +742,6 @@ export default function TenderSaveForm({
                         <GoogleLocationInput
                           value={f.value ?? ""}
                           onChange={(location) => {
-                            console.log(location, "Location");
 
                             // формуємо addr для input
                             const addr = location.street

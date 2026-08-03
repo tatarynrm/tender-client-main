@@ -11,7 +11,6 @@ export default function EditCargoPage() {
 
   // 1. Extract status helpers directly from your hook
   const { data, isLoading, isError } = useUserById(id as string);
-  console.log(data, "DATA");
 
   // 2. Handle the loading state
   if (isLoading) {

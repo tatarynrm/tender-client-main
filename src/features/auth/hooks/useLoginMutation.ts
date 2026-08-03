@@ -84,7 +84,6 @@ export function useLoginMutation(
           // 2. Перепідключаємось, щоб бекенд отримав новий handshake
           loadSocket.disconnect().connect();
 
-          console.log("🔌 Socket reconnected with user:", user.id);
         }
         
         // Track login activity

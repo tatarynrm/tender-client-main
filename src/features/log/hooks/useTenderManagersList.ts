@@ -70,7 +70,6 @@ export const useTenderListManagers = (filters: TenderListFilters) => {
       queryClient.invalidateQueries({ queryKey });
     };
     const handleRefresh = () => {
-      console.log("Отримано нову подію, оновлюємо список...");
       queryClient.invalidateQueries({ queryKey });
     };
     const handleNewBid = (updatedTender: ITender) => {

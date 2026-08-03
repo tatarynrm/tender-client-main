@@ -48,7 +48,6 @@ export function CreateCompanyDialog({ companyData }: Props) {
     { ids: number; country_name: string }[]
   >([]);
   // const { refetch } = useGetUsersPreRegister();
-  console.log(companyData, "COMPANY DATA");
 
   // Отримуємо onSubmit та isPending з хуку (тільки сабміт)
   const { onSubmit: handleCreateCompany, isPending } = useCreateCompany();

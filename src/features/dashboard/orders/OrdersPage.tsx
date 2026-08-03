@@ -76,7 +76,6 @@ export default function OrdersPage({ profile }: { profile: any }) {
     const query = searchQuery.toLowerCase();
     return route.includes(query) || num.includes(query);
   });
-  console.log(stats)
   return (
     <div className="flex flex-col gap-5 w-full  mx-auto pb-10">
       <div className="flex items-center gap-4 pt-2">

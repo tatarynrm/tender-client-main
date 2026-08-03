@@ -12,8 +12,8 @@ export function useUpdateProfileMutation() {
       onSuccess() {
         toast.success("Ви успішно обновили профіль");
       },
-      onError(error) {
-        console.log(error, "ERROR ON UPDATE PROFILE MUTATION HOOK");
+      onError() {
+        toast.error("Не вдалося оновити профіль");
       },
     });
 

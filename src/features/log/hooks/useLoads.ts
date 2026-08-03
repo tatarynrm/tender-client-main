@@ -143,7 +143,6 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       };
 
       return Object.entries(currentFilters).every(([key, filterValue]) => {
-        console.log(key, filterValue, "KEY FILTER VALUE 128");
         // Пропускаємо порожні значення, пагінацію та ліміти
         if (
           filterValue === undefined ||
@@ -155,7 +154,6 @@ export const useLoads = (filters: TenderListFilters = {}) => {
         }
 
         if (checkRules[key]) {
-          console.log(checkRules[key], "CHECKRULES KEY");
 
           return checkRules[key](filterValue);
         }
@@ -252,11 +250,10 @@ export const useLoads = (filters: TenderListFilters = {}) => {
       if (axios.isAxiosError(err)) {
         // Тепер TS знає, що це AxiosError і властивість response існує
         const message = err.response?.data?.message || "Виникла помилка";
-        console.log(message, "DATA");
         toast.message(message);
       } else {
         // Обробка звичайної помилки JS
-        console.log(err.message);
+        toast.message(err.message);
       }
     },
   });

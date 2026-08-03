@@ -55,7 +55,6 @@ const SettingsApp: React.FC = () => {
 
   const handleSave = () => {
     // Here you would typically save settings to backend
-    console.log('Saving settings:', settings);
     alert('Налаштування збережено!');
   };
 

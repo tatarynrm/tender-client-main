@@ -67,7 +67,6 @@ export const useTenderListClient = (filters: TenderListFilters) => {
     if (!profile?.person?.id || !tender) return;
 
     const handleRefresh = () => {
-      console.log("Отримано нову подію, оновлюємо список...");
       queryClient.invalidateQueries({ queryKey });
     };
 
