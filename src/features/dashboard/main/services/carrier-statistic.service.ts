@@ -51,6 +51,7 @@ export interface ILastEvent {
   label: string;
   date: string | null;
   info: string | null;
+  info2?: string | null;
 }
 
 export interface ICarrierStatistic {
@@ -207,11 +208,16 @@ class CarrierStatisticService {
     perPage: number = 100
   ): Promise<IActiveTransport[]> {
     try {
-      const response = await api.post<IActiveTransport[]>(
+      const response = await api.post<
+        IActiveTransport[] | { content?: IActiveTransport[] }
+      >(
         `/oracle/carrier-transportation-list/${mid}`,
         { status, pagination: { page, per_page: perPage } }
       );
-      return response.data;
+      // Ендпоінт віддає { status, content, props } — масив лежить у content.
+      // Перевірку на масив лишаємо на випадок старої форми відповіді.
+      const data = response.data;
+      return Array.isArray(data) ? data : (data?.content ?? []);
     } catch (error) {
       console.error("Failed to fetch transportation list", error);
       return [];

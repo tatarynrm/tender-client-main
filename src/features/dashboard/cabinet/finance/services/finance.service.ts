@@ -105,25 +105,68 @@ export interface IInvoice {
   perev_list: IPerevItem[];
 }
 
+export interface IPagination {
+  page: number;
+  per_page: number;
+  page_count: number;
+  rows_all: number;
+}
+
 export interface IFinanceListResponse {
   status: string;
   content: IInvoice[];
   props: {
-    pagination: {
-      page: number;
-      per_page: number;
-      page_count: number;
-      rows_all: number;
-    };
+    pagination: IPagination;
   };
 }
+
+/**
+ * Елемент списку перевезень (p_carrier.run → perev_list). Структурно це той
+ * самий рядок, що й у perev_list всередині рахунку, лише ttn_list може бути
+ * відсутнім — рахунок ще не виставлений.
+ */
+export type ITransportationItem = Omit<IPerevItem, "ttn_list"> & {
+  ttn_list?: ITtnItem[];
+};
+
+export interface ITransportationListResponse {
+  status: string;
+  content: ITransportationItem[];
+  props?: {
+    pagination?: IPagination;
+  };
+}
+
+/**
+ * Приводить перевезення до форми рахунку, щоб вкладка «Невиставлені рахунки»
+ * рендерилась тією ж карткою. Рахунку ще немає, тому rah_num порожній —
+ * картка за цією ознакою показує номер заявки замість номера рахунку.
+ */
+export const transportationToInvoice = (item: ITransportationItem): IInvoice => ({
+  kod_rah: item.kod_zay,
+  firma: item.firma,
+  rah_num: "",
+  rah_dat: item.zav_date,
+  doc_otrim: null,
+  dat_opl_plan: item.opl_plan_date ?? null,
+  dat_opl: null,
+  grafik_dat: null,
+  economist: item.manager,
+  suma: item.fraht ?? 0,
+  sumaopl: 0,
+  borg: 0,
+  valut: item.valut,
+  valut_code: item.valut_code,
+  problem_info: null,
+  perev_list: [{ ...item, ttn_list: item.ttn_list ?? [] }],
+});
 
 export type FinanceStatusType =
   | "GRAFIK"
   | "OPL_CURR_MONTH"
   | "OPL_PREV_MONTH"
   | "PROBLEM"
-  | "BORG"
+  | "DOC_WAIT"
   | "PLAN"
   | "OPL_PREV"
   | "OPL_CUR"
@@ -162,6 +205,34 @@ class FinanceService {
       return response.data;
     } catch (error) {
       console.error("Failed to fetch finance list:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Список перевезень (func: perev_list). Використовується вкладкою
+   * «Невиставлені рахунки» — там рахунку ще немає, тож rah_list порожній.
+   */
+  async getTransportationList(
+    mid: string | number,
+    status: FinanceStatusType,
+    page: number = 1,
+    perPage: number = 20
+  ): Promise<ITransportationListResponse | null> {
+    try {
+      const response = await api.post<ITransportationListResponse>(
+        `/oracle/carrier-transportation-list/${mid}`,
+        {
+          status,
+          pagination: {
+            page,
+            per_page: perPage,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Failed to fetch transportation list:", error);
       return null;
     }
   }

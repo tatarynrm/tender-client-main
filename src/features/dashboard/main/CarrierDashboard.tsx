@@ -83,8 +83,6 @@ export const CarrierDashboard = () => {
 
   const plannedPaymentDate = plannedPayments[0]?.date_opl;
 
-  console.log("Дані з бекенду (expectedIncomes):", expectedIncomes);
-  console.log("Дані з бекенду (plannedPayments):", plannedPayments);
 
   // Dynamically find the array of active transports
   const activeTransports: IActiveTransport[] = Array.isArray(data)
@@ -276,19 +274,22 @@ export const CarrierDashboard = () => {
                 <div key={idx} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-bold text-[#3B52B4]">{event.info || "Подія"}</span>
+                    {event.info2 && (
+                      <span className="text-sm font-bold text-[#3B52B4] font-normal">{event.info2}</span>
+                    )}
                     {event.date && (
                       <span className="text-xs text-[#8BA6EB] font-medium">{format(parseISO(event.date), "dd.MM.yy")}</span>
                     )}
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${event.label.toLowerCase().includes("oplata") || event.label.toLowerCase().includes("оплата")
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${(event.code ?? event.label ?? '').toLowerCase().includes("oplata") || (event.code ?? event.label ?? '').toLowerCase().includes("оплата")
                       ? "bg-[#D1FAE5] text-[#059669]"
-                      : event.label.toLowerCase().includes("docin") || event.label.toLowerCase().includes("документ")
+                      : (event.code ?? event.label ?? '').toLowerCase().includes("docin") || (event.code ?? event.label ?? '').toLowerCase().includes("документ")
                         ? "bg-[#FFEDD5] text-[#D97706]"
                         : "bg-[#E0E7FF] text-[#3B52B4]"
                       }`}
                   >
-                    {event.label === 'OPLATA' ? 'Оплата' : event.label === 'DOCIN' ? 'Документ' : event.label}
+                    {event.label}
                   </span>
                 </div>
               ))
@@ -345,7 +346,7 @@ export const CarrierDashboard = () => {
                         : "bg-[#D1FAE5] text-[#059669]"
                       }`}
                   >
-                    {transport.status_detail_name || "Доставлено"}
+                    {transport.status_name}
                   </span>
                   <span className="text-lg font-bold text-emerald-500 whitespace-nowrap w-32 text-right">
                     {transport.fraht ? `${transport.fraht.toLocaleString("uk-UA")} ${transport.valut_code || transport.valut || ""}` : "—"}

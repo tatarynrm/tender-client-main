@@ -153,29 +153,28 @@ function CabinetPageContent() {
   return (
     <div className="w-full space-y-6">
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Card 1 */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+       
         <div className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col items-center justify-center p-6 py-8">
           <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_all || 0}</div>
           <div className="text-sm font-semibold text-[#3B52B4] border-t border-blue-100 w-full text-center pt-2">Всього рейсів за весь час</div>
         </div>
 
-        {/* Card 2 */}
+     
         <div className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col items-center justify-center p-6 py-8">
           <div className="text-5xl font-bold text-[#3B52B4] mb-2">{stats?.zay_count_month || 0}</div>
           <div className="text-sm font-semibold text-[#3B52B4] border-t border-blue-100 w-full text-center pt-2">Цього місяця</div>
         </div>
 
-        {/* Card 3 (Empty) */}
+   
         <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 py-8">
-          {/* Future use */}
+     
         </div>
-      </div>
+      </div> */}
 
       {/* Tabs and Controls */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 mt-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
         <div className="flex flex-col gap-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-2">Статус рейсів</span>
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => (
               <button
@@ -346,7 +345,7 @@ function CabinetPageContent() {
                 <div className="border-t border-blue-50 px-5 py-2.5 flex items-center justify-between text-xs text-blue-400">
                   <div className="flex flex-wrap items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-1.5 font-medium">
-                      <Truck size={14} className="text-gray-400" /> 
+                      <Truck size={14} className="text-gray-400" />
                       <span className="uppercase text-gray-700">{item.am}</span>
                       {item.pr && <span className="uppercase text-gray-500">/ {item.pr}</span>}
                     </div>
@@ -375,15 +374,15 @@ function CabinetPageContent() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 rounded-xl border-blue-100 shadow-sm p-1 bg-white">
-                        <DropdownMenuItem 
-                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600" 
+                        <DropdownMenuItem
+                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600"
                           onClick={(e) => { e.stopPropagation(); if (item.manager?.email) window.location.href = `mailto:${item.manager.email}`; }}
                         >
                           <Mail size={16} className="text-blue-300" />
                           <span className="text-xs font-medium truncate">{item.manager?.email || "Немає email"}</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600" 
+                        <DropdownMenuItem
+                          className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-600"
                           onClick={(e) => { e.stopPropagation(); if (item.manager?.phone) window.location.href = `tel:${item.manager.phone.replace(/[^0-9+]/g, '')}`; }}
                         >
                           <Phone size={16} className="text-blue-300" />

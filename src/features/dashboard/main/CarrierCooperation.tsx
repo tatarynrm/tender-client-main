@@ -80,7 +80,7 @@ export const CarrierCooperation = () => {
   const activeDirectionsList = activeDirectionTab === 'reg' ? data.direction_list_reg : data.direction_list_mn;
   const activeDirectionsCount = activeDirectionsList?.reduce((acc: number, cur: any) => acc + (cur.zay_count || 0), 0) || 1;
   const activeDirections = activeDirectionsList?.slice(0, 6) || [];
-
+  const priorityTotalCount = priorities.reduce((acc: number, cur: any) => acc + (cur.zay_count || 0), 0) || 1;
   return (
     <div className="flex flex-col gap-3 mt-2 w-full text-slate-800">
       {/* 4 Cards */}
@@ -172,7 +172,7 @@ export const CarrierCooperation = () => {
                   <span className="font-bold text-slate-700">
                     {activeDog?.termin ? format(parseISO(activeDog.termin), "dd.MM.yyyy") : "—"}
                   </span>
-                  <span className="text-[#8BA6EB] text-[10px]">автопролонгація</span>
+                  {/* <span className="text-[#8BA6EB] text-[10px]">автопролонгація</span> */}
                 </div>
               </div>
               {activeDog?.edo_vchasno === 1 ? "ЕДО «Вчасно»" : activeDog?.edo_medok === 1 &&
@@ -227,8 +227,10 @@ export const CarrierCooperation = () => {
 
           <div className="flex flex-col gap-4">
             {priorities.length > 0 ? (
+
               priorities.map((dir: any, idx: number) => {
                 const badge = priorityBadges[idx] || priorityBadges[3];
+                const percentage = Math.round((dir.zay_count / priorityTotalCount) * 100);
                 return (
                   <div key={idx} className="flex items-center justify-between border-b border-slate-50 pb-3 last:border-0">
                     <div className="flex items-center gap-3">
@@ -241,9 +243,12 @@ export const CarrierCooperation = () => {
                         <span className="text-xs text-[#8BA6EB]">{dir.zay_count} виконаних рейсів</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${badge.bg} ${badge.color}`}>
-                        {badge.text}
+                    <div className="flex items-center gap-3 min-w-[140px]">
+                      <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                        <div className="bg-[#3B52B4] h-full rounded-full" style={{ width: `${percentage}%` }}></div>
+                      </div>
+                      <span className={`font-bold text-sm w-10 text-right ${idx === 0 ? "text-[#3B52B4]" : "text-slate-500"}`}>
+                        {percentage}%
                       </span>
                     </div>
                   </div>
