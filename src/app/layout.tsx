@@ -53,7 +53,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const profile = await getProfile();
-
+   console.log('TEST');
   return (
     <html lang="uk" suppressHydrationWarning className="scrollbar-thin">
       <head>
