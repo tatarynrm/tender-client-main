@@ -33,6 +33,7 @@ export const translateActivityPath = (path: string): string => {
     "/admin/notifications": "Сповіщення",
     "/admin/settings": "Налаштування",
     "/admin/suggestions": "Відгуки і пропозиції",
+    "/admin/tasks": "Завдання проєкту",
     "/admin/telegram": "Telegram",
     "/admin/updates": "Оновлення",
     "/log/apps": "Логи: Додатки",

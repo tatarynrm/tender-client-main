@@ -22,6 +22,7 @@ import {
   Sparkles,
   Mail,
   Video,
+  ClipboardList,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -85,6 +86,11 @@ const links: MenuItem[] = [
         icon: Send,
       },
     ],
+  },
+  {
+    name: "Завдання проєкту",
+    href: "/admin/tasks",
+    icon: ClipboardList,
   },
   {
     name: "Відгуки та ідеї",
