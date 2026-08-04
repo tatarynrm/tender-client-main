@@ -107,6 +107,11 @@ const links: MenuItem[] = [
     href: "/admin/notifications",
     icon: Bell,
   },
+  {
+    name: "Документація БД Oracle",
+    href: "/admin/documentation",
+    icon: FileStack,
+  },
 ];
 
 export default function AdminSidebar({

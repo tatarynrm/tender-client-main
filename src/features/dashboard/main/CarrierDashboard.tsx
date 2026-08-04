@@ -83,6 +83,8 @@ export const CarrierDashboard = () => {
 
   const plannedPaymentDate = plannedPayments[0]?.date_opl;
 
+  const chartData = Array.isArray(data.zay_chart) ? data.zay_chart : [];
+
 
   // Dynamically find the array of active transports
   const activeTransports: IActiveTransport[] = Array.isArray(data)
@@ -208,7 +210,7 @@ export const CarrierDashboard = () => {
           </h3>
           <div className="flex-1 mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.zay_chart} margin={{ top: 20, right: 0, left: 0, bottom: 10 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 0, left: 0, bottom: 10 }}>
                 <XAxis
                   dataKey="month"
                   tick={<CustomXAxisTick />}
@@ -235,7 +237,7 @@ export const CarrierDashboard = () => {
                     position="top"
                     content={(props: any) => {
                       const { x, y, width, value, index } = props;
-                      const isCurrent = data.zay_chart[index].current_month === 1;
+                      const isCurrent = chartData[index]?.current_month === 1;
                       return (
                         <text
                           x={x + width / 2}
@@ -250,7 +252,7 @@ export const CarrierDashboard = () => {
                       );
                     }}
                   />
-                  {data.zay_chart.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.current_month === 1 ? "#3B52B4" : "#D4DEF8"}
