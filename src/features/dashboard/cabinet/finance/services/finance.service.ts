@@ -26,6 +26,7 @@ export interface IFinanceStatistic {
   opl_two_month_rah_count?: number;
   opl_curr_month_rah_count?: number;
   opl_prev_month_rah_count?: number;
+  doc_wait_zay_count?:number;
 }
 
 export interface IContactPerson {

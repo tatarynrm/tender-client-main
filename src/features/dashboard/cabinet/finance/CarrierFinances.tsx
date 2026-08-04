@@ -474,7 +474,7 @@ export const CarrierFinances = () => {
             >
               <span>Невиставлені рахунки</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "DOC_WAIT" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.all_zay_count || statistic?.all_rah_count || statistic?.all_borg || 0}
+                {statistic?.doc_wait_zay_count}
               </span>
             </button>
 
