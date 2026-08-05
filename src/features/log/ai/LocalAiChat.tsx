@@ -139,33 +139,39 @@ export default function LocalAiChat() {
   );
 
   return (
-    <div className="relative h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-border/50 bg-background">
-      {/* Фон: хвиля з частинок + м'яке свічення зверху */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.55] dark:opacity-40">
-        <ParticleWave transparent amount={140} opacity={0.45} mouseStrength={1.6} />
+    <div className="relative h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-violet-900/50 bg-[#070718]">
+      {/* Частинки */}
+      <div className="pointer-events-none absolute inset-0 opacity-30">
+        <ParticleWave transparent amount={100} opacity={0.35} mouseStrength={1.2} />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-sky-400/[0.07] to-transparent" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/70 via-background/40 to-background/85" />
+
+      {/* Туманності — кольорові світлові плями */}
+      <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-violet-700/25 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-16 bottom-1/3 h-64 w-64 rounded-full bg-fuchsia-700/20 blur-[100px]" />
+      <div className="pointer-events-none absolute left-1/2 -bottom-10 h-56 w-56 -translate-x-1/2 rounded-full bg-indigo-700/20 blur-[90px]" />
+
+      {/* Загальне затемнення, щоб частинки не пробивались надто сильно */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#070718]/60 via-transparent to-[#070718]/80" />
 
       <div className="relative flex h-full gap-4 p-3 sm:p-4">
         <aside className="hidden w-64 shrink-0 lg:block">{sessionPanel}</aside>
 
-        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-background/45 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
-          <header className="flex items-center justify-between gap-3 border-b border-border/50 px-3 py-2.5 sm:px-4">
+        <section className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-violet-800/30 bg-white/[0.03] shadow-[0_20px_60px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl">
+          <header className="flex items-center justify-between gap-3 border-b border-violet-800/30 px-3 py-2.5 sm:px-4">
             <div className="flex min-w-0 items-center gap-2.5">
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
                   <button
                     type="button"
                     aria-label="Розмови"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 text-muted-foreground transition-colors hover:text-foreground lg:hidden"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-800/50 text-zinc-500 transition-colors hover:text-violet-300 lg:hidden"
                   >
                     <PanelLeft className="h-4 w-4" />
                   </button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-72 p-4">
+                <SheetContent side="left" className="w-72 border-violet-900/50 bg-[#070718] p-4">
                   <SheetHeader className="p-0 pb-3">
-                    <SheetTitle className="text-sm">Розмови</SheetTitle>
+                    <SheetTitle className="text-sm text-zinc-200">Розмови</SheetTitle>
                   </SheetHeader>
                   {sessionPanel}
                 </SheetContent>
@@ -174,10 +180,10 @@ export default function LocalAiChat() {
               <AiOrb size={26} active={sendMessage.isPending} />
 
               <div className="min-w-0">
-                <h1 className="truncate text-sm font-semibold">
+                <h1 className="truncate bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-sm font-semibold text-transparent">
                   AI помічник ICT
                 </h1>
-                <p className="truncate text-[11px] text-muted-foreground/70">
+                <p className="truncate text-[11px] text-zinc-600">
                   локальна модель — дані не залишають мережу компанії
                 </p>
               </div>
@@ -187,8 +193,8 @@ export default function LocalAiChat() {
               className={cn(
                 "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium backdrop-blur",
                 online
-                  ? "border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-300"
-                  : "border-amber-500/25 bg-amber-500/[0.08] text-amber-600 dark:text-amber-300",
+                  ? "border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-300"
+                  : "border-amber-500/25 bg-amber-500/[0.08] text-amber-300",
               )}
               title={
                 health?.available
@@ -224,7 +230,7 @@ export default function LocalAiChat() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent h-full overflow-y-auto"
+              className="scrollbar-thin scrollbar-thumb-violet-800/50 scrollbar-track-transparent h-full overflow-y-auto"
             >
               <div className="mx-auto flex max-w-3xl flex-col gap-5 px-3 py-5 sm:px-5">
                 {messages.length === 0 && !sendMessage.isPending && (
@@ -260,7 +266,7 @@ export default function LocalAiChat() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   aria-label="До останнього повідомлення"
-                  className="absolute bottom-4 left-1/2 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-border/60 bg-background/80 text-muted-foreground shadow-lg backdrop-blur-xl transition-colors hover:text-foreground"
+                  className="absolute bottom-4 left-1/2 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-violet-800/50 bg-[#070718]/80 text-zinc-500 shadow-lg backdrop-blur-xl transition-colors hover:text-violet-300"
                 >
                   <ArrowDown className="h-4 w-4" />
                 </motion.button>

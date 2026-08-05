@@ -137,24 +137,24 @@ export function AiSessionList({
 
                 {isConfirming ? (
                   <>
-                    <span className="min-w-0 flex-1 truncate text-[12px] text-destructive">
+                    <span className="min-w-0 flex-1 truncate text-[12px] text-red-400">
                       Видалити розмову?
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDelete(session.id)}
                       aria-label="Підтвердити видалення"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-destructive/10"
+                      className="shrink-0 rounded-md p-0.5 hover:bg-red-900/30"
                     >
-                      <Check className="h-3.5 w-3.5 text-destructive" />
+                      <Check className="h-3.5 w-3.5 text-red-400" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmId(null)}
                       aria-label="Скасувати"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-foreground/5"
+                      className="shrink-0 rounded-md p-0.5 hover:bg-white/5"
                     >
-                      <X className="h-3.5 w-3.5 text-muted-foreground" />
+                      <X className="h-3.5 w-3.5 text-zinc-500" />
                     </button>
                   </>
                 ) : (
@@ -167,10 +167,10 @@ export function AiSessionList({
                       <MessageSquare
                         className={cn(
                           "h-3.5 w-3.5 shrink-0 transition-colors",
-                          isActive ? "text-sky-400" : "text-muted-foreground/60",
+                          isActive ? "text-violet-400" : "text-zinc-600",
                         )}
                       />
-                      <span className="truncate">{session.title}</span>
+                      <span className={cn("truncate", isActive ? "text-zinc-200" : "text-zinc-400")}>{session.title}</span>
                     </button>
 
                     <button
