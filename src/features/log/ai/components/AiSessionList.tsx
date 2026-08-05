@@ -121,17 +121,17 @@ export function AiSessionList({
                 className={cn(
                   "group relative flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm transition-colors",
                   isConfirming
-                    ? "bg-destructive/[0.07]"
+                    ? "bg-red-900/20"
                     : isActive
-                      ? "bg-foreground/[0.06] font-medium"
-                      : "hover:bg-foreground/[0.035]",
+                      ? "bg-violet-900/30 font-medium"
+                      : "hover:bg-violet-900/20",
                 )}
               >
                 {isActive && !isConfirming && (
                   <motion.span
                     layoutId="ai-session-active"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-gradient-to-b from-sky-400 to-indigo-500"
+                    className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-gradient-to-b from-violet-400 to-pink-500"
                   />
                 )}
 
