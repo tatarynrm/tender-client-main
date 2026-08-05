@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import Flag from "react-flagkit";
 import { format } from "date-fns";
 import {
@@ -70,15 +71,24 @@ export function TenderCardManagers({
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const { openModal, confirm } = useModalStore();
   const { profile } = useProfile();
+  const pathname = usePathname();
+
+  // Меню тендера доступне лише в просторах менеджерів ICT та адміністраторів.
+  // У просторі перевізника (/dashboard) рольових привілеїв не даємо.
+  const isManagerArea =
+    pathname?.startsWith("/log") || pathname?.startsWith("/admin");
 
   const isAuthor = React.useMemo(() => {
     if (!profile || !cargo) return false;
+    if (!isManagerArea) return false;
 
     const isIct = profile.role.is_ict;
     const isAdmin = profile.role.is_admin;
 
-    // Менеджери ICT та адміністратори мають доступ до меню тендера
-    if (isIct || isAdmin) return true;
+    // ICT-менеджер + адміністратор — повний доступ до всіх тендерів.
+    // Лише is_ict (без is_admin) — доступ тільки до власних тендерів,
+    // тобто далі йде перевірка авторства.
+    if (isIct && isAdmin) return true;
 
     const pEmail = profile.email || (profile as any).usr_email || "";
     const cEmail = cargo.email || (cargo as any).usr_email || "";
@@ -95,7 +105,7 @@ export function TenderCardManagers({
       return true;
 
     return false;
-  }, [profile, cargo]);
+  }, [profile, cargo, isManagerArea]);
 
   const [myPrice, setMyPrice] = React.useState(0);
   React.useEffect(() => {
