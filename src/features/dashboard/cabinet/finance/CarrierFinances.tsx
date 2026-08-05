@@ -37,6 +37,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/components/ui/tooltip";
 
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
@@ -78,17 +83,28 @@ const ContactDropdown = ({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 rounded-full border border-[#D9E2F2] dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition outline-none cursor-pointer">
-          <div className="p-1 border border-[#D9E2F2] dark:border-slate-500 rounded-full">
-            <User size={12} className="text-[#51648B] dark:text-slate-300" />
-          </div>
-          <span className="text-[13px] font-medium text-[#51648B] dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]">
-            {economistName}
-          </span>
-          <ChevronLeft size={14} className="text-[#8B9EC7] -rotate-90 ml-0.5" />
-        </button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-700 rounded-full border border-[#D9E2F2] dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 transition outline-none cursor-pointer">
+              <div className="p-1 border border-[#D9E2F2] dark:border-slate-500 rounded-full">
+                <User size={12} className="text-[#51648B] dark:text-slate-300" />
+              </div>
+              <span className="text-[13px] font-medium text-[#51648B] dark:text-slate-200 truncate max-w-[140px] sm:max-w-[200px]">
+                {economistName}
+              </span>
+              <ChevronLeft size={14} className="text-[#8B9EC7] -rotate-90 ml-0.5" />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent
+          side="top"
+          sideOffset={6}
+          className="bg-slate-200 text-slate-900 dark:bg-slate-700 dark:text-slate-100 [&>span]:hidden"
+        >
+          {economist?.department}
+        </TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-56 rounded-xl border-[#D9E2F2] dark:border-slate-700 shadow-sm p-1 bg-white dark:bg-slate-800">
         <DropdownMenuItem
           className="flex items-center gap-3 py-2 px-3 rounded-lg cursor-pointer hover:bg-[#F4F7FB] dark:hover:bg-slate-700 focus:bg-[#F4F7FB] dark:focus:bg-slate-700 text-[#51648B] dark:text-slate-200"
@@ -553,7 +569,7 @@ export const CarrierFinances = () => {
             const statusDateText = isPaid
               ? `Оплачено ${formatDate(actualPaidDate)}`
               : isNotInvoiced
-                ? "Очікуються документи для виставлення рахунку"
+                ? ""
                 : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
 
             // Badges
@@ -610,7 +626,7 @@ export const CarrierFinances = () => {
 
                   {/* Legal entity info */}
                   <div className="text-xs font-semibold text-[#8BA6EB]">
-                    Юрособа :{" "}
+                    Платник :{" "}
                     <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
                       {invoice.firma}
                     </strong>
@@ -654,11 +670,11 @@ export const CarrierFinances = () => {
                       {statusDateText}
                     </span>
                     {/* Debt at the very bottom */}
-                    {debtSum > 0 && (
+                    {/* {debtSum > 0 && (
                       <span className="text-xs font-bold text-red-500 dark:text-red-400 select-all">
                         Борг: {Math.round(debtSum).toLocaleString("uk-UA")} {currencyLabel}
                       </span>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Dropdown for Contacts */}

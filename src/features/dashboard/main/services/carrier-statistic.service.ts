@@ -54,6 +54,21 @@ export interface ILastEvent {
   info2?: string | null;
 }
 
+/**
+ * Статистика тендерів приходить не з Oracle, а з процедури Postgres
+ * tender_statistic — бекенд доклеює її до відповіді /oracle/carrier-statistic.
+ */
+export interface ITenderStatistic {
+  count_plan: number;
+  count_active: number;
+  count_ending: number;
+  /**
+   * Подія по тендерах у форматі last_events. Поки тендерної події немає,
+   * процедура віддає порожній об'єкт — звідси Partial.
+   */
+  event: Partial<ILastEvent> | null;
+}
+
 export interface ICarrierStatistic {
   kod_per: number;
   work_begin: string;
@@ -84,6 +99,7 @@ export interface ICarrierStatistic {
   }[];
   last_events?: ILastEvent[];
   zay_list_10?: IActiveTransport[];
+  tender_statistic?: ITenderStatistic | null;
   [key: string]: any;
 }
 

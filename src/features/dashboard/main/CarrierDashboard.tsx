@@ -17,6 +17,8 @@ import {
   carrierStatisticService,
   ICarrierStatistic,
   IActiveTransport,
+  ITenderStatistic,
+  ILastEvent,
 } from "./services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
 
@@ -85,6 +87,46 @@ export const CarrierDashboard = () => {
 
   const chartData = Array.isArray(data.zay_chart) ? data.zay_chart : [];
 
+  // Тендери — з процедури Postgres tender_statistic, яку бекенд доклеює
+  // до оракловської статистики. Може бути відсутня, тому все через ?? 0.
+  const tenderStatistic: ITenderStatistic | null = data.tender_statistic ?? null;
+  const tendersPlannedActive =
+    (tenderStatistic?.count_plan ?? 0) + (tenderStatistic?.count_active ?? 0);
+  const tendersEndingToday = tenderStatistic?.count_ending ?? 0;
+
+  // Oracle не знає про тендери й віддає в last_events лише порожній
+  // плейсхолдер TENDER — реальна подія приходить з tender_statistic.event.
+  // Підставляємо її на місце плейсхолдера, а порожній плейсхолдер ховаємо.
+  const oracleEvents: ILastEvent[] = Array.isArray(data.last_events)
+    ? data.last_events
+    : [];
+
+  const tenderEvent = tenderStatistic?.event;
+  const hasTenderEvent =
+    !!tenderEvent &&
+    Object.values(tenderEvent).some(
+      (value) => value !== null && value !== undefined && value !== ""
+    );
+
+  const lastEvents: ILastEvent[] = hasTenderEvent
+    ? [...oracleEvents]
+    : oracleEvents.filter((item) => item.code !== "TENDER");
+
+  if (hasTenderEvent) {
+    const mergedTenderEvent: ILastEvent = {
+      code: "TENDER",
+      label: "Тендер",
+      date: null,
+      info: null,
+      info2: null,
+      ...tenderEvent,
+    };
+    const tenderIdx = lastEvents.findIndex((item) => item.code === "TENDER");
+
+    if (tenderIdx >= 0) lastEvents[tenderIdx] = mergedTenderEvent;
+    else lastEvents.unshift(mergedTenderEvent);
+  }
+
 
   // Dynamically find the array of active transports
   const activeTransports: IActiveTransport[] = Array.isArray(data)
@@ -112,10 +154,10 @@ export const CarrierDashboard = () => {
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/3">
           <div className="text-sm text-blue-100">
-            Виграно тендерів <span className="font-bold text-white ml-1">126</span>
+            Виграно тендерів <span className="font-bold text-white ml-1">0</span>
           </div>
           <div className="text-sm text-blue-100">
-            Успішність участі в тендерах <span className="font-bold text-white ml-1">90%</span>
+            Успішність участі в тендерах <span className="font-bold text-white ml-1">0%</span>
           </div>
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/3 md:items-end md:text-right">
@@ -141,11 +183,11 @@ export const CarrierDashboard = () => {
         {/* Card 1 */}
         <div className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-[#D4DEF8] flex flex-col justify-between">
           <div className="flex items-center gap-4 pb-3 border-b border-[#D4DEF8]">
-            <span className="text-4xl font-bold text-[#3B52B4] w-10 text-center">7</span>
+            <span className="text-4xl font-bold text-[#3B52B4] w-10 text-center">{tendersPlannedActive}</span>
             <span className="text-sm font-bold text-[#3B52B4] leading-tight">Заплановані та активні<br />тендери</span>
           </div>
           <div className="flex items-center gap-4 pt-3">
-            <span className="text-3xl font-bold text-[#EF4444] w-10 text-center">2</span>
+            <span className="text-3xl font-bold text-[#EF4444] w-10 text-center">{tendersEndingToday}</span>
             <span className="text-sm font-bold text-[#EF4444] leading-tight">Завершуються сьогодні</span>
           </div>
         </div>
@@ -156,7 +198,7 @@ export const CarrierDashboard = () => {
             {data.zay_count_active}
           </span>
           <span className="text-sm font-bold text-[#3B52B4] leading-tight">
-            Активні<br />перевезення
+            Перевезення<br />в роботі
           </span>
         </div>
 
@@ -168,7 +210,7 @@ export const CarrierDashboard = () => {
           </div>
           <div className="flex items-center gap-4 pt-3">
             <span className="text-3xl font-bold text-[#3B52B4] w-8 text-center">{data.doc_no_set}</span>
-            <span className="text-sm font-bold text-[#3B52B4]">Документи до врегулювання</span>
+            <span className="text-sm font-bold text-[#3B52B4]">Рахунки до врегулювання</span>
           </div>
         </div>
 
@@ -271,8 +313,8 @@ export const CarrierDashboard = () => {
           </h3>
           <div className="flex flex-col flex-1 overflow-y-auto pr-2 custom-scrollbar">
 
-            {data.last_events && data.last_events.length > 0 ? (
-              data.last_events.map((event, idx) => (
+            {lastEvents.length > 0 ? (
+              lastEvents.map((event, idx) => (
                 <div key={idx} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-bold text-[#3B52B4]">{event.info || "Подія"}</span>
