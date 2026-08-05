@@ -19,9 +19,11 @@ import {
   Gavel,
   Settings,
   Sparkles,
+  Bot,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
+import { canUseLocalAi } from "@/shared/constants/local-ai";
 import { IUserProfile } from "@/shared/types/user.types";
 import { cn } from "@/shared/utils";
 
@@ -70,6 +72,12 @@ const links: MenuItem[] = [
     icon: MapPin,
     href: "/log/map",
   },
+  {
+    name: "AI помічник",
+    icon: Bot,
+    href: "/log/ai",
+    status: "new",
+  },
 ];
 
 const defaultFooterLinks: MenuItem[] = [
@@ -88,20 +96,25 @@ export default function LogSidebar({
   const pathname = usePathname();
 
   // Filter links based on user roles
-  const mainLinks = links.map((group) => {
-    if (group.name === "Тендери" && group.children) {
-      return {
-        ...group,
-        children: group.children.filter((child) => {
-          if (child.name === "На погодженні") {
-            return profile?.role?.is_admin && profile?.role?.is_ict;
-          }
-          return true;
-        }),
-      };
-    }
-    return group;
-  });
+  const mainLinks = links
+    // AI-помічник поки персональний — решті користувачів пункт не показуємо
+    .filter(
+      (group) => group.href !== "/log/ai" || canUseLocalAi(profile?.email),
+    )
+    .map((group) => {
+      if (group.name === "Тендери" && group.children) {
+        return {
+          ...group,
+          children: group.children.filter((child) => {
+            if (child.name === "На погодженні") {
+              return profile?.role?.is_admin && profile?.role?.is_ict;
+            }
+            return true;
+          }),
+        };
+      }
+      return group;
+    });
 
   useEffect(() => {
     const saved = localStorage.getItem("userSidebarOpenMenus");
