@@ -40,8 +40,8 @@ export function AiMessage({ message, animate = false }: Props) {
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="flex justify-end"
       >
-        <div className="max-w-[85%] rounded-2xl rounded-br-md border border-violet-600/30 bg-violet-900/50 px-4 py-2.5 text-sm leading-relaxed shadow-sm backdrop-blur-sm">
-          <p className="whitespace-pre-wrap text-zinc-100">{text}</p>
+        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-blue-600 px-4 py-2.5 text-sm leading-relaxed text-white shadow-sm">
+          <p className="whitespace-pre-wrap">{text}</p>
         </div>
       </motion.div>
     );
@@ -57,18 +57,23 @@ export function AiMessage({ message, animate = false }: Props) {
       <AiOrb size={32} active={isTyping} className="mt-0.5" />
 
       <div className="min-w-0 flex-1">
-        <p className="whitespace-pre-wrap text-[15px] leading-7 text-zinc-100/90">
+        <p className="whitespace-pre-wrap text-[15px] leading-7 text-slate-700 dark:text-slate-200">
           {text}
           {isTyping && (
-            <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] animate-pulse bg-violet-400" />
+            <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] animate-pulse bg-blue-500" />
           )}
         </p>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
+          {/*
+            Технічну назву функції (runSqlQuery, searchDocuments тощо) не
+            показуємо ніколи — це внутрішня кухня, користувачу вона нічого не
+            пояснює. Лишається сам факт звернення до бази й кількість рядків.
+          */}
           {message.toolName && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/25 bg-violet-500/[0.1] px-2.5 py-1 text-[11px] font-medium text-violet-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-300">
               <Database className="h-3 w-3" />
-              {message.toolName}
+              Дані з бази
               {message.rows?.length ? ` · ${message.rows.length} рядк.` : null}
             </span>
           )}
@@ -78,8 +83,8 @@ export function AiMessage({ message, animate = false }: Props) {
             onClick={handleCopy}
             aria-label="Скопіювати відповідь"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-zinc-500 transition-all",
-              "opacity-0 hover:bg-violet-500/10 hover:text-violet-300 focus-visible:opacity-100 group-hover:opacity-100",
+              "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-slate-400 transition-all dark:text-slate-500",
+              "opacity-0 hover:bg-slate-100 hover:text-slate-700 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-white/5 dark:hover:text-slate-200",
             )}
           >
             {copied ? (

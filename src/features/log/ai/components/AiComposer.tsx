@@ -58,20 +58,20 @@ export function AiComposer({
   const canSend = Boolean(value.trim()) && !isPending && !disabled;
 
   return (
-    <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+    <div className="border-t border-slate-200/70 px-3 pt-3 pb-3 sm:px-4 sm:pb-4 dark:border-white/10">
       <div
         className={cn(
-          "relative rounded-2xl border bg-white/[0.04] backdrop-blur-xl transition-all duration-300",
+          "relative rounded-xl border bg-white transition-all duration-200 dark:bg-slate-800/60",
           focused
-            ? "border-violet-500/50 shadow-[0_0_0_4px_rgba(139,92,246,0.1),0_8px_30px_-12px_rgba(139,92,246,0.5)]"
-            : "border-violet-900/50 shadow-[0_4px_24px_-16px_rgba(0,0,0,0.8)]",
+            ? "border-blue-400 shadow-[0_0_0_3px_rgba(59,130,246,0.12)] dark:border-blue-500/60"
+            : "border-slate-200 shadow-sm dark:border-white/10",
         )}
       >
         <div className="flex items-end gap-2 p-2">
           <Sparkles
             className={cn(
-              "mb-2.5 ml-1.5 h-4 w-4 shrink-0 transition-colors duration-300",
-              focused ? "text-violet-400" : "text-zinc-600",
+              "mb-2.5 ml-1.5 h-4 w-4 shrink-0 transition-colors duration-200",
+              focused ? "text-blue-500" : "text-slate-300 dark:text-slate-600",
             )}
           />
 
@@ -90,7 +90,7 @@ export function AiComposer({
             rows={1}
             placeholder="Запитайте про рейси, заявки, тендери…"
             disabled={disabled}
-            className="max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent py-2.5 text-sm leading-6 text-zinc-100 outline-none placeholder:text-zinc-600 disabled:opacity-50"
+            className="max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent py-2.5 text-sm leading-6 text-slate-800 outline-none placeholder:text-slate-400 disabled:opacity-50 dark:text-slate-100 dark:placeholder:text-slate-500"
           />
 
           <button
@@ -99,10 +99,10 @@ export function AiComposer({
             disabled={!canSend}
             aria-label="Надіслати"
             className={cn(
-              "mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
+              "mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
               canSend
-                ? "bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-[0_4px_16px_-4px_rgba(139,92,246,0.7)] hover:brightness-110 active:scale-95"
-                : "bg-white/[0.05] text-zinc-600",
+                ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700 active:scale-95"
+                : "bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-600",
             )}
           >
             {isPending ? (
@@ -114,7 +114,7 @@ export function AiComposer({
         </div>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-zinc-600">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-400 dark:text-slate-500">
         <span className="inline-flex items-center gap-1">
           <Kbd>Enter</Kbd> надіслати
         </span>

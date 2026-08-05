@@ -1,6 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { localAiService } from "../services/local-ai.service";
 import { ILocalAiAnswer } from "../ai/types/local-ai.types";
@@ -12,12 +17,13 @@ const messagesKey = (sessionId?: string) => [
   sessionId ?? "none",
 ];
 
-/** Стан локальної моделі — індикатор у шапці чату. */
+/** Стан моделі — індикатор у шапці чату. */
 export const useLocalAiHealth = () =>
   useQuery({
     queryKey: ["local-ai", "health"],
     queryFn: localAiService.getHealth,
-    // LM Studio запускають вручну, тому періодично перевіряємо, чи він піднявся
+    // Провайдер може відвалитися посеред роботи (ключ, квота, зупинений LM Studio),
+    // тому індикатор періодично перепитує стан
     refetchInterval: 60_000,
     retry: false,
   });
@@ -28,10 +34,33 @@ export const useLocalAiSessions = () =>
     queryFn: localAiService.getSessions,
   });
 
+/** Скільки повідомлень тягнемо за раз. Одна відповідь може везти таблицю на 50 рядків. */
+export const MESSAGES_PAGE_SIZE = 30;
+
+/**
+ * Історія розмови сторінками, від кінця.
+ *
+ * Стара версія тягнула всю переписку одним запитом: у довгій розмові це
+ * мегабайти JSON (у кожній відповіді збережена таблиця даних) і секунди
+ * очікування перед тим, як користувач побачить хоч щось. Тепер приходить
+ * останнє вікно, а старіше довантажується при скролі вгору.
+ *
+ * `fetchNextPage` тут означає «сторінка СТАРІШИХ повідомлень».
+ */
 export const useLocalAiMessages = (sessionId?: string) =>
-  useQuery({
+  useInfiniteQuery({
     queryKey: messagesKey(sessionId),
-    queryFn: () => localAiService.getMessages(sessionId!),
+    queryFn: ({ pageParam }) =>
+      localAiService.getMessages(sessionId!, {
+        limit: MESSAGES_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    initialPageParam: 0,
+    // Наступний offset — це все, що вже завантажено: сторінки не перекриваються
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.hasMore
+        ? pages.reduce((sum, p) => sum + p.messages.length, 0)
+        : undefined,
     enabled: Boolean(sessionId),
   });
 
@@ -69,7 +98,7 @@ export const useSendLocalAiMessage = (
     onError: (error: any) => {
       const message =
         error?.response?.data?.message ??
-        "Не вдалося отримати відповідь від локальної моделі";
+        "Не вдалося отримати відповідь від моделі";
       toast.error(Array.isArray(message) ? message.join(", ") : message);
     },
   });

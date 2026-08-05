@@ -19,6 +19,16 @@ export interface ILocalAiMessage {
   meta?: Record<string, any>;
 }
 
+/**
+ * Сторінка історії: сервер віддає хвіст розмови, а старіше довантажується
+ * при скролі вгору. `hasMore` — чи лишилося щось СТАРІШЕ за цю сторінку.
+ */
+export interface ILocalAiMessagePage {
+  messages: ILocalAiMessage[];
+  total: number;
+  hasMore: boolean;
+}
+
 export interface ILocalAiAnswer {
   sessionId: string;
   message: ILocalAiMessage;
@@ -31,11 +41,14 @@ export interface ILocalAiAnswer {
 
 export interface ILocalAiHealth {
   available: boolean;
+  /** Хто відповідає: хмарний Gemini чи локальна модель у LM Studio. */
+  provider?: "gemini" | "lmstudio";
   model: string;
   loaded: boolean;
   error?: string;
   nativeToolCalling: boolean;
-  tools: string[];
+  /** Скільки функцій доступно користувачу. Назви сервер назовні не віддає. */
+  toolsCount: number;
   /** Обмеження, задані на сервері. */
   limits?: {
     /** Скільки розмов зберігається на користувача; найстаріші видаляються самі. */

@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export const metadata: Metadata = {
   title: "AI помічник",
   description:
-    "Локальний AI-помічник ICT: рейси, заявки, тендери та документи в діалозі",
+    "AI-помічник ICT: тендери, ставки, заявки та звіти по базі в діалозі",
 };
 
 export default async function LocalAiPage() {

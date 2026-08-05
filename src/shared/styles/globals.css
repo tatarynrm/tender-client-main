@@ -215,6 +215,51 @@
   background: #475569;
 }
 
+/*
+  Ледь помітна прокрутка обома осями — таблиці даних AI-помічника.
+
+  Від .custom-scrollbar відрізняється двома речами: є горизонтальна смуга
+  (таблиця буває ширшою за колонку чату) і scrollbar-width для Firefox.
+  Дефолтна смуга Windows завтовшки 17px забирала кадр на себе в невеликій
+  таблиці під відповіддю; тут вона 4px і майже прозора, а під курсором
+  проявляється — щоб було видно, що вміст ще є.
+*/
+.ai-thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+}
+
+.ai-thin-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.ai-thin-scroll::-webkit-scrollbar-track,
+.ai-thin-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.ai-thin-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.22);
+  border-radius: 9999px;
+}
+
+.ai-thin-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.45);
+}
+
+.dark .ai-thin-scroll {
+  scrollbar-color: rgba(226, 232, 240, 0.22) transparent;
+}
+
+.dark .ai-thin-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(226, 232, 240, 0.18);
+}
+
+.dark .ai-thin-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(226, 232, 240, 0.4);
+}
+
 
 /* Приховує горизонтальний скрол, але залишає функціонал */
 .scrollbar-hide::-webkit-scrollbar {

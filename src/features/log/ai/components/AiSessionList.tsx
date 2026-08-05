@@ -52,24 +52,26 @@ export function AiSessionList({
   };
 
   return (
-    <div className="flex h-full w-full flex-col gap-3">
+    <div className="flex h-full w-full flex-col gap-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
       <button
         type="button"
         onClick={onCreate}
-        className="group flex w-full items-center gap-2 rounded-xl border border-violet-900/50 bg-white/[0.04] px-3 py-2.5 text-sm font-medium text-zinc-300 backdrop-blur-xl transition-all duration-300 hover:border-violet-500/50 hover:shadow-[0_0_0_3px_rgba(139,92,246,0.08)]"
+        className="group flex w-full items-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 active:scale-[0.99]"
       >
-        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white transition-transform duration-300 group-hover:rotate-90">
+        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-white/20 transition-transform duration-300 group-hover:rotate-90">
           <Plus className="h-3.5 w-3.5" />
         </span>
         Нова розмова
       </button>
 
       {sessions.length > 0 && (
-        <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center justify-between gap-2 px-0.5">
           <span
             className={cn(
               "text-[11px] tabular-nums",
-              atLimit ? "text-amber-400" : "text-zinc-600",
+              atLimit
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-slate-400 dark:text-slate-500",
             )}
             title={
               maxSessions
@@ -85,7 +87,7 @@ export function AiSessionList({
           <button
             type="button"
             onClick={() => setClearOpen(true)}
-            className="text-[11px] text-zinc-600 transition-colors hover:text-red-400"
+            className="text-[11px] text-slate-400 transition-colors hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
           >
             Очистити все
           </button>
@@ -93,20 +95,20 @@ export function AiSessionList({
       )}
 
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-1 pr-2">
+        <div className="flex flex-col gap-0.5 pr-2">
           {isLoading && (
             <div className="flex flex-col gap-1.5 px-1 py-2">
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-8 animate-pulse rounded-lg bg-violet-900/20"
+                  className="h-8 animate-pulse rounded-lg bg-slate-100 dark:bg-white/5"
                 />
               ))}
             </div>
           )}
 
           {!isLoading && sessions.length === 0 && (
-            <p className="px-2 py-4 text-xs text-zinc-600">
+            <p className="px-2 py-4 text-xs text-slate-400 dark:text-slate-500">
               Розмов ще немає
             </p>
           )}
@@ -119,42 +121,42 @@ export function AiSessionList({
               <div
                 key={session.id}
                 className={cn(
-                  "group relative flex items-center gap-1 rounded-xl px-2.5 py-2 text-sm transition-colors",
+                  "group relative flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm transition-colors",
                   isConfirming
-                    ? "bg-red-900/20"
+                    ? "bg-red-50 dark:bg-red-500/10"
                     : isActive
-                      ? "bg-violet-900/30 font-medium"
-                      : "hover:bg-violet-900/20",
+                      ? "bg-blue-50/70 font-medium dark:bg-blue-500/10"
+                      : "hover:bg-slate-50 dark:hover:bg-white/5",
                 )}
               >
                 {isActive && !isConfirming && (
                   <motion.span
                     layoutId="ai-session-active"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-gradient-to-b from-violet-400 to-pink-500"
+                    className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-blue-500"
                   />
                 )}
 
                 {isConfirming ? (
                   <>
-                    <span className="min-w-0 flex-1 truncate text-[12px] text-red-400">
+                    <span className="min-w-0 flex-1 truncate text-[12px] text-red-600 dark:text-red-400">
                       Видалити розмову?
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDelete(session.id)}
                       aria-label="Підтвердити видалення"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-red-900/30"
+                      className="shrink-0 rounded-md p-0.5 hover:bg-red-100 dark:hover:bg-red-500/20"
                     >
-                      <Check className="h-3.5 w-3.5 text-red-400" />
+                      <Check className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmId(null)}
                       aria-label="Скасувати"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-white/5"
+                      className="shrink-0 rounded-md p-0.5 hover:bg-slate-100 dark:hover:bg-white/10"
                     >
-                      <X className="h-3.5 w-3.5 text-zinc-500" />
+                      <X className="h-3.5 w-3.5 text-slate-500" />
                     </button>
                   </>
                 ) : (
@@ -167,10 +169,21 @@ export function AiSessionList({
                       <MessageSquare
                         className={cn(
                           "h-3.5 w-3.5 shrink-0 transition-colors",
-                          isActive ? "text-violet-400" : "text-zinc-600",
+                          isActive
+                            ? "text-blue-600 dark:text-blue-400"
+                            : "text-slate-400 dark:text-slate-500",
                         )}
                       />
-                      <span className={cn("truncate", isActive ? "text-zinc-200" : "text-zinc-400")}>{session.title}</span>
+                      <span
+                        className={cn(
+                          "truncate",
+                          isActive
+                            ? "text-blue-700 dark:text-blue-300"
+                            : "text-slate-600 dark:text-slate-300",
+                        )}
+                      >
+                        {session.title}
+                      </span>
                     </button>
 
                     <button
@@ -179,7 +192,7 @@ export function AiSessionList({
                       aria-label="Видалити розмову"
                       className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                      <Trash2 className="h-3.5 w-3.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400" />
                     </button>
                   </>
                 )}
@@ -192,7 +205,9 @@ export function AiSessionList({
       <Dialog open={clearOpen} onOpenChange={setClearOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">Очистити всі розмови?</DialogTitle>
+            <DialogTitle className="text-base">
+              Очистити всі розмови?
+            </DialogTitle>
             <DialogDescription className="text-xs">
               Буде видалено {sessions.length} розмов разом з усіма
               повідомленнями й таблицями даних. Відновити їх неможливо.

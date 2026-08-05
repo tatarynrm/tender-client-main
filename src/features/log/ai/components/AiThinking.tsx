@@ -5,17 +5,13 @@ import { useEffect, useState } from "react";
 import { AiOrb } from "./AiOrb";
 
 /**
- * Етапи повторюють реальний конвеєр на сервері: модель обирає функцію,
- * функція йде в базу, далі модель переказує результат. Тому підпис міняється
- * не «для краси» — він показує, на чому саме зараз стоїть запит.
+ * Один підпис на весь час очікування.
+ *
+ * Раніше тут змінювалися етапи конвеєра («обираю джерело», «читаю базу») —
+ * це розкривало внутрішню кухню й нічого не давало користувачу. Лишився
+ * лічильник секунд: він показує, що запит живий.
  */
-const STAGES = [
-  { after: 0, label: "Розбираю запит" },
-  { after: 2, label: "Обираю джерело даних" },
-  { after: 5, label: "Читаю базу" },
-  { after: 11, label: "Формую відповідь" },
-  { after: 25, label: "Ще працюю — запит великий" },
-];
+const THINKING_LABEL = "Виконую запит — очікуйте";
 
 export function AiThinking() {
   const [seconds, setSeconds] = useState(0);
@@ -24,9 +20,6 @@ export function AiThinking() {
     const timer = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const stage =
-    [...STAGES].reverse().find((s) => seconds >= s.after) ?? STAGES[0];
 
   return (
     <motion.div
@@ -39,23 +32,22 @@ export function AiThinking() {
       <AiOrb size={32} active />
 
       <div className="flex min-w-0 flex-1 flex-col gap-2 pt-1.5">
-        <div className="flex items-center gap-2 text-sm text-zinc-400">
+        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           <motion.span
-            key={stage.label}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-gradient-to-r from-violet-300 via-fuchsia-200 to-violet-300 bg-[length:200%_100%] bg-clip-text text-transparent"
+            className="bg-gradient-to-r from-blue-600 via-sky-400 to-blue-600 bg-[length:200%_100%] bg-clip-text text-transparent dark:from-blue-300 dark:via-sky-200 dark:to-blue-300"
             style={{ animation: "ai-shimmer 2.4s linear infinite" }}
           >
-            {stage.label}
+            {THINKING_LABEL}
           </motion.span>
 
           <span className="flex gap-1">
             {[0, 1, 2].map((i) => (
               <motion.span
                 key={i}
-                className="h-1 w-1 rounded-full bg-violet-400"
+                className="h-1 w-1 rounded-full bg-blue-500 dark:bg-blue-400"
                 animate={{ opacity: [0.2, 1, 0.2] }}
                 transition={{
                   duration: 1.2,
@@ -75,7 +67,7 @@ export function AiThinking() {
           {[100, 82, 60].map((w, i) => (
             <motion.div
               key={w}
-              className="h-2.5 rounded-full bg-violet-500/[0.12]"
+              className="h-2.5 rounded-full bg-slate-200 dark:bg-white/10"
               style={{ width: `${w}%` }}
               animate={{ opacity: [0.4, 0.85, 0.4] }}
               transition={{

@@ -10,6 +10,10 @@ interface Props {
   className?: string;
 }
 
+/**
+ * Значок помічника. Кольори — синій акцент застосунку, тому орб однаково
+ * читається і на світлій, і на темній темі, не вибиваючись із решти LOG.
+ */
 export function AiOrb({ size = 32, active = false, className }: Props) {
   return (
     <span
@@ -17,31 +21,32 @@ export function AiOrb({ size = 32, active = false, className }: Props) {
       style={{ width: size, height: size }}
       aria-hidden
     >
-      {/* Зовнішнє розмите свічення — «атмосфера планети» */}
+      {/* Розмите свічення навколо */}
       <span
         className={cn(
-          "absolute -inset-1 rounded-full blur-lg transition-opacity duration-700",
-          "bg-gradient-to-br from-violet-500 via-fuchsia-400 to-pink-500",
-          active ? "opacity-80" : "opacity-35",
+          "absolute -inset-1 rounded-full bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500 blur-lg transition-opacity duration-700",
+          active ? "opacity-60" : "opacity-25",
         )}
       />
 
-      {/* Обертовий контур — «кільця» */}
+      {/* Обертовий контур */}
       <span
         className={cn(
-          "absolute -inset-[2px] rounded-full opacity-90",
+          "absolute -inset-[2px] rounded-full opacity-80",
           "bg-[conic-gradient(from_0deg,transparent_0deg,var(--ai-orb-ring)_100deg,transparent_220deg)]",
           active
             ? "animate-[spin_1.4s_linear_infinite]"
             : "animate-[spin_6s_linear_infinite]",
         )}
-        style={{ "--ai-orb-ring": "rgba(196,130,255,0.95)" } as React.CSSProperties}
+        style={
+          { "--ai-orb-ring": "rgba(59,130,246,0.9)" } as React.CSSProperties
+        }
       />
 
       {/* Тіло орба */}
-      <span className="relative inline-flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-violet-600/90 via-fuchsia-400/90 to-pink-500/90 shadow-inner">
+      <span className="relative inline-flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 shadow-inner">
         <span
-          className={cn("rounded-full bg-white/90", active && "animate-pulse")}
+          className={cn("rounded-full bg-white/95", active && "animate-pulse")}
           style={{ width: size * 0.22, height: size * 0.22 }}
         />
       </span>

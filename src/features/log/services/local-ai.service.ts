@@ -2,7 +2,7 @@ import api from "@/shared/api/instance.api";
 import {
   ILocalAiAnswer,
   ILocalAiHealth,
-  ILocalAiMessage,
+  ILocalAiMessagePage,
   ILocalAiSession,
 } from "../ai/types/local-ai.types";
 
@@ -29,8 +29,17 @@ export const localAiService = {
   // POST /local-ai/sessions свідомо не має клієнта: розмову заводить сервер
   // разом із першим повідомленням, інакше порожні чати займали б слоти ліміту.
 
-  getMessages: async (sessionId: string): Promise<ILocalAiMessage[]> => {
-    const { data } = await api.get(`/local-ai/sessions/${sessionId}/messages`);
+  /**
+   * Сторінка історії. `offset` рахується від найновішого повідомлення:
+   * 0 — хвіст розмови, далі — все старіше й старіше.
+   */
+  getMessages: async (
+    sessionId: string,
+    params?: { limit?: number; offset?: number },
+  ): Promise<ILocalAiMessagePage> => {
+    const { data } = await api.get(`/local-ai/sessions/${sessionId}/messages`, {
+      params,
+    });
     return data;
   },
 
