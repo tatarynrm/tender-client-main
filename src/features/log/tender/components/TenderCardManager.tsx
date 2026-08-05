@@ -77,7 +77,8 @@ export function TenderCardManagers({
     const isIct = profile.role.is_ict;
     const isAdmin = profile.role.is_admin;
 
-    if (isIct && isAdmin) return true;
+    // Менеджери ICT та адміністратори мають доступ до меню тендера
+    if (isIct || isAdmin) return true;
 
     const pEmail = profile.email || (profile as any).usr_email || "";
     const cEmail = cargo.email || (cargo as any).usr_email || "";
