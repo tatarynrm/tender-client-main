@@ -7,6 +7,17 @@ export interface ILocalAiSession {
   messageCount: number;
 }
 
+/**
+ * Сторінка списку розмов: сервер віддає найсвіжіші, старіші довантажуються
+ * при скролі списку вниз.
+ */
+export interface ILocalAiSessionPage {
+  sessions: ILocalAiSession[];
+  /** Скільки розмов у користувача взагалі — для лічильника «N з 50». */
+  total: number;
+  hasMore: boolean;
+}
+
 export interface ILocalAiMessage {
   id: string;
   role: "user" | "assistant";

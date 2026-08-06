@@ -3,7 +3,7 @@ import {
   ILocalAiAnswer,
   ILocalAiHealth,
   ILocalAiMessagePage,
-  ILocalAiSession,
+  ILocalAiSessionPage,
 } from "../ai/types/local-ai.types";
 
 /**
@@ -21,8 +21,12 @@ export const localAiService = {
     return data;
   },
 
-  getSessions: async (): Promise<ILocalAiSession[]> => {
-    const { data } = await api.get("/local-ai/sessions");
+  /** Сторінка списку розмов, від найсвіжішої. */
+  getSessions: async (params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<ILocalAiSessionPage> => {
+    const { data } = await api.get("/local-ai/sessions", { params });
     return data;
   },
 

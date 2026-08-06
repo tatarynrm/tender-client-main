@@ -1,5 +1,14 @@
 "use client";
 
+import { Button } from "@/shared/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -33,7 +42,7 @@ import { AiOrb } from "./components/AiOrb";
 import { AiSessionList } from "./components/AiSessionList";
 import { AiThinking } from "./components/AiThinking";
 import { AiWelcome } from "./components/AiWelcome";
-import { ILocalAiMessage } from "./types/local-ai.types";
+import { ILocalAiMessage, ILocalAiSession } from "./types/local-ai.types";
 
 /**
  * Фон декоративний і тягне за собою three.js, тому вантажимо його окремим
@@ -73,6 +82,11 @@ export default function LocalAiChat() {
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [input, setInput] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
+  /** Розмова, для якої відкрите вікно підтвердження видалення. */
+  const [pendingDelete, setPendingDelete] = useState<ILocalAiSession | null>(
+    null,
+  );
+  const [clearOpen, setClearOpen] = useState(false);
   const [atBottom, setAtBottom] = useState(true);
   /** Стрічку прокрутили від верху — потрібно, щоб робот не наїхав на текст. */
   const [scrolledFromTop, setScrolledFromTop] = useState(false);
@@ -88,8 +102,33 @@ export default function LocalAiChat() {
   const jumpedForRef = useRef<string | undefined>(undefined);
 
   const { data: health } = useLocalAiHealth();
-  const { data: sessions = [], isLoading: sessionsLoading } =
-    useLocalAiSessions();
+
+  const {
+    data: sessionPages,
+    fetchNextPage: fetchMoreSessions,
+    hasNextPage: hasMoreSessions,
+    isFetchingNextPage: isFetchingMoreSessions,
+    isLoading: sessionsLoading,
+  } = useLocalAiSessions();
+
+  /**
+   * Дедуплікація за id обовʼязкова: offset наступної сторінки рахується від
+   * кількості вже завантажених розмов, а видалення зменшує її на одиницю —
+   * без цього між оптимістичним видаленням і відповіддю сервера один рядок
+   * міг би приїхати двічі.
+   */
+  const sessions = useMemo(() => {
+    const seen = new Set<string>();
+
+    return (sessionPages?.pages ?? []).flatMap((page) =>
+      page.sessions.filter((session) => {
+        if (seen.has(session.id)) return false;
+        seen.add(session.id);
+        return true;
+      }),
+    );
+  }, [sessionPages]);
+  const sessionsTotal = sessionPages?.pages[0]?.total ?? 0;
 
   const {
     data: messagePages,
@@ -218,17 +257,36 @@ export default function LocalAiChat() {
     jumpedForRef.current = undefined;
   };
 
-  const handleDelete = (id: string) => {
-    deleteSession.mutate(id);
-    if (id === sessionId) setSessionId(undefined);
+  /**
+   * Намір видалити розмову.
+   *
+   * Шторку зачиняємо ПЕРЕД відкриттям вікна: Sheet — теж модалка з пасткою
+   * фокуса, і діалог поверх неї не отримував би ні фокуса, ні кліків.
+   */
+  const requestDelete = (session: ILocalAiSession) => {
+    setSheetOpen(false);
+    setPendingDelete(session);
   };
 
-  const handleDeleteAll = () => {
+  const requestDeleteAll = () => {
+    setSheetOpen(false);
+    setClearOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+
+    deleteSession.mutate(pendingDelete.id);
+    if (pendingDelete.id === sessionId) setSessionId(undefined);
+    setPendingDelete(null);
+  };
+
+  const confirmDeleteAll = () => {
     deleteAllSessions.mutate();
     // Активна розмова щойно зникла разом з рештою — інакше екран показував би
     // повідомлення, яких на сервері вже немає
     setSessionId(undefined);
-    setSheetOpen(false);
+    setClearOpen(false);
   };
 
   const online = Boolean(health?.available && health?.loaded);
@@ -249,13 +307,17 @@ export default function LocalAiChat() {
   const sessionPanel = (
     <AiSessionList
       sessions={sessions}
+      total={sessionsTotal}
       activeId={sessionId}
       isLoading={sessionsLoading}
       maxSessions={health?.limits?.maxSessions}
+      hasMore={Boolean(hasMoreSessions)}
+      isLoadingMore={isFetchingMoreSessions}
+      onLoadMore={fetchMoreSessions}
       onSelect={handleSelect}
       onCreate={handleCreate}
-      onDelete={handleDelete}
-      onDeleteAll={handleDeleteAll}
+      onDelete={requestDelete}
+      onDeleteAll={requestDeleteAll}
     />
   );
 
@@ -447,6 +509,79 @@ export default function LocalAiChat() {
           />
         </section>
       </div>
+
+      {/*
+        Обидва вікна підтвердження живуть тут, а не в списку розмов: список
+        рендериться двічі (бічна панель і мобільна шторка), тож діалог у ньому
+        існував би у двох екземплярах, а всередині Sheet ще й лишався б без
+        фокуса — саме через це підтвердження раніше не спрацьовувало.
+      */}
+      <Dialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">Видалити розмову?</DialogTitle>
+            <DialogDescription className="text-xs">
+              «{pendingDelete?.title}» буде видалено разом з усіма
+              повідомленнями й таблицями даних. Відновити її неможливо.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setPendingDelete(null)}
+            >
+              Скасувати
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={confirmDelete}
+            >
+              Видалити
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              Очистити всі розмови?
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Буде видалено {sessionsTotal} розмов разом з усіма повідомленнями
+              й таблицями даних. Відновити їх неможливо.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setClearOpen(false)}
+            >
+              Скасувати
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={confirmDeleteAll}
+            >
+              Видалити все
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

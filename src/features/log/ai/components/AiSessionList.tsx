@@ -1,55 +1,91 @@
 "use client";
 
-import { Button } from "@/shared/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { cn } from "@/shared/utils/index";
-import { motion } from "framer-motion";
-import { Check, MessageSquare, Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Loader2, MessageSquare, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { ILocalAiSession } from "../types/local-ai.types";
 
 interface Props {
   sessions: ILocalAiSession[];
+  /** Скільки розмов у користувача всього — для лічильника «N з 50». */
+  total: number;
   activeId?: string;
   isLoading: boolean;
   /** Стеля розмов із сервера — понад неї найстаріші видаляються самі. */
   maxSessions?: number;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
   onSelect: (id: string) => void;
   onCreate: () => void;
-  onDelete: (id: string) => void;
+  /** Підтвердження живе на рівні сторінки — див. коментар нижче. */
+  onDelete: (session: ILocalAiSession) => void;
   onDeleteAll: () => void;
 }
 
-/** Бічний список розмов: створення, перемикання, видалення по одній і повне очищення. */
+/** За скільки пікселів до низу починаємо тягнути наступну сторінку розмов. */
+const LOAD_MORE_THRESHOLD = 120;
+
+/** Від скількох розмов має сенс писати «це всі» — на трьох рядках це шум. */
+const SHOW_END_FROM = 8;
+
+/**
+ * Бічний список розмов: створення, перемикання, видалення по одній і повне
+ * очищення. Список приходить сторінками — старіші розмови довантажуються,
+ * коли скрол доходить до низу.
+ *
+ * Діалогів підтвердження тут навмисно немає. Компонент рендериться двічі —
+ * у бічній панелі й у мобільній шторці (Sheet), — а Sheet сам є модалкою з
+ * пасткою фокуса: вкладений у нього Dialog перехоплював фокус у батька, і
+ * кнопки підтвердження ставали неклікабельними. Тому список лише повідомляє
+ * про намір, а вікно показує сторінка, поза шторкою.
+ */
 export function AiSessionList({
   sessions,
+  total,
   activeId,
   isLoading,
   maxSessions,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   onSelect,
   onCreate,
   onDelete,
   onDeleteAll,
 }: Props) {
-  // Видалення незворотне, тому підтвердження просимо прямо в рядку —
-  // окреме модальне вікно на кожну розмову було б надто важким
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [clearOpen, setClearOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const atLimit = Boolean(maxSessions && sessions.length >= maxSessions);
+  /**
+   * Підсвітка активного рядка їде між панелями через layoutId, а він мусить
+   * бути унікальним на кожен екземпляр списку: інакше desktop-панель і шторка
+   * ділять один id, і смужка перестрибує між ними.
+   */
+  const layoutId = useId();
 
-  const handleDelete = (id: string) => {
-    setConfirmId(null);
-    onDelete(id);
-  };
+  const atLimit = Boolean(maxSessions && total >= maxSessions);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !hasMore || isLoadingMore) return;
+
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < LOAD_MORE_THRESHOLD) {
+      onLoadMore();
+    }
+  }, [hasMore, isLoadingMore, onLoadMore]);
+
+  /**
+   * Перша сторінка може не заповнити панель на високому екрані — тоді скрол
+   * не зʼявиться і довантаження ніколи не спрацює. Перевіряємо це щоразу,
+   * коли список змінився.
+   */
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !hasMore || isLoadingMore) return;
+
+    if (el.scrollHeight <= el.clientHeight) onLoadMore();
+  }, [sessions.length, hasMore, isLoadingMore, onLoadMore]);
 
   return (
     <div className="flex h-full w-full flex-col gap-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
@@ -64,7 +100,7 @@ export function AiSessionList({
         Нова розмова
       </button>
 
-      {sessions.length > 0 && (
+      {total > 0 && (
         <div className="flex items-center justify-between gap-2 px-0.5">
           <span
             className={cn(
@@ -80,13 +116,13 @@ export function AiSessionList({
             }
           >
             {maxSessions
-              ? `${sessions.length} з ${maxSessions} розмов`
-              : `Розмов: ${sessions.length}`}
+              ? `${total} з ${maxSessions} розмов`
+              : `Розмов: ${total}`}
           </span>
 
           <button
             type="button"
-            onClick={() => setClearOpen(true)}
+            onClick={onDeleteAll}
             className="text-[11px] text-slate-400 transition-colors hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
           >
             Очистити все
@@ -94,8 +130,12 @@ export function AiSessionList({
         </div>
       )}
 
-      <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-0.5 pr-2">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="ai-thin-scroll flex-1 overflow-y-auto"
+      >
+        <div className="flex flex-col gap-0.5 pr-1">
           {isLoading && (
             <div className="flex flex-col gap-1.5 px-1 py-2">
               {[0, 1, 2].map((i) => (
@@ -113,130 +153,92 @@ export function AiSessionList({
             </p>
           )}
 
-          {sessions.map((session) => {
-            const isActive = session.id === activeId;
-            const isConfirming = session.id === confirmId;
+          <AnimatePresence initial={false}>
+            {sessions.map((session) => {
+              const isActive = session.id === activeId;
 
-            return (
-              <div
-                key={session.id}
-                className={cn(
-                  "group relative flex items-center gap-1 rounded-lg px-2.5 py-2 text-sm transition-colors",
-                  isConfirming
-                    ? "bg-red-50 dark:bg-red-500/10"
-                    : isActive
+              return (
+                <motion.div
+                  key={session.id}
+                  layout="position"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  // Рядок згортається на місці — сусіди підтягуються плавно,
+                  // а не стрибають одразу після натискання «Видалити»
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className={cn(
+                    "group relative flex items-center gap-1 overflow-hidden rounded-lg px-2.5 py-2 text-sm transition-colors",
+                    isActive
                       ? "bg-blue-50/70 font-medium dark:bg-blue-500/10"
                       : "hover:bg-slate-50 dark:hover:bg-white/5",
-                )}
-              >
-                {isActive && !isConfirming && (
-                  <motion.span
-                    layoutId="ai-session-active"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-blue-500"
-                  />
-                )}
+                  )}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId={layoutId}
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 32,
+                      }}
+                      className="absolute top-1.5 bottom-1.5 left-0 w-[2px] rounded-full bg-blue-500"
+                    />
+                  )}
 
-                {isConfirming ? (
-                  <>
-                    <span className="min-w-0 flex-1 truncate text-[12px] text-red-600 dark:text-red-400">
-                      Видалити розмову?
+                  <button
+                    type="button"
+                    onClick={() => onSelect(session.id)}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  >
+                    <MessageSquare
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0 transition-colors",
+                        isActive
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-slate-400 dark:text-slate-500",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "truncate",
+                        isActive
+                          ? "text-blue-700 dark:text-blue-300"
+                          : "text-slate-600 dark:text-slate-300",
+                      )}
+                    >
+                      {session.title}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(session.id)}
-                      aria-label="Підтвердити видалення"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-red-100 dark:hover:bg-red-500/20"
-                    >
-                      <Check className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmId(null)}
-                      aria-label="Скасувати"
-                      className="shrink-0 rounded-md p-0.5 hover:bg-slate-100 dark:hover:bg-white/10"
-                    >
-                      <X className="h-3.5 w-3.5 text-slate-500" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => onSelect(session.id)}
-                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                    >
-                      <MessageSquare
-                        className={cn(
-                          "h-3.5 w-3.5 shrink-0 transition-colors",
-                          isActive
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-slate-400 dark:text-slate-500",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "truncate",
-                          isActive
-                            ? "text-blue-700 dark:text-blue-300"
-                            : "text-slate-600 dark:text-slate-300",
-                        )}
-                      >
-                        {session.title}
-                      </span>
-                    </button>
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setConfirmId(session.id)}
-                      aria-label="Видалити розмову"
-                      className="shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400" />
-                    </button>
-                  </>
-                )}
-              </div>
-            );
-          })}
+                  <button
+                    type="button"
+                    onClick={() => onDelete(session)}
+                    aria-label={`Видалити розмову «${session.title}»`}
+                    title="Видалити розмову"
+                    className="shrink-0 rounded-md p-1 opacity-0 transition-opacity hover:bg-red-50 focus-visible:opacity-100 group-hover:opacity-100 dark:hover:bg-red-500/10"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400" />
+                  </button>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          {isLoadingMore && (
+            <div className="flex items-center justify-center gap-2 py-3 text-[11px] text-slate-400 dark:text-slate-500">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Завантажуємо ще
+            </div>
+          )}
+
+          {!hasMore && sessions.length > SHOW_END_FROM && (
+            <p className="py-3 text-center text-[11px] text-slate-300 dark:text-slate-600">
+              Це всі розмови
+            </p>
+          )}
         </div>
-      </ScrollArea>
-
-      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-base">
-              Очистити всі розмови?
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Буде видалено {sessions.length} розмов разом з усіма
-              повідомленнями й таблицями даних. Відновити їх неможливо.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setClearOpen(false)}
-            >
-              Скасувати
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                setClearOpen(false);
-                onDeleteAll();
-              }}
-            >
-              Видалити все
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   );
 }

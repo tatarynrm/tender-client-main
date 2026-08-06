@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -8,7 +9,10 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { localAiService } from "../services/local-ai.service";
-import { ILocalAiAnswer } from "../ai/types/local-ai.types";
+import {
+  ILocalAiAnswer,
+  ILocalAiSessionPage,
+} from "../ai/types/local-ai.types";
 
 const SESSIONS_KEY = ["local-ai", "sessions"];
 const messagesKey = (sessionId?: string) => [
@@ -28,10 +32,30 @@ export const useLocalAiHealth = () =>
     retry: false,
   });
 
+/** Скільки розмов тягнемо за раз при скролі списку. */
+export const SESSIONS_PAGE_SIZE = 20;
+
+/**
+ * Список розмов сторінками.
+ *
+ * Стеля зберігання — 50 розмов, і тягнути їх усі одним запитом заради панелі,
+ * у яку влазить десяток рядків, немає сенсу: беремо перші 20, решта
+ * довантажується при скролі вниз.
+ */
 export const useLocalAiSessions = () =>
-  useQuery({
+  useInfiniteQuery({
     queryKey: SESSIONS_KEY,
-    queryFn: localAiService.getSessions,
+    queryFn: ({ pageParam }) =>
+      localAiService.getSessions({
+        limit: SESSIONS_PAGE_SIZE,
+        offset: pageParam,
+      }),
+    initialPageParam: 0,
+    // Наступний offset — це все, що вже завантажено: сторінки не перекриваються
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.hasMore
+        ? pages.reduce((sum, p) => sum + p.sessions.length, 0)
+        : undefined,
   });
 
 /** Скільки повідомлень тягнемо за раз. Одна відповідь може везти таблицю на 50 рядків. */
@@ -111,16 +135,55 @@ export const useSendLocalAiMessage = (
  * Ендпоінт POST /local-ai/sessions лишається доступним через localAiService.
  */
 
+/**
+ * Видалення однієї розмови.
+ *
+ * Рядок зникає одразу, ще до відповіді сервера: інвалідація списку перемалювала
+ * б усі завантажені сторінки й дала б помітну паузу з мигтінням. Якщо запит
+ * упаде — повертаємо попередній кеш і кажемо про це.
+ */
 export const useDeleteLocalAiSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (sessionId: string) => localAiService.deleteSession(sessionId),
-    onSuccess: () => {
-      toast.success("Розмову видалено");
+
+    onMutate: async (sessionId: string) => {
+      await queryClient.cancelQueries({ queryKey: SESSIONS_KEY });
+      const previous = queryClient.getQueryData<
+        InfiniteData<ILocalAiSessionPage>
+      >(SESSIONS_KEY);
+
+      queryClient.setQueryData<InfiniteData<ILocalAiSessionPage>>(
+        SESSIONS_KEY,
+        (data) =>
+          data && {
+            ...data,
+            pages: data.pages.map((page) => ({
+              ...page,
+              total: Math.max(0, page.total - 1),
+              sessions: page.sessions.filter((s) => s.id !== sessionId),
+            })),
+          },
+      );
+
+      return { previous };
+    },
+
+    onSuccess: () => toast.success("Розмову видалено"),
+
+    onError: (_err, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(SESSIONS_KEY, context.previous);
+      }
+      toast.error("Не вдалося видалити розмову");
+    },
+
+    // Звіряємося з сервером у будь-якому випадку: видалення могло зсунути
+    // межу сторінок, і в списку зʼявиться розмова, яка доти не влазила
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: SESSIONS_KEY });
     },
-    onError: () => toast.error("Не вдалося видалити розмову"),
   });
 };
 
