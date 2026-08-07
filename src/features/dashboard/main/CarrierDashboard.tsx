@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { uk } from "date-fns/locale";
 import {
@@ -39,6 +40,7 @@ const CustomXAxisTick = ({ x, y, payload }: any) => {
 };
 
 export const CarrierDashboard = () => {
+  const router = useRouter();
   const { profile, isProfileLoading } = useProfile();
   const [data, setData] = useState<ICarrierStatistic | null>(null);
   const [loading, setLoading] = useState(true);
@@ -314,29 +316,59 @@ export const CarrierDashboard = () => {
           <div className="flex flex-col flex-1 overflow-y-auto pr-2 custom-scrollbar">
 
             {lastEvents.length > 0 ? (
-              lastEvents.map((event, idx) => (
-                <div key={idx} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-sm font-bold text-[#3B52B4]">{event.info || "Подія"}</span>
-                    {event.info2 && (
-                      <span className="text-sm font-bold text-[#3B52B4] font-normal">{event.info2}</span>
-                    )}
-                    {event.date && (
-                      <span className="text-xs text-[#8BA6EB] font-medium">{format(parseISO(event.date), "dd.MM.yy")}</span>
-                    )}
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold ${(event.code ?? event.label ?? '').toLowerCase().includes("oplata") || (event.code ?? event.label ?? '').toLowerCase().includes("оплата")
-                      ? "bg-[#D1FAE5] text-[#059669]"
-                      : (event.code ?? event.label ?? '').toLowerCase().includes("docin") || (event.code ?? event.label ?? '').toLowerCase().includes("документ")
-                        ? "bg-[#FFEDD5] text-[#D97706]"
-                        : "bg-[#E0E7FF] text-[#3B52B4]"
+              lastEvents.map((event, idx) => {
+                // Тендерна подія веде на список активних тендерів, де цей тендер
+                // підсвічується. id віддає процедура tender_statistic; поки його
+                // немає — рядок лишається звичайним, некликабельним.
+                const tenderId = event.code === "TENDER" ? event.id : null;
+                const openTender = tenderId
+                  ? () => router.push(`/dashboard/tender/active?highlight=${tenderId}`)
+                  : undefined;
+
+                return (
+                  <div
+                    key={idx}
+                    onClick={openTender}
+                    onKeyDown={
+                      openTender
+                        ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            openTender();
+                          }
+                        }
+                        : undefined
+                    }
+                    role={openTender ? "button" : undefined}
+                    tabIndex={openTender ? 0 : undefined}
+                    title={openTender ? "Перейти до тендера" : undefined}
+                    className={`group flex items-center justify-between py-3 border-b border-slate-100 last:border-0 ${openTender
+                      ? "cursor-pointer -mx-2 px-2 rounded-lg transition-colors hover:bg-[#F3F7FF] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3B52B4]"
+                      : ""
                       }`}
                   >
-                    {event.label}
-                  </span>
-                </div>
-              ))
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-sm font-bold text-[#3B52B4] ${openTender ? "group-hover:underline" : ""}`}>{event.info || "Подія"}</span>
+                      {event.info2 && (
+                        <span className="text-sm font-normal text-[#3B52B4]">{event.info2}</span>
+                      )}
+                      {event.date && (
+                        <span className="text-xs text-[#8BA6EB] font-medium">{format(parseISO(event.date), "dd.MM.yy")}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold ${(event.code ?? event.label ?? '').toLowerCase().includes("oplata") || (event.code ?? event.label ?? '').toLowerCase().includes("оплата")
+                        ? "bg-[#D1FAE5] text-[#059669]"
+                        : (event.code ?? event.label ?? '').toLowerCase().includes("docin") || (event.code ?? event.label ?? '').toLowerCase().includes("документ")
+                          ? "bg-[#FFEDD5] text-[#D97706]"
+                          : "bg-[#E0E7FF] text-[#3B52B4]"
+                        }`}
+                    >
+                      {event.label}
+                    </span>
+                  </div>
+                );
+              })
             ) : (
               <div className="text-sm text-slate-500 py-3">Немає актуальних подій</div>
             )}

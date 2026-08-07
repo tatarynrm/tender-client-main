@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Flag from "react-flagkit";
 
 import { Button } from "@/shared/components/ui";
@@ -32,11 +32,21 @@ import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
 export function TenderCardClients({
   cargo,
   onOpenDetails,
+  highlighted = false,
 }: {
   cargo: ITender;
   onOpenDetails: () => void;
+  /** Картка, на яку привела подія з головної (?highlight=<id>). */
+  highlighted?: boolean;
 }) {
   const { confirm, openModal } = useModalStore();
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!highlighted) return;
+    cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlighted]);
+
   const bestBidPrice = useMemo(() => {
     if (!cargo.rate_company || cargo.rate_company.length === 0) return null;
     return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
@@ -158,7 +168,15 @@ export function TenderCardClients({
   const hasNoBids = !cargo.rate_company || cargo.rate_company.length === 0;
 
   return (
-    <div className="w-full relative mb-1 overflow-hidden border-2 border-[#7C98CB] dark:border-[#656A9D] rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8]  font-sans text-xs group/card mt-2">
+    <div
+      ref={cardRef}
+      className={cn(
+        "w-full relative mb-1 overflow-hidden border-2 rounded-xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-lg transition-all bg-[#f4f5f8] font-sans text-xs group/card mt-2 scroll-mt-24",
+        highlighted
+          ? "animate-tender-flash border-amber-400"
+          : "border-[#7C98CB] dark:border-[#656A9D]",
+      )}
+    >
       {/* HEADER for "Редукціон", "Аукціон", etc - usually outside, but if we need a wrapper we can put it here, or just let the caller do it.
           We will wrap the main content in a white card. */}
 

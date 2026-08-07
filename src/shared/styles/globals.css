@@ -322,6 +322,44 @@
     outline: 2px solid rgba(245, 158, 11, 0.3) !important;
     z-index: 50;
   }
+
+  /* Підсвітка тендера, на який привела подія з блока «Актуальні події».
+     Блимає рамкою й сяйвом, не чіпаючи прозорість картки, — на відміну від
+     animate-pulse текст лишається читабельним увесь час. */
+  @keyframes tender-flash {
+    0%,
+    100% {
+      border-color: #f59e0b;
+      box-shadow:
+        0 0 0 5px rgba(251, 191, 36, 0.55),
+        0 0 30px -2px rgba(245, 158, 11, 0.9);
+    }
+
+    50% {
+      border-color: rgba(245, 158, 11, 0.25);
+      box-shadow:
+        0 0 0 0 rgba(251, 191, 36, 0),
+        0 0 0 0 rgba(245, 158, 11, 0);
+    }
+  }
+
+  .animate-tender-flash {
+    animation: tender-flash 0.7s ease-in-out infinite;
+    /* Вище сусідніх карток, але нижче липкої шапки таблиці (z-20),
+       щоб сяйво не наповзало на неї при скролі. */
+    z-index: 10;
+  }
+
+  /* Кому важко від мигання — лишаємо статичну рамку без блимання. */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-tender-flash {
+      animation: none;
+      border-color: #f59e0b;
+      box-shadow:
+        0 0 0 5px rgba(251, 191, 36, 0.55),
+        0 0 30px -2px rgba(245, 158, 11, 0.9);
+    }
+  }
 }
 
 

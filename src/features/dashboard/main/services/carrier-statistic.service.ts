@@ -52,6 +52,12 @@ export interface ILastEvent {
   date: string | null;
   info: string | null;
   info2?: string | null;
+  /**
+   * Ідентифікатор сутності події. Для code === "TENDER" це id тендера —
+   * по ньому подія веде на список активних тендерів із підсвіткою.
+   * Оракловські події його не віддають, тому опційний.
+   */
+  id?: number | null;
 }
 
 /**

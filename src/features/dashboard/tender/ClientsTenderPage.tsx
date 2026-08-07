@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 import { ITender } from "@/features/log/types/tender.type";
@@ -80,6 +80,22 @@ export default function ClientsTenderPage({
   );
 
   const { filters, setFilters, reset } = useFilters(currentParams);
+
+  // ?highlight=<id> — прихід із «Актуальних подій» на головній: картку треба
+  // підсвітити й проскролити до неї. Підсвітка тимчасова, гасне сама, тому
+  // тримається в стані, а не читається з URL напряму. У updateUrl параметр не
+  // потрапляє — будь-яка зміна фільтра чи сторінки прибирає його з адреси.
+  const highlightParam = Number(searchParams.get("highlight")) || null;
+  const [highlightedId, setHighlightedId] = useState<number | null>(
+    highlightParam,
+  );
+
+  useEffect(() => {
+    if (!highlightParam) return;
+    setHighlightedId(highlightParam);
+    const timer = setTimeout(() => setHighlightedId(null), 6000);
+    return () => clearTimeout(timer);
+  }, [highlightParam]);
 
   const updateUrl = useCallback(
     (newParams: Record<string, any>) => {
@@ -343,6 +359,15 @@ export default function ClientsTenderPage({
         dropdowns={tenderFilters}
       />
 
+      {/* Тендер із події міг завершитися або бути на іншій сторінці списку —
+          мовчазна відсутність підсвітки виглядала б як несправність. */}
+      {highlightParam && !tenders?.some((t: ITender) => t.id === highlightParam) && (
+        <div className="mx-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-[12px] font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          Тендер № {highlightParam} не знайдено серед активних за поточними
+          фільтрами — можливо, він уже завершився або на іншій сторінці.
+        </div>
+      )}
+
       {!tenders?.length ? (
         <EmptyTenders onReset={handleReset} />
       ) : (
@@ -396,6 +421,7 @@ export default function ClientsTenderPage({
                 <TenderCardClients
                   key={item.id}
                   cargo={item}
+                  highlighted={highlightedId === item.id}
                   onOpenDetails={() => handleOpenDetails(item)}
                 />
               ))}
