@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { carrierStatisticService, IActiveTransport } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { User, Phone, Truck, Mail, ChevronLeft, Calendar, Weight, Box } from "lucide-react";
+import { User, Phone, Truck, Mail, ChevronLeft, Calendar, Weight, Box, AlertTriangle } from "lucide-react";
 import Flag from "react-flagkit";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
@@ -34,6 +34,7 @@ interface TransportationStats {
   zay_count_doc_wait: number;
   zay_count_problem: number;
   zay_count_opl_wait?: number;
+  zay_count_unloaded?: number;
 }
 
 
@@ -122,6 +123,8 @@ function CabinetPageContent() {
         problem: "PROBLEM",
         pay_wait: "OPL_WAIT",
         closed: "CLOSED",
+     
+        unloaded: "UNLOADED",
       };
 
       const status = tabToStatusMap[activeTab];
@@ -154,8 +157,9 @@ function CabinetPageContent() {
   const tabs = [
     { id: "plan", label: "Заплановані", count: stats?.zay_count_plan || 0 },
     { id: "in_progress", label: "В роботі", count: stats?.zay_count_active || 0 },
-    { id: "doc_wait", label: "Очікуються документи", count: stats?.zay_count_doc_wait || 0 },
-    { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
+    { id: "unloaded", label: "Розвантажені", count: stats?.zay_count_unloaded || 0 },
+    // { id: "doc_wait", label: "Очікуються документи", count: stats?.zay_count_doc_wait || 0 },
+    // { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
     // { id: "pay_wait", label: "Очікують оплати", count: stats?.zay_count_opl_wait || 0 },
     { id: "closed", label: "Завершені", count: stats?.zay_count_closed || 0 },
   ];
@@ -295,6 +299,17 @@ function CabinetPageContent() {
             if (item.code_status_detail === "PLAN") tripColor = "bg-blue-100 text-blue-600";
             if (item.code_status_detail === "CLOSED") tripColor = "bg-gray-100 text-gray-600";
 
+            let statusColor = "bg-amber-100 text-amber-700";
+            if (item.code_status === "ZAMOVL") statusColor = "bg-slate-100 text-slate-600";
+            else if (item.code_status === "PLAN") statusColor = "bg-blue-100 text-blue-600";
+            else if (item.code_status === "ACTIVE") statusColor = "bg-emerald-100 text-emerald-600";
+            else if (item.code_status === "DOC_WAIT") statusColor = "bg-amber-100 text-amber-700";
+            else if (item.code_status === "DOC_NO_SET") statusColor = "bg-red-100 text-red-600";
+            else if (item.code_status === "DOC_ACT") statusColor = "bg-rose-100 text-rose-700";
+            else if (item.code_status === "DOC_OPR") statusColor = "bg-indigo-100 text-indigo-600";
+            else if (item.code_status === "OPL_GRAFIK") statusColor = "bg-purple-100 text-purple-600";
+            else if (item.code_status === "CLOSED") statusColor = "bg-gray-100 text-gray-600";
+
             return (
               <div
                 key={item.kod_zay}
@@ -302,7 +317,7 @@ function CabinetPageContent() {
                 className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col overflow-hidden cursor-pointer hover:shadow-md hover:border-blue-200 transition"
               >
                 {/* Top row */}
-                <div className="flex flex-col md:flex-row justify-between p-4 px-5">
+                <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-start md:justify-between">
                   <div className="flex flex-col gap-1 md:w-[40%]">
                     <div className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-wider">
                       Заявка № {item.zay_num} {item.zav_date && `від ${formatDate(item.zav_date)}`}
@@ -353,38 +368,48 @@ function CabinetPageContent() {
                         </div>
                       )}
                     </div>
+
                   </div>
 
-                  <div className="flex flex-row md:w-[60%] justify-between items-center mt-4 md:mt-0">
-                    <div className="flex flex-col items-center">
-                      {/* <span className="text-[10px] text-blue-300 mb-1">Статус оплати</span>
-                      <span
-                        className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${paymentColor}`}
-                      >
-                        {paymentStatus}
-                      </span> */}
-                    </div>
+                  <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 md:justify-end">
+                    {activeTab === "unloaded" && item.status_name && (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-semibold text-blue-300 uppercase tracking-widest whitespace-nowrap">Статус</span>
+                        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ring-black/5 ${statusColor}`}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {item.status_name}
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="flex flex-col items-center">
-                      {/* <span className="text-[10px] text-blue-300 mb-1">Статус рейсу</span>
-                      <span
-                        className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${tripColor}`}
-                      >
-                        {tripStatus}
-                      </span> */}
-                    </div>
-
-                    <div className="flex flex-col items-end pr-2">
-                      <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest">Сума фрахту</span>
-                      <span className="text-lg font-bold text-[#3B52B4] leading-tight mt-1">
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest whitespace-nowrap">Сума фрахту</span>
+                      <span className="text-lg font-bold text-[#3B52B4] leading-tight mt-1 whitespace-nowrap">
                         {item.fraht} {item.valut}
                       </span>
                     </div>
                   </div>
                 </div>
 
+                {/* Problems banner (only on the "unloaded" tab) */}
+                {activeTab === "unloaded" && item.problem && item.problem.length > 0 && (
+                  <div className="flex items-start gap-2.5 border-t border-red-100 bg-red-50/70 px-4 py-3 sm:px-5">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                    <div className="flex flex-col gap-1.5">
+                      {item.problem.map((p) => (
+                        <div key={p.code} className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                          <span className="text-xs font-bold uppercase tracking-wide text-red-600">
+                            {p.head}:
+                          </span>
+                          <span className="text-xs text-red-500/90">{p.info}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Bottom row (Driver info & Manager) */}
-                <div className="border-t border-blue-50 px-5 py-2.5 flex items-center justify-between text-xs text-blue-400">
+                <div className="border-t border-blue-50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-y-2 text-xs text-blue-400">
                   <div className="flex flex-wrap items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-1.5 font-medium">
                       <Truck size={14} className="text-gray-400" />
