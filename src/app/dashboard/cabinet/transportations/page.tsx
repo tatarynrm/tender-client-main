@@ -5,7 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { carrierStatisticService, IActiveTransport } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { User, Phone, Truck, Mail, ChevronLeft } from "lucide-react";
+import { User, Phone, Truck, Mail, ChevronLeft, Calendar, Weight, Box } from "lucide-react";
+import Flag from "react-flagkit";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 import {
@@ -14,6 +15,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+
+function formatLocation(town?: string, country?: string, obl?: string | null) {
+  if (!town) return "Невідомо";
+  if (country?.toUpperCase() === "UA" && obl) {
+    const cleanObl = obl.replace(/\s*(обл\.?|область)\s*/gi, "").trim();
+    return `${town} (${cleanObl} обл.)`;
+  }
+  return town;
+}
 
 interface TransportationStats {
   zay_count_all: number;
@@ -146,7 +156,7 @@ function CabinetPageContent() {
     { id: "in_progress", label: "В роботі", count: stats?.zay_count_active || 0 },
     { id: "doc_wait", label: "Очікуються документи", count: stats?.zay_count_doc_wait || 0 },
     { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
-    { id: "pay_wait", label: "Очікують оплати", count: stats?.zay_count_opl_wait || 0 },
+    // { id: "pay_wait", label: "Очікують оплати", count: stats?.zay_count_opl_wait || 0 },
     { id: "closed", label: "Завершені", count: stats?.zay_count_closed || 0 },
   ];
 
@@ -293,48 +303,80 @@ function CabinetPageContent() {
               >
                 {/* Top row */}
                 <div className="flex flex-col md:flex-row justify-between p-4 px-5">
-                  <div className="flex flex-col gap-2 md:w-[40%]">
-                    <div className="font-bold text-base text-gray-800">
-                      {item.zav_town?.split(",")[0]} → {item.rozv_town?.split(",")[0]}
+                  <div className="flex flex-col gap-1 md:w-[40%]">
+                    <div className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-wider">
+                      Заявка № {item.zay_num} {item.zav_date && `від ${formatDate(item.zav_date)}`}
                     </div>
-                    <div className="text-xs text-blue-400 font-medium">#{item.zay_num}</div>
+                    <div className="text-[15px] text-slate-800 font-extrabold flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-wide">
+                      <span className="flex items-center gap-1.5">
+                        {item.zav_country && (
+                          <span className="flex items-center gap-1 text-slate-400 text-[11px] font-bold">
+                            <Flag country={item.zav_country} size={14} className="rounded-[2px] shadow-sm" />
+                            {item.zav_country}
+                          </span>
+                        )}
+                        <span className="text-[#3B52B4]">
+                          {formatLocation(item.zav_town?.split(",")[0], item.zav_country, item.zav_obl)}
+                        </span>
+                      </span>
+                      <span className="text-[#8BA6EB] font-light text-sm">➔</span>
+                      <span className="flex items-center gap-1.5">
+                        {item.rozv_country && (
+                          <span className="flex items-center gap-1 text-slate-400 text-[11px] font-bold">
+                            <Flag country={item.rozv_country} size={14} className="rounded-[2px] shadow-sm" />
+                            {item.rozv_country}
+                          </span>
+                        )}
+                        <span className="text-[#3B52B4]">
+                          {formatLocation(item.rozv_town?.split(",")[0], item.rozv_country, item.rozv_obl)}
+                        </span>
+                      </span>
+                    </div>
 
-                    <div className="flex items-center gap-4 text-xs text-gray-500 font-medium mt-1">
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-400">📅</span> {formatDate(item.zav_date)}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-400">⚖️</span> {item.vant_ton} Т{" "}
-                        <span className="ml-1">{item.vant_name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-gray-400">📍</span> {item.zav_country} → {item.rozv_country}
-                      </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold text-[#7C93B8] uppercase tracking-wider mt-1">
+                      {item.zav_date && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                          <span>Дата завантаження: {formatDate(item.zav_date)}</span>
+                        </div>
+                      )}
+                      {item.vant_ton != null && (
+                        <div className="flex items-center gap-1">
+                          <Weight className="w-3.5 h-3.5 opacity-70" />
+                          <span>Вага: {item.vant_ton} Т</span>
+                        </div>
+                      )}
+                      {item.vant_name && (
+                        <div className="flex items-center gap-1">
+                          <Box className="w-3.5 h-3.5 opacity-70" />
+                          <span>Вантаж: {item.vant_name}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex flex-row md:w-[60%] justify-between items-center mt-4 md:mt-0">
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] text-blue-300 mb-1">Статус оплати</span>
+                      {/* <span className="text-[10px] text-blue-300 mb-1">Статус оплати</span>
                       <span
                         className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${paymentColor}`}
                       >
                         {paymentStatus}
-                      </span>
+                      </span> */}
                     </div>
 
                     <div className="flex flex-col items-center">
-                      <span className="text-[10px] text-blue-300 mb-1">Статус рейсу</span>
+                      {/* <span className="text-[10px] text-blue-300 mb-1">Статус рейсу</span>
                       <span
                         className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${tripColor}`}
                       >
                         {tripStatus}
-                      </span>
+                      </span> */}
                     </div>
 
                     <div className="flex flex-col items-end pr-2">
-                      <span className="text-[10px] font-bold text-gray-800 tracking-widest">ФРАХТ</span>
-                      <span className="text-lg font-bold text-gray-800 leading-tight mt-1">
+                      <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest">Сума фрахту</span>
+                      <span className="text-lg font-bold text-[#3B52B4] leading-tight mt-1">
                         {item.fraht} {item.valut}
                       </span>
                     </div>

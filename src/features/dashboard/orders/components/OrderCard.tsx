@@ -113,7 +113,7 @@ export default function OrderCard({ order }: OrderCardProps) {
           {weight && (
             <div className="flex items-center gap-1">
               <Weight className="w-3.5 h-3.5 opacity-70" />
-              <span>Тонаж: {weight}</span>
+              <span>Вага: {weight}</span>
             </div>
           )}
           {distance && (

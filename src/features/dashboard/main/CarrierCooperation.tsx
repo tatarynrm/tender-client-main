@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { format, parseISO, differenceInMonths, differenceInYears } from "date-fns";
 import { uk } from "date-fns/locale";
 import { useProfile } from "@/shared/hooks/useProfile";
@@ -112,12 +113,12 @@ export const CarrierCooperation = () => {
         </div>
 
         {/* Card 4 */}
-        <div className="bg-white rounded-3xl px-4 py-4 shadow-sm border border-[#3B52B4] flex flex-col items-center justify-center gap-2 text-[#3B52B4]">
+        <Link
+          href="/dashboard/cabinet/contacts"
+          className="bg-white rounded-3xl px-4 py-4 shadow-sm border border-[#3B52B4] flex flex-col items-center justify-center gap-1 text-[#3B52B4] hover:bg-[#EEF2FF] transition-colors cursor-pointer"
+        >
           <span className="text-sm font-bold">Всі контакти ICT</span>
-          <button className="bg-[#3B52B4] text-white rounded-xl w-full py-2 font-bold text-xs hover:bg-[#2d4090] transition-colors uppercase">
-            НАПИСАТИ
-          </button>
-        </div>
+        </Link>
       </div>
 
       {/* Section 1: УМОВИ СПІВПРАЦІ */}

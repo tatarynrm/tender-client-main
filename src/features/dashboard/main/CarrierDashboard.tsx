@@ -73,11 +73,7 @@ export const CarrierDashboard = () => {
     ? new Date(data.work_begin).getFullYear()
     : 2014;
 
-  const expectedIncomes = Array.isArray(data.debt_payment)
-    ? data.debt_payment
-    : data.debt_payment
-      ? [data.debt_payment as any]
-      : [];
+ 
 
   const plannedPayments = Array.isArray(data.waiting_payment)
     ? data.waiting_payment
@@ -163,20 +159,7 @@ export const CarrierDashboard = () => {
           </div>
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/3 md:items-end md:text-right">
-          <div className="text-sm text-blue-100 flex gap-2 md:justify-end">
-            <span>Очікувані надходження</span>
-            <div className="flex flex-col items-start md:items-end">
-              {expectedIncomes.length ? (
-                expectedIncomes.map((payment, idx) => (
-                  <span key={idx} className="font-bold text-white whitespace-nowrap">
-                    {payment.sum.toLocaleString("uk-UA")} {payment.ids || payment.code || payment.valut_code || payment.valut}
-                  </span>
-                ))
-              ) : (
-                <span className="font-bold text-white">154 820 грн</span>
-              )}
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -218,17 +201,17 @@ export const CarrierDashboard = () => {
 
         {/* Card 4 */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#D4DEF8] flex items-center gap-4">
-          <div className="flex flex-col items-center justify-center w-1/3 border-r border-[#D4DEF8] pr-2">
+          {/* <div className="flex flex-col items-center justify-center w-1/3 border-r border-[#D4DEF8] pr-2">
             <span className="text-[40px] font-bold text-[#3B52B4] leading-none">
               {plannedPaymentDate ? format(parseISO(plannedPaymentDate), "d") : "28"}
             </span>
             <span className="text-sm font-bold text-[#3B52B4] mt-1">
               {plannedPaymentDate ? format(parseISO(plannedPaymentDate), "MMMM", { locale: uk }) : "червня"}
             </span>
-          </div>
-          <div className="flex flex-col w-2/3 pl-2 justify-center">
+          </div> */}
+          <div className="flex flex-col pl-2 justify-center">
             <span className="text-sm font-bold text-[#3B52B4] leading-tight mb-2">
-              Запланована дата<br />та сума оплати
+              Плановано до оплати в поточному місяці
             </span>
             <div className="flex flex-col">
               {plannedPayments.length ? (
@@ -238,7 +221,7 @@ export const CarrierDashboard = () => {
                   </span>
                 ))
               ) : (
-                <span className="text-lg font-bold text-emerald-500 leading-none">54 000 грн</span>
+               null
               )}
             </div>
           </div>

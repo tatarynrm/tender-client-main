@@ -15,8 +15,10 @@ export interface IActiveTransport {
   zav_date: string;
   zav_town: string;
   zav_country: string;
+  zav_obl?: string | null;
   rozv_town: string;
   rozv_country: string;
+  rozv_obl?: string | null;
   am: string;
   am_mark: string | null;
   pr: string | null;
@@ -146,8 +148,10 @@ export interface ITransportationDetails {
   zav_date: string;
   zav_town: string;
   zav_country: string;
+  zav_obl?: string | null;
   rozv_town: string;
   rozv_country: string;
+  rozv_obl?: string | null;
   am: string;
   am_mark: string;
   pr: string;
