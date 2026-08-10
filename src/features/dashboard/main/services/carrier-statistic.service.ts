@@ -47,11 +47,6 @@ export interface IActiveTransport {
   opl_plan_date?: string | null;
   opl_fakt_date?: string | null;
   opl_suma?: number;
-  problem?: {
-    code: string;
-    head: string;
-    info: string;
-  }[];
 }
 
 export interface ILastEvent {

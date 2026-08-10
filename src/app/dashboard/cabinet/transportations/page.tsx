@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useProfile } from "@/shared/hooks/useProfile";
 import { carrierStatisticService, IActiveTransport } from "@/features/dashboard/main/services/carrier-statistic.service";
 import Loader from "@/shared/components/Loaders/MainLoader";
-import { User, Phone, Truck, Mail, ChevronLeft, Calendar, Weight, Box, AlertTriangle } from "lucide-react";
+import { User, Phone, Truck, Mail, ChevronLeft, Calendar, Weight, Box } from "lucide-react";
 import Flag from "react-flagkit";
 import { Pagination } from "@/shared/components/Pagination/Pagination";
 import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
@@ -303,7 +303,8 @@ function CabinetPageContent() {
             if (item.code_status === "ZAMOVL") statusColor = "bg-slate-100 text-slate-600";
             else if (item.code_status === "PLAN") statusColor = "bg-blue-100 text-blue-600";
             else if (item.code_status === "ACTIVE") statusColor = "bg-emerald-100 text-emerald-600";
-            else if (item.code_status === "DOC_WAIT") statusColor = "bg-amber-100 text-amber-700";
+            else if (item.code_status === "DOC_WAIT") statusColor = "bg-indigo-100 text-red-700";
+            else if (item.code_status === "DOC_WAIT_20") statusColor = "bg-yellow-100 text-yellow-700";
             else if (item.code_status === "DOC_NO_SET") statusColor = "bg-red-100 text-red-600";
             else if (item.code_status === "DOC_ACT") statusColor = "bg-rose-100 text-rose-700";
             else if (item.code_status === "DOC_OPR") statusColor = "bg-indigo-100 text-indigo-600";
@@ -387,6 +388,11 @@ function CabinetPageContent() {
                           <span className="h-1.5 w-1.5 rounded-full bg-current" />
                           {item.status_name}
                         </span>
+                        {item.code_status === "DOC_WAIT_20" && (
+                          <span className="text-[9px] font-semibold text-yellow-600 whitespace-nowrap">
+                            більше 20 днів
+                          </span>
+                        )}
                       </div>
                     )}
 
@@ -399,22 +405,6 @@ function CabinetPageContent() {
                   </div>
                 </div>
 
-                {/* Problems banner (only on the "unloaded" tab) */}
-                {activeTab === "unloaded" && item.problem && item.problem.length > 0 && (
-                  <div className="flex items-start gap-2.5 border-t border-red-100 bg-red-50/70 px-4 py-3 sm:px-5">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                    <div className="flex flex-col gap-1.5">
-                      {item.problem.map((p) => (
-                        <div key={p.code} className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                          <span className="text-xs font-bold uppercase tracking-wide text-red-600">
-                            {p.head}:
-                          </span>
-                          <span className="text-xs text-red-500/90">{p.info}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Bottom row (Driver info & Manager) */}
                 <div className="border-t border-blue-50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-y-2 text-xs text-blue-400">
