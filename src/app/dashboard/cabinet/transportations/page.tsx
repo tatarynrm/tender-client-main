@@ -25,6 +25,11 @@ function formatLocation(town?: string, country?: string, obl?: string | null) {
   return town;
 }
 
+function formatNumber(value?: number | null) {
+  if (value == null) return "";
+  return new Intl.NumberFormat("uk-UA").format(value);
+}
+
 interface TransportationStats {
   zay_count_all: number;
   zay_count_month: number;
@@ -303,7 +308,7 @@ function CabinetPageContent() {
             if (item.code_status === "ZAMOVL") statusColor = "bg-slate-100 text-slate-600";
             else if (item.code_status === "PLAN") statusColor = "bg-blue-100 text-blue-600";
             else if (item.code_status === "ACTIVE") statusColor = "bg-emerald-100 text-emerald-600";
-            else if (item.code_status === "DOC_WAIT") statusColor = "bg-indigo-100 text-red-700";
+            else if (item.code_status === "DOC_WAIT") statusColor = "bg-indigo-100 text-blue-600";
             else if (item.code_status === "DOC_WAIT_20") statusColor = "bg-yellow-100 text-yellow-700";
             else if (item.code_status === "DOC_NO_SET") statusColor = "bg-red-100 text-red-600";
             else if (item.code_status === "DOC_ACT") statusColor = "bg-rose-100 text-rose-700";
@@ -389,7 +394,7 @@ function CabinetPageContent() {
                           {item.status_name}
                         </span>
                         {item.code_status === "DOC_WAIT_20" && (
-                          <span className="text-[9px] font-semibold text-yellow-600 whitespace-nowrap">
+                          <span className="text-[12px] font-semibold text-yellow-600 whitespace-nowrap">
                             більше 20 днів
                           </span>
                         )}
@@ -399,7 +404,7 @@ function CabinetPageContent() {
                     <div className="flex flex-col items-end shrink-0">
                       <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest whitespace-nowrap">Сума фрахту</span>
                       <span className="text-lg font-bold text-[#3B52B4] leading-tight mt-1 whitespace-nowrap">
-                        {item.fraht} {item.valut}
+                        {formatNumber(item.fraht)} {item.valut}
                       </span>
                     </div>
                   </div>
