@@ -348,7 +348,7 @@ function CabinetPageContent() {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-bold text-[#7C93B8] uppercase tracking-wider mt-1">
+                    <div className="flex flex-col gap-1 text-[11px] font-bold text-[#7C93B8] uppercase tracking-wider mt-1">
                       {item.zav_date && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 opacity-70" />
@@ -358,21 +358,23 @@ function CabinetPageContent() {
                       {item.rozv_date && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 opacity-70" />
-                          <span>Дата вивантаження: {formatDate(item.rozv_date)}</span>
+                          <span>Дата розвантаження: {formatDate(item.rozv_date)}</span>
                         </div>
                       )}
-                      {item.vant_ton != null && (
-                        <div className="flex items-center gap-1">
-                          <Weight className="w-3.5 h-3.5 opacity-70" />
-                          <span>Вага: {item.vant_ton} Т</span>
-                        </div>
-                      )}
-                      {item.vant_name && (
-                        <div className="flex items-center gap-1">
-                          <Box className="w-3.5 h-3.5 opacity-70" />
-                          <span>Вантаж: {item.vant_name}</span>
-                        </div>
-                      )}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        {item.vant_ton != null && (
+                          <div className="flex items-center gap-1">
+                            <Weight className="w-3.5 h-3.5 opacity-70" />
+                            <span>Вага: {item.vant_ton} Т</span>
+                          </div>
+                        )}
+                        {item.vant_name && (
+                          <div className="flex items-center gap-1">
+                            <Box className="w-3.5 h-3.5 opacity-70" />
+                            <span>Вантаж: {item.vant_name}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                   </div>
