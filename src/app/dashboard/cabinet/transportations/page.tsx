@@ -355,6 +355,12 @@ function CabinetPageContent() {
                           <span>Дата завантаження: {formatDate(item.zav_date)}</span>
                         </div>
                       )}
+                      {item.rozv_date && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                          <span>Дата вивантаження: {formatDate(item.rozv_date)}</span>
+                        </div>
+                      )}
                       {item.vant_ton != null && (
                         <div className="flex items-center gap-1">
                           <Weight className="w-3.5 h-3.5 opacity-70" />

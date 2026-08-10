@@ -19,6 +19,7 @@ export interface IActiveTransport {
   rozv_town: string;
   rozv_country: string;
   rozv_obl?: string | null;
+  rozv_date?: string | null;
   am: string;
   am_mark: string | null;
   pr: string | null;
