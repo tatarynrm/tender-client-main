@@ -1,32 +1,24 @@
 import api from "@/shared/api/instance.api";
 
-export interface IFinanceStatistic {
-  all_borg?: number;
-  all_zay_count?: number;
-  all_rah_count?: number;
-  proterm_borg?: number;
-  proterm_zay_count?: number;
-  proterm_rah_count?: number;
-  problem_rah_count?: number;
-  plan_opl?: number;
-  plan_zay_count?: number;
-  plan_rah_count?: number;
-  opl_prev_suma?: number;
-  opl_prev_zay_count?: number;
-  opl_prev_rah_count?: number;
-  opl_cur_suma?: number;
-  opl_cur_zay_count?: number;
-  opl_cur_rah_count?: number;
+export interface ICurrencySum {
+  valut: string;
+  valut_code: string;
+  suma: number;
+}
 
-  borg_all?: number;
-  plan_curr_month?: number;
-  opl_curr_month?: number;
-  grafik_rah_count?: number;
-  grafik_month_number?: number | string;
-  opl_two_month_rah_count?: number;
-  opl_curr_month_rah_count?: number;
-  opl_prev_month_rah_count?: number;
-  doc_wait_zay_count?:number;
+export interface IFinanceStatistic {
+  // Усього до оплати по виставлених рахунках (може містити декілька валют)
+  suma_borg_all?: ICurrencySum[];
+  // Плановано до оплати в поточному місяці
+  suma_borg_curr_month?: ICurrencySum[];
+  // Оплачено у поточному місяці
+  suma_opl_curr_month?: ICurrencySum[];
+
+  count_rah_grafik?: number;
+  count_rah_opl_curr_month?: number;
+  count_rah_opl_prev_month?: number;
+  count_rah_problem?: number;
+  count_zay_doc_wait?: number;
 }
 
 export interface IContactPerson {

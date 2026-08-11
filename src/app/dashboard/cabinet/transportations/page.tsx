@@ -15,6 +15,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 
 function formatLocation(town?: string, country?: string, obl?: string | null) {
   if (!town) return "Невідомо";
@@ -28,6 +35,17 @@ function formatLocation(town?: string, country?: string, obl?: string | null) {
 function formatNumber(value?: number | null) {
   if (value == null) return "";
   return new Intl.NumberFormat("uk-UA").format(value);
+}
+
+const PROBLEM_STATUS_CODES = ["DOC_ACT", "DOC_NO_SET"];
+
+function normalizeUnloadedStatus(code?: string, name?: string) {
+  if (!code || !name) return null;
+  if (PROBLEM_STATUS_CODES.includes(code)) return "Проблемні";
+  return name
+    .replace(/\d{2}\.\d{2}\.\d{4}/g, "")
+    .replace(/\s*(з|від|по)\s*$/iu, "")
+    .trim();
 }
 
 interface TransportationStats {
@@ -60,6 +78,7 @@ function CabinetPageContent() {
   const [transports, setTransports] = useState<IActiveTransport[]>([]);
   const [loadingTransports, setLoadingTransports] = useState(false);
   const [defaultLimit, setDefaultLimit] = useState(10);
+  const [unloadedStatusFilter, setUnloadedStatusFilter] = useState("all");
 
   useEffect(() => {
     const savedLimit = localStorage.getItem("transportations_limit");
@@ -157,7 +176,26 @@ function CabinetPageContent() {
     fetchTransports();
   }, [profile, activeTab, page, currentLimit]);
 
+  useEffect(() => {
+    setUnloadedStatusFilter("all");
+  }, [activeTab]);
+
   if (isProfileLoading || loading) return <Loader />;
+
+  const unloadedStatusOptions = Array.from(
+    new Set(
+      transports
+        .map((t) => normalizeUnloadedStatus(t.code_status, t.status_name))
+        .filter((s): s is string => Boolean(s))
+    )
+  );
+
+  const visibleTransports =
+    activeTab === "unloaded" && unloadedStatusFilter !== "all"
+      ? transports.filter(
+          (t) => normalizeUnloadedStatus(t.code_status, t.status_name) === unloadedStatusFilter
+        )
+      : transports;
 
   const tabs = [
     { id: "plan", label: "Заплановані", count: stats?.zay_count_plan || 0 },
@@ -192,8 +230,8 @@ function CabinetPageContent() {
       </div> */}
 
       {/* Tabs and Controls */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap justify-between items-start sm:items-center lg:items-end gap-3 sm:gap-4">
+        <div className="flex flex-col gap-2 min-w-0">
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => (
               <button
@@ -213,18 +251,36 @@ function CabinetPageContent() {
           </div>
         </div>
 
-        <div className="flex items-center bg-white rounded-xl text-[#415A88] border border-blue-100 shadow-sm p-1 px-2 shrink-0">
-          <span className="text-xs font-semibold text-gray-500 mr-2 ml-1">Відображати:</span>
-          <ItemsPerPage
-            options={[10, 20, 50, 100]}
-            defaultValue={currentLimit}
-            onChange={handleLimitChange}
-          />
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+          {activeTab === "unloaded" && unloadedStatusOptions.length > 0 && (
+            <Select value={unloadedStatusFilter} onValueChange={setUnloadedStatusFilter}>
+              <SelectTrigger className="h-9 bg-white border-blue-100 text-[#415A88]">
+                <SelectValue placeholder="Усі статуси" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Усі статуси</SelectItem>
+                {unloadedStatusOptions.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <div className="flex items-center bg-white rounded-xl text-[#415A88] border border-blue-100 shadow-sm p-1 px-2 shrink-0">
+            <span className="text-xs font-semibold text-gray-500 mr-2 ml-1">Відображати:</span>
+            <ItemsPerPage
+              options={[10, 20, 50, 100]}
+              defaultValue={currentLimit}
+              onChange={handleLimitChange}
+            />
+          </div>
         </div>
       </div>
 
       {/* Transports List */}
-      <div className="flex flex-col gap-3 mt-4">
+      <div className="flex flex-col gap-3 sm:gap-4 mt-4">
         {loadingTransports ? (
           <>
             {[...Array(3)].map((_, i) => (
@@ -270,12 +326,14 @@ function CabinetPageContent() {
               </div>
             ))}
           </>
-        ) : transports.length === 0 ? (
+        ) : visibleTransports.length === 0 ? (
           <div className="flex justify-center py-8 text-gray-500 font-medium">
-            Немає перевезень у цій вкладці
+            {transports.length === 0
+              ? "Немає перевезень у цій вкладці"
+              : "Немає перевезень з обраним статусом"}
           </div>
         ) : (
-          transports.map((item) => {
+          visibleTransports.map((item) => {
             const formatDate = (dateStr: string) => {
               if (!dateStr) return "";
               const date = new Date(dateStr);
@@ -323,12 +381,12 @@ function CabinetPageContent() {
                 className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col overflow-hidden cursor-pointer hover:shadow-md hover:border-blue-200 transition"
               >
                 {/* Top row */}
-                <div className="flex flex-col gap-4 p-4 sm:p-5 md:flex-row md:items-start md:justify-between">
-                  <div className="flex flex-col gap-1 md:w-[40%]">
+                <div className="flex flex-col gap-4 p-4 sm:p-5 lg:p-6 md:flex-row md:items-start md:justify-between lg:gap-6">
+                  <div className="flex flex-col gap-1 min-w-0 md:w-[55%] lg:w-[60%]">
                     <div className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-wider">
                       Заявка № {item.zay_num} {item.zav_date && `від ${formatDate(item.zav_date)}`}
                     </div>
-                    <div className="text-[15px] text-slate-800 font-extrabold flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-wide">
+                    <div className="text-[15px] text-slate-800 font-extrabold flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-wide break-words">
                       <span className="flex items-center gap-1.5">
                         {item.zav_country && (
                           <span className="flex items-center gap-1 text-slate-400 text-[11px] font-bold">
@@ -357,26 +415,26 @@ function CabinetPageContent() {
                     <div className="flex flex-col gap-1 text-[11px] font-bold text-[#7C93B8] uppercase tracking-wider mt-1">
                       {item.zav_date && (
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                          <Calendar className="w-3.5 h-3.5 opacity-70 shrink-0" />
                           <span>Дата завантаження: {formatDate(item.zav_date)}</span>
                         </div>
                       )}
                       {item.rozv_date && (
                         <div className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 opacity-70" />
+                          <Calendar className="w-3.5 h-3.5 opacity-70 shrink-0" />
                           <span>Дата розвантаження: {formatDate(item.rozv_date)}</span>
                         </div>
                       )}
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                         {item.vant_ton != null && (
                           <div className="flex items-center gap-1">
-                            <Weight className="w-3.5 h-3.5 opacity-70" />
+                            <Weight className="w-3.5 h-3.5 opacity-70 shrink-0" />
                             <span>Вага: {item.vant_ton} Т</span>
                           </div>
                         )}
                         {item.vant_name && (
                           <div className="flex items-center gap-1">
-                            <Box className="w-3.5 h-3.5 opacity-70" />
+                            <Box className="w-3.5 h-3.5 opacity-70 shrink-0" />
                             <span>Вантаж: {item.vant_name}</span>
                           </div>
                         )}
@@ -385,45 +443,43 @@ function CabinetPageContent() {
 
                   </div>
 
-                  <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 md:justify-end">
-                    {activeTab === "unloaded" && item.status_name && (
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-[10px] font-semibold text-blue-300 uppercase tracking-widest whitespace-nowrap">Статус</span>
-                        <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ring-black/5 ${statusColor}`}>
-                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                          {item.status_name}
-                        </span>
-                        {item.code_status === "DOC_WAIT_20" && (
-                          <span className="text-[12px] font-semibold text-yellow-600 whitespace-nowrap">
-                            більше 20 днів
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="flex flex-col items-end shrink-0">
-                      <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest whitespace-nowrap">Сума фрахту</span>
-                      <span className="text-lg font-bold text-[#3B52B4] leading-tight mt-1 whitespace-nowrap">
-                        {formatNumber(item.fraht)} {item.valut}
-                      </span>
-                    </div>
+                  <div className="flex flex-col gap-1 shrink-0 items-start md:items-end md:text-right">
+                    <span className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-widest whitespace-nowrap">Сума фрахту</span>
+                    <span className="text-lg sm:text-xl font-bold text-[#3B52B4] leading-tight whitespace-nowrap">
+                      {formatNumber(item.fraht)} {item.valut}
+                    </span>
                   </div>
                 </div>
 
+                {/* Middle row — статус перевезення по центру картки (тільки для вкладки "Розвантажені") */}
+                {activeTab === "unloaded" && item.status_name && (
+                  <div className="border-t border-blue-50 bg-blue-50/40 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+                    <span className="text-[10px] font-semibold text-blue-300 uppercase tracking-widest whitespace-nowrap">Статус</span>
+                    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ring-black/5 ${statusColor}`}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                      {item.status_name}
+                    </span>
+                    {item.code_status === "DOC_WAIT_20" && (
+                      <span className="text-[12px] font-semibold text-yellow-600 whitespace-nowrap">
+                        більше 20 днів
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Bottom row (Driver info & Manager) */}
-                <div className="border-t border-blue-50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center justify-between gap-y-2 text-xs text-blue-400">
-                  <div className="flex flex-wrap items-center gap-4 md:gap-6">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Truck size={14} className="text-gray-400" />
-                      <span className="uppercase text-gray-700">{item.am}</span>
-                      {item.pr && <span className="uppercase text-gray-500">/ {item.pr}</span>}
+                <div className="border-t border-blue-50 px-4 py-2.5 sm:px-5 lg:px-6 flex flex-wrap items-center justify-between gap-y-2 text-xs text-blue-400">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 min-w-0">
+                    <div className="flex items-center gap-1.5 font-medium min-w-0">
+                      <Truck size={14} className="text-gray-400 shrink-0" />
+                      <span className="uppercase text-gray-700 truncate">{item.am}</span>
+                      {item.pr && <span className="uppercase text-gray-500 truncate">/ {item.pr}</span>}
                     </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <User size={14} className="text-gray-400" /> {item.driver}
+                    <div className="flex items-center gap-1.5 font-medium min-w-0">
+                      <User size={14} className="text-gray-400 shrink-0" /> <span className="truncate">{item.driver}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <Phone size={14} className="text-blue-300" /> {item.driver_phone}
+                    <div className="flex items-center gap-1.5 font-medium min-w-0">
+                      <Phone size={14} className="text-blue-300 shrink-0" /> <span className="truncate">{item.driver_phone}</span>
                     </div>
                   </div>
 

@@ -1,36 +1,25 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
-  DollarSign,
-  Calendar,
-  Clock,
-  CheckCircle2,
   User,
   Phone,
   Mail,
-  ChevronDown,
-  Copy,
-  Check,
   FileText,
-  ArrowRight,
-  Info,
   ChevronLeft,
-  ChevronRight,
-  TrendingUp,
   AlertTriangle
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useProfile } from "@/shared/hooks/useProfile";
 import {
   financeService,
   transportationToInvoice,
   IFinanceStatistic,
+  ICurrencySum,
   IInvoice,
   IContactPerson,
 } from "./services/finance.service";
-import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +33,6 @@ import {
 } from "@/shared/components/ui/tooltip";
 
 import { Pagination } from "@/shared/components/Pagination/Pagination";
-import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 
 type TabType = "GRAFIK" | "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "PROBLEM" | "DOC_WAIT";
 
@@ -62,10 +50,41 @@ const formatDate = (dateStr?: string | null) => {
   }
 };
 
-// Formatter for currency
-const formatCurrency = (val?: number) => {
-  if (val === undefined || val === null) return "0 грн";
-  return `${Math.round(val).toLocaleString("uk-UA")} грн`;
+// Renders одну або декілька валютних сум окремо, без сумування (наприклад: 838 274 грн, 500 EUR)
+const CurrencySumDisplay = ({
+  sums,
+  colorClass,
+}: {
+  sums?: ICurrencySum[];
+  colorClass: string;
+}) => {
+  const items = sums && sums.length > 0 ? sums : [{ valut: "грн", valut_code: "UAH", suma: 0 }];
+  const isSingle = items.length === 1;
+
+  return (
+    <div
+      className={`flex w-full pb-2 select-none ${isSingle
+        ? "items-baseline justify-center gap-1.5"
+        : "flex-wrap items-baseline justify-center gap-x-3 gap-y-1"
+        }`}
+    >
+      {items.map((item, i) => (
+        <React.Fragment key={item.valut_code || item.valut || i}>
+          {i > 0 && (
+            <span className={`text-slate-300 dark:text-slate-700 ${isSingle ? "text-base" : "text-xs"}`}>•</span>
+          )}
+          <div className="flex items-baseline gap-1">
+            <span className={`font-extrabold ${colorClass} ${isSingle ? "text-2xl sm:text-3xl" : "text-base sm:text-lg"}`}>
+              {Math.round(item.suma || 0).toLocaleString("uk-UA")}
+            </span>
+            <span className={`font-bold ${colorClass} ${isSingle ? "text-sm" : "text-xs"}`}>
+              {item.valut || item.valut_code || "грн"}
+            </span>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
 };
 
 // Action Dropdown for contact person (phone/email/copy)
@@ -186,7 +205,6 @@ export const CarrierFinances = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalRows, setTotalRows] = useState(0);
   const [perPage, setPerPage] = useState(10);
 
   // Helper to sync state to URL
@@ -214,11 +232,6 @@ export const CarrierFinances = () => {
       setCurrentPage(pageInUrl);
     }
   }, [searchParams]);
-
-  const handleLimitChange = (newLimit: number) => {
-    setPerPage(newLimit);
-    setCurrentPage(1);
-  };
 
   const mid = profile?.company?.migrate_id;
 
@@ -268,17 +281,10 @@ export const CarrierFinances = () => {
 
         if (listData && listData.content) {
           setInvoices(listData.content);
-          if (listData.props?.pagination) {
-            setTotalPages(listData.props.pagination.page_count || 1);
-            setTotalRows(listData.props.pagination.rows_all || 0);
-          } else {
-            setTotalPages(1);
-            setTotalRows(listData.content.length);
-          }
+          setTotalPages(listData.props?.pagination?.page_count || 1);
         } else {
           setInvoices([]);
           setTotalPages(1);
-          setTotalRows(0);
         }
       } catch (err) {
         console.error("Failed to load invoice list:", err);
@@ -308,23 +314,6 @@ export const CarrierFinances = () => {
     setActiveTab(targetTab);
     setCurrentPage(1);
     updateUrlParams(targetTab, 1);
-  };
-
-  // Helper info text depending on active tab
-  const getHelperText = () => {
-    switch (activeTab) {
-      case "GRAFIK":
-        return "Заплановані виплати у графіку";
-      case "PROBLEM":
-        return "Протерміновані виплати з виявленими затримками або проблемами";
-      case "OPL_CURR_MONTH":
-      case "OPL_PREV_MONTH":
-        return `Оплачені замовлення за ${paidPeriod === "CUR" ? "поточний" : "попередній"} місяць`;
-      case "DOC_WAIT":
-        return "Загальний список діючої заборгованості за перевезення";
-      default:
-        return "";
-    }
   };
 
   // Check if profile is loading
@@ -364,50 +353,18 @@ export const CarrierFinances = () => {
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
-          <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
-            <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.borg_all || 0).toLocaleString("uk-UA")}
-            </span>
-            <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
-              грн
-            </span>
-          </div>
+          <CurrencySumDisplay sums={statistic?.suma_borg_all} colorClass="text-[#3B52B4] dark:text-blue-400" />
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Усього до оплати по виставлених рахунках
           </span>
         </div>
 
-        {/* Overdue (PROTERM) Card */}
-        {/* <div
-          className="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-950/30 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
-        >
-          <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
-            <span className="text-2xl sm:text-3xl font-extrabold text-[#E53E3E] dark:text-red-400">
-              {Math.round(statistic?.proterm_borg || 0).toLocaleString("uk-UA")}
-            </span>
-            <span className="text-sm font-bold text-[#E53E3E] dark:text-red-400">
-              грн
-            </span>
-          </div>
-          <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
-          <span className="text-xs sm:text-sm text-[#E53E3E] dark:text-red-400 font-bold mt-2 text-center select-none">
-            Протермінована
-          </span>
-        </div> */}
-
         {/* Planned (PLAN) Card */}
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
-          <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
-            <span className="text-2xl sm:text-3xl font-extrabold text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.plan_curr_month || 0).toLocaleString("uk-UA")}
-            </span>
-            <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
-              грн
-            </span>
-          </div>
+          <CurrencySumDisplay sums={statistic?.suma_borg_curr_month} colorClass="text-[#3B52B4] dark:text-blue-400" />
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Плановано до оплати в поточному місяці
@@ -418,14 +375,7 @@ export const CarrierFinances = () => {
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
-          <div className="flex items-baseline justify-center gap-1.5 select-none w-full pb-2">
-            <span className="text-2xl sm:text-3xl font-black text-[#3B52B4] dark:text-blue-400">
-              {Math.round(statistic?.opl_curr_month || 0).toLocaleString("uk-UA")}
-            </span>
-            <span className="text-sm font-bold text-[#3B52B4] dark:text-blue-400">
-              грн
-            </span>
-          </div>
+          <CurrencySumDisplay sums={statistic?.suma_opl_curr_month} colorClass="text-[#3B52B4] dark:text-blue-400" />
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Оплачено у поточному місяці
@@ -452,7 +402,7 @@ export const CarrierFinances = () => {
             >
               <span>У графіку оплат</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "GRAFIK" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-                {statistic?.grafik_rah_count || 0}
+                {statistic?.count_rah_grafik || 0}
               </span>
             </button>
 
@@ -464,7 +414,7 @@ export const CarrierFinances = () => {
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
                 }`}
             >
-              <span>Оплачені ({statistic?.opl_two_month_rah_count || 0})</span>
+              <span>Оплачені ({(statistic?.count_rah_opl_curr_month || 0) + (statistic?.count_rah_opl_prev_month || 0)})</span>
             </button>
 
             {/* Overdue Flights / Problems Tab */}
@@ -477,7 +427,7 @@ export const CarrierFinances = () => {
             >
               <span>Рахунки до врегулювання</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "PROBLEM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.problem_rah_count || 0}
+                {statistic?.count_rah_problem || 0}
               </span>
             </button>
             {/* Overdue Flights / Problems Tab */}
@@ -490,31 +440,16 @@ export const CarrierFinances = () => {
             >
               <span>Невиставлені рахунки</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "DOC_WAIT" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.doc_wait_zay_count}
+                {statistic?.count_zay_doc_wait || 0}
               </span>
             </button>
 
 
           </div>
-
-          <div className="flex items-center gap-2 self-start md:self-auto">
-            <span className="text-xs text-slate-400 dark:text-slate-500 font-bold select-none">Відображати по:</span>
-            <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl text-[#415A88] dark:text-white">
-              <ItemsPerPage
-                options={[10, 20, 50, 100]}
-                defaultValue={perPage}
-                onChange={handleLimitChange}
-              />
-            </div>
-          </div>
         </div>
 
         {/* Small descriptive text below active tab */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-2 mt-1 select-none">
-          {/* <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">
-            {getHelperText()}
-          </span> */}
-
           {/* Month Switcher visible only when Paid tab is active */}
           {(activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH") && (
             <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg shadow-sm gap-1">
@@ -525,7 +460,7 @@ export const CarrierFinances = () => {
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
-                Поточний місяць ({statistic?.opl_curr_month_rah_count || 0})
+                Поточний місяць ({statistic?.count_rah_opl_curr_month || 0})
               </button>
               <button
                 onClick={() => handlePaidPeriodChange("OPL_PREV_MONTH")}
@@ -534,7 +469,7 @@ export const CarrierFinances = () => {
                   : "text-slate-400 hover:text-slate-600"
                   }`}
               >
-                Попередній місяць ({statistic?.opl_prev_month_rah_count || 0})
+                Попередній місяць ({statistic?.count_rah_opl_prev_month || 0})
               </button>
             </div>
           )}
@@ -571,18 +506,6 @@ export const CarrierFinances = () => {
               : isNotInvoiced
                 ? ""
                 : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
-
-            // Badges
-            // Check document completeness
-            const docCompleteness = invoice.doc_otrim
-              ? { text: "Комплект", style: "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30" }
-              : { text: "Некомплект", style: "bg-[#FFF2E6] text-[#D35400] border border-orange-200/50" };
-
-            // Tax invoice registration (ПН)
-            const taxInvoiceRegistered = {
-              text: "ПН зареєстрована",
-              style: "bg-[#E6F9F5] text-[#1ABC9C] border border-[#1ABC9C]/20"
-            };
 
             return (
               <motion.div
@@ -669,12 +592,6 @@ export const CarrierFinances = () => {
                       }`}>
                       {statusDateText}
                     </span>
-                    {/* Debt at the very bottom */}
-                    {/* {debtSum > 0 && (
-                      <span className="text-xs font-bold text-red-500 dark:text-red-400 select-all">
-                        Борг: {Math.round(debtSum).toLocaleString("uk-UA")} {currencyLabel}
-                      </span>
-                    )} */}
                   </div>
 
                   {/* Dropdown for Contacts */}
