@@ -26,7 +26,11 @@ import {
   Building2,
   Zap,
   AlertTriangle,
+  MousePointerClick,
 } from "lucide-react";
+
+// Тимчасова підказка "клікабельний замовник" — прибрати після 2026-08-13
+const CUSTOMER_HINT_EXPIRY = new Date("2026-08-13T00:00:00");
 
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
@@ -41,6 +45,7 @@ import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
+import { CustomerStatsDialog } from "./CustomerStatsDialog";
 import { getRegionName } from "@/shared/utils/region.utils";
 import { useProfile } from "@/shared/hooks";
 import {
@@ -69,6 +74,11 @@ export function TenderCardManagers({
     useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
+  const [statsCompanyName, setStatsCompanyName] = React.useState<string | null>(null);
+  const showCustomerHint = React.useMemo(
+    () => new Date() < CUSTOMER_HINT_EXPIRY,
+    []
+  );
   const { openModal, confirm } = useModalStore();
   const { profile } = useProfile();
   const pathname = usePathname();
@@ -687,9 +697,26 @@ export function TenderCardManagers({
               <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">
                 Замовник:
               </span>
-              <span className="text-[12px] font-black text-zinc-800 dark:text-white uppercase truncate max-w-[200px]">
+              {showCustomerHint && (
+                <MousePointerClick
+                  size={13}
+                  className="text-orange-500 animate-bounce shrink-0"
+                />
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStatsCompanyName(cargo.company_name);
+                }}
+                className={cn(
+                  "text-[12px] font-black text-zinc-800 dark:text-white uppercase truncate max-w-[200px] cursor-pointer hover:text-[#3B52B4] dark:hover:text-blue-400 hover:underline underline-offset-2 transition-colors",
+                  showCustomerHint &&
+                    "animate-pulse rounded px-1 -mx-1 ring-2 ring-orange-400/70 ring-offset-1 ring-offset-white dark:ring-offset-zinc-900"
+                )}
+              >
                 {cargo.company_name}
-              </span>
+              </button>
             </div>
           )}
         </div>
@@ -759,6 +786,11 @@ export function TenderCardManagers({
         isOpen={isFilesModalOpen}
         onClose={() => setIsFilesModalOpen(false)}
         files={cargo.files || []}
+      />
+
+      <CustomerStatsDialog
+        companyName={statsCompanyName}
+        onClose={() => setStatsCompanyName(null)}
       />
     </div>
   );

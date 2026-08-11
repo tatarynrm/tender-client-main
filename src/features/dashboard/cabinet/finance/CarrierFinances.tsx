@@ -14,11 +14,11 @@ import { motion } from "framer-motion";
 import { useProfile } from "@/shared/hooks/useProfile";
 import {
   financeService,
-  transportationToInvoice,
   IFinanceStatistic,
   ICurrencySum,
   IInvoice,
   IContactPerson,
+  ITransportationItem,
 } from "./services/finance.service";
 import {
   DropdownMenu,
@@ -33,6 +33,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 
 import { Pagination } from "@/shared/components/Pagination/Pagination";
+import { TransportationCard } from "@/shared/components/Transportation/TransportationCard";
 
 type TabType = "GRAFIK" | "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "PROBLEM" | "DOC_WAIT";
 
@@ -194,6 +195,9 @@ export const CarrierFinances = () => {
 
   const [statistic, setStatistic] = useState<IFinanceStatistic | null>(null);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
+  // "Невиставлені рахунки" — рахунку ще нема, рендеримо в тому ж форматі,
+  // що й /dashboard/cabinet/transportations, без перетворення в IInvoice
+  const [transportItems, setTransportItems] = useState<ITransportationItem[]>([]);
   const [loadingStat, setLoadingStat] = useState(true);
   const [loadingList, setLoadingList] = useState(true);
 
@@ -267,28 +271,29 @@ export const CarrierFinances = () => {
         }
 
         // «Невиставлені рахунки» живуть у перевезеннях (func: perev_list),
-        // бо рахунку ще не існує. Решта вкладок — у рахунках (func: rah_list).
-        const listData =
-          targetStatus === "DOC_WAIT"
-            ? await financeService
-                .getTransportationList(mid, targetStatus, currentPage, perPage)
-                .then((res) =>
-                  res
-                    ? { ...res, content: (res.content || []).map(transportationToInvoice) }
-                    : null
-                )
-            : await financeService.getFinanceList(mid, targetStatus, currentPage, perPage);
-
-        if (listData && listData.content) {
-          setInvoices(listData.content);
-          setTotalPages(listData.props?.pagination?.page_count || 1);
-        } else {
+        // бо рахунку ще не існує — рендеримо тим самим форматом картки,
+        // що й /dashboard/cabinet/transportations. Решта вкладок — у
+        // рахунках (func: rah_list), звична картка рахунку.
+        if (targetStatus === "DOC_WAIT") {
+          const res = await financeService.getTransportationList(mid, targetStatus, currentPage, perPage);
+          setTransportItems(res?.content || []);
           setInvoices([]);
-          setTotalPages(1);
+          setTotalPages(res?.props?.pagination?.page_count || 1);
+        } else {
+          const listData = await financeService.getFinanceList(mid, targetStatus, currentPage, perPage);
+          setTransportItems([]);
+          if (listData && listData.content) {
+            setInvoices(listData.content);
+            setTotalPages(listData.props?.pagination?.page_count || 1);
+          } else {
+            setInvoices([]);
+            setTotalPages(1);
+          }
         }
       } catch (err) {
         console.error("Failed to load invoice list:", err);
         setInvoices([]);
+        setTransportItems([]);
       } finally {
         setLoadingList(false);
       }
@@ -342,6 +347,20 @@ export const CarrierFinances = () => {
       </div>
     );
   }
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] mt-2 text-center text-slate-500">
+      <FileText className="w-12 h-12 text-[#8BA6EB] dark:text-slate-700 mb-3" />
+      <span className="font-bold text-base text-slate-700 dark:text-slate-300">
+        {activeTab === "DOC_WAIT" ? "Невиставлених рахунків немає" : "Рахунки відсутні"}
+      </span>
+      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
+        {activeTab === "DOC_WAIT"
+          ? "Немає перевезень, за якими очікуються документи для виставлення рахунку."
+          : "Не знайдено жодного рахунку для вибраного статусу фінансування."}
+      </span>
+    </div>
+  );
 
   return (
     <div className="w-full  pb-10">
@@ -481,6 +500,19 @@ export const CarrierFinances = () => {
         {loadingList ? (
           // Skeletons
           [...Array(3)].map((_, i) => <SkeletonInvoice key={i} />)
+        ) : activeTab === "DOC_WAIT" ? (
+          // «Невиставлені рахунки» — той самий формат картки, що й у перевезеннях
+          transportItems.length > 0 ? (
+            transportItems.map((item) => (
+              <TransportationCard
+                key={item.kod_zay}
+                item={item}
+                onClick={() => router.push(`/dashboard/cabinet/transportations/${item.kod_zay}`)}
+              />
+            ))
+          ) : (
+            emptyState
+          )
         ) : invoices.length > 0 ? (
           invoices.map((invoice, idx) => {
             // Currency & sum totals calculation directly from invoice object
@@ -489,23 +521,19 @@ export const CarrierFinances = () => {
             const debtSum = invoice.borg ?? 0;
             const currencyLabel = (invoice.valut || invoice.valut_code || invoice.perev_list?.[0]?.valut || "ГРН").toUpperCase();
 
-            // Grab first transport route to display
             const firstPerev = invoice.perev_list?.[0];
-            const routeText = firstPerev
-              ? `${firstPerev.zav_country} ${firstPerev.zav_town} ➔ ${firstPerev.rozv_country} ${firstPerev.rozv_town}`
-              : "Напрямок не вказано";
+            const routeText = `Заявка № ${firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}${firstPerev
+                ? `${firstPerev.zav_country} ${firstPerev.zav_town} ➔ ${firstPerev.rozv_country} ${firstPerev.rozv_town}`
+                : "Напрямок не вказано"
+              }`;
 
             // Status dates
             const actualPaidDate = invoice.dat_opl;
             const isPaid = Boolean(actualPaidDate);
-            // Рахунок ще не виставлений — рядок прийшов із перевезень
-            const isNotInvoiced = !invoice.rah_num;
 
             const statusDateText = isPaid
               ? `Оплачено ${formatDate(actualPaidDate)}`
-              : isNotInvoiced
-                ? ""
-                : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
+              : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
 
             return (
               <motion.div
@@ -520,17 +548,13 @@ export const CarrierFinances = () => {
                 <div className="flex-1 p-6 flex flex-col gap-3 min-w-0">
                   {/* Bill title */}
                   <h3 className="text-[#3B52B4] dark:text-blue-400 text-lg font-black tracking-tight leading-tight select-all">
-                    {isNotInvoiced
-                      ? `Заявка №${firstPerev?.zay_num || ""} від ${formatDate(invoice.rah_dat)}`
-                      : `Рахунок №${invoice.rah_num} від ${formatDate(invoice.rah_dat)}`}
+                    Рахунок №{invoice.rah_num} від {formatDate(invoice.rah_dat)}
                   </h3>
 
                   {/* Route & order numbers */}
                   <div className="flex flex-col gap-1">
                     <span className="text-xs font-extrabold text-[#8BA6EB] dark:text-blue-400/80 uppercase tracking-wide">
-                      {isNotInvoiced
-                        ? routeText
-                        : <>Заявка № {firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}{routeText}</>}
+                      {routeText}
                     </span>
                   </div>
 
@@ -605,18 +629,7 @@ export const CarrierFinances = () => {
             );
           })
         ) : (
-          // Empty State
-          <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] mt-2 text-center text-slate-500">
-            <FileText className="w-12 h-12 text-[#8BA6EB] dark:text-slate-700 mb-3" />
-            <span className="font-bold text-base text-slate-700 dark:text-slate-300">
-              {activeTab === "DOC_WAIT" ? "Невиставлених рахунків немає" : "Рахунки відсутні"}
-            </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
-              {activeTab === "DOC_WAIT"
-                ? "Немає перевезень, за якими очікуються документи для виставлення рахунку."
-                : "Не знайдено жодного рахунку для вибраного статусу фінансування."}
-            </span>
-          </div>
+          emptyState
         )}
       </div>
 

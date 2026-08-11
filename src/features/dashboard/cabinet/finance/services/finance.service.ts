@@ -130,30 +130,6 @@ export interface ITransportationListResponse {
   };
 }
 
-/**
- * Приводить перевезення до форми рахунку, щоб вкладка «Невиставлені рахунки»
- * рендерилась тією ж карткою. Рахунку ще немає, тому rah_num порожній —
- * картка за цією ознакою показує номер заявки замість номера рахунку.
- */
-export const transportationToInvoice = (item: ITransportationItem): IInvoice => ({
-  kod_rah: item.kod_zay,
-  firma: item.firma,
-  rah_num: "",
-  rah_dat: item.zav_date,
-  doc_otrim: null,
-  dat_opl_plan: item.opl_plan_date ?? null,
-  dat_opl: null,
-  grafik_dat: null,
-  economist: item.manager,
-  suma: item.fraht ?? 0,
-  sumaopl: 0,
-  borg: 0,
-  valut: item.valut,
-  valut_code: item.valut_code,
-  problem_info: null,
-  perev_list: [{ ...item, ttn_list: item.ttn_list ?? [] }],
-});
-
 export type FinanceStatusType =
   | "GRAFIK"
   | "OPL_CURR_MONTH"
