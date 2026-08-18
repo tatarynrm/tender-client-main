@@ -598,7 +598,14 @@ export default function HomePage() {
           </div>
         </div>
 
-
+        <div className="footer-bottom">
+          <span className="footer-copy">© {new Date().getFullYear()} ICT Tender. Усі права захищено.</span>
+          <span className="footer-legal">
+            <Link href="/terms">Угода користувача</Link>
+            <span className="footer-sep">·</span>
+            <Link href="/privacy">Політика конфіденційності</Link>
+          </span>
+        </div>
       </footer>
       <style dangerouslySetInnerHTML={{ __html: landingStyles }} />
     </div>
@@ -1590,6 +1597,8 @@ const landingStyles = `
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   padding-top: 28px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -1602,6 +1611,25 @@ const landingStyles = `
 
 .footer-note {
   font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.footer-legal {
+  font-size: 12px;
+}
+
+.footer-legal a {
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-legal a:hover {
+  color: #fff;
+}
+
+.footer-sep {
+  margin: 0 8px;
   color: rgba(255, 255, 255, 0.25);
 }
 

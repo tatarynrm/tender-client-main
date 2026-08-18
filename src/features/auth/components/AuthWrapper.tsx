@@ -39,12 +39,21 @@ const AuthWrapper = ({
         {children}
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         {backButtonLabel && backButtonHref && (
           <Button variant={"link"} className="w-full font-normal text-[#4256D5] hover:text-[#3143b5]">
             <Link href={backButtonHref}>{backButtonLabel}</Link>
           </Button>
         )}
+        <div className="w-full text-center text-[11px] text-slate-400 leading-relaxed">
+          <Link href="/terms" target="_blank" className="hover:text-[#4256D5] hover:underline">
+            Угода користувача
+          </Link>
+          <span className="mx-1.5">·</span>
+          <Link href="/privacy" target="_blank" className="hover:text-[#4256D5] hover:underline">
+            Політика конфіденційності
+          </Link>
+        </div>
       </CardFooter>
     </Card>
   );

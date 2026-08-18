@@ -15,6 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { Button } from "@/shared/components/ui/button";
+import { DateField } from "@/shared/components/Inputs/DateField";
+import { Search, X } from "lucide-react";
+import { parseISO } from "date-fns";
+
+const EMPTY_SEARCH_FILTERS = {
+  order_number: "",
+  date_from: "",
+  date_to: "",
+  place_from: "",
+  place_to: "",
+  vehicle_number: "",
+};
 
 const PROBLEM_STATUS_CODES = ["DOC_ACT", "DOC_NO_SET"];
 
@@ -59,6 +72,15 @@ function CabinetPageContent() {
   const [defaultLimit, setDefaultLimit] = useState(10);
   const [unloadedStatusFilter, setUnloadedStatusFilter] = useState("all");
 
+  // Вкладка «Пошук»: власний стан. За замовчуванням нічого не вантажимо —
+  // тільки після заповнення фільтра й натискання «Шукати».
+  const [searchFilters, setSearchFilters] = useState({ ...EMPTY_SEARCH_FILTERS });
+  const [searchResults, setSearchResults] = useState<IActiveTransport[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searchPage, setSearchPage] = useState(1);
+  const [hasSearched, setHasSearched] = useState(false);
+
   useEffect(() => {
     const savedLimit = localStorage.getItem("transportations_limit");
     if (savedLimit) setDefaultLimit(Number(savedLimit));
@@ -90,6 +112,51 @@ function CabinetPageContent() {
     localStorage.setItem("transportations_limit", String(newLimit));
     setDefaultLimit(newLimit);
     updateUrl({ limit: newLimit, page: 1 });
+  };
+
+  const isSearch = activeTab === "search";
+
+  // Чи є хоча б один заповнений фільтр — без цього пошук не запускаємо.
+  const hasAnyFilter = Object.values(searchFilters).some((v) => v.trim() !== "");
+
+  const runSearch = async (pageArg = 1) => {
+    if (!profile?.company?.migrate_id) return;
+    // Збираємо лише непорожні поля, щоб не слати зайвих фільтрів у процедуру.
+    const filter: Record<string, string> = {};
+    Object.entries(searchFilters).forEach(([key, value]) => {
+      const v = value.trim();
+      if (v) filter[key] = v;
+    });
+    if (Object.keys(filter).length === 0) return;
+
+    setSearchLoading(true);
+    setHasSearched(true);
+    setSearchPage(pageArg);
+    try {
+      const { content, total } =
+        await carrierStatisticService.getCarrierTransportationFilter(
+          profile.company.migrate_id,
+          filter,
+          pageArg,
+          currentLimit
+        );
+      setSearchResults(content);
+      setSearchTotal(total);
+    } catch (error) {
+      console.error("Failed to search transports", error);
+      setSearchResults([]);
+      setSearchTotal(0);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const resetSearch = () => {
+    setSearchFilters({ ...EMPTY_SEARCH_FILTERS });
+    setSearchResults([]);
+    setSearchTotal(0);
+    setSearchPage(1);
+    setHasSearched(false);
   };
 
   useEffect(() => {
@@ -176,7 +243,11 @@ function CabinetPageContent() {
         )
       : transports;
 
-  const tabs = [
+  // На вкладці «Пошук» показуємо результати пошуку, інакше — список статусу.
+  const listLoading = isSearch ? searchLoading : loadingTransports;
+  const listItems = isSearch ? searchResults : visibleTransports;
+
+  const tabs: { id: string; label: string; count?: number }[] = [
     { id: "plan", label: "Заплановані", count: stats?.zay_count_plan || 0 },
     { id: "in_progress", label: "В роботі", count: stats?.zay_count_active || 0 },
     { id: "unloaded", label: "Розвантажені", count: stats?.zay_count_unloaded || 0 },
@@ -184,6 +255,7 @@ function CabinetPageContent() {
     // { id: "problem", label: "Потребують додаткового опрацювання", count: stats?.zay_count_problem || 0 },
     // { id: "pay_wait", label: "Очікують оплати", count: stats?.zay_count_opl_wait || 0 },
     { id: "closed", label: "Завершені", count: stats?.zay_count_closed || 0 },
+    { id: "search", label: "Пошук" },
   ];
 
   return (
@@ -221,10 +293,13 @@ function CabinetPageContent() {
                   : "bg-white text-[#3B52B4] border-blue-200 hover:bg-blue-50"
                   }`}
               >
+                {tab.id === "search" && <Search className="w-3.5 h-3.5" />}
                 {tab.label}
-                <span className={`text-xs ml-1 font-bold ${activeTab === tab.id ? "text-blue-200" : "text-blue-300"}`}>
-                  {tab.count}
-                </span>
+                {tab.count !== undefined && (
+                  <span className={`text-xs ml-1 font-bold ${activeTab === tab.id ? "text-blue-200" : "text-blue-300"}`}>
+                    {tab.count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -258,9 +333,109 @@ function CabinetPageContent() {
         </div>
       </div>
 
+      {/* Форма пошуку (лише на вкладці «Пошук») */}
+      {isSearch && (
+        <div
+          className="bg-white rounded-xl border border-blue-100 shadow-sm p-2.5"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasAnyFilter && !searchLoading) runSearch(1);
+          }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
+            {/* Номер заявки */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Номер заявки</label>
+              <input
+                type="text"
+                value={searchFilters.order_number}
+                placeholder="напр. 482-26ТЕК"
+                onChange={(e) => setSearchFilters((f) => ({ ...f, order_number: e.target.value }))}
+                className="h-8 rounded-md border border-blue-100 bg-white px-2 text-[12px] text-[#0a2540] outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+            {/* Період */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Період — від</label>
+              <DateField
+                value={searchFilters.date_from}
+                onChange={(v) => setSearchFilters((f) => ({ ...f, date_from: v }))}
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Період — до</label>
+              <DateField
+                value={searchFilters.date_to}
+                onChange={(v) => setSearchFilters((f) => ({ ...f, date_to: v }))}
+                minDate={searchFilters.date_from ? parseISO(searchFilters.date_from) : null}
+              />
+            </div>
+            {/* Номер авто */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Номер авто</label>
+              <input
+                type="text"
+                value={searchFilters.vehicle_number}
+                placeholder="напр. AA1234BB"
+                onChange={(e) => setSearchFilters((f) => ({ ...f, vehicle_number: e.target.value }))}
+                className="h-8 rounded-md border border-blue-100 bg-white px-2 text-[12px] text-[#0a2540] outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+            {/* Напрямки */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Напрямок — звідки</label>
+              <input
+                type="text"
+                value={searchFilters.place_from}
+                placeholder="місто або країна"
+                onChange={(e) => setSearchFilters((f) => ({ ...f, place_from: e.target.value }))}
+                className="h-8 rounded-md border border-blue-100 bg-white px-2 text-[12px] text-[#0a2540] outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88]">Напрямок — куди</label>
+              <input
+                type="text"
+                value={searchFilters.place_to}
+                placeholder="місто або країна"
+                onChange={(e) => setSearchFilters((f) => ({ ...f, place_to: e.target.value }))}
+                className="h-8 rounded-md border border-blue-100 bg-white px-2 text-[12px] text-[#0a2540] outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-2.5">
+            <Button
+              size="sm"
+              onClick={() => runSearch(1)}
+              disabled={!hasAnyFilter || searchLoading}
+              loading={searchLoading}
+              className="h-8 px-3 bg-[#3B52B4] hover:bg-[#2f429a] text-white text-[12px]"
+            >
+              <Search className="w-3.5 h-3.5 mr-1" />
+              Шукати
+            </Button>
+            {(hasAnyFilter || hasSearched) && (
+              <button
+                type="button"
+                onClick={resetSearch}
+                className="inline-flex items-center gap-1 text-[13px] font-medium text-[#415A88] hover:text-[#3B52B4]"
+              >
+                <X className="w-3.5 h-3.5" />
+                Скинути
+              </button>
+            )}
+            {!hasAnyFilter && (
+              <span className="text-[11px] text-gray-400">
+                Заповніть хоча б одне поле для пошуку.
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Transports List */}
       <div className="flex flex-col gap-3 sm:gap-4 mt-4">
-        {loadingTransports ? (
+        {listLoading ? (
           <>
             {[...Array(3)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-blue-100 shadow-sm flex flex-col overflow-hidden animate-pulse">
@@ -305,18 +480,22 @@ function CabinetPageContent() {
               </div>
             ))}
           </>
-        ) : visibleTransports.length === 0 ? (
-          <div className="flex justify-center py-8 text-gray-500 font-medium">
-            {transports.length === 0
-              ? "Немає перевезень у цій вкладці"
-              : "Немає перевезень з обраним статусом"}
+        ) : listItems.length === 0 ? (
+          <div className="flex justify-center py-8 text-gray-500 font-medium text-center">
+            {isSearch
+              ? hasSearched
+                ? "За вашим запитом нічого не знайдено"
+                : "Введіть параметри пошуку та натисніть «Шукати»"
+              : transports.length === 0
+                ? "Немає перевезень у цій вкладці"
+                : "Немає перевезень з обраним статусом"}
           </div>
         ) : (
-          visibleTransports.map((item) => (
+          listItems.map((item) => (
             <TransportationCard
               key={item.kod_zay}
               item={item}
-              showStatus={activeTab === "unloaded"}
+              showStatus={isSearch || activeTab === "unloaded"}
               onClick={() => router.push(`/dashboard/cabinet/transportations/${item.kod_zay}`)}
             />
           ))
@@ -325,6 +504,30 @@ function CabinetPageContent() {
 
       {/* Bottom Controls */}
       {(() => {
+        if (isSearch) {
+          if (!hasSearched) return null;
+          // Якщо процедура віддала total — рахуємо точно; інакше даємо «наступну»,
+          // поки сторінка заповнена вщент.
+          const pageCount =
+            searchTotal > 0
+              ? Math.ceil(searchTotal / currentLimit)
+              : searchResults.length === currentLimit
+                ? searchPage + 1
+                : searchPage;
+          if (pageCount > 1) {
+            return (
+              <div className="pb-8">
+                <Pagination
+                  page={searchPage}
+                  pageCount={pageCount}
+                  onChange={(p) => runSearch(p)}
+                />
+              </div>
+            );
+          }
+          return null;
+        }
+
         const totalItems = tabs.find((t) => t.id === activeTab)?.count || 0;
         const pageCount = Math.ceil(totalItems / currentLimit);
         if (pageCount > 1) {

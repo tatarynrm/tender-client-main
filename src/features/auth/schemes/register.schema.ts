@@ -82,6 +82,14 @@ export const RegisterSchema = z
     company_expedition: z.boolean().optional(),
     company_carrier: z.boolean().optional(),
     company_freighter: z.boolean().optional(),
+
+    // --- Згода на обробку персональних даних (обов'язкова) ---
+    // Реєстрація неможлива без прийняття Угоди користувача та Політики
+    // конфіденційності — zodResolver заблокує сабміт, поки поле не true.
+    pd_consent: z.boolean().refine((v) => v === true, {
+      message:
+        "Для реєстрації потрібно прийняти Угоду користувача та Політику конфіденційності",
+    }),
   })
   .superRefine(({ passwordRepeat, password }, ctx) => {
     if (passwordRepeat !== password) {

@@ -523,8 +523,8 @@ export const CarrierFinances = () => {
 
             const firstPerev = invoice.perev_list?.[0];
             const routeText = `Заявка № ${firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}${firstPerev
-                ? `${firstPerev.zav_country} ${firstPerev.zav_town} ➔ ${firstPerev.rozv_country} ${firstPerev.rozv_town}`
-                : "Напрямок не вказано"
+              ? `${firstPerev.zav_country} ${firstPerev.zav_town} ➔ ${firstPerev.rozv_country} ${firstPerev.rozv_town}`
+              : "Напрямок не вказано"
               }`;
 
             // Status dates
@@ -562,7 +562,7 @@ export const CarrierFinances = () => {
                   <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-semibold">
                     {invoice.doc_otrim && (
                       <span className="text-[#8BA6EB]">
-                        Документи отримано{" "}
+                        Документи отримано
                         <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
                           {formatDate(invoice.doc_otrim)}
                         </strong>

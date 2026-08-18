@@ -98,20 +98,20 @@ export default function Header({
           </span>
         </div>
 
-        {/* Impersonate Actions (Only for ICT Admins) */}
-        {profile?.role?.is_ict && profile?.role?.is_admin && profile?.company?.id === 1 && (
-          <ImpersonateCompanyDialog />
-        )}
-        {profile?.role?.is_ict && profile?.role?.is_admin && profile?.company?.id !== 1 && (
-          <Button
-            variant="default"
-            size="sm"
-            className="ml-2"
-            onClick={handleReturnToIct}
-            disabled={returningToIct}
-          >
-            {returningToIct ? "Зачекайте..." : "Повернутись до ICT"}
-          </Button>
+        {/* Перемикання компанії — лише коли РОЛЬ is_ict && is_admin (обидві умови).
+            Без прив'язки до company.id: обидві дії доступні завжди для таких ролей. */}
+        {profile?.role?.is_ict && profile?.role?.is_admin && (
+          <div className="flex items-center gap-2 ml-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleReturnToIct}
+              disabled={returningToIct}
+            >
+              {returningToIct ? "Зачекайте..." : "Повернутись до ICT"}
+            </Button>
+            <ImpersonateCompanyDialog />
+          </div>
         )}
       </div>
 

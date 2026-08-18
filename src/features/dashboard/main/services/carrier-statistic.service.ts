@@ -301,6 +301,38 @@ class CarrierStatisticService {
     }
   }
 
+  /**
+   * Пошук перевезень за фільтрами (вкладка «Пошук»). Викликає окрему
+   * Oracle-функцію perev_filter. Повертає масив content і total із
+   * props.pagination для розрахунку сторінок.
+   */
+  async getCarrierTransportationFilter(
+    mid: string | number,
+    filter: Record<string, string>,
+    page: number = 1,
+    perPage: number = 10
+  ): Promise<{ content: IActiveTransport[]; total: number }> {
+    try {
+      const response = await api.post<any>(
+        `/oracle/carrier-transportation-filter/${mid}`,
+        { filter, pagination: { page, per_page: perPage } }
+      );
+      const data = response.data;
+      const content: IActiveTransport[] = Array.isArray(data)
+        ? data
+        : (data?.content ?? []);
+      // props.pagination може називати підсумок по-різному — читаємо гнучко.
+      const p = data?.props?.pagination ?? {};
+      const total = Number(
+        p.total ?? p.total_rows ?? p.total_count ?? p.count ?? p.rows ?? 0
+      );
+      return { content, total: Number.isFinite(total) ? total : 0 };
+    } catch (error) {
+      console.error("Failed to filter transportation list", error);
+      return { content: [], total: 0 };
+    }
+  }
+
   async getCarrierTransportationOne(mid: string | number, kod: number): Promise<ITransportationDetails | null> {
     try {
       const response = await api.post<ITransportationDetails>(

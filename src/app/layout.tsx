@@ -46,6 +46,7 @@ export const metadata: Metadata = {
 };
 
 import { UserActivityTracker } from "@/shared/components/UserActivityTracker";
+import { CookieConsent } from "@/shared/components/CookieConsent";
 
 export default async function RootLayout({
   children,
@@ -80,6 +81,7 @@ export default async function RootLayout({
         />
         <UserActivityTracker />
         <MainProvider profile={profile ?? null}>{children}</MainProvider>
+        <CookieConsent />
       </body>
     </html>
   );

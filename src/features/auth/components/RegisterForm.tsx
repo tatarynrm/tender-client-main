@@ -14,9 +14,11 @@ import {
   Briefcase,
 } from "lucide-react";
 
+import Link from "next/link";
 import { RegisterSchema, TypeRegisterSchema } from "../schemes";
 import { userRegisterMutation } from "../hooks";
 import api from "@/shared/api/instance.api";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { InputText } from "@/shared/components/Inputs/InputText";
 import {
   Button,
@@ -60,6 +62,7 @@ const RegisterForm = () => {
       company_carrier: false,
       company_expedition: false,
       company_freighter: false,
+      pd_consent: false,
     },
   });
 
@@ -363,6 +366,49 @@ const RegisterForm = () => {
               </div>
             </div>
           </div>
+
+          {/* Згода з Угодою користувача та Політикою конфіденційності */}
+          <FormField
+            control={form.control}
+            name="pd_consent"
+            render={({ field }) => (
+              <FormItem className="flex flex-col space-y-1.5 pt-4 mt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-start gap-2.5">
+                  <FormControl>
+                    <Checkbox
+                      id="pd_consent"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoadingRegister}
+                      className="mt-0.5"
+                    />
+                  </FormControl>
+                  <label
+                    htmlFor="pd_consent"
+                    className="text-[13px] leading-snug text-[#3d6080] cursor-pointer select-none"
+                  >
+                    Я прочитав(-ла) та погоджуюся з{" "}
+                    <Link
+                      href="/terms"
+                      target="_blank"
+                      className="text-[#4256D5] hover:underline font-medium"
+                    >
+                      Угодою користувача
+                    </Link>{" "}
+                    та{" "}
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="text-[#4256D5] hover:underline font-medium"
+                    >
+                      Політикою конфіденційності
+                    </Link>
+                  </label>
+                </div>
+                <FormMessage className="text-[10px] uppercase font-black tracking-tight" />
+              </FormItem>
+            )}
+          />
 
           <AppButton
             disabled={isLoadingRegister}
