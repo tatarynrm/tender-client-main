@@ -17,6 +17,7 @@ import {
 } from "@/shared/components/ui/select";
 import { Button } from "@/shared/components/ui/button";
 import { DateField } from "@/shared/components/Inputs/DateField";
+import { FilterHint } from "@/shared/components/Inputs/FilterHint";
 import { Search, X } from "lucide-react";
 import { parseISO } from "date-fns";
 
@@ -122,10 +123,12 @@ function CabinetPageContent() {
   const runSearch = async (pageArg = 1) => {
     if (!profile?.company?.migrate_id) return;
     // Збираємо лише непорожні поля, щоб не слати зайвих фільтрів у процедуру.
-    const filter: Record<string, string> = {};
+    // order_number надсилаємо числом (обов'язково), решту — рядком.
+    const filter: Record<string, string | number> = {};
     Object.entries(searchFilters).forEach(([key, value]) => {
       const v = value.trim();
-      if (v) filter[key] = v;
+      if (!v) return;
+      filter[key] = key === "order_number" ? Number(v) : v;
     });
     if (Object.keys(filter).length === 0) return;
 
@@ -344,12 +347,25 @@ function CabinetPageContent() {
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2">
             {/* Номер заявки */}
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Номер заявки</label>
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88]">
+                Номер заявки
+                <FilterHint
+                  title="Номер заявки"
+                  examples={["4434", "2387"]}
+                  note="Тільки цифри."
+                />
+              </label>
               <input
                 type="text"
+                inputMode="numeric"
                 value={searchFilters.order_number}
-                placeholder="напр. 482-26ТЕК"
-                onChange={(e) => setSearchFilters((f) => ({ ...f, order_number: e.target.value }))}
+                placeholder="напр. 482"
+                onChange={(e) =>
+                  setSearchFilters((f) => ({
+                    ...f,
+                    order_number: e.target.value.replace(/\D/g, ""),
+                  }))
+                }
                 className="h-8 rounded-md border border-blue-100 bg-white px-2 text-[12px] text-[#0a2540] outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
               />
             </div>
@@ -371,7 +387,14 @@ function CabinetPageContent() {
             </div>
             {/* Номер авто */}
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Номер авто</label>
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88]">
+                Номер авто
+                <FilterHint
+                  title="Як вводити номер авто"
+                  examples={["ВС", "ВС0204", "ВС0204ВК"]}
+                  note="Можна частково або повністю."
+                />
+              </label>
               <input
                 type="text"
                 value={searchFilters.vehicle_number}
@@ -382,7 +405,14 @@ function CabinetPageContent() {
             </div>
             {/* Напрямки */}
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Напрямок — звідки</label>
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88]">
+                Напрямок — звідки
+                <FilterHint
+                  title="Як вводити напрямок"
+                  examples={["UA", "DE", "Львів", "Львівська", "львівсь"]}
+                  note="Країна, місто чи область — можна частково."
+                />
+              </label>
               <input
                 type="text"
                 value={searchFilters.place_from}
@@ -392,7 +422,14 @@ function CabinetPageContent() {
               />
             </div>
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Напрямок — куди</label>
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88]">
+                Напрямок — куди
+                <FilterHint
+                  title="Як вводити напрямок"
+                  examples={["UA", "DE", "Львів", "Львівська", "львівсь"]}
+                  note="Країна, місто чи область — можна частково."
+                />
+              </label>
               <input
                 type="text"
                 value={searchFilters.place_to}

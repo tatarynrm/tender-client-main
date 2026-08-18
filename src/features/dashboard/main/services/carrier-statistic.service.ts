@@ -308,7 +308,7 @@ class CarrierStatisticService {
    */
   async getCarrierTransportationFilter(
     mid: string | number,
-    filter: Record<string, string>,
+    filter: Record<string, string | number>,
     page: number = 1,
     perPage: number = 10
   ): Promise<{ content: IActiveTransport[]; total: number }> {

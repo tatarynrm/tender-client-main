@@ -31,33 +31,6 @@ function formatDate(dateStr?: string | null) {
     .replace(/\./g, ".");
 }
 
-function getStatusColor(codeStatus?: string | null) {
-  switch (codeStatus) {
-    case "ZAMOVL":
-      return "bg-slate-100 text-slate-600";
-    case "PLAN":
-      return "bg-blue-100 text-blue-600";
-    case "ACTIVE":
-      return "bg-emerald-100 text-emerald-600";
-    case "DOC_WAIT":
-      return "bg-indigo-100 text-blue-600";
-    case "DOC_WAIT_20":
-      return "bg-yellow-100 text-yellow-700";
-    case "DOC_NO_SET":
-      return "bg-red-100 text-red-600";
-    case "DOC_ACT":
-      return "bg-rose-100 text-rose-700";
-    case "DOC_OPR":
-      return "bg-indigo-100 text-indigo-600";
-    case "OPL_GRAFIK":
-      return "bg-purple-100 text-purple-600";
-    case "CLOSED":
-      return "bg-gray-100 text-gray-600";
-    default:
-      return "bg-amber-100 text-amber-700";
-  }
-}
-
 export interface ITransportationCardManager {
   imja?: string | null;
   prizv?: string | null;
@@ -103,8 +76,6 @@ export const TransportationCard = ({
   onClick?: () => void;
   showStatus?: boolean;
 }) => {
-  const statusColor = getStatusColor(item.code_status);
-
   return (
     <div
       onClick={onClick}
@@ -183,26 +154,6 @@ export const TransportationCard = ({
         </div>
       </div>
 
-      {/* Middle row — статус перевезення по центру картки */}
-      {showStatus && item.status_name && (
-        <div className="border-t border-blue-50 dark:border-slate-800 bg-blue-50/40 dark:bg-slate-800/40 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
-          <span className="text-[10px] font-semibold text-blue-300 uppercase tracking-widest whitespace-nowrap">
-            Статус
-          </span>
-          <span
-            className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ring-black/5 ${statusColor}`}
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-current" />
-            {item.status_name}
-          </span>
-          {item.code_status === "DOC_WAIT_20" && (
-            <span className="text-[12px] font-semibold text-yellow-600 whitespace-nowrap">
-              більше 20 днів
-            </span>
-          )}
-        </div>
-      )}
-
       {/* Bottom row (Driver info & Manager) */}
       <div className="border-t border-blue-50 dark:border-slate-800 px-4 py-2.5 sm:px-5 lg:px-6 flex flex-wrap items-center justify-between gap-y-2 text-xs text-blue-400">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 min-w-0">
@@ -214,10 +165,6 @@ export const TransportationCard = ({
           <div className="flex items-center gap-1.5 font-medium min-w-0">
             <User size={14} className="text-gray-400 shrink-0" />{" "}
             <span className="truncate text-gray-700 dark:text-slate-300">{item.driver}</span>
-          </div>
-          <div className="flex items-center gap-1.5 font-medium min-w-0">
-            <Phone size={14} className="text-blue-300 shrink-0" />{" "}
-            <span className="truncate text-gray-700 dark:text-slate-300">{item.driver_phone}</span>
           </div>
         </div>
 
