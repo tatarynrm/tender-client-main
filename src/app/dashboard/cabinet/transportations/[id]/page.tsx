@@ -363,12 +363,6 @@ export default function TransportationDetailsPage() {
                 <span className="font-bold text-[#303f5f] text-sm">{data.fraht} {data.valut}</span>
               </div>
               <div className="flex justify-between py-2.5 border-b border-[#F0F4F8]">
-                <span className="text-[#8B9EC7] font-medium">Статус оплати</span>
-                <span className="px-2 py-0.5 bg-[#FFE8CC] text-[#D97706] rounded text-[10px] font-bold">
-                  {data.status_opl || "Заплановано"}
-                </span>
-              </div>
-              <div className="flex justify-between py-2.5 border-b border-[#F0F4F8]">
                 <span className="text-[#8B9EC7] font-medium">Дата виплати</span>
                 <span className="font-bold text-[#303f5f]">{formatDate(data.opl_plan_date)}</span>
               </div>

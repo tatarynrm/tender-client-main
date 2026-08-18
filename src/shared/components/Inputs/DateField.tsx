@@ -13,9 +13,11 @@ import {
   isSameMonth,
   isSameDay,
   eachDayOfInterval,
+  getYear,
+  setYear,
 } from "date-fns";
 import { uk } from "date-fns/locale";
-import { CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarIcon, ChevronLeft, ChevronRight, ChevronDown, X } from "lucide-react";
 import { cn } from "@/shared/utils";
 
 interface DateFieldProps {
@@ -45,6 +47,12 @@ export const DateField = ({
   const [currentMonth, setCurrentMonth] = useState<Date>(
     selectedDate ?? new Date()
   );
+  // Опційний вибір року: перемикає календар у режим сітки років.
+  const [pickingYear, setPickingYear] = useState(false);
+  const [yearBase, setYearBase] = useState(() => {
+    const y = getYear(selectedDate ?? new Date());
+    return y - (y % 12);
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,6 +67,46 @@ export const DateField = ({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Закривши календар — повертаємось до перегляду днів.
+  useEffect(() => {
+    if (!isOpen) setPickingYear(false);
+  }, [isOpen]);
+
+  const openYearPicker = () => {
+    const y = getYear(currentMonth);
+    setYearBase(y - (y % 12));
+    setPickingYear(true);
+  };
+
+  const renderYears = () => {
+    const years = Array.from({ length: 12 }, (_, i) => yearBase + i);
+    const selYear = selectedDate ? getYear(selectedDate) : null;
+    const curYear = getYear(currentMonth);
+    return years.map((yr) => {
+      const isSel = selYear === yr;
+      const isCur = curYear === yr;
+      return (
+        <div
+          key={yr}
+          onClick={() => {
+            setCurrentMonth(setYear(currentMonth, yr));
+            setPickingYear(false);
+          }}
+          className={cn(
+            "h-9 flex items-center justify-center text-[13px] rounded-lg cursor-pointer transition-all",
+            isSel
+              ? "bg-[#3B52B4] text-white shadow-md"
+              : isCur
+                ? "text-[#3B52B4] font-bold hover:bg-blue-50"
+                : "text-slate-600 hover:bg-blue-50"
+          )}
+        >
+          {yr}
+        </div>
+      );
+    });
+  };
 
   const renderDays = () => {
     const monthStart = startOfMonth(currentMonth);
@@ -145,35 +193,64 @@ export const DateField = ({
           <div className="flex items-center justify-between mb-4 px-1">
             <button
               type="button"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              onClick={() =>
+                pickingYear
+                  ? setYearBase((b) => b - 12)
+                  : setCurrentMonth(subMonths(currentMonth, 1))
+              }
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
             >
               <ChevronLeft size={18} />
             </button>
-            <span className="text-[13px] font-bold uppercase tracking-tight text-zinc-700">
-              {format(currentMonth, "LLLL yyyy", { locale: uk })}
-            </span>
+            {/* Клік по заголовку — відкрити/закрити вибір року */}
             <button
               type="button"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              onClick={() => (pickingYear ? setPickingYear(false) : openYearPicker())}
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-[13px] font-bold uppercase tracking-tight text-zinc-700 hover:bg-blue-50 hover:text-[#3B52B4] transition-colors"
+              title="Обрати рік"
+            >
+              {pickingYear
+                ? `${yearBase} – ${yearBase + 11}`
+                : format(currentMonth, "LLLL yyyy", { locale: uk })}
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "text-[#8BA6EB] transition-transform",
+                  pickingYear ? "rotate-180" : "animate-bounce"
+                )}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                pickingYear
+                  ? setYearBase((b) => b + 12)
+                  : setCurrentMonth(addMonths(currentMonth, 1))
+              }
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
             >
               <ChevronRight size={18} />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 mb-2">
-            {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
-              <div
-                key={d}
-                className="text-center text-[10px] font-bold text-slate-400 uppercase"
-              >
-                {d}
+          {pickingYear ? (
+            <div className="grid grid-cols-3 gap-2">{renderYears()}</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-7 mb-2">
+                {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"].map((d) => (
+                  <div
+                    key={d}
+                    className="text-center text-[10px] font-bold text-slate-400 uppercase"
+                  >
+                    {d}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
+              <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
+            </>
+          )}
         </div>
       )}
     </div>
