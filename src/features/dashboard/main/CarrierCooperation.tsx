@@ -117,14 +117,14 @@ export const CarrierCooperation = () => {
           href="/dashboard/cabinet/contacts"
           className="bg-white rounded-3xl px-4 py-4 shadow-sm border border-[#3B52B4] flex flex-col items-center justify-center gap-1 text-[#3B52B4] hover:bg-[#EEF2FF] transition-colors cursor-pointer"
         >
-          <span className="text-sm font-bold">Всі контакти ICT</span>
+          <span className="text-sm font-bold">ІСТ Контакти</span>
         </Link>
       </div>
 
       {/* Section 1: УМОВИ СПІВПРАЦІ */}
       <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col gap-3">
         <h3 className="text-sm font-bold text-[#3B52B4] uppercase tracking-wider">
-          УМОВИ СПІВПРАЦІ
+          ДОГОВОРИ
         </h3>
 
         {data.dog_list_active && data.dog_list_active.length > 0 ? (

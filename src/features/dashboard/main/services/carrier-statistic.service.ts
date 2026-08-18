@@ -78,22 +78,72 @@ export interface ITenderStatistic {
   event: Partial<ILastEvent> | null;
 }
 
-export interface ICarrierStatistic {
-  kod_per: number;
+/**
+ * Зведення співпраці. Раніше ці поля лежали пласко в корені відповіді
+ * /oracle/carrier-statistic, тепер бекенд віддає їх вкладеними в cooperation.
+ */
+export interface ICooperationSummary {
   work_begin: string;
-  work_end: string;
   zay_count_all: number;
   zay_count_active: number;
-  doc_no_set: number;
   doc_waiting: number;
-  debt_payment: {
+  doc_no_set: number;
+  oborot: number;
+  curr_month_payable?: {
     valut: string;
-    valut_code?: string;
-    ids?: string;
-    sum: number;
-    zay_count: number;
+    valut_code: string;
+    suma: number;
   }[];
-  waiting_payment: {
+}
+
+/** Активний договір перевізника (блок «Умови співпраці»). */
+export interface IActiveDog {
+  kod_dog: number;
+  firma: string;
+  dog_num: string;
+  dog_date: string;
+  termin: string;
+  perev_mn: number;
+  perev_ukr: number;
+  payment_procedure: string;
+  edo_medok: number;
+  edo_vchasno: number;
+}
+
+/** Міжнародний напрямок (країна → країна) для блоків напрямків. */
+export interface IDirectionMn {
+  kod_krainaz: number;
+  kod_krainar: number;
+  country_zav: string;
+  country_rozv: string;
+  zay_count: number;
+}
+
+/** Регіональний напрямок (область → область) для блоку напрямків. */
+export interface IDirectionReg {
+  kod_oblz: number;
+  kod_oblr: number;
+  obl_zav: string;
+  obl_rozv: string;
+  zay_count: number;
+}
+
+export interface ICarrierStatistic {
+  kod_per: number;
+  /** Зведення співпраці — тепер вкладене, а не пласко в корені. */
+  cooperation: ICooperationSummary;
+  zay_chart: {
+    month: string;
+    count: number;
+    current_month: number;
+  }[];
+  last_events?: ILastEvent[];
+  dog_list_active?: IActiveDog[];
+  direction_list_mn?: IDirectionMn[];
+  direction_list_reg?: IDirectionReg[];
+  tender_statistic?: ITenderStatistic | null;
+  /** Наразі бекенд не віддає — лишено опційним для картки планованих оплат. */
+  waiting_payment?: {
     valut: string;
     valut_code?: string;
     date_opl?: string;
@@ -101,14 +151,14 @@ export interface ICarrierStatistic {
     sum: number;
     zay_count: number;
   }[];
-  zay_chart: {
-    month: string;
-    count: number;
-    current_month: number;
+  debt_payment?: {
+    valut: string;
+    valut_code?: string;
+    ids?: string;
+    sum: number;
+    zay_count: number;
   }[];
-  last_events?: ILastEvent[];
   zay_list_10?: IActiveTransport[];
-  tender_statistic?: ITenderStatistic | null;
   [key: string]: any;
 }
 

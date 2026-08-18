@@ -104,7 +104,18 @@ export default function HomePage() {
       </nav>
 
       {/* HERO */}
-      <section className="hero relative min-h-screen flex flex-col justify-center items-center px-4 sm:px-12 lg:px-[80px] py-[100px] sm:py-[140px] z-10">
+      <section className="hero relative min-h-screen flex flex-col justify-center items-center px-4 sm:px-12 lg:px-[80px] py-[100px] sm:py-[140px] z-10 overflow-hidden" style={{ background: 'transparent' }}>
+        {/* Background Video */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source src="/images/main-page/hero-background.mp4" type="video/mp4" />
+        </video>
+
         <div className="relative z-10 w-full  px-4 flex flex-col items-center lg:items-start text-center lg:text-left">
           {/* Eyebrow with horizontal line all the way to the right */}
           <div className="hero-eyebrow flex items-center gap-3 mb-6 w-full justify-center lg:justify-start fade-up">
@@ -2479,7 +2490,8 @@ const landingStyles = `
 
 .landing-body .hero {
   position: relative;
-  background: url('/images/main-page/hero-image.jpg') no-repeat center center / cover !important;
+  /* background: url('/images/main-page/hero-image.jpg') no-repeat center center / cover !important; */
+  background: transparent !important;
   min-height: 100vh !important;
   display: flex !important;
   flex-direction: column !important;
