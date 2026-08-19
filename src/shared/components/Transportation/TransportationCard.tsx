@@ -115,7 +115,7 @@ export const TransportationCard = ({
       <div className="flex flex-col gap-4 p-4 sm:p-5 lg:p-6 md:flex-row md:items-start md:justify-between lg:gap-6">
         <div className="flex flex-col gap-1 min-w-0 md:w-[55%] lg:w-[60%]">
           <div className="text-[10px] font-bold text-[#8BA6EB] uppercase tracking-wider">
-            Заявка № {item.zay_num} {item.zav_date && `від ${formatDate(item.zav_date)}`}
+            Заявка  {item.zay_num} {item.zav_date && `від ${formatDate(item.zav_date)}`}
           </div>
           <div className="text-[15px] text-slate-800 dark:text-slate-100 font-extrabold flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-wide break-words">
             <span className="flex items-center gap-1.5">

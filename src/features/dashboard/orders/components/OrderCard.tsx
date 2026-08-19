@@ -69,7 +69,7 @@ export default function OrderCard({ order }: OrderCardProps) {
     <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:shadow-md">
       <div className="flex flex-col gap-1">
         <div className="text-[10px] font-bold text-[#8BA6EB] dark:text-blue-400/80 uppercase tracking-wider">
-          Заявка № {orderNum} {date && `від ${date}`}
+          Заявка  {orderNum} {date && `від ${date}`}
         </div>
         <div className="text-[15px] text-slate-800 dark:text-slate-100 font-extrabold flex flex-wrap items-center gap-x-2 gap-y-1 uppercase tracking-wide">
           <span className="flex items-center gap-1.5">

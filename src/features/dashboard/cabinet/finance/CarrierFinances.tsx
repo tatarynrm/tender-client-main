@@ -522,7 +522,7 @@ export const CarrierFinances = () => {
             const currencyLabel = (invoice.valut || invoice.valut_code || invoice.perev_list?.[0]?.valut || "ГРН").toUpperCase();
 
             const firstPerev = invoice.perev_list?.[0];
-            const routeText = `Заявка № ${firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}${firstPerev
+            const routeText = `Заявка ${firstPerev?.zay_num ? `#${firstPerev.zay_num} ` : ""}${firstPerev
               ? `${firstPerev.zav_country} ${firstPerev.zav_town} ➔ ${firstPerev.rozv_country} ${firstPerev.rozv_town}`
               : "Напрямок не вказано"
               }`;

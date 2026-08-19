@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -29,6 +29,7 @@ import { ITender, ITenderRoute } from "../types/tender.type";
 import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import { tenderManagerService } from "@/features/log/services/tender.manager.service";
+import { useSockets } from "@/shared/providers/SocketProvider";
 import dynamic from "next/dynamic";
 
 const TenderMap = dynamic(
@@ -108,28 +109,48 @@ export default function ManagersTenderFullPage({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
+  const { tender: tenderSocket } = useSockets();
 
-  useEffect(() => {
-    const fetchTender = async () => {
-      setIsLoading(true);
-      setError(null);
+  const loadTender = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setIsLoading(true);
+        setError(null);
+      }
       try {
         const data = await tenderManagerService.getOneTender(tenderId);
         const finalData = Array.isArray(data) ? data[0] : data;
         if (!finalData) {
-          setError("Тендер не знайдено");
+          if (!silent) setError("Тендер не знайдено");
         } else {
           setTender(finalData);
+          setError(null);
         }
       } catch (err) {
         console.error("Failed to fetch tender", err);
-        setError("Не вдалося завантажити дані тендеру");
+        if (!silent) setError("Не вдалося завантажити дані тендеру");
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
+    },
+    [tenderId],
+  );
+
+  useEffect(() => {
+    loadTender();
+  }, [loadTender]);
+
+  // Live-оновлення: коли таймер завершує тендер (для менеджерів — перехід
+  // в "аналіз"), сокет-подія прилітає всім — тихо перезавантажуємо деталі
+  // без спінера, щоб сторінка не блимала.
+  useEffect(() => {
+    if (!tenderSocket) return;
+    const handleStatusUpdated = () => loadTender(true);
+    tenderSocket.on("tender_status_updated", handleStatusUpdated);
+    return () => {
+      tenderSocket.off("tender_status_updated", handleStatusUpdated);
     };
-    fetchTender();
-  }, [tenderId]);
+  }, [tenderSocket, loadTender]);
 
   if (isLoading) {
     return (

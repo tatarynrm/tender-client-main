@@ -145,7 +145,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
 
     // Текст для копіювання
     const textToCopy = [
-      `📎 ЗАЯВКА #${load.id}`,
+      `📎 ЗАЯВКА ${load.id}`,
       `--------------------------`,
       `📍 ЗВІДКИ: ${fromPoints}`,
       `🏁 КУДИ: ${toPoints}`,
@@ -188,9 +188,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
     // Формуємо фінальне посилання
     // api=1 & origin=... & destination=... & waypoints=...
     const baseUrl = "https://www.google.com/maps/dir/?api=1";
-    const url = `${baseUrl}&origin=${origin}&destination=${destination}${
-      waypoints ? `&waypoints=${waypoints}` : ""
-    }&travelmode=driving`;
+    const url = `${baseUrl}&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""
+      }&travelmode=driving`;
 
     window.open(url, "_blank");
   };
@@ -413,8 +412,8 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               >
                 {load.crm_load_trailer?.length > 0
                   ? load.crm_load_trailer
-                      .map((t) => t.trailer_type_name)
-                      .join(", ")
+                    .map((t) => t.trailer_type_name)
+                    .join(", ")
                   : "ТЕНТ"}
               </div>
               <div

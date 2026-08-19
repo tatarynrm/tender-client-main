@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -28,6 +28,7 @@ import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import dynamic from "next/dynamic";
 import { useProfile } from "@/shared/hooks";
+import { useSockets } from "@/shared/providers/SocketProvider";
 import {
   formatTenderDateTime,
   formatTenderDate,
@@ -95,23 +96,43 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
   const [error, setError] = useState<string | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const { profile } = useProfile();
+  const { tender: tenderSocket } = useSockets();
 
-  useEffect(() => {
-    if (!tenderId) return;
-    const loadTender = async () => {
-      setIsLoading(true);
+  const loadTender = useCallback(
+    async (silent = false) => {
+      if (!tenderId) return;
+      if (!silent) setIsLoading(true);
       try {
         const data = await tenderClientsService.getOneTender(tenderId);
         if (!data) setError("Тендер не знайдено");
-        else setTender(data);
+        else {
+          setTender(data);
+          setError(null);
+        }
       } catch (err) {
-        setError("Не вдалося завантажити дані тендеру");
+        if (!silent) setError("Не вдалося завантажити дані тендеру");
       } finally {
-        setIsLoading(false);
+        if (!silent) setIsLoading(false);
       }
-    };
+    },
+    [tenderId],
+  );
+
+  useEffect(() => {
     loadTender();
-  }, [tenderId]);
+  }, [loadTender]);
+
+  // Live-оновлення: коли таймер завершує тендер (для перевізника — статус
+  // "завершено"), сокет-подія прилітає всім — тихо перезавантажуємо деталі
+  // без спінера, щоб сторінка не блимала.
+  useEffect(() => {
+    if (!tenderSocket) return;
+    const handleStatusUpdated = () => loadTender(true);
+    tenderSocket.on("tender_status_updated", handleStatusUpdated);
+    return () => {
+      tenderSocket.off("tender_status_updated", handleStatusUpdated);
+    };
+  }, [tenderSocket, loadTender]);
 
   if (isLoading) {
     return (
