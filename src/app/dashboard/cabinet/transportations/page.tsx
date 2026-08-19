@@ -196,7 +196,7 @@ function CabinetPageContent() {
         problem: "PROBLEM",
         pay_wait: "OPL_WAIT",
         closed: "CLOSED",
-     
+
         unloaded: "UNLOADED",
       };
 
@@ -242,8 +242,8 @@ function CabinetPageContent() {
   const visibleTransports =
     activeTab === "unloaded" && unloadedStatusFilter !== "all"
       ? transports.filter(
-          (t) => normalizeUnloadedStatus(t.code_status, t.status_name) === unloadedStatusFilter
-        )
+        (t) => normalizeUnloadedStatus(t.code_status, t.status_name) === unloadedStatusFilter
+      )
       : transports;
 
   // На вкладці «Пошук» показуємо результати пошуку, інакше — список статусу.
@@ -371,14 +371,14 @@ function CabinetPageContent() {
             </div>
             {/* Період */}
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Період — від</label>
+              <label className="text-[10px] font-semibold text-[#415A88]">Період — від (дата розвантаження)</label>
               <DateField
                 value={searchFilters.date_from}
                 onChange={(v) => setSearchFilters((f) => ({ ...f, date_from: v }))}
               />
             </div>
             <div className="flex flex-col gap-0.5">
-              <label className="text-[10px] font-semibold text-[#415A88]">Період — до</label>
+              <label className="text-[10px] font-semibold text-[#415A88]">Період — до (дата розвантаження)</label>
               <DateField
                 value={searchFilters.date_to}
                 onChange={(v) => setSearchFilters((f) => ({ ...f, date_to: v }))}

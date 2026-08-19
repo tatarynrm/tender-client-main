@@ -6,19 +6,27 @@ export interface ICurrencySum {
   suma: number;
 }
 
-export interface IFinanceStatistic {
-  // Усього до оплати по виставлених рахунках (може містити декілька валют)
-  suma_borg_all?: ICurrencySum[];
-  // Плановано до оплати в поточному місяці
-  suma_borg_curr_month?: ICurrencySum[];
-  // Оплачено у поточному місяці
-  suma_opl_curr_month?: ICurrencySum[];
+// Тиждень у графіку планових платежів (чип-підтаб усередині вкладки "Планові платежі").
+export interface IPlanWeek {
+  // ISO-дата тижня — ключ фільтра, який передаємо у список (body.week).
+  week: string;
+  // Людська назва тижня, напр. "26/34 тиж". Може повторюватись для різних дат
+  // (два дні одного ISO-тижня), тож не є унікальним ключем — ключ це week.
+  week_title: string;
+  rah_count: number;
+}
 
-  count_rah_grafik?: number;
-  count_rah_opl_curr_month?: number;
-  count_rah_opl_prev_month?: number;
-  count_rah_problem?: number;
-  count_zay_doc_wait?: number;
+export interface IFinanceStatistic {
+  // Планові платежі — загальна кількість рахунків у графіку.
+  plan?: number;
+  // Розбивка планових платежів по тижнях (чипи всередині "Планові платежі").
+  plan_week?: IPlanWeek[];
+  // Оплачені.
+  opl?: number;
+  // Рахунки до врегулювання.
+  problem?: number;
+  // Невиставлені рахунки (перевезення без виставленого рахунку).
+  norah?: number;
 }
 
 export interface IContactPerson {
@@ -131,8 +139,8 @@ export interface ITransportationListResponse {
 }
 
 export type FinanceStatusType =
-  | "GRAFIK"
-  | "OPL_CURR_MONTH"
+  | "PLAN"
+  | "OPL"
   | "OPL_PREV_MONTH"
   | "PROBLEM"
   | "DOC_WAIT"
@@ -158,13 +166,17 @@ class FinanceService {
     mid: string | number,
     status: FinanceStatusType,
     page: number = 1,
-    perPage: number = 20
+    perPage: number = 20,
+    week?: string | null
   ): Promise<IFinanceListResponse | null> {
     try {
       const response = await api.post<IFinanceListResponse>(
         `/oracle/carrier-finance-list/${mid}`,
         {
           status,
+          // Для "Планові платежі" (GRAFIK) фільтруємо по конкретному тижню.
+          // Бекенд прозоро прокидає весь body у процедуру p_carrier.run.
+          ...(week ? { week } : {}),
           pagination: {
             page,
             per_page: perPage,
@@ -203,6 +215,39 @@ class FinanceService {
     } catch (error) {
       console.error("Failed to fetch transportation list:", error);
       return null;
+    }
+  }
+
+  /**
+   * Пошук рахунків за фільтрами (вкладка «Пошук»). Викликає окрему
+   * Oracle-функцію rah_filter (аналог perev_filter у перевезеннях).
+   * Тіло: { filter, pagination }. Повертає масив content і total із
+   * props.pagination для розрахунку сторінок.
+   */
+  async searchInvoices(
+    mid: string | number,
+    filter: Record<string, string | number>,
+    page: number = 1,
+    perPage: number = 20
+  ): Promise<{ content: IInvoice[]; total: number }> {
+    try {
+      const response = await api.post<any>(
+        `/oracle/carrier-finance-filter/${mid}`,
+        { filter, pagination: { page, per_page: perPage } }
+      );
+      const data = response.data;
+      const content: IInvoice[] = Array.isArray(data)
+        ? data
+        : (data?.content ?? []);
+      // props.pagination може називати підсумок по-різному — читаємо гнучко.
+      const p = data?.props?.pagination ?? {};
+      const total = Number(
+        p.total ?? p.total_rows ?? p.total_count ?? p.count ?? p.rows ?? p.rows_all ?? 0
+      );
+      return { content, total: Number.isFinite(total) ? total : 0 };
+    } catch (error) {
+      console.error("Failed to search invoices:", error);
+      return { content: [], total: 0 };
     }
   }
 }

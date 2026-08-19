@@ -177,26 +177,9 @@ function CooperationTerms({ dogList }: { dogList: IActiveDog[] }) {
 
             <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-[#F7F9FF]">
               <span className="flex items-center gap-2 text-[#8BA6EB] font-medium shrink-0">
-                <Clock className="w-4 h-4" /> Відстрочка оплати
+                <Clock className="w-4 h-4" /> Термін платежу
               </span>
               <span className="font-bold text-slate-700 text-right">{activeDog?.payment_procedure || "—"}</span>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-[#F7F9FF]">
-              <span className="flex items-center gap-2 text-[#8BA6EB] font-medium shrink-0">
-                <Route className="w-4 h-4" /> Напрямки співпраці
-              </span>
-              <div className="flex flex-wrap justify-end gap-1.5">
-                {activeDog?.perev_mn === 1 && (
-                  <span className="px-2 py-0.5 bg-[#EEF2FF] text-[#3B52B4] rounded-full text-[10px] font-bold">Міжнародні</span>
-                )}
-                {activeDog?.perev_ukr === 1 && (
-                  <span className="px-2 py-0.5 bg-[#FFF7ED] text-[#EA580C] rounded-full text-[10px] font-bold">Локальні</span>
-                )}
-                {activeDog?.perev_mn !== 1 && activeDog?.perev_ukr !== 1 && (
-                  <span className="font-bold text-slate-400">—</span>
-                )}
-              </div>
             </div>
 
             <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-[#F7F9FF]">

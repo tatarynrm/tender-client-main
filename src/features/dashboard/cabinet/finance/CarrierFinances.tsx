@@ -8,8 +8,10 @@ import {
   Mail,
   FileText,
   ChevronLeft,
-  AlertTriangle
+  AlertTriangle,
+  Search
 } from "lucide-react";
+import { parseISO } from "date-fns";
 import { motion } from "framer-motion";
 import { useProfile } from "@/shared/hooks/useProfile";
 import {
@@ -33,9 +35,22 @@ import {
 } from "@/shared/components/ui/tooltip";
 
 import { Pagination } from "@/shared/components/Pagination/Pagination";
+import { ItemsPerPage } from "@/shared/components/Pagination/ItemsPerPage";
 import { TransportationCard } from "@/shared/components/Transportation/TransportationCard";
+import { DateField } from "@/shared/components/Inputs/DateField";
+import { FilterHint } from "@/shared/components/Inputs/FilterHint";
 
-type TabType = "GRAFIK" | "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "PROBLEM" | "DOC_WAIT";
+type TabType = "PLAN" | "OPL" | "OPL_PREV_MONTH" | "PROBLEM" | "DOC_WAIT" | "SEARCH";
+
+// Порожній фільтр вкладки «Пошук». За замовчуванням нічого не вантажимо —
+// лише після заповнення й натискання «Шукати». Назви полів — як очікує
+// Oracle-процедура rah_filter.
+const EMPTY_FINANCE_SEARCH = {
+  order_number: "",
+  invoice_number: "",
+  date_from: "",
+  date_to: "",
+};
 
 // Custom date formatter: ISO string -> dd.mm.yyyy
 const formatDate = (dateStr?: string | null) => {
@@ -49,6 +64,18 @@ const formatDate = (dateStr?: string | null) => {
   } catch (e) {
     return dateStr || "";
   }
+};
+
+// Кількість сторінок для пагінації: беремо page_count, а якщо процедура його
+// не віддала — рахуємо з rows_all / per_page. Так пагінація працює на всіх табах.
+const derivePageCount = (pagination: any, perPage: number): number => {
+  if (!pagination) return 1;
+  if (pagination.page_count && pagination.page_count > 0) return pagination.page_count;
+  const per = pagination.per_page || perPage || 1;
+  if (pagination.rows_all && per > 0) {
+    return Math.max(1, Math.ceil(pagination.rows_all / per));
+  }
+  return 1;
 };
 
 // Renders одну або декілька валютних сум окремо, без сумування (наприклад: 838 274 грн, 500 EUR)
@@ -185,9 +212,9 @@ export const CarrierFinances = () => {
 
   const tabParam = searchParams.get("tab") || searchParams.get("status");
   const initialTab: TabType = (
-    ["GRAFIK", "OPL_CURR_MONTH", "OPL_PREV_MONTH", "PROBLEM", "DOC_WAIT"].includes(tabParam || "")
+    ["PLAN", "OPL", "OPL_PREV_MONTH", "PROBLEM", "DOC_WAIT", "SEARCH"].includes(tabParam || "")
       ? tabParam
-      : "GRAFIK"
+      : "PLAN"
   ) as TabType;
 
   const initialPaidPeriod: "CUR" | "PREV" = initialTab === "OPL_PREV_MONTH" ? "PREV" : "CUR";
@@ -205,6 +232,17 @@ export const CarrierFinances = () => {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   // Sub-status for paid tab to toggle between current month and previous month
   const [paidPeriod, setPaidPeriod] = useState<"CUR" | "PREV">(initialPaidPeriod);
+  // Активний тиждень у "Планові платежі" (GRAFIK). Ключ — ISO-дата week.
+  const [selectedWeek, setSelectedWeek] = useState<string | null>(null);
+
+  // Вкладка «Пошук»: власний стан. Нічого не вантажимо, доки не заповнено
+  // фільтр і не натиснуто «Шукати».
+  const [searchFilters, setSearchFilters] = useState({ ...EMPTY_FINANCE_SEARCH });
+  const [searchResults, setSearchResults] = useState<IInvoice[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [searchPage, setSearchPage] = useState(1);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(initialPage);
@@ -226,10 +264,10 @@ export const CarrierFinances = () => {
   // Sync state when URL searchParams change externally (e.g. back/forward navigation or shared link)
   useEffect(() => {
     const currentTabInUrl = searchParams.get("tab") || searchParams.get("status");
-    if (currentTabInUrl && ["GRAFIK", "OPL_CURR_MONTH", "OPL_PREV_MONTH", "PROBLEM", "DOC_WAIT"].includes(currentTabInUrl)) {
+    if (currentTabInUrl && ["PLAN", "OPL", "OPL_PREV_MONTH", "PROBLEM", "DOC_WAIT", "SEARCH"].includes(currentTabInUrl)) {
       setActiveTab(currentTabInUrl as TabType);
       if (currentTabInUrl === "OPL_PREV_MONTH") setPaidPeriod("PREV");
-      if (currentTabInUrl === "OPL_CURR_MONTH") setPaidPeriod("CUR");
+      if (currentTabInUrl === "OPL") setPaidPeriod("CUR");
     }
     const pageInUrl = Number(searchParams.get("page"));
     if (pageInUrl && pageInUrl > 0) {
@@ -238,6 +276,13 @@ export const CarrierFinances = () => {
   }, [searchParams]);
 
   const mid = profile?.company?.migrate_id;
+
+  // Відновлюємо збережений вибір "Відображати по N" (як у перевезеннях).
+  useEffect(() => {
+    const saved =
+      typeof window !== "undefined" ? localStorage.getItem("finance_limit") : null;
+    if (saved) setPerPage(Number(saved));
+  }, []);
 
   // Fetch Statistics
   useEffect(() => {
@@ -258,17 +303,43 @@ export const CarrierFinances = () => {
     if (mid) fetchStat();
   }, [mid]);
 
+  // Автовибір першого тижня у "Планові платежі". Якщо поточний вибір уже
+  // валідний (є у списку) — не чіпаємо; інакше беремо перший тиждень.
+  useEffect(() => {
+    if (activeTab !== "PLAN") return;
+    const weeks = statistic?.plan_week;
+    if (weeks && weeks.length > 0) {
+      const stillValid = selectedWeek && weeks.some((w) => w.week === selectedWeek);
+      if (!stillValid) setSelectedWeek(weeks[0].week);
+    } else {
+      setSelectedWeek(null);
+    }
+  }, [activeTab, statistic, selectedWeek]);
+
   // Fetch Invoice List based on Active Tab, Sub-period, and Page
   useEffect(() => {
     const fetchList = async () => {
       if (!mid) return;
+      // «Пошук» вантажиться вручну (кнопка «Шукати»), а не при зміні табу.
+      if (activeTab === "SEARCH") {
+        setLoadingList(false);
+        return;
+      }
+      // Для "Планові платежі" чекаємо, поки завантажиться статистика і
+      // визначиться активний тиждень — щоб не робити зайвий запит "усі тижні".
+      if (activeTab === "PLAN") {
+        if (!statistic) return;
+        if ((statistic.plan_week?.length ?? 0) > 0 && !selectedWeek) return;
+      }
       try {
         setLoadingList(true);
         // Map UI paidPeriod selection to the correct status string
         let targetStatus: TabType = activeTab;
-        if (activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH") {
-          targetStatus = paidPeriod === "CUR" ? "OPL_CURR_MONTH" : "OPL_PREV_MONTH";
+        if (activeTab === "OPL" || activeTab === "OPL_PREV_MONTH") {
+          targetStatus = paidPeriod === "CUR" ? "OPL" : "OPL_PREV_MONTH";
         }
+        // Тиждень передаємо лише у вкладці "Планові платежі".
+        const weekParam = activeTab === "PLAN" ? selectedWeek : undefined;
 
         // «Невиставлені рахунки» живуть у перевезеннях (func: perev_list),
         // бо рахунку ще не існує — рендеримо тим самим форматом картки,
@@ -278,13 +349,13 @@ export const CarrierFinances = () => {
           const res = await financeService.getTransportationList(mid, targetStatus, currentPage, perPage);
           setTransportItems(res?.content || []);
           setInvoices([]);
-          setTotalPages(res?.props?.pagination?.page_count || 1);
+          setTotalPages(derivePageCount(res?.props?.pagination, perPage));
         } else {
-          const listData = await financeService.getFinanceList(mid, targetStatus, currentPage, perPage);
+          const listData = await financeService.getFinanceList(mid, targetStatus, currentPage, perPage, weekParam);
           setTransportItems([]);
           if (listData && listData.content) {
             setInvoices(listData.content);
-            setTotalPages(listData.props?.pagination?.page_count || 1);
+            setTotalPages(derivePageCount(listData.props?.pagination, perPage));
           } else {
             setInvoices([]);
             setTotalPages(1);
@@ -300,25 +371,79 @@ export const CarrierFinances = () => {
     };
 
     if (mid) fetchList();
-  }, [mid, activeTab, paidPeriod, currentPage, perPage]);
+  }, [mid, activeTab, paidPeriod, currentPage, perPage, selectedWeek, statistic]);
 
   // When active tab changes, reset to page 1 and update URL
   const handleTabChange = (tab: TabType) => {
-    if (tab === "OPL_CURR_MONTH" || tab === "OPL_PREV_MONTH") {
-      setPaidPeriod(tab === "OPL_CURR_MONTH" ? "CUR" : "PREV");
+    if (tab === "OPL" || tab === "OPL_PREV_MONTH") {
+      setPaidPeriod(tab === "OPL" ? "CUR" : "PREV");
     }
     setActiveTab(tab);
     setCurrentPage(1);
     updateUrlParams(tab, 1);
   };
 
-  const handlePaidPeriodChange = (period: "OPL_CURR_MONTH" | "OPL_PREV_MONTH" | "CUR" | "PREV") => {
-    const isCur = period === "OPL_CURR_MONTH" || period === "CUR";
-    const targetTab: TabType = isCur ? "OPL_CURR_MONTH" : "OPL_PREV_MONTH";
-    setPaidPeriod(isCur ? "CUR" : "PREV");
-    setActiveTab(targetTab);
+  // Клік по чипу тижня у "Планові платежі" — фільтруємо список за його датою.
+  const handleWeekChange = (week: string) => {
+    setSelectedWeek(week);
     setCurrentPage(1);
-    updateUrlParams(targetTab, 1);
+    updateUrlParams("PLAN", 1);
+  };
+
+  // Зміна "Відображати по N" — як у перевезеннях: запам'ятовуємо вибір,
+  // скидаємо на першу сторінку, а perPage підставляється у запит списку.
+  const handleLimitChange = (newLimit: number) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("finance_limit", String(newLimit));
+    }
+    setPerPage(newLimit);
+    setCurrentPage(1);
+    updateUrlParams(activeTab, 1);
+    // У «Пошуку» список не перезавантажується автоматично — перезапитуємо вручну.
+    if (activeTab === "SEARCH" && hasSearched) runSearch(1, newLimit);
+  };
+
+  // Чи є хоч один заповнений фільтр — без цього пошук не запускаємо.
+  const hasAnyFilter = Object.values(searchFilters).some((v) => v.trim() !== "");
+
+  // Пошук рахунків: збираємо лише непорожні поля (щоб не слати зайвого у
+  // процедуру) і б'ємо в rah_filter. Дати — рядок "yyyy-MM-dd".
+  const runSearch = async (pageArg = 1, perPageArg = perPage) => {
+    if (!mid) return;
+    const filter: Record<string, string | number> = {};
+    Object.entries(searchFilters).forEach(([key, value]) => {
+      const v = value.trim();
+      if (v) filter[key] = v;
+    });
+    if (Object.keys(filter).length === 0) return;
+
+    setSearchLoading(true);
+    setHasSearched(true);
+    setSearchPage(pageArg);
+    try {
+      const { content, total } = await financeService.searchInvoices(
+        mid,
+        filter,
+        pageArg,
+        perPageArg
+      );
+      setSearchResults(content);
+      setSearchTotal(total);
+    } catch (err) {
+      console.error("Failed to search invoices:", err);
+      setSearchResults([]);
+      setSearchTotal(0);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const resetSearch = () => {
+    setSearchFilters({ ...EMPTY_FINANCE_SEARCH });
+    setSearchResults([]);
+    setSearchTotal(0);
+    setSearchPage(1);
+    setHasSearched(false);
   };
 
   // Check if profile is loading
@@ -362,13 +487,37 @@ export const CarrierFinances = () => {
     </div>
   );
 
+  // Уніфікація рендера списку: у «Пошуку» показуємо searchResults з власними
+  // лоадером/пагінацією, на інших табах — звичайний invoices.
+  const isSearch = activeTab === "SEARCH";
+  const listLoading = isSearch ? searchLoading : loadingList;
+  const invoicesToRender = isSearch ? searchResults : invoices;
+  const displayedTotalPages = isSearch
+    ? Math.max(1, Math.ceil(searchTotal / (perPage || 1)))
+    : totalPages;
+  const displayedPage = isSearch ? searchPage : currentPage;
+
+  // Порожній стан вкладки «Пошук»: до першого пошуку — підказка, після — «нічого».
+  const searchEmpty = (
+    <div className="flex flex-col items-center justify-center py-16 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[28px] mt-2 text-center text-slate-500">
+      <Search className="w-12 h-12 text-[#8BA6EB] dark:text-slate-700 mb-3" />
+      <span className="font-bold text-base text-slate-700 dark:text-slate-300">
+        {hasSearched ? "Нічого не знайдено" : "Введіть критерії пошуку"}
+      </span>
+      <span className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[300px]">
+        {hasSearched
+          ? "За вказаними фільтрами рахунків немає. Спробуйте змінити критерії."
+          : "Заповніть номер рахунку, номер заявки або період і натисніть «Шукати»."}
+      </span>
+    </div>
+  );
+
   return (
     <div className="w-full  pb-10">
 
       {/* 4 Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
 
-        {/* Total Debt (BORG) Card */}
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
@@ -379,7 +528,7 @@ export const CarrierFinances = () => {
           </span>
         </div>
 
-        {/* Planned (PLAN) Card */}
+     
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
@@ -390,51 +539,40 @@ export const CarrierFinances = () => {
           </span>
         </div>
 
-        {/* Paid (OPL_CUR) Card */}
+    
         <div
           className="bg-white dark:bg-slate-900 border border-blue-200/80 dark:border-slate-800 rounded-[24px] p-5 flex flex-col items-center justify-center transition-all shadow-sm"
         >
-          <CurrencySumDisplay sums={statistic?.suma_opl_curr_month} colorClass="text-[#3B52B4] dark:text-blue-400" />
+          <CurrencySumDisplay sums={statistic?.suma_OPL} colorClass="text-[#3B52B4] dark:text-blue-400" />
           <div className="w-full border-t border-slate-100 dark:border-slate-800/80" />
           <span className="text-xs sm:text-sm text-[#3B52B4] dark:text-blue-400/90 font-bold mt-2 text-center select-none">
             Оплачено у поточному місяці
           </span>
         </div>
 
-      </div>
+      </div> */}
 
       {/* Tabs Container */}
-      <div className="flex flex-col gap-2 mt-2">
-        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest pl-2">
-          Статус рахунків
-        </span>
+      <div className="flex flex-col gap-2">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap gap-2">
 
             {/* Planned Payments Tab */}
             <button
-              onClick={() => handleTabChange("GRAFIK")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "GRAFIK"
+              onClick={() => handleTabChange("PLAN")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "PLAN"
                 ? "bg-[#3B52B4] text-white border-[#3B52B4]"
                 : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
                 }`}
             >
-              <span>У графіку оплат</span>
-              <span className={`text-xs ml-1 font-bold ${activeTab === "GRAFIK" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
-                {statistic?.count_rah_grafik || 0}
+              <span>Планові платежі</span>
+              <span className={`text-xs ml-1 font-bold ${activeTab === "PLAN" ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}`}>
+                {statistic?.plan || 0}
               </span>
             </button>
 
             {/* Paid Orders Tab */}
-            <button
-              onClick={() => handleTabChange("OPL_CURR_MONTH")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH"
-                ? "bg-[#3B52B4] text-white border-[#3B52B4]"
-                : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
-                }`}
-            >
-              <span>Оплачені ({(statistic?.count_rah_opl_curr_month || 0) + (statistic?.count_rah_opl_prev_month || 0)})</span>
-            </button>
+
 
             {/* Overdue Flights / Problems Tab */}
             <button
@@ -446,7 +584,7 @@ export const CarrierFinances = () => {
             >
               <span>Рахунки до врегулювання</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "PROBLEM" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.count_rah_problem || 0}
+                {statistic?.problem || 0}
               </span>
             </button>
             {/* Overdue Flights / Problems Tab */}
@@ -459,45 +597,151 @@ export const CarrierFinances = () => {
             >
               <span>Невиставлені рахунки</span>
               <span className={`text-xs ml-1 font-bold ${activeTab === "DOC_WAIT" ? "text-red-200" : "text-red-300 dark:text-red-500"}`}>
-                {statistic?.count_zay_doc_wait || 0}
+                {statistic?.norah || 0}
               </span>
             </button>
+            <button
+              onClick={() => handleTabChange("OPL")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1 cursor-pointer select-none ${activeTab === "OPL" || activeTab === "OPL_PREV_MONTH"
+                ? "bg-[#3B52B4] text-white border-[#3B52B4]"
+                : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
+                }`}
+            >
+              <span>Оплачені ({statistic?.opl || 0})</span>
+            </button>
 
+            {/* Search Tab */}
+            <button
+              onClick={() => handleTabChange("SEARCH")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors flex items-center gap-1.5 cursor-pointer select-none ${activeTab === "SEARCH"
+                ? "bg-[#3B52B4] text-white border-[#3B52B4]"
+                : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
+                }`}
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Пошук</span>
+            </button>
 
+          </div>
+
+          {/* "Відображати по N" — той самий перемикач, що й у перевезеннях.
+              Керує perPage, який підставляється у per_page запиту списку. */}
+          <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl text-[#415A88] dark:text-slate-300 border border-blue-100 dark:border-slate-800 shadow-sm p-1 px-2 shrink-0 self-start md:self-auto">
+            <span className="text-xs font-semibold text-gray-500 mr-2 ml-1">Відображати:</span>
+            <ItemsPerPage
+              options={[10, 20, 50, 100]}
+              defaultValue={perPage}
+              onChange={handleLimitChange}
+            />
           </div>
         </div>
 
-        {/* Small descriptive text below active tab */}
+        {/* Тижневі під-таби для "Планові платежі" (GRAFIK). Один чип на кожен
+            запис plan_week; ключ фільтра — week (ISO-дата), назва — week_title. */}
         <div className="flex flex-wrap items-center justify-between gap-2 px-2 mt-1 select-none">
-          {/* Month Switcher visible only when Paid tab is active */}
-          {(activeTab === "OPL_CURR_MONTH" || activeTab === "OPL_PREV_MONTH") && (
-            <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-0.5 rounded-lg shadow-sm gap-1">
-              <button
-                onClick={() => handlePaidPeriodChange("OPL_CURR_MONTH")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${activeTab === "OPL_CURR_MONTH" || paidPeriod === "CUR"
-                  ? "bg-[#3B52B4] text-white"
-                  : "text-slate-400 hover:text-slate-600"
-                  }`}
-              >
-                Поточний місяць ({statistic?.count_rah_opl_curr_month || 0})
-              </button>
-              <button
-                onClick={() => handlePaidPeriodChange("OPL_PREV_MONTH")}
-                className={`px-3 py-1 rounded-md text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${activeTab === "OPL_PREV_MONTH" || paidPeriod === "PREV"
-                  ? "bg-[#3B52B4] text-white"
-                  : "text-slate-400 hover:text-slate-600"
-                  }`}
-              >
-                Попередній місяць ({statistic?.count_rah_opl_prev_month || 0})
-              </button>
+          {activeTab === "PLAN" && (statistic?.plan_week?.length || 0) > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {statistic!.plan_week!.map((w, i) => (
+                <button
+                  key={`${w.week}-${i}`}
+                  onClick={() => handleWeekChange(w.week)}
+                  className={`px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${selectedWeek === w.week
+                    ? "bg-[#3B52B4] text-white border-[#3B52B4]"
+                    : "bg-white dark:bg-slate-900 text-[#3B52B4] dark:text-blue-400 border-blue-200 dark:border-slate-800 hover:bg-blue-50 dark:hover:bg-slate-800"
+                    }`}
+                >
+                  <span>{w.week_title}</span>
+                  <span className={selectedWeek === w.week ? "text-blue-200" : "text-blue-300 dark:text-blue-500"}>
+                    {w.rah_count}
+                  </span>
+                </button>
+              ))}
             </div>
           )}
         </div>
       </div>
 
+      {/* Форма пошуку (лише на вкладці «Пошук») */}
+      {isSearch && (
+        <div
+          className="bg-white dark:bg-slate-900 rounded-xl border border-blue-100 dark:border-slate-800 shadow-sm p-2.5 mt-2"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hasAnyFilter && !searchLoading) runSearch(1);
+          }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {/* Номер рахунку */}
+            <div className="flex flex-col gap-0.5">
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88] dark:text-slate-300">
+                Номер рахунку
+                <FilterHint title="Номер рахунку" examples={["8751", "617"]} note="Тільки цифри." />
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={searchFilters.invoice_number}
+                placeholder="напр. 8751"
+                onChange={(e) =>
+                  setSearchFilters((f) => ({ ...f, invoice_number: e.target.value.replace(/\D/g, "") }))
+                }
+                className="h-8 rounded-md border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[12px] text-[#0a2540] dark:text-slate-100 outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+            {/* Номер заявки */}
+            <div className="flex flex-col gap-0.5">
+              <label className="flex items-center gap-1 text-[10px] font-semibold text-[#415A88] dark:text-slate-300">
+                Номер заявки
+                <FilterHint title="Номер заявки" examples={["4399-26Л", "3462-26І", "4399"]} note="Можна частково або повністю." />
+              </label>
+              <input
+                type="text"
+                value={searchFilters.order_number}
+                placeholder="напр. 4399"
+                onChange={(e) => setSearchFilters((f) => ({ ...f, order_number: e.target.value }))}
+                className="h-8 rounded-md border border-blue-100 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[12px] text-[#0a2540] dark:text-slate-100 outline-none placeholder:text-gray-400 focus:border-[#3B52B4] focus:ring-2 focus:ring-[#3B52B4]/20"
+              />
+            </div>
+            {/* Період — від */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88] dark:text-slate-300">Період — від (по даті рахунку)</label>
+              <DateField
+                value={searchFilters.date_from}
+                onChange={(v) => setSearchFilters((f) => ({ ...f, date_from: v }))}
+              />
+            </div>
+            {/* Період — до */}
+            <div className="flex flex-col gap-0.5">
+              <label className="text-[10px] font-semibold text-[#415A88] dark:text-slate-300">Період — до (по даті рахунку)</label>
+              <DateField
+                value={searchFilters.date_to}
+                onChange={(v) => setSearchFilters((f) => ({ ...f, date_to: v }))}
+                minDate={searchFilters.date_from ? parseISO(searchFilters.date_from) : null}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-2.5">
+            <button
+              onClick={() => runSearch(1)}
+              disabled={!hasAnyFilter || searchLoading}
+              className="h-8 px-3 inline-flex items-center gap-1 rounded-md bg-[#3B52B4] hover:bg-[#2f429a] disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] font-semibold transition-colors"
+            >
+              <Search className="w-3.5 h-3.5" />
+              {searchLoading ? "Пошук…" : "Шукати"}
+            </button>
+            <button
+              onClick={resetSearch}
+              className="h-8 px-3 rounded-md border border-blue-100 dark:border-slate-700 text-[#415A88] dark:text-slate-300 text-[12px] font-semibold hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              Скинути
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Bills / Invoices List */}
       <div className="flex flex-col gap-4 mt-2">
-        {loadingList ? (
+        {listLoading ? (
           // Skeletons
           [...Array(3)].map((_, i) => <SkeletonInvoice key={i} />)
         ) : activeTab === "DOC_WAIT" ? (
@@ -513,8 +757,8 @@ export const CarrierFinances = () => {
           ) : (
             emptyState
           )
-        ) : invoices.length > 0 ? (
-          invoices.map((invoice, idx) => {
+        ) : invoicesToRender.length > 0 ? (
+          invoicesToRender.map((invoice, idx) => {
             // Currency & sum totals calculation directly from invoice object
             const totalSum = invoice.suma ?? (invoice.perev_list?.reduce((sum, item) => sum + (item.fraht || 0), 0) || 0);
             const paidSum = invoice.sumaopl ?? 0;
@@ -533,7 +777,7 @@ export const CarrierFinances = () => {
 
             const statusDateText = isPaid
               ? `Оплачено ${formatDate(actualPaidDate)}`
-              : `Планова оплата з ${formatDate(invoice.dat_opl_plan || firstPerev?.opl_plan_date || invoice.rah_dat)}\nПлатіжний день - четвер`;
+              : ''
 
             return (
               <motion.div
@@ -541,107 +785,132 @@ export const CarrierFinances = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: idx * 0.05 }}
-                className="w-full bg-white dark:bg-slate-900 border border-[#C7D2FE]/70 dark:border-slate-800 rounded-[28px] shadow-sm hover:shadow-md hover:border-[#3B52B4]/40 dark:hover:border-slate-700 transition-all flex flex-col lg:flex-row overflow-hidden"
+                className="w-full bg-white dark:bg-slate-900 border border-[#C7D2FE]/70 dark:border-slate-800 rounded-[28px] shadow-sm hover:shadow-md hover:border-[#3B52B4]/40 dark:hover:border-slate-700 transition-all flex flex-col overflow-hidden"
               >
+                {/* Тіло рахунку — дві колонки */}
+                <div className="flex flex-col lg:flex-row">
 
-                {/* Left Side: Invoice Details */}
-                <div className="flex-1 p-6 flex flex-col gap-3 min-w-0">
-                  {/* Bill title */}
-                  <h3 className="text-[#3B52B4] dark:text-blue-400 text-lg font-black tracking-tight leading-tight select-all">
-                    Рахунок №{invoice.rah_num} від {formatDate(invoice.rah_dat)}
-                  </h3>
+                  {/* Left Side: Invoice Details */}
+                  <div className="flex-1 p-6 flex flex-col gap-3 min-w-0">
+                    {/* Bill title */}
+                    <h3 className="text-[#3B52B4] dark:text-blue-400 text-lg font-black tracking-tight leading-tight select-all">
+                      Рахунок №{invoice.rah_num} від {formatDate(invoice.rah_dat)}
+                    </h3>
 
-                  {/* Route & order numbers */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs font-extrabold text-[#8BA6EB] dark:text-blue-400/80 uppercase tracking-wide">
-                      {routeText}
-                    </span>
-                  </div>
-
-                  {/* Date details */}
-                  <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-semibold">
-                    {invoice.doc_otrim && (
-                      <span className="text-[#8BA6EB]">
-                        Документи отримано
-                        <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
-                          {formatDate(invoice.doc_otrim)}
-                        </strong>
+                    {/* Route & order numbers */}
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-extrabold text-[#8BA6EB] dark:text-blue-400/80 uppercase tracking-wide">
+                        {routeText}
                       </span>
-                    )}
-
-                  </div>
-
-                  {/* Legal entity info */}
-                  <div className="text-xs font-semibold text-[#8BA6EB]">
-                    Платник :{" "}
-                    <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
-                      {invoice.firma}
-                    </strong>
-                  </div>
-
-                  {/* Problem Info Banner */}
-                  {invoice.problem_info && (
-                    <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-medium mt-1">
-                      <AlertTriangle size={16} className="text-rose-500 shrink-0 mt-0.5" />
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-extrabold text-[11px] uppercase tracking-wide text-rose-600 dark:text-rose-400">
-                          Причина врегулювання:
-                        </span>
-                        <span className="text-slate-700 dark:text-slate-200 font-semibold">
-                          {typeof invoice.problem_info === "string"
-                            ? invoice.problem_info
-                            : JSON.stringify(invoice.problem_info)}
-                        </span>
-                      </div>
                     </div>
-                  )}
 
-                </div>
+                    {/* Date details */}
+                    <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs font-semibold">
+                      {invoice.doc_otrim && (
+                        <span className="text-[#8BA6EB]">
+                          Документи отримано
+                          <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
+                            {formatDate(invoice.doc_otrim)}
+                          </strong>
+                        </span>
+                      )}
 
-                {/* Right Side: Money & Actions */}
-                <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center lg:items-end justify-between gap-4 shrink-0">
+                    </div>
 
-                  {/* Amount / Paid / Dates / Borg */}
-                  <div className="space-y-1 w-full text-center lg:text-right flex flex-col lg:items-end">
-                    <span className="text-xl sm:text-2xl font-black text-[#3B52B4] dark:text-blue-400 select-all">
-                      {Math.round(totalSum).toLocaleString("uk-UA")} {currencyLabel}
-                    </span>
-                    {/* Partial payment details if not fully paid */}
-                    {debtSum > 0 && paidSum > 0 && (
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 select-all">
-                        Оплачено: {Math.round(paidSum).toLocaleString("uk-UA")} {currencyLabel}
-                      </span>
+                    {/* Legal entity info */}
+                    <div className="text-xs font-semibold text-[#8BA6EB]">
+                      Платник :{" "}
+                      <strong className="text-slate-600 dark:text-slate-300 font-bold ml-1">
+                        {invoice.firma}
+                      </strong>
+                    </div>
+
+                    {/* Problem Info Banner */}
+                    {invoice.problem_info && (
+                      <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-medium mt-1">
+                        <AlertTriangle size={16} className="text-rose-500 shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-extrabold text-[11px] uppercase tracking-wide text-rose-600 dark:text-rose-400">
+                            Причина врегулювання:
+                          </span>
+                          <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                            {typeof invoice.problem_info === "string"
+                              ? invoice.problem_info
+                              : JSON.stringify(invoice.problem_info)}
+                          </span>
+                        </div>
+                      </div>
                     )}
-                    <span className={`text-xs font-bold flex items-center justify-center lg:justify-end gap-1.5 ${isPaid ? "text-emerald-600 dark:text-emerald-400" : activeTab === "PROBLEM" ? "text-red-500" : "text-[#8BA6EB]"
-                      }`}>
-                      {statusDateText}
-                    </span>
+
                   </div>
 
-                  {/* Dropdown for Contacts */}
-                  <ContactDropdown
-                    economist={invoice.economist}
-                  />
+                  {/* Right Side: Money & Actions */}
+                  <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center lg:items-end justify-between gap-4 shrink-0">
+
+                    {/* Amount / Paid / Dates / Borg */}
+                    <div className="space-y-1 w-full text-center lg:text-right flex flex-col lg:items-end">
+                      <span className="text-xl sm:text-2xl font-black text-[#3B52B4] dark:text-blue-400 select-all">
+                        {Math.round(totalSum).toLocaleString("uk-UA")} {currencyLabel}
+                      </span>
+                      {/* Partial payment details if not fully paid */}
+                      {debtSum > 0 && paidSum > 0 && (
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 select-all">
+                          Оплачено: {Math.round(paidSum).toLocaleString("uk-UA")} {currencyLabel}
+                        </span>
+                      )}
+                      <span className={`text-xs font-bold flex items-center justify-center lg:justify-end gap-1.5 ${isPaid ? "text-emerald-600 dark:text-emerald-400" : activeTab === "PROBLEM" ? "text-red-500" : "text-[#8BA6EB]"
+                        }`}>
+                        {statusDateText}
+                      </span>
+                    </div>
+
+                    {/* Dropdown for Contacts */}
+                    <ContactDropdown
+                      economist={invoice.economist}
+                    />
+
+                  </div>
 
                 </div>
+                {/* Проблема — окрема смуга на всю ширину картки, по центру.
+                    Джерело — perev_list[].status_name (напр. "Претензійний акт"),
+                    а не problem_info. Лише у вкладці "Рахунки до врегулювання". */}
+                {activeTab === "PROBLEM" && (invoice.perev_list?.length ?? 0) > 0 && (
+                  <div className="border-t border-red-100 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/20 px-6 py-3 flex flex-col items-center gap-0.5 text-center">
+                    {invoice.perev_list.map((p) => (
+                      <span
+                        key={p.kod_zay}
+                        className="text-sm font-bold text-red-600 dark:text-red-400"
+                      >
+                        Заявка {p.zay_num} — {p.status_name}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
               </motion.div>
             );
           })
+        ) : isSearch ? (
+          searchEmpty
         ) : (
           emptyState
         )}
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {displayedTotalPages > 1 && (
         <div className="flex items-center justify-center border-t border-slate-200 dark:border-slate-800 pt-4 mt-4 px-2">
           <Pagination
-            page={currentPage}
-            pageCount={totalPages}
+            page={displayedPage}
+            pageCount={displayedTotalPages}
             onChange={(newPage: number) => {
-              setCurrentPage(newPage);
-              updateUrlParams(activeTab, newPage);
+              if (isSearch) {
+                runSearch(newPage);
+              } else {
+                setCurrentPage(newPage);
+                updateUrlParams(activeTab, newPage);
+              }
             }}
           />
         </div>
