@@ -215,10 +215,6 @@ export const TransportationCard = ({
             <User size={14} className="text-gray-400 shrink-0" />{" "}
             <span className="truncate text-gray-700 dark:text-slate-300">{item.driver}</span>
           </div>
-          <div className="flex items-center gap-1.5 font-medium min-w-0">
-            <Phone size={14} className="text-blue-300 shrink-0" />{" "}
-            <span className="truncate text-gray-700 dark:text-slate-300">{item.driver_phone}</span>
-          </div>
         </div>
 
         <div className="flex items-center shrink-0 ml-4" onClick={(e) => e.stopPropagation()}>
