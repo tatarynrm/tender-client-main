@@ -121,6 +121,16 @@ const ContactDropdown = ({
 }: {
   economist?: IContactPerson | null;
 }) => {
+  // Порожній economist (null або обʼєкт без жодних даних) — не рендеримо взагалі.
+  const isEmpty =
+    !economist ||
+    (!economist.kod_os &&
+      !economist.imja &&
+      !economist.prizv &&
+      !economist.email &&
+      !economist.phone);
+  if (isEmpty) return null;
+
   const economistName = economist?.imja
     ? `${economist.imja} ${economist.prizv || ""}`.trim()
     : "Економіст";
