@@ -118,7 +118,7 @@ const DEFAULT_EVENTS: NotifyDestination[] = [
     to_whatsapp: false,
   },
   {
-    value: "Кастомні повідомлення",
+    value: "Інші повідомлення",
     to_web: false,
     to_email: false,
     to_viber: false,
@@ -301,9 +301,9 @@ export function NotificationsTab() {
             field.onChange(
               selected
                 ? selected.map((opt: any) => ({
-                    id_parent: form.getValues("id"),
-                    [keyMapping]: opt.value,
-                  }))
+                  id_parent: form.getValues("id"),
+                  [keyMapping]: opt.value,
+                }))
                 : [],
             )
           }

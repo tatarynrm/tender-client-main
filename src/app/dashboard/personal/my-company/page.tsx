@@ -23,7 +23,7 @@ import { useProfile } from "@/shared/hooks";
 
 const companyTabs: TabOption[] = [
   { id: "general", label: "Місцезнаходження та контакти" },
-  { id: "contracts", label: "Реквізити та договори" },
+  // { id: "contracts", label: "Реквізити та договори" },
   { id: "information", label: "Інформація про організацію" },
 ];
 
