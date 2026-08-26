@@ -1,3 +1,12 @@
+export interface IPersonPhone {
+  id: number;
+  phone: string;
+  id_person?: number;
+  is_viber?: boolean;
+  is_telegram?: boolean;
+  is_whatsapp?: boolean;
+}
+
 export interface ITender {
   id: number;
 
@@ -53,6 +62,7 @@ export interface ITender {
   rating?: number;
 
   usr_phone: any[]; // якщо зʼявиться структура — типізуємо
+  person_phone?: IPersonPhone[]; // телефони автора тендера з галочками месенджерів
   rate_company: IRateCompany[];
 
   tender_load: ITenderLoad[];

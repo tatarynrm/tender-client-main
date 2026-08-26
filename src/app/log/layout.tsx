@@ -6,6 +6,7 @@ import { getProfile } from "@/shared/server/getProfile";
 import { ModalProvider } from "@/shared/components/modal-provider/ModalProvider";
 import { RestTimerTracker } from "@/shared/components/Modals/GlobalModals/Trackers/RestTimerTracker";
 import { CRMSocketActionProvider } from "@/shared/providers/SocketActionsProviders/CRMSocketActionProvider";
+import { PhoneRequiredTracker } from "@/features/log/profile/PhoneRequiredTracker";
 
 export default async function LogLayout({
   children,
@@ -25,6 +26,7 @@ export default async function LogLayout({
       <CRMSocketActionProvider>
         <ModalProvider />
         <RestTimerTracker />
+        <PhoneRequiredTracker profile={profile} />
         {children}
       </CRMSocketActionProvider>
     </LogShell>

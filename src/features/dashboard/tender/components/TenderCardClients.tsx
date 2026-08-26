@@ -12,7 +12,6 @@ import { useTenderActions } from "../hooks/useTenderActions";
 import {
   User as UserIcon,
   Mail as MailIcon,
-  Phone as PhoneIcon,
   Paperclip as PaperclipIcon,
   Truck,
 } from "lucide-react";
@@ -28,6 +27,7 @@ import {
 } from "@/shared/utils/date.utils";
 import { getCurrencySymbol } from "@/shared/utils/currency.utils";
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
+import { TenderPhones } from "./TenderPhones";
 
 export function TenderCardClients({
   cargo,
@@ -686,15 +686,7 @@ export function TenderCardClients({
                 <span>{cargo.email}</span>
               </a>
             )}
-            {cargo?.usr_phone && cargo.usr_phone.length > 0 && (
-              <a
-                href={`tel:${cargo.usr_phone[0]?.phone}`}
-                className="flex items-center gap-1 text-indigo-500 hover:text-indigo-600 transition-colors"
-              >
-                <PhoneIcon size={13} />
-                <span>{cargo.usr_phone[0]?.phone}</span>
-              </a>
-            )}
+            <TenderPhones phones={cargo?.person_phone} />
           </div>
 
           <div className="flex items-center gap-2">

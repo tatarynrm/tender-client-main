@@ -9,6 +9,17 @@ export interface IUserProfile {
   is_blocked: boolean;
   // Додаємо нове поле. Воно може бути null, якщо користувач ще не підключив бота
   person_telegram: IPersonTelegram | null;
+  // Телефони працівника з галочками месенджерів. Порожній масив, якщо жодного немає.
+  person_phone?: IPersonPhone[];
+}
+
+// Телефон працівника з таблиці person_phone
+export interface IPersonPhone {
+  id: number;
+  phone: string;
+  is_telegram: boolean;
+  is_viber: boolean;
+  is_whatsapp: boolean;
 }
 
 // Створюємо новий інтерфейс для Telegram-даних
