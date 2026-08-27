@@ -116,7 +116,8 @@ export default function HomePage() {
           <source src="/images/main-page/hero-background.mp4" type="video/mp4" />
         </video>
 
-        <div className="relative z-10 w-full  px-4 flex flex-col items-center lg:items-start text-center lg:text-left">
+        <div className="hero-top-row relative z-10 w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
+        <div className="w-full lg:flex-1  px-4 flex flex-col items-center lg:items-start text-center lg:text-left">
           {/* Eyebrow with horizontal line all the way to the right */}
           <div className="hero-eyebrow flex items-center gap-3 mb-6 w-full justify-center lg:justify-start fade-up">
             <span className="hero-eyebrow-text font-sans font-bold text-[22px] tracking-[-0.02em] text-[#3d6080] whitespace-nowrap">
@@ -161,6 +162,18 @@ export default function HomePage() {
               >
                 Переглянути активні тендери
               </Link>
+            </div>
+          </div>
+        </div>
+
+          {/* Нахилений скріншот кабінету (drop у public/images/main-page/dashboard-preview.png) */}
+          <div className="hero-preview fade-up fade-up-delay-4" aria-hidden="true">
+            <div className="hero-preview-inner">
+              <img
+                src="/images/main-page/dashboard-preview.png"
+                alt="Кабінет перевізника ICTender"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
@@ -914,6 +927,55 @@ const landingStyles = `
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
+}
+
+/* ── HERO TOP ROW (текст зліва + скрін справа) ── */
+.hero-top-row {
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .hero-top-row {
+    align-items: center;
+  }
+}
+
+/* ── HERO PREVIEW (нахилений скрін кабінету, нахил + прозорий фон запечені в PNG) ── */
+.hero-preview {
+  width: 100%;
+  max-width: 900px;   /* на моб/планшеті — під текстом */
+  margin: 8px auto 0;
+  padding: 0 4px;
+  position: relative;
+  z-index: 10;
+}
+
+/* на десктопі — права колонка поруч з текстом, ширша за текст */
+@media (min-width: 1024px) {
+  .hero-preview {
+    flex: 1.35 1 0%;
+    max-width: 1040px;
+    margin: 0;
+    /* трохи виходить за межі, щоб виглядало живіше */
+    margin-right: -40px;
+  }
+}
+
+.hero-preview-inner {
+  line-height: 0;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* тінь іде по формі картки (прозорий фон), а не по прямокутнику */
+  filter: drop-shadow(0 26px 55px rgba(10, 37, 64, 0.42));
+}
+
+.hero-preview:hover .hero-preview-inner {
+  transform: translateY(-4px) scale(1.01);
 }
 
 /* ── HERO STATS ── */
