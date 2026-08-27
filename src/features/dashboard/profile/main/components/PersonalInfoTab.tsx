@@ -33,6 +33,15 @@ export function PersonalInfoTab() {
   if (profile.role.is_manager) roles.push("менеджер");
   if (roles.length === 0) roles.push("користувач");
 
+  // Телефони працівника: якщо їх декілька — перелічуємо через кому
+  const phones =
+    profile.person_phone
+      ?.map((p) => p.phone)
+      .filter(Boolean)
+      .join(", ") ||
+    profile.person.phone ||
+    "—";
+
   const fields = [
     {
       label: "Ім'я та прізвище",
@@ -51,9 +60,12 @@ export function PersonalInfoTab() {
       isEmail: true,
     },
     {
-      label: "Номер телефону",
-      value: profile.person.phone || "(067) 443-43-70",
+      label: profile.person_phone && profile.person_phone.length > 1
+        ? "Номери телефонів"
+        : "Номер телефону",
+      value: phones,
       icon: Phone,
+      noTruncate: true,
     },
     {
       label: "Права доступу",
@@ -93,7 +105,8 @@ export function PersonalInfoTab() {
                 <div className="w-full border border-[#D0DDF0] dark:border-zinc-700 rounded-[8px] p-2.5 px-4 bg-white dark:bg-zinc-900 shadow-sm">
                   <span
                     className={cn(
-                      "text-[14px] font-semibold truncate block",
+                      "text-[14px] font-semibold block",
+                      field.noTruncate ? "break-words" : "truncate",
                       field.isEmail
                         ? "text-[#4863D4] dark:text-blue-400"
                         : "text-slate-600 dark:text-zinc-300"
