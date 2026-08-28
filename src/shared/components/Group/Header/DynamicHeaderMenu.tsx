@@ -38,7 +38,7 @@ export default function DynamicHeaderMenu() {
     {
       match: "/log",
       items: [
-        { href: "/log/load/add", label: "Нова заявка", icon: FilePlus2, disabled: true },
+        { href: "/log/load/add", label: "Нова заявка", icon: FilePlus2 },
         { href: "/log/tender/add", label: "Новий тендер", icon: Gavel },
       ],
     },
