@@ -12,8 +12,16 @@ import {
   Truck,
   Container,
   ChevronRight,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
+
+type MenuItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  disabled?: boolean;
+};
 
 export default function DynamicHeaderMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +42,7 @@ export default function DynamicHeaderMenu() {
   // Закриття при переході на іншу сторінку
   useEffect(() => setIsOpen(false), [pathname]);
 
-  const menus = [
+  const menus: { match: string; items: MenuItem[] }[] = [
     {
       match: "/log",
       items: [
