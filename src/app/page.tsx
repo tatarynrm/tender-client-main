@@ -165,17 +165,6 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-          {/* Нахилений скріншот кабінету (drop у public/images/main-page/dashboard-preview.png) */}
-          <div className="hero-preview fade-up fade-up-delay-4" aria-hidden="true">
-            <div className="hero-preview-inner">
-              <img
-                src="/images/main-page/dashboard-preview.png"
-                alt="Кабінет перевізника ICTender"
-                loading="lazy"
-              />
-            </div>
-          </div>
         </div>
 
         <div className="hero-stats-wrapper  mt-16 px-4 z-10 relative fade-up fade-up-delay-4">
