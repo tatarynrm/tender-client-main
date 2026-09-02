@@ -349,7 +349,14 @@ export function PartnersActivityReport() {
 
                 {isOpen && (
                   <div className="overflow-x-auto border-t border-zinc-100 dark:border-zinc-800">
-                    <table className="w-full min-w-[640px] text-sm">
+                    <table className="w-full min-w-[720px] table-fixed text-sm">
+                      <colgroup>
+                        <col style={{ width: "30%" }} />
+                        <col style={{ width: "20%" }} />
+                        <col style={{ width: "10%" }} />
+                        <col style={{ width: "20%" }} />
+                        <col style={{ width: "20%" }} />
+                      </colgroup>
                       <thead>
                         <tr className="text-left text-xs uppercase tracking-wide text-zinc-400">
                           <th className="px-4 py-2 font-medium">Користувач</th>
@@ -367,13 +374,13 @@ export function PartnersActivityReport() {
                         {company.users.map((u) => (
                           <tr
                             key={u.id_usr}
-                            className="border-t border-zinc-50 dark:border-zinc-800/50"
+                            className="border-t border-zinc-50 dark:border-zinc-800/50 align-top"
                           >
                             <td className="px-4 py-2.5">
-                              <div className="font-medium text-zinc-800 dark:text-zinc-100">
+                              <div className="font-medium text-zinc-800 dark:text-zinc-100 break-words">
                                 {fullName(u)}
                               </div>
-                              <div className="text-xs text-zinc-400">
+                              <div className="text-xs text-zinc-400 break-words">
                                 {[u.position, u.email]
                                   .filter(Boolean)
                                   .join(" · ")}
@@ -385,10 +392,10 @@ export function PartnersActivityReport() {
                             <td className="px-4 py-2.5 text-center font-semibold text-zinc-700 dark:text-zinc-200">
                               {u.login_count}
                             </td>
-                            <td className="px-4 py-2.5 text-zinc-500 dark:text-zinc-400">
+                            <td className="px-4 py-2.5 whitespace-nowrap text-zinc-500 dark:text-zinc-400">
                               {fmtDateTime(u.first_login)}
                             </td>
-                            <td className="px-4 py-2.5 text-zinc-500 dark:text-zinc-400">
+                            <td className="px-4 py-2.5 whitespace-nowrap text-zinc-500 dark:text-zinc-400">
                               {fmtDateTime(u.last_login)}
                             </td>
                           </tr>
