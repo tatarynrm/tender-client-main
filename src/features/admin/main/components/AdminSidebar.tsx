@@ -23,6 +23,7 @@ import {
   Mail,
   Video,
   ClipboardList,
+  Globe,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -63,7 +64,18 @@ const links: MenuItem[] = [
       { name: "Створити", href: "/admin/companies/save", icon: Pickaxe },
     ],
   },
-  { name: "Аналітика", href: "/admin/analytics", icon: BarChart },
+  {
+    name: "Аналітика",
+    icon: BarChart,
+    children: [
+      { name: "Огляд", href: "/admin/analytics", icon: BarChart },
+      {
+        name: "Активність партнерів",
+        href: "/admin/analytics/partners",
+        icon: Globe,
+      },
+    ],
+  },
   { name: "Email розсилка", href: "/admin/email-broadcast", icon: Mail },
 
   {
