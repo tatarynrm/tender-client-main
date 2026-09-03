@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,6 +13,9 @@ import {
   Globe,
   Info,
   Star,
+  Search,
+  Loader2,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -24,6 +27,8 @@ import { useAdminCompanies } from "@/features/admin/hooks/useAdminCompanies";
 import { ICompany } from "@/features/admin/types/company.types";
 import { InputMultiSelect } from "@/shared/components/Inputs/InputMultiSelect";
 import { InputSelect } from "@/shared/components/Inputs/InputSelect";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import api from "@/shared/api/instance.api";
 const websiteRegex =
   /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
 
@@ -101,11 +106,90 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
     defaultValues: initialValues,
   });
 
-  const { control, handleSubmit, reset } = form;
+  const { control, handleSubmit, reset, setValue } = form;
 
   useEffect(() => {
     if (defaultValues) reset(initialValues);
   }, [initialValues, reset, defaultValues]);
+
+  /* =======================
+     ORACLE: пошук компанії за ЄДРПОУ + автозаповнення форми.
+     Використовує публічний ендпоінт GET /oracle/search-company?edrpou=,
+     що шукає в реєстрі Oracle (таблиця ur) за zkpo. Той самий патерн, що й
+     у формі реєстрації перевізника.
+  ======================= */
+  const [oracleQuery, setOracleQuery] = useState("");
+  const [oracleOptions, setOracleOptions] = useState<any[]>([]);
+  const [oracleOpen, setOracleOpen] = useState(false);
+  const [oracleLoading, setOracleLoading] = useState(false);
+  const oracleBoxRef = useRef<HTMLDivElement>(null);
+  const debouncedOracleQuery = useDebounce(oracleQuery, 400);
+
+  // Закриття випадаючого списку при кліку поза межами
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (
+        oracleBoxRef.current &&
+        !oracleBoxRef.current.contains(e.target as Node)
+      ) {
+        setOracleOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const q = debouncedOracleQuery?.trim();
+    // Цифри → ЄДРПОУ (від 8), текст → назва (від 3 символів).
+    const isNumeric = !!q && /^\d+$/.test(q);
+    const tooShort = !q || (isNumeric ? q.length < 8 : q.length < 3);
+    if (!q || tooShort || q.length > 60) {
+      setOracleOptions([]);
+      setOracleOpen(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setOracleLoading(true);
+      try {
+        const { data } = await api.get(
+          `/oracle/search-company?edrpou=${encodeURIComponent(q)}`,
+        );
+        if (cancelled) return;
+        setOracleOptions(Array.isArray(data) ? data : []);
+        setOracleOpen((Array.isArray(data) ? data : []).length > 0);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Oracle search-company error:", err);
+          setOracleOptions([]);
+          setOracleOpen(false);
+        }
+      } finally {
+        if (!cancelled) setOracleLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedOracleQuery]);
+
+  // Автозаповнення форми з обраної компанії Oracle:
+  // zkpo → ЄДРПОУ, nur → назви, nadr → адреса.
+  const handleSelectOracleCompany = (company: any) => {
+    const opts = { shouldValidate: true, shouldDirty: true } as const;
+    const name = company.nur || company.fo || "";
+    if (company.zkpo) setValue("edrpou", String(company.zkpo), opts);
+    if (name) {
+      setValue("company_name", name, opts);
+      setValue("company_name_full", name, opts);
+    }
+    if (company.nadr)
+      setValue("address", String(company.nadr).replace(/[\r\n]+/g, ", "), opts);
+    setOracleOpen(false);
+    setOracleQuery("");
+    toast.success("Дані компанії підставлено з Oracle");
+  };
 
   const onSubmit: SubmitHandler<CompanyFormValues> = async (values) => {
     try {
@@ -144,6 +228,81 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
 
       <Form<CompanyFormValues> {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* ORACLE: пошук компанії за ЄДРПОУ для автозаповнення */}
+          <div
+            ref={oracleBoxRef}
+            className="relative bg-indigo-50/40 dark:bg-indigo-500/5 p-6 rounded-[1.5rem] border border-indigo-100 dark:border-indigo-500/20 space-y-3"
+          >
+            <div className="flex items-center gap-2 text-indigo-600">
+              <Search size={18} />
+              <span className="font-bold text-[10px] uppercase tracking-wider">
+                Пошук компанії в Oracle
+              </span>
+            </div>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              Введіть ЄДРПОУ (від 8 цифр) або назву компанії (від 3 символів),
+              оберіть зі списку — поля нижче заповняться автоматично.
+            </p>
+
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                {oracleLoading ? (
+                  <Loader2 size={18} className="animate-spin text-indigo-600" />
+                ) : (
+                  <Search size={18} strokeWidth={2.2} />
+                )}
+              </div>
+              <input
+                value={oracleQuery}
+                onChange={(e) => setOracleQuery(e.target.value)}
+                onFocus={() => oracleOptions.length > 0 && setOracleOpen(true)}
+                placeholder="ЄДРПОУ або назва компанії"
+                className="w-full h-12 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-[13px] font-medium outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600/20 transition-all"
+              />
+              {oracleQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOracleQuery("");
+                    setOracleOptions([]);
+                    setOracleOpen(false);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              )}
+
+              {oracleOpen && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl z-[100] overflow-hidden max-h-[280px] overflow-y-auto custom-scrollbar">
+                  {oracleOptions.length > 0 ? (
+                    oracleOptions.map((c, idx) => (
+                      <div
+                        key={`${c.kod ?? c.zkpo ?? idx}`}
+                        onClick={() => handleSelectOracleCompany(c)}
+                        className="px-4 py-3 cursor-pointer border-b border-zinc-50 dark:border-zinc-900/50 last:border-none hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-all"
+                      >
+                        <div className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+                          {c.nur || c.fo || "—"}
+                        </div>
+                        <div className="flex gap-3 text-[11px] text-slate-500 mt-0.5">
+                          <span>ЄДРПОУ: {c.zkpo}</span>
+                          {c.nadr && (
+                            <span className="truncate">{c.nadr}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-[11px] uppercase tracking-[0.2em] font-bold text-slate-400">
+                      {oracleLoading ? "Пошук..." : "Компанію не знайдено"}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-slate-900 p-6 rounded-[1.5rem] border shadow-sm space-y-4">
             <div className="flex items-center gap-2 text-primary">
               <Building2 size={18} />

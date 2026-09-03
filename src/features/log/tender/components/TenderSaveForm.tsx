@@ -107,6 +107,14 @@ import { cn } from "@/shared/utils";
 import api from "@/shared/api/instance.api";
 import { useSaveTender } from "../../hooks/useSaveTender";
 import { currencyStringTransform } from "@/shared/helpers/currency-formatter";
+import { useAuth } from "@/shared/providers/AuthCheckProvider";
+
+// Відділ ICT, тендери якого призначені виключно власним менеджерам.
+// Для користувачів цього відділу прибираємо вибір аудиторії ("хто приймає
+// участь") і жорстко фіксуємо ids_members = MANAGER.
+// ⚠️ Гейт по department.id. Якщо "13" — це інший ідентифікатор (напр. idnt),
+// достатньо змінити лише це значення / поле.
+const MANAGERS_ONLY_DEPARTMENT_ID = 13;
 
 // ==========================================
 // SCHEMAS
@@ -972,6 +980,11 @@ export default function TenderSaveForm({
   const { mutateAsync: saveTender, isPending } = useSaveTender();
   const router = useRouter();
 
+  const { profile } = useAuth();
+  // Користувач із відділу, якому дозволено виставляти тендери лише менеджерам.
+  const isManagersOnlyDepartment =
+    profile?.department?.id === MANAGERS_ONLY_DEPARTMENT_ID;
+
   const [truckList, setTruckList] = useState<
     { label: string; value: string }[]
   >([]);
@@ -1675,6 +1688,14 @@ export default function TenderSaveForm({
     }
   }, [isEdit, setValue]);
 
+  // Для відділу "лише менеджери" завжди тримаємо ids_members = MANAGER,
+  // навіть якщо дефолт/чернетка/AI підставили інше значення.
+  useEffect(() => {
+    if (isManagersOnlyDepartment) {
+      setValue("ids_members", "MANAGER");
+    }
+  }, [isManagersOnlyDepartment, setValue]);
+
   // Save draft on changes
   useEffect(() => {
     if (!isEdit) {
@@ -1853,6 +1874,8 @@ export default function TenderSaveForm({
 
     const payload = {
       ...sanitizedValues,
+      // Відділ "лише менеджери" не може виставляти тендер перевізникам/усім.
+      ids_members: isManagersOnlyDepartment ? "MANAGER" : values.ids_members,
       tender_permission:
         values.tender_permission?.filter((p) => p && p.ids_permission_type) ||
         [],
@@ -2535,13 +2558,31 @@ export default function TenderSaveForm({
                       />
                     </div>
                     <div className="md:col-span-1">
-                      <InputOption
-                        name="ids_members"
-                        control={control}
-                        label="ХТО ПРИЙМАЄ УЧАСТЬ"
-                        options={tenderMembers}
-                        icon={ShieldCheck}
-                      />
+                      {isManagersOnlyDepartment ? (
+                        <div className="mt-1.5 flex items-center gap-2.5 h-11 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 px-3.5">
+                          <ShieldCheck
+                            size={18}
+                            strokeWidth={2.2}
+                            className="text-indigo-600 shrink-0"
+                          />
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              Хто приймає участь
+                            </span>
+                            <span className="text-[13px] font-medium text-slate-900 dark:text-white">
+                              Лише менеджери
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <InputOption
+                          name="ids_members"
+                          control={control}
+                          label="ХТО ПРИЙМАЄ УЧАСТЬ"
+                          options={tenderMembers}
+                          icon={ShieldCheck}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
