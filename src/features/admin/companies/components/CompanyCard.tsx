@@ -115,7 +115,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Fingerprint className="h-3.5 w-3.5 opacity-70" />
             <span className="text-[13px] font-bold font-mono tracking-tight text-foreground">
-              {company.edrpou}
+              {company.edrpou || "—"}
             </span>
           </div>
           <div

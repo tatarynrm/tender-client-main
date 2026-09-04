@@ -6,7 +6,7 @@ export interface ICompany {
   company_name: string;
   company_name_full?: string; // Додано
   company_form?: string; // Додано (ФОП/ТОВ)
-  edrpou: string;
+  edrpou: string | null;
   address: string | null;
   web_site?: string; // Додано
   is_blocked: boolean;

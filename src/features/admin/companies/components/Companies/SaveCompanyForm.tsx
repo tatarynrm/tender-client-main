@@ -43,7 +43,7 @@ const tenderMemberSchema = z
     SCHEMA 
 ======================= */
 const companySchema = z.object({
-  edrpou: z.string().min(8, "ЄДРПОУ має бути від 8 символів"),
+  edrpou: z.string().nullable().optional(),
   // Дозволяємо null або пустий рядок, щоб схема не "падала"
   address: z.string().nullable().optional(),
   web_site: z
@@ -97,7 +97,12 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
       company_name: defaultValues?.company_name ?? "",
       company_name_full: defaultValues?.company_name_full ?? "", // Додано
       company_form: defaultValues?.company_form ?? "", // Додано
-      edrpou: defaultValues?.edrpou ?? defaultValues?.company_edrpou ?? "", // Враховуємо можливість отримати edrpou з company
+      edrpou:
+        defaultValues?.edrpou && defaultValues.edrpou !== "null"
+          ? defaultValues.edrpou.trim()
+          : defaultValues?.company_edrpou && defaultValues.company_edrpou !== "null"
+            ? defaultValues.company_edrpou.trim()
+            : "",
       address: defaultValues?.address
         ? defaultValues.address.replace(/[\r\n]+/g, ", ")
         : "",
@@ -215,6 +220,7 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
     try {
       const sanitizedValues = {
         ...values,
+        edrpou: values.edrpou?.trim() ? values.edrpou.trim() : null,
         ids_members_exp: values.ids_members_exp || null,
         ids_members_imp: values.ids_members_imp || null,
         ids_members_reg: values.ids_members_reg || null,
