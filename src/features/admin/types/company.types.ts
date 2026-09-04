@@ -1,4 +1,6 @@
 export type CarrierRating = "MAIN" | "MEDIUM" | "IMPORTANT";
+export type TenderMemberType = "ALL" | "CARRIER" | "MANAGER";
+
 export interface ICompany {
   id: number;
   company_name: string;
@@ -17,6 +19,11 @@ export interface ICompany {
   updated_at: string;
   rating: number | null;
   ids_carrier_rating: CarrierRating;
+
+  // Tender members
+  ids_members_exp?: TenderMemberType | null;
+  ids_members_imp?: TenderMemberType | null;
+  ids_members_reg?: TenderMemberType | null;
 
   // from pre
   company_edrpou?: string; // Додано для сумісності з даними, які можуть прийти з pre-register

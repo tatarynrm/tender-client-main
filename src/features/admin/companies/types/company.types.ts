@@ -9,4 +9,7 @@ export interface CreateCompanyDto {
   is_carrier?: boolean;
   is_expedition?: boolean;
   is_client?: boolean;
+  ids_members_exp?: string | null;
+  ids_members_imp?: string | null;
+  ids_members_reg?: string | null;
 }

@@ -16,6 +16,8 @@ import {
   Search,
   Loader2,
   X,
+  Layers,
+  Send,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -31,6 +33,11 @@ import { useDebounce } from "@/shared/hooks/useDebounce";
 import api from "@/shared/api/instance.api";
 const websiteRegex =
   /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+
+const tenderMemberSchema = z
+  .union([z.enum(["ALL", "CARRIER", "MANAGER"]), z.literal("")])
+  .nullable()
+  .optional();
 
 /* ======================= 
     SCHEMA 
@@ -56,6 +63,9 @@ const companySchema = z.object({
   company_name: z.string().min(2, "Назва занадто коротка"),
   company_name_full: z.string().min(2, "Назва занадто коротка"),
   ids_country: z.string().nullable().optional(),
+  ids_members_exp: tenderMemberSchema,
+  ids_members_imp: tenderMemberSchema,
+  ids_members_reg: tenderMemberSchema,
 });
 type CompanyFormValues = z.infer<typeof companySchema>;
 
@@ -69,6 +79,13 @@ const carrierRatingOptions = [
   { label: "MEDIUM (Середній)", value: "MEDIUM" },
   { label: "IMPORTANT (Важливий)", value: "IMPORTANT" },
 ];
+
+const tenderMemberOptions = [
+  { label: "ALL (Всі)", value: "ALL" },
+  { label: "CARRIER (Перевізники)", value: "CARRIER" },
+  { label: "MANAGER (Менеджери)", value: "MANAGER" },
+];
+
 export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
   const { createCompany, isCreating } = useAdminCompanies();
   const router = useRouter();
@@ -96,6 +113,9 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
       black_list: !!defaultValues?.black_list, // Додано
       ids_country: defaultValues?.ids_country ?? "UA",
       ids_carrier_rating: defaultValues?.ids_carrier_rating ?? "MAIN",
+      ids_members_exp: defaultValues?.ids_members_exp ?? null,
+      ids_members_imp: defaultValues?.ids_members_imp ?? null,
+      ids_members_reg: defaultValues?.ids_members_reg ?? null,
     }),
     [defaultValues],
   );
@@ -193,7 +213,15 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
 
   const onSubmit: SubmitHandler<CompanyFormValues> = async (values) => {
     try {
-      const payload = isEditMode ? { ...values, id: defaultValues.id } : values;
+      const sanitizedValues = {
+        ...values,
+        ids_members_exp: values.ids_members_exp || null,
+        ids_members_imp: values.ids_members_imp || null,
+        ids_members_reg: values.ids_members_reg || null,
+      };
+      const payload = isEditMode
+        ? { ...sanitizedValues, id: defaultValues.id }
+        : sanitizedValues;
 
       await createCompany(payload, {
         onSuccess: () => {
@@ -379,6 +407,51 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
                 name="is_expedition"
                 control={control}
                 label="Експедиція"
+              />
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-[1.5rem] border shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-primary">
+                <Layers size={18} />
+                <span className="font-bold text-[10px] uppercase tracking-wider">
+                  Учасники тендерів (Експорт / Імпорт / Регіональні)
+                </span>
+              </div>
+              <span className="text-[11px] text-slate-400 font-medium">
+                За замовчуванням пусто
+              </span>
+            </div>
+
+            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              Виберіть види учасників для участі у відповідних напрямках тендерів (EXP / IMP / REG). За замовчуванням значення не обрано.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <InputSelect
+                name="ids_members_exp"
+                control={control}
+                label="Експорт (EXP)"
+                options={tenderMemberOptions}
+                icon={Send}
+                clearable
+              />
+              <InputSelect
+                name="ids_members_imp"
+                control={control}
+                label="Імпорт (IMP)"
+                options={tenderMemberOptions}
+                icon={Globe}
+                clearable
+              />
+              <InputSelect
+                name="ids_members_reg"
+                control={control}
+                label="Регіональні (REG)"
+                options={tenderMemberOptions}
+                icon={MapPin}
+                clearable
               />
             </div>
           </div>
