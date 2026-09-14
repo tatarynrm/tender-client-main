@@ -20,6 +20,7 @@ import {
   Settings,
   Sparkles,
   Bot,
+  GraduationCap,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -71,6 +72,12 @@ const links: MenuItem[] = [
     name: "Карта",
     icon: MapPin,
     href: "/log/map",
+  },
+  {
+    name: "Навчання",
+    icon: GraduationCap,
+    href: "/log/training",
+    status: "new",
   },
   {
     name: "AI помічник",
