@@ -209,11 +209,22 @@ const useDeleteUser = (queryKey: string[]) => {
   });
 };
 
+/**
+ * Працівники ICT. Основний відбір робить бекенд (фільтр по person_role.is_ict
+ * у usr_list_ict), тут — страховка на випадок, коли в списку опиняється
+ * користувач без цієї позначки.
+ */
 export const useIctUsers = () => {
   return useQuery({
     queryKey: ["ict-users"],
     queryFn: () => adminUserService.getIctUsers(),
     staleTime: 1000 * 60 * 5,
+    select: (res) => ({
+      ...res,
+      content: (res?.content ?? []).filter(
+        (u: any) => u?.person?.person_role?.is_ict === true || u?.is_ict === true,
+      ),
+    }),
   });
 };
 
