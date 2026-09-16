@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useCallback, useEffect } from "react";
+import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import Loader from "@/shared/components/Loaders/MainLoader";
@@ -13,6 +13,7 @@ import { useGridColumns } from "@/shared/hooks/useGridColumns";
 import { useFilters } from "@/shared/hooks/useFilters";
 
 import { CargoCard } from "@/features/log/active/ui/CargoCard";
+import { CargoList } from "@/features/log/active/ui/CargoList";
 import { useLoads, TenderListFilters } from "@/features/log/hooks/useLoads";
 import { useGetLoadFilters } from "../hooks/useGetLoadFilters";
 import { LoadFiltersSheet } from "./components/LoadFiltersSheet";
@@ -22,10 +23,12 @@ import { LoadApiItem } from "../types/load.type";
 import { useUrlFilters } from "@/shared/hooks/useUrlFilter";
 import { EmptyLoads } from "./components/EmptyLoads";
 import { QuickFilterBtn } from "./QuickFilterBtn";
+import { LoadViewMode, ViewModeToggle } from "./components/ViewModeToggle";
 
 // ─── Key for persisting filters in session storage ────────────────────────────
 const PERSIST_KEY = "active_load_filters_cache";
 const LIMIT_STORAGE_KEY = "load_list_limit";
+const VIEW_MODE_STORAGE_KEY = "load_list_view_mode";
 
 interface Props {
   active?: boolean;
@@ -40,6 +43,21 @@ export default function LoadListComponent({ active, archive }: Props) {
     "loadListColumns",
     3,
   );
+
+  // ── Вигляд списку ─────────────────────────────────────────────────────────
+  // За замовчуванням — полоски, як у тендерах. Якщо менеджер перемкнув вигляд,
+  // його вибір лежить у localStorage і має пріоритет після перезавантаження.
+  const [viewMode, setViewMode] = useState<LoadViewMode>("list");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (saved === "grid" || saved === "list") setViewMode(saved);
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: LoadViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  }, []);
 
   // ── 1. Parse URL params ───────────────────────────────────────────────────
   const currentParams = useMemo(() => {
@@ -231,11 +249,20 @@ export default function LoadListComponent({ active, archive }: Props) {
 
             {/* ── Right: Grid & limit selectors ───────────────────────────── */}
             <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
-              <GridColumnSelector
-                gridCols={gridCols}
-                setGridCols={setGridCols}
-                columnOptions={columnOptions}
+              <ViewModeToggle
+                value={viewMode}
+                onChange={handleViewModeChange}
               />
+              {viewMode === "grid" && (
+                <>
+                  <div className="w-px h-4 bg-border/70" />
+                  <GridColumnSelector
+                    gridCols={gridCols}
+                    setGridCols={setGridCols}
+                    columnOptions={columnOptions}
+                  />
+                </>
+              )}
               <div className="w-px h-4 bg-border/70" />
               <ItemsPerPage
                 options={[10, 20, 50, 100, 200]}
@@ -262,11 +289,17 @@ export default function LoadListComponent({ active, archive }: Props) {
       <div className="space-y-6">
         {loads.length > 0 ? (
           <>
-            <div className={`grid ${gridClass} gap-6 mb-10`}>
-              {loads.map((item: LoadApiItem) => (
-                <CargoCard key={item.id} load={item} filters={loadFilters} />
-              ))}
-            </div>
+            {viewMode === "list" ? (
+              <div className="mb-10">
+                <CargoList loads={loads} filters={loadFilters} />
+              </div>
+            ) : (
+              <div className={`grid ${gridClass} gap-6 mb-10`}>
+                {loads.map((item: LoadApiItem) => (
+                  <CargoCard key={item.id} load={item} filters={loadFilters} />
+                ))}
+              </div>
+            )}
 
             {pagination && pagination.page_count > 1 && (
               <Pagination

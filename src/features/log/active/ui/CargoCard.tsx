@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { format } from "date-fns";
 import {
   MessageCircle,
@@ -12,220 +12,42 @@ import {
   Copy,
   Map,
   Boxes,
-  DollarSign,
   CircleDollarSign,
 } from "lucide-react";
 
 import { cn } from "@/shared/utils";
 import { Dropdowns, LoadApiItem } from "../../types/load.type";
-import { CargoDetailsDrawer } from "./CargoDetailsDrawer";
-import { AddCarsModal } from "./CargoCarAddModal";
-import { useAddCars } from "../../hooks/useAddLoadCars";
-import { CargoCarRemoveModal } from "./CargoCarRemoveModal";
-import { useRemoveCars } from "../../hooks/useRemoveLoadCars";
-import { CargoCloseByManagerModal } from "./CargoCloseByManagerModal";
-import { useCloseCargoByManager } from "../../hooks/useCloseByManager";
-import { CargoHistoryModal } from "./CargoHistoryModal";
-import LoadChat from "./LoadChat";
-import { useLoads } from "../../hooks/useLoads";
-import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { CargoActions } from "./CargoActions";
-import { useEventEffect } from "@/shared/hooks/useEventEffects";
 import { StatusIndicator } from "./CargoCardUpdateColor";
-import { useOnlineUsers } from "@/shared/hooks/useOnlineUsers";
 import { RoutePoint } from "./RoutePointTooltip";
-import { toast } from "sonner";
+import { CargoCardModals } from "./CargoCardModals";
+import { EVENT_LABELS, useCargoCard } from "../hooks/useCargoCard";
 import { useFontSize } from "@/shared/providers/FontSizeProvider";
-import { eventBus } from "@/shared/lib/event-bus";
 
 interface CargoCardProps {
   load: LoadApiItem;
   filters?: Dropdowns;
 }
-const EVENT_LABELS: Record<string, string> = {
-  cargo_shake: "Оновлено",
-  update_comment: "Новий коментар",
-  update_load_date: "Заявку оновлено",
-  load_add_car: "Додано авто",
-  load_remove_car: "Видалено авто",
-};
 
 export function CargoCard({ load, filters }: CargoCardProps) {
   const { config, size } = useFontSize(); // Отримуємо динамічний конфіг
-  const { profile } = useAuth();
-  const onlineUsers = useOnlineUsers();
-  const [isJustCreated, setIsJustCreated] = useState(false);
-  const [selectedCargo, setSelectedCargo] = useState<LoadApiItem | null>(null);
-  const [chatCargo, setChatCargo] = useState<LoadApiItem | null>(null);
-  const [openAddCars, setOpenAddCars] = useState(false);
-  const [openRemoveCars, setOpenRemoveCars] = useState(false);
-  const [openCloseCargoByManager, setOpenCloseCargoByManager] = useState(false);
-  const [openHistory, setOpenHistory] = useState(false);
-  // const [isActionsExpanded, setIsActionsExpanded] = useState(false);
-  const [lastEvent, setLastEvent] = useState<string | null>(null);
-  const isOnline = onlineUsers.has(String(load.id_author));
-  const [localReadTime, setLocalReadTime] = useState<string | null>(
-    load.comment_read_time || null,
-  );
-
-  const { mutateAsync: addCarsMutate, isLoading: isLoadingAddCars } =
-    useAddCars();
-  const { removeCarsMutate, isLoadingRemove } = useRemoveCars();
-  const { closeCargoMutate, isLoadingCloseCargo } = useCloseCargoByManager();
-
-  // const { isActive: isShaking } = useEventEffect(load.id, [
-  //   "cargo_shake",
-  //   "update_comment",
-  //   "update_load_date",
-  //   "load_add_car",
-  // ]);
-
-  useEffect(() => {
-    if (!load.created_at) return;
-    const diff = Date.now() - new Date(load.created_at).getTime();
-    setIsJustCreated(diff / 1000 / 60 < 1);
-  }, [load.created_at]);
-
-  const allPoints = [...load.crm_load_route_from, ...load.crm_load_route_to];
-  const firstPoint = allPoints[0];
-  const lastPoint = allPoints[allPoints.length - 1];
-  const middlePoints = allPoints.slice(1, -1);
-
-  const canDelete = load.created_at
-    ? Date.now() - new Date(load.created_at).getTime() < 3600000
-    : false;
-
-  const hasUnreadMessages = React.useMemo(() => {
-    const lastTime = load?.comment_last_time;
-    const readTime = localReadTime || load?.comment_read_time;
-    if (!lastTime || !load?.comment_count) return false;
-    if (!readTime) return true;
-    return new Date(lastTime).getTime() > new Date(readTime).getTime() + 1000;
-  }, [
-    load.comment_last_time,
-    load.comment_count,
-    load.comment_read_time,
-    localReadTime,
-  ]);
-
-  const handleCopyLoad = () => {
-    const getFlag = (code?: string) =>
-      code === "UA" ? "🇺🇦" : code === "DE" ? "🇩🇪" : code === "PL" ? "🇵🇱" : "🏳️";
-
-    // Форматування точок маршруту
-    const formatRoute = (points: any[]) =>
-      points
-        .map(
-          (p) =>
-            `${getFlag(p.ids_country)} ${p.city}${p.region ? ` (${p.region})` : ""}`,
-        )
-        .join(" — ");
-
-    const fromPoints = formatRoute(load.crm_load_route_from);
-    const toPoints = formatRoute(load.crm_load_route_to);
-
-    // Типи причепів
-    const trailers =
-      load.crm_load_trailer?.map((t: any) => t.trailer_type_name).join(", ") ||
-      "Не вказано";
-    // Логіка відображення ціни
-    const getPriceDisplay = () => {
-      if (load.is_price_request) return "Запит ціни";
-
-      // Якщо ціна 0, null або undefined
-      if (!load.price || load.price === 0) return "—";
-
-      return `${load.price.toLocaleString()} ${load.valut_name}${load.is_collective ? " (Збірний)" : ""}`;
-    };
-    const priceDisplay = getPriceDisplay();
-    // Форматування ціни
-
-    // Дати (завантаження — розвантаження)
-    const dateInfo = `📅 ${load.date_load}${load.date_unload ? ` — ${load.date_unload}` : ""}`;
-
-    // Текст для копіювання
-    const textToCopy = [
-      `📎 ЗАЯВКА ${load.id}`,
-      `--------------------------`,
-      `📍 ЗВІДКИ: ${fromPoints}`,
-      `🏁 КУДИ: ${toPoints}`,
-      `🗓️ ДАТА: ${dateInfo}`,
-      `🚛 ТИП: ${trailers} (${load.transit_type})`,
-      `🔢 К-СТЬ АВТО: ${load.car_count_actual}`,
-      `💰 СТАВКА: ${priceDisplay}`,
-      `--------------------------`,
-      `👤 Менеджер: ${load.author}`,
-    ].join("\n");
-
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      toast.success("Деталі заявки скопійовано", {
-        icon: <Copy className="w-4 h-4 text-blue-500" />,
-      });
-    });
-  };
-  const handleOpenGoogleMaps = () => {
-    if (allPoints.length < 2) {
-      toast.error("Недостатньо точок для маршруту");
-      return;
-    }
-
-    // Початкова точка
-    const origin = encodeURIComponent(
-      `${firstPoint.city}, ${firstPoint.ids_country}`,
-    );
-
-    // Кінцева точка
-    const destination = encodeURIComponent(
-      `${lastPoint.city}, ${lastPoint.ids_country}`,
-    );
-
-    // Проміжні точки (waypoints) через символ "|"
-    const waypoints = allPoints
-      .slice(1, -1)
-      .map((p) => encodeURIComponent(`${p.city}, ${p.ids_country}`))
-      .join("|");
-
-    // Формуємо фінальне посилання
-    // api=1 & origin=... & destination=... & waypoints=...
-    const baseUrl = "https://www.google.com/maps/dir/?api=1";
-    const url = `${baseUrl}&origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""
-      }&travelmode=driving`;
-
-    window.open(url, "_blank");
-  };
-  useEffect(() => {
-    const events = [
-      "cargo_shake",
-      "update_comment",
-      "update_load_date",
-      "load_add_car",
-      "load_remove_car",
-    ];
-
-    const handler = (e: any) => {
-      // e.type - це назва події
-      setLastEvent(e.type);
-
-      // Очищуємо бейдж через 3 секунди
-      setTimeout(() => setLastEvent(null), 3000);
-    };
-
-    events.forEach((event) =>
-      eventBus.on(event as any, (e) => {
-        // Перевіряємо, чи подія стосується саме цієї картки
-        if (e.detail === load.id) handler(e);
-      }),
-    );
-
-    return () => {
-      events.forEach((event) => eventBus.off(event as any, handler as any));
-    };
-  }, [load.id]);
-
-  const isShaking = !!lastEvent;
+  const ctrl = useCargoCard(load);
+  const {
+    profile,
+    isOnline,
+    isJustCreated,
+    lastEvent,
+    isShaking,
+    firstPoint,
+    lastPoint,
+    middlePoints,
+    canDelete,
+    hasUnreadMessages,
+    handleCopyLoad,
+    handleOpenGoogleMaps,
+  } = ctrl;
 
   // ── Shared class tokens ────────────────────────────────────────────────────
-  const darkCard = "dark:bg-slate-900 dark:border-zinc-800";
   const dateCellCls =
     "bg-white dark:bg-slate-900 py-1.5 px-4 flex gap-2 items-center justify-center sm:justify-start";
   const footerBtnCls =
@@ -317,7 +139,6 @@ export function CargoCard({ load, filters }: CargoCardProps) {
                       {load.company_name || "-----"}
                     </span>
                   </div>
-                  {/* <div className="absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent pointer-events-none" /> */}
                 </div>
               </div>
             </div>
@@ -337,9 +158,9 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               <CargoActions
                 load={load}
                 profile={profile}
-                onAddCars={() => setOpenAddCars(true)}
-                onRemoveCars={() => setOpenRemoveCars(true)}
-                onCloseCargo={() => setOpenCloseCargoByManager(true)}
+                onAddCars={() => ctrl.setOpenAddCars(true)}
+                onRemoveCars={() => ctrl.setOpenRemoveCars(true)}
+                onCloseCargo={() => ctrl.setOpenCloseCargoByManager(true)}
                 canDelete={canDelete}
               />
             </div>
@@ -519,13 +340,13 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               },
               {
                 icon: History,
-                onClick: () => setOpenHistory(true),
+                onClick: () => ctrl.setOpenHistory(true),
                 title: "Історія",
                 hover: "hover:text-blue-500",
               },
               {
                 icon: Info,
-                onClick: () => setSelectedCargo(load),
+                onClick: () => ctrl.setSelectedCargo(load),
                 title: "Інфо",
                 hover: "hover:text-blue-500",
               },
@@ -540,7 +361,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
               </button>
             ))}
             <button
-              onClick={() => setChatCargo(load)}
+              onClick={() => ctrl.setChatCargo(load)}
               className={cn(
                 footerBtnCls,
                 "relative hover:bg-zinc-50 dark:hover:bg-slate-700",
@@ -567,50 +388,7 @@ export function CargoCard({ load, filters }: CargoCardProps) {
         </div>
       </div>
 
-      {/* MODALS (Без змін) */}
-      <CargoDetailsDrawer
-        cargo={selectedCargo ?? undefined}
-        open={!!selectedCargo}
-        onClose={() => setSelectedCargo(null)}
-      />
-      {chatCargo && (
-        <LoadChat
-          cargoId={chatCargo.id}
-          open={!!chatCargo}
-          onClose={() => {
-            setChatCargo(null);
-            setLocalReadTime(new Date().toISOString());
-          }}
-        />
-      )}
-      <AddCarsModal
-        loadId={load.id}
-        open={openAddCars}
-        onOpenChange={setOpenAddCars}
-        onSubmit={addCarsMutate}
-        isLoading={isLoadingAddCars}
-      />
-      <CargoCarRemoveModal
-        load={load}
-        open={openRemoveCars}
-        onOpenChange={setOpenRemoveCars}
-        onSubmit={removeCarsMutate}
-        isLoading={isLoadingRemove}
-        dropdowns={filters}
-      />
-      <CargoCloseByManagerModal
-        dropdowns={filters}
-        load={load}
-        open={openCloseCargoByManager}
-        onOpenChange={setOpenCloseCargoByManager}
-        onSubmit={closeCargoMutate}
-        isLoading={isLoadingCloseCargo}
-      />
-      <CargoHistoryModal
-        open={openHistory}
-        onOpenChange={setOpenHistory}
-        loadId={load.id}
-      />
+      <CargoCardModals load={load} filters={filters} ctrl={ctrl} />
     </>
   );
 }
