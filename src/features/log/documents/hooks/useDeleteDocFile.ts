@@ -8,17 +8,15 @@ export const useDeleteDocFile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    /** Кілька id — масове видалення вибраних файлів. */
-    mutationFn: async ({ ids, confirm }: { ids: string[]; confirm: string }) => {
-      for (const id of ids) await documentsService.deleteFile(id, confirm);
-      return ids.length;
-    },
-    onSuccess: (count) => {
-      toast.success(count > 1 ? `Видалено файлів: ${count}` : "Файл видалено");
+    /** Один запит на всі вибрані файли; уже видалені кимось файли бекенд пропускає. */
+    mutationFn: ({ ids, confirm }: { ids: string[]; confirm: string }) =>
+      documentsService.deleteFiles(ids, confirm),
+    onSuccess: ({ deleted }) => {
+      toast.success(deleted === 1 ? "Файл видалено" : `Видалено файлів: ${deleted}`);
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },
     onError: (error) => {
-      toast.error(docErrorMessage(error, "Не вдалося видалити файл"));
+      toast.error(docErrorMessage(error, "Не вдалося видалити файли"));
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },
   });

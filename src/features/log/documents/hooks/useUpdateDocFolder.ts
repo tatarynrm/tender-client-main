@@ -16,6 +16,7 @@ export const useUpdateDocFolder = () => {
     },
     onError: (error) => {
       toast.error(docErrorMessage(error, "Не вдалося змінити папку"));
+      queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },
   });
 };

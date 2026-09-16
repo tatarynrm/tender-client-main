@@ -102,6 +102,18 @@ export const formatDocSize = (bytes: number) => {
 export const formatDocDate = (iso: string) =>
   new Date(iso).toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+/** Зберегти Blob як файл (blob: URL того ж origin, тож атрибут download працює). */
+export const saveBlob = (blob: Blob, fileName: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+};
+
 export const docErrorMessage = (error: unknown, fallback: string) => {
   const err = error as AxiosError<{ message?: string | string[] }>;
   if (err.response?.status === 413) return "Файл завеликий (максимум 200 МБ)";
@@ -206,33 +218,50 @@ export const matchesQuery = (name: string, query: string) =>
  * Файли з події drop разом зі структурою папок. Entry треба забрати СИНХРОННО,
  * до першого await — після обробника DataTransfer стає порожнім.
  */
-export const collectDroppedItems = async (dataTransfer: DataTransfer): Promise<IUploadItem[]> => {
+export const collectDroppedItems = async (
+  dataTransfer: DataTransfer,
+): Promise<{ items: IUploadItem[]; skipped: string[] }> => {
   const entries = Array.from(dataTransfer.items)
     .filter((item) => item.kind === "file")
     .map((item) => item.webkitGetAsEntry?.())
     .filter((entry): entry is FileSystemEntry => !!entry);
 
   if (!entries.length) {
-    return Array.from(dataTransfer.files).map((file) => ({ file, path: file.name }));
+    return {
+      items: Array.from(dataTransfer.files).map((file) => ({ file, path: file.name })),
+      skipped: [],
+    };
   }
 
-  const result: IUploadItem[] = [];
+  const items: IUploadItem[] = [];
+  // Файл без доступу / зниклий під час читання не зриває весь drop — лише пропускається
+  const skipped: string[] = [];
 
   const walk = async (entry: FileSystemEntry, prefix: string): Promise<void> => {
     if (entry.isFile) {
-      const file = await new Promise<File>((resolve, reject) =>
-        (entry as FileSystemFileEntry).file(resolve, reject),
-      );
-      result.push({ file, path: `${prefix}${file.name}` });
+      try {
+        const file = await new Promise<File>((resolve, reject) =>
+          (entry as FileSystemFileEntry).file(resolve, reject),
+        );
+        items.push({ file, path: `${prefix}${file.name}` });
+      } catch {
+        skipped.push(`${prefix}${entry.name}`);
+      }
       return;
     }
     if (entry.isDirectory) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
       // readEntries віддає вміст порціями (по 100 у Chrome) — читаємо до порожньої
       for (;;) {
-        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) =>
-          reader.readEntries(resolve, reject),
-        );
+        let batch: FileSystemEntry[];
+        try {
+          batch = await new Promise<FileSystemEntry[]>((resolve, reject) =>
+            reader.readEntries(resolve, reject),
+          );
+        } catch {
+          skipped.push(`${prefix}${entry.name}/`);
+          break;
+        }
         if (!batch.length) break;
         for (const child of batch) await walk(child, `${prefix}${entry.name}/`);
       }
@@ -240,7 +269,7 @@ export const collectDroppedItems = async (dataTransfer: DataTransfer): Promise<I
   };
 
   for (const entry of entries) await walk(entry, "");
-  return result;
+  return { items, skipped };
 };
 
 /** Файли з <input webkitdirectory> або звичайного <input multiple>. */

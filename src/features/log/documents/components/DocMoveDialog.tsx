@@ -22,7 +22,8 @@ interface Props {
   index: DocsIndex;
   /** Папки, куди переміщати не можна (сама папка та її вкладені) */
   disabledIds: Set<string>;
-  currentParentId: string | null;
+  /** undefined — елементи з різних папок, «поточної» немає */
+  currentParentId: string | null | undefined;
   pending: boolean;
   onSubmit: (folderId: string | null) => void;
   onClose: () => void;
@@ -36,7 +37,7 @@ export function DocMoveDialog({
 
   useEffect(() => {
     if (open) {
-      setSelected(currentParentId);
+      setSelected(currentParentId === undefined ? null : currentParentId);
       setQuery("");
     }
   }, [open, currentParentId]);

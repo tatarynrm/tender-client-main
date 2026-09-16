@@ -1,5 +1,6 @@
 import api from "@/shared/api/instance.api";
 import { IApiResponse } from "@/shared/api/api.type";
+import { XHR_HEADERS } from "@/shared/api/xhr.headers";
 import {
   ITrainingStreamToken,
   ITrainingVideo,
@@ -27,6 +28,7 @@ export const trainingService = {
 
     const { data } = await api.post("/training", formData, {
       timeout: 0,
+      headers: XHR_HEADERS,
       onUploadProgress: (e) => {
         if (e.total) onProgress?.(Math.round((e.loaded / e.total) * 100));
       },
@@ -35,12 +37,12 @@ export const trainingService = {
   },
 
   update: async (id: string, payload: ITrainingVideoForm): Promise<ITrainingVideo> => {
-    const { data } = await api.patch(`/training/${id}`, payload);
+    const { data } = await api.patch(`/training/${id}`, payload, { headers: XHR_HEADERS });
     return data;
   },
 
   remove: async (id: string): Promise<{ id: string }> => {
-    const { data } = await api.delete(`/training/${id}`);
+    const { data } = await api.delete(`/training/${id}`, { headers: XHR_HEADERS });
     return data;
   },
 

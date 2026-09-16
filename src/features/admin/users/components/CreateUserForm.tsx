@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useForm, SubmitHandler, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  SubmitHandler,
+  useFieldArray,
+  useWatch,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
@@ -14,7 +19,9 @@ import {
   Phone,
   Plus,
   Trash2,
+  BadgeCheck,
 } from "lucide-react";
+import { ConfirmDialog } from "@/shared/components/confirm-dialog/ConfirmDialog";
 
 import {
   Form,
@@ -57,6 +64,7 @@ const userSchema = z.object({
     person_role: z.object({
       is_admin: z.boolean({ message: "Вкажіть права адміністратора" }),
       is_manager: z.boolean({ message: "Вкажіть права менеджера" }),
+      is_ict: z.boolean({ message: "Вкажіть, чи це працівник ICT" }),
     }),
     id_company: z.number().nullable(),
 
@@ -111,7 +119,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
           position: defaultValues?.person?.position || "",
           ids_sex: "M",
           id_company: defaultValues?.company?.id || null,
-          person_role: { is_admin: false, is_manager: false },
+          person_role: { is_admin: false, is_manager: false, is_ict: false },
           person_phone: defaultValues?.phone
             ? [
                 {
@@ -136,7 +144,12 @@ export default function UserForm({ defaultValues }: UserFormProps) {
     ),
   });
 
-  const { control, handleSubmit, reset, formState } = form;
+  const { control, handleSubmit, reset, setValue, formState } = form;
+
+  // Позначка "Працівник ICT" перемикається лише через підтвердження:
+  // вона відкриває внутрішній простір /log і змінює обсяг даних у процедурах.
+  const isIct = useWatch({ control, name: "person.person_role.is_ict" });
+  const [pendingIct, setPendingIct] = useState<boolean | null>(null);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -179,6 +192,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
           person_role: {
             is_admin: !!defaultValues.person?.person_role?.is_admin,
             is_manager: !!defaultValues.person?.person_role?.is_manager,
+            is_ict: !!defaultValues.person?.person_role?.is_ict,
           },
           person_phone: initialPhones,
         },
@@ -382,7 +396,7 @@ export default function UserForm({ defaultValues }: UserFormProps) {
               </span>
             </div>
 
-            <div className="flex gap-8">
+            <div className="flex flex-wrap gap-8">
               <InputSwitch
                 name="person.person_role.is_admin"
                 control={control}
@@ -393,7 +407,20 @@ export default function UserForm({ defaultValues }: UserFormProps) {
                 control={control}
                 label="Менеджер"
               />
+              <InputSwitch
+                id="person-role-is-ict"
+                label="Працівник ICT"
+                icon={BadgeCheck}
+                checked={!!isIct}
+                onCheckedChange={(val) => setPendingIct(val)}
+              />
             </div>
+
+            {isIct && (
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Користувач має доступ до внутрішнього простору ICT (розділ LOG).
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end pt-4">
@@ -408,6 +435,32 @@ export default function UserForm({ defaultValues }: UserFormProps) {
           </div>
         </form>
       </Form>
+
+      <ConfirmDialog
+        open={pendingIct !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingIct(null);
+        }}
+        variant={pendingIct ? "warning" : "danger"}
+        title={
+          pendingIct
+            ? "Позначити як працівника ICT?"
+            : "Зняти позначку працівника ICT?"
+        }
+        description={
+          pendingIct
+            ? "Користувач отримає доступ до внутрішнього простору ICT (розділ LOG) — тендери, вантажі та внутрішні дані компанії. Вмикайте лише для співробітників ICT."
+            : "Користувач втратить доступ до внутрішнього простору ICT і працюватиме як звичайний перевізник."
+        }
+        confirmText={pendingIct ? "Так, це працівник ICT" : "Так, зняти"}
+        onConfirm={() => {
+          setValue("person.person_role.is_ict", !!pendingIct, {
+            shouldDirty: true,
+            shouldTouch: true,
+          });
+          setPendingIct(null);
+        }}
+      />
     </div>
   );
 }

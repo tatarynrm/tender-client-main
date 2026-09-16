@@ -184,16 +184,27 @@ function TreeNode({
           )}
           <span className="truncate">{folder.name}</span>
         </button>
-        <span className="text-[11px] tabular-nums text-muted-foreground group-hover:hidden">{count}</span>
-        <DocActionsMenu
-          target={{ kind: "folder", item: folder }}
-          isAdmin={isAdmin}
-          isFavorite={isFavorite}
-          handlers={handlers}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
-          className={cn("hidden p-1 group-hover:block", menuOpen && "block")}
-        />
+        {/* Лічильник і «⋮» в одній клітинці, перемикаються visibility (не display):
+            прихована кнопка лишається в розкладці, і меню Radix не «стрибає» в кут екрана */}
+        <span className="grid place-items-center">
+          <span
+            className={cn(
+              "text-[11px] tabular-nums text-muted-foreground [grid-area:1/1] group-hover:invisible",
+              menuOpen && "invisible",
+            )}
+          >
+            {count}
+          </span>
+          <DocActionsMenu
+            target={{ kind: "folder", item: folder }}
+            isAdmin={isAdmin}
+            isFavorite={isFavorite}
+            handlers={handlers}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            className={cn("invisible p-1 [grid-area:1/1] group-hover:visible", menuOpen && "visible")}
+          />
+        </span>
       </div>
       {isOpen && renderChildren(children)}
     </div>

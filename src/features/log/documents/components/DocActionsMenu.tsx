@@ -24,6 +24,9 @@ import { cn } from "@/shared/utils";
 import { DocTarget } from "../types/documents.type";
 import { getDocTypeMeta } from "../utils/documents.utils";
 
+// Викликається лише в обробниках подій — на сервері не виконується, гідрацію не ламає
+const isMac = () => /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+
 export interface DocActionHandlers {
   onOpen: (target: DocTarget) => void;
   onOpenInTab: (target: DocTarget) => void;
@@ -81,6 +84,15 @@ export function DocActionsMenu({
         className="w-52"
         onClick={(e) => e.stopPropagation()}
         onContextMenu={(e) => e.preventDefault()}
+        // На macOS контекстне меню відкривається на натисканні, а Radix вибирає пункт на
+        // відпусканні кнопки — без цього правий клік одразу виконав би пункт під курсором.
+        // Ctrl+клік — контекстне меню лише на macOS; на Windows Ctrl = мультивибір, його не блокуємо.
+        onPointerUpCapture={(e) => {
+          if (e.button !== 0 || (isMac() && e.ctrlKey)) e.preventDefault();
+        }}
+        onClickCapture={(e) => {
+          if (isMac() && e.ctrlKey) e.preventDefault();
+        }}
       >
         {!hideOpen && (
           <DropdownMenuItem onSelect={() => handlers.onOpen(target)}>

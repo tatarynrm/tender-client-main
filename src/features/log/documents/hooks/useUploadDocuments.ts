@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { documentsService } from "../../services/documents.service";
@@ -26,9 +26,11 @@ export interface UploadState {
 export const useUploadDocuments = () => {
   const queryClient = useQueryClient();
   const [state, setState] = useState<UploadState | null>(null);
+  // state у замиканні може бути застарілим (upload викликається після await читання drop) — тому ref
+  const busyRef = useRef(false);
 
   const upload = async (rawItems: IUploadItem[], folderId: string | null, targetName: string) => {
-    if (state) {
+    if (busyRef.current) {
       toast.warning("Дочекайтесь завершення поточного завантаження");
       return;
     }
@@ -46,6 +48,7 @@ export const useUploadDocuments = () => {
     }
     if (!accepted.length) return;
 
+    busyRef.current = true;
     const totalBytes = accepted.reduce((sum, i) => sum + i.file.size, 0);
     setState({ total: accepted.length, done: 0, totalBytes, loadedBytes: 0, targetName });
 
@@ -78,6 +81,7 @@ export const useUploadDocuments = () => {
         description: uploaded ? `Встигли завантажитись ${uploaded} з ${accepted.length}` : undefined,
       });
     } finally {
+      busyRef.current = false;
       setState(null);
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     }

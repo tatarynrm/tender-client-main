@@ -10,15 +10,19 @@ export const useUpdateDocFile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    /** Кілька id — масове переміщення вибраних файлів. */
+    /** Перейменування — по одному файлу; переміщення — одним масовим запитом. */
     mutationFn: async ({ ids, payload }: { ids: string[]; payload: Payload }) => {
-      for (const id of ids) await documentsService.updateFile(id, payload);
-      return ids.length;
+      if (payload.folderId !== undefined) {
+        const { moved } = await documentsService.moveFiles(ids, payload.folderId);
+        return moved;
+      }
+      await documentsService.updateFile(ids[0], payload);
+      return 1;
     },
     onSuccess: (count, { payload }) => {
       toast.success(
         payload.folderId !== undefined
-          ? count > 1 ? `Переміщено файлів: ${count}` : "Файл переміщено"
+          ? count === 1 ? "Файл переміщено" : `Переміщено файлів: ${count}`
           : "Файл перейменовано",
       );
       queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });

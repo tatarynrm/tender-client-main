@@ -16,6 +16,8 @@ export const useDeleteDocFolder = () => {
     },
     onError: (error) => {
       toast.error(docErrorMessage(error, "Не вдалося видалити папку"));
+      // Напр. папку вже видалив інший адмін — оновлюємо дерево, щоб вона зникла
+      queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
     },
   });
 };

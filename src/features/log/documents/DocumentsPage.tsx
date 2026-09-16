@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   ArrowDownAZ,
@@ -47,7 +48,7 @@ import { useCreateDocFolder } from "./hooks/useCreateDocFolder";
 import { useDeleteDocFile } from "./hooks/useDeleteDocFile";
 import { useDeleteDocFolder } from "./hooks/useDeleteDocFolder";
 import { useDocFavorites } from "./hooks/useDocFavorites";
-import { useDocuments } from "./hooks/useDocuments";
+import { DOCUMENTS_QUERY_KEY, useDocuments } from "./hooks/useDocuments";
 import { useDownloadZip, ZipEntry } from "./hooks/useDownloadZip";
 import { useUpdateDocFile } from "./hooks/useUpdateDocFile";
 import { useUpdateDocFolder } from "./hooks/useUpdateDocFolder";
@@ -61,6 +62,7 @@ import {
   formatDocSize,
   itemsFromFileList,
   matchesQuery,
+  saveBlob,
   sortFiles,
   sortFolders,
 } from "./utils/documents.utils";
@@ -84,6 +86,7 @@ export default function DocumentsPage({ isAdmin }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError: loadFailed } = useDocuments();
   const tree = data ?? EMPTY_TREE;
@@ -171,7 +174,8 @@ export default function DocumentsPage({ isAdmin }: Props) {
         e.preventDefault();
         searchRef.current?.focus();
       }
-      if (e.key === "Escape" && !previewId) {
+      // defaultPrevented — Esc уже закрив діалог чи меню Radix; вибір тоді не скидаємо
+      if (e.key === "Escape" && !e.defaultPrevented && !previewId) {
         if (selected.size) setSelected(new Set());
         else if (document.activeElement === searchRef.current) setSearch("");
       }
@@ -217,12 +221,28 @@ export default function DocumentsPage({ isAdmin }: Props) {
   }, [query, favoritesView, tree, favoriteIds, index, currentFolderId, sortKey]);
 
   const previewFile = previewId ? tree.files.find((f) => f.id === previewId) ?? null : null;
+
+  // ?file= на файл, якого вже немає (видалили, старе посилання) — прибираємо з адреси,
+  // інакше сторінка вважає перегляд відкритим (напр. Esc не скидає вибір)
+  useEffect(() => {
+    if (data && previewId && !previewFile) setUrl({ file: null });
+  }, [data, previewId, previewFile, setUrl]);
   const previewList = previewFile && visibleFiles.some((f) => f.id === previewFile.id) ? visibleFiles : previewFile ? [previewFile] : [];
 
   const currentPath = index.pathOf(currentFolderId);
   const currentName = currentPath.at(-1)?.name ?? "Усі документи";
   const totalSize = useMemo(() => tree.files.reduce((s, f) => s + f.size, 0), [tree.files]);
   const selectedFiles = visibleFiles.filter((f) => selected.has(f.id));
+
+  // Вибір — лише серед показаних файлів: видалені/переміщені кимось не лишаються «вибраними»
+  useEffect(() => {
+    setSelected((prev) => {
+      if (!prev.size) return prev;
+      const visible = new Set(visibleFiles.map((f) => f.id));
+      const next = new Set([...prev].filter((id) => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [visibleFiles]);
 
   // ---------- навігація ----------
   const openFolder = (id: string | null) => {
@@ -270,14 +290,22 @@ export default function DocumentsPage({ isAdmin }: Props) {
     });
   };
 
-  const downloadFile = (file: IDocFile) => {
-    // Content-Disposition: attachment — браузер скачає, не залишаючи сторінку
-    const link = document.createElement("a");
-    link.href = documentsService.downloadUrl(file.id);
-    link.rel = "noopener";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  // Через axios, а не посиланням: при помилці (файл видалили, сесія скінчилась)
+  // браузер інакше відкрив би сторінку з сирим JSON замість документів
+  const downloadFile = async (file: IDocFile) => {
+    const toastId = file.size > 5 * 1024 * 1024 ? toast.loading(`Скачування «${file.name}»…`) : undefined;
+    try {
+      const blob = await documentsService.fetchBlob(file.id);
+      saveBlob(blob, file.name);
+      if (toastId !== undefined) toast.dismiss(toastId);
+    } catch (error) {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      toast.error(
+        status === 404 ? "Файл не знайдено — можливо, його вже видалили" : "Не вдалося скачати файл",
+        { id: toastId },
+      );
+      queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY });
+    }
   };
 
   const copyLink = async (target: DocTarget) => {
@@ -324,7 +352,8 @@ export default function DocumentsPage({ isAdmin }: Props) {
   const moveByDrop = (payload: { kind: "folder" | "file"; ids: string[] }, targetId: string | null) => {
     if (payload.kind === "folder") {
       const folder = index.foldersById.get(payload.ids[0]);
-      if (!folder || folder.parentId === targetId) return;
+      // Кинули на саму себе (випадковий мікро-drag при кліку) — мовчки нічого не робимо
+      if (!folder || folder.parentId === targetId || folder.id === targetId) return;
       if (targetId && collectDescendantIds(index, folder.id).has(targetId)) {
         toast.error("Не можна перемістити папку всередину самої себе");
         return;
@@ -382,12 +411,9 @@ export default function DocumentsPage({ isAdmin }: Props) {
               return;
             }
 
-            // Файли з комп'ютера, кинуті на конкретну папку, — завантажуємо саме в неї.
-            // collectDroppedItems забирає entries синхронно, до першого await.
+            // Файли з комп'ютера, кинуті на конкретну папку, — завантажуємо саме в неї
             resetUploadDrag();
-            collectDroppedItems(e.dataTransfer).then((items) =>
-              upload(items, targetFolderId, target ? target.item.name : "Усі документи"),
-            );
+            uploadDropped(e.dataTransfer, targetFolderId, target ? target.item.name : "Усі документи");
           }
         : undefined,
     };
@@ -405,16 +431,48 @@ export default function DocumentsPage({ isAdmin }: Props) {
     setUploadOver(false);
   };
 
-  // Файл, кинутий повз зону завантаження, браузер інакше відкриє замість сторінки
+  /** Викликати синхронно в обробнику drop — entries забираються до першого await. */
+  const uploadDropped = (dataTransfer: DataTransfer, folderId: string | null, targetName: string) => {
+    collectDroppedItems(dataTransfer)
+      .then(({ items, skipped }) => {
+        if (skipped.length) {
+          toast.warning(`Не вдалося прочитати: ${skipped.length}`, {
+            description: skipped.slice(0, 5).join(", ") + (skipped.length > 5 ? "…" : ""),
+          });
+        }
+        return upload(items, folderId, targetName);
+      })
+      .catch(() => toast.error("Не вдалося прочитати перетягнуті файли"));
+  };
+
   useEffect(() => {
+    // Файл, кинутий повз зону завантаження, браузер інакше відкриє замість сторінки
     const block = (e: DragEvent) => {
       if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
     };
+    // Drag скасовано або курсор пішов за межі вікна — рамка завантаження не повинна «залипнути»
+    const reset = (e: DragEvent) => {
+      // relatedTarget у drag-подіях ненадійний між браузерами — вихід з вікна визначаємо за координатами
+      const leftWindow =
+        e.type === "dragleave" &&
+        (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight);
+      if (e.type !== "dragleave" || leftWindow) {
+        dragDepth.current = 0;
+        setUploadOver(false);
+        setDropTargetId(null);
+      }
+    };
     window.addEventListener("dragover", block);
     window.addEventListener("drop", block);
+    window.addEventListener("drop", reset);
+    window.addEventListener("dragleave", reset);
+    window.addEventListener("dragend", reset);
     return () => {
       window.removeEventListener("dragover", block);
       window.removeEventListener("drop", block);
+      window.removeEventListener("drop", reset);
+      window.removeEventListener("dragleave", reset);
+      window.removeEventListener("dragend", reset);
     };
   }, []);
 
@@ -437,7 +495,7 @@ export default function DocumentsPage({ isAdmin }: Props) {
           if (!isFileDrag(e)) return;
           e.preventDefault();
           resetUploadDrag();
-          collectDroppedItems(e.dataTransfer).then((items) => upload(items, uploadTargetId, uploadTargetName));
+          uploadDropped(e.dataTransfer, uploadTargetId, uploadTargetName);
         },
       }
     : {};
@@ -919,8 +977,9 @@ export default function DocumentsPage({ isAdmin }: Props) {
               </div>
             )}
 
-            {isAdmin && !uploadOver && (visibleFolders.length > 0 || visibleFiles.length > 0) && (
-              <p className="hidden pt-2 text-center text-xs text-muted-foreground lg:block">
+            {/* Не розмонтовуємо під час drag (лише ховаємо) — інакше губиться dragleave і рамка залипає */}
+            {isAdmin && (visibleFolders.length > 0 || visibleFiles.length > 0) && (
+              <p className={cn("hidden pt-2 text-center text-xs text-muted-foreground lg:block", uploadOver && "invisible")}>
                 Перетягніть файли або цілі папки сюди, щоб завантажити в «{uploadTargetName}». Файли й папки можна
                 перетягувати на інші папки, щоб перемістити.
               </p>
@@ -984,12 +1043,13 @@ export default function DocumentsPage({ isAdmin }: Props) {
             }
             index={index}
             disabledIds={moveDisabledIds}
+            // undefined — файли з різних папок: «поточної» немає, корінь теж доступний
             currentParentId={
               moveTarget?.kind === "folder"
                 ? moveTarget.folder.parentId
                 : moveTarget && moveTarget.files.every((f) => f.folderId === moveTarget.files[0].folderId)
                   ? moveTarget.files[0].folderId
-                  : null
+                  : undefined
             }
             pending={updateFolder.isPending || updateFile.isPending}
             onSubmit={submitMove}

@@ -79,7 +79,8 @@ export function FolderCard({
       role="button"
       tabIndex={0}
       onClick={() => handlers.onOpen(target)}
-      onKeyDown={(e) => e.key === "Enter" && handlers.onOpen(target)}
+      // Лише Enter на самій плитці: із меню «⋮» чи чекбокса подія спливає сюди ж
+      onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && handlers.onOpen(target)}
       onContextMenu={onContextMenu}
       {...dnd}
       className={cn(
@@ -141,7 +142,8 @@ export function FileCard({
       role="button"
       tabIndex={0}
       onClick={(e) => (selectionMode || e.ctrlKey || e.metaKey ? onToggleSelect(file.id, e) : handlers.onOpen(target))}
-      onKeyDown={(e) => e.key === "Enter" && handlers.onOpen(target)}
+      // Лише Enter на самій плитці: із меню «⋮» чи чекбокса подія спливає сюди ж
+      onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && handlers.onOpen(target)}
       onContextMenu={onContextMenu}
       {...dnd}
       className={cn(
