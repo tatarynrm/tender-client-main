@@ -23,8 +23,10 @@ interface Props<T extends FieldValues> {
   required?: boolean;
   initialLabel?: string;
   // ДОДАНО: колбек для передачі назви компанії наверх
+  // Разом з id/name повертає всі поля компанії (напр. ids_members_exp/imp/reg),
+  // бо /company/name/:name віддає повний рядок таблиці company.
   onEntityChange?: (
-    entity: { id: number | string; name: string } | null,
+    entity: ({ id: number | string; name: string } & Record<string, any>) | null,
   ) => void;
 }
 
@@ -74,6 +76,7 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
       try {
         const { data } = await api.get(`/company/name/${searchTerm}`);
         const mappedOptions = data.map((c: any) => ({
+          ...c,
           value: c.id,
           label: c.company_name,
         }));
@@ -95,8 +98,9 @@ export const InputAsyncSelectCompany = <T extends FieldValues>({
     setLocalDisplayValue(option.label);
 
     // Передаємо дані батьківському компоненту для localStorage
+    // (разом з усіма полями компанії, включно з ids_members_exp/imp/reg)
     if (onEntityChange) {
-      onEntityChange({ id: option.value, name: option.label });
+      onEntityChange({ ...option, id: option.value, name: option.label });
     }
 
     setSearchTerm("");

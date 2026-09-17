@@ -970,6 +970,36 @@ const TenderPreviewCard = ({
     </div>
   );
 };
+// Визначаємо напрямок перевезення (експорт/імпорт/регіональне) за країнами
+// точок завантаження (LOAD_FROM/CUSTOM_UP) і розвантаження (LOAD_TO/CUSTOM_DOWN).
+// Повертає null, поки точки ще не заповнені або напрямок неоднозначний
+// (наприклад, транзит між двома іноземними країнами).
+type RouteKind = "exp" | "imp" | "reg";
+
+function resolveRouteKind(
+  routes: { ids_point?: string; ids_country?: string }[],
+): RouteKind | null {
+  const norm = (v?: string) => (v || "").trim().toUpperCase();
+  const loadCountries = (routes || [])
+    .filter((r) => r.ids_point === "LOAD_FROM" || r.ids_point === "CUSTOM_UP")
+    .map((r) => norm(r.ids_country))
+    .filter(Boolean);
+  const unloadCountries = (routes || [])
+    .filter((r) => r.ids_point === "LOAD_TO" || r.ids_point === "CUSTOM_DOWN")
+    .map((r) => norm(r.ids_country))
+    .filter(Boolean);
+
+  if (!loadCountries.length || !unloadCountries.length) return null;
+
+  const loadForeign = loadCountries.some((c) => c !== "UA");
+  const unloadForeign = unloadCountries.some((c) => c !== "UA");
+
+  if (!loadForeign && !unloadForeign) return "reg";
+  if (!loadForeign && unloadForeign) return "exp";
+  if (loadForeign && !unloadForeign) return "imp";
+  return null;
+}
+
 export default function TenderSaveForm({
   defaultValues,
   isEdit,
@@ -1007,6 +1037,21 @@ export default function TenderSaveForm({
   >([]);
 
   const [companyLabel, setCompanyLabel] = useState<string>("");
+  // Налаштування аудиторії участі компанії-замовника за напрямком
+  // перевезення (ids_members_exp/imp/reg): ALL | CARRIER | MANAGER | CHOICE | null.
+  const [companyMembers, setCompanyMembers] = useState<{
+    exp: string | null;
+    imp: string | null;
+    reg: string | null;
+  } | null>(null);
+  // Модалка вибору аудиторії, коли компанія має ids_members_* = CHOICE.
+  const [membersChoiceModal, setMembersChoiceModal] = useState<{
+    open: boolean;
+    values: TenderFormValues | null;
+  }>({ open: false, values: null });
+  const [membersChoiceValue, setMembersChoiceValue] = useState<
+    "ALL" | "CARRIER" | "MANAGER"
+  >("ALL");
   const [isNextTender, setIsNextTender] = useState(false);
   const [files, setFiles] = useState<(File | any)[]>([]); // Combines existing and new files
   const STORAGE_KEY = "tender_log_form_draft";
@@ -1696,6 +1741,60 @@ export default function TenderSaveForm({
     }
   }, [isManagersOnlyDepartment, setValue]);
 
+  // Підвантажуємо налаштування аудиторії компанії-замовника (ids_members_exp/imp/reg)
+  // щоразу, коли обрано/змінено компанію (ручний вибір, чернетка, редагування тендера).
+  const idOwnerCompanyValue = watchedValues.id_owner_company;
+  useEffect(() => {
+    if (!idOwnerCompanyValue) {
+      setCompanyMembers(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get(`/company/${idOwnerCompanyValue}`);
+        if (cancelled) return;
+        setCompanyMembers({
+          exp: data?.ids_members_exp || null,
+          imp: data?.ids_members_imp || null,
+          reg: data?.ids_members_reg || null,
+        });
+      } catch (err) {
+        console.error(
+          "Не вдалося завантажити налаштування аудиторії компанії",
+          err,
+        );
+        if (!cancelled) setCompanyMembers(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [idOwnerCompanyValue]);
+
+  const currentRouteKind = resolveRouteKind(watchedValues.tender_route || []);
+  const currentMemberSetting = currentRouteKind
+    ? companyMembers?.[currentRouteKind] || null
+    : null;
+  // Показуємо інформаційний бейдж лише коли аудиторія вже конкретна
+  // (ALL/MANAGER/CARRIER). Для CHOICE вибір відбувається в модалці при публікації.
+  const showAutoMembersBadge =
+    !isManagersOnlyDepartment &&
+    !!currentRouteKind &&
+    !!currentMemberSetting &&
+    currentMemberSetting !== "CHOICE";
+
+  const membersChoiceOptions = (() => {
+    const fromDictionary = tenderMembers.filter((o) => o.value !== "CHOICE");
+    return fromDictionary.length > 0
+      ? fromDictionary
+      : [
+          { value: "ALL", label: "Всі" },
+          { value: "CARRIER", label: "Перевізники" },
+          { value: "MANAGER", label: "Менеджери" },
+        ];
+  })();
+
   // Save draft on changes
   useEffect(() => {
     if (!isEdit) {
@@ -1845,7 +1944,53 @@ export default function TenderSaveForm({
     }
   }, [typeValue, setValue, clearErrors]);
 
+  // Хто приймає участь визначаємо за налаштуваннями компанії-замовника
+  // (ids_members_exp/imp/reg) для фактичного напрямку перевезення.
+  // Відділ "лише менеджери" завжди має пріоритет над цими налаштуваннями.
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
+    if (isManagersOnlyDepartment) {
+      await submitTender(values, "MANAGER");
+      return;
+    }
+
+    const routeKindForSubmit = resolveRouteKind(values.tender_route);
+    const memberSettingForSubmit = routeKindForSubmit
+      ? companyMembers?.[routeKindForSubmit] || null
+      : null;
+
+    if (!memberSettingForSubmit) {
+      setConfirmDialog({
+        open: true,
+        title: "Потрібне налаштування аудиторії",
+        description:
+          "Зверніться до комерційного відділу для внесення даного тендеру.",
+        confirmText: "Зрозуміло",
+        variant: "primary",
+        onConfirm: () => {},
+      });
+      return;
+    }
+
+    if (memberSettingForSubmit === "CHOICE") {
+      // Компанія дозволяє менеджеру самому обрати аудиторію — питаємо в модалці.
+      setMembersChoiceValue("ALL");
+      setMembersChoiceModal({ open: true, values });
+      return;
+    }
+
+    await submitTender(values, null);
+  };
+
+  const handleConfirmMembersChoice = async () => {
+    const pendingValues = membersChoiceModal.values;
+    setMembersChoiceModal({ open: false, values: null });
+    if (pendingValues) await submitTender(pendingValues, membersChoiceValue);
+  };
+
+  const submitTender = async (
+    values: TenderFormValues,
+    resolvedIdsMembers: "ALL" | "CARRIER" | "MANAGER" | null,
+  ) => {
     // Sanitization: Round all numeric fields to prevent database overflow
     const sanitizedValues = {
       ...values,
@@ -1874,8 +2019,7 @@ export default function TenderSaveForm({
 
     const payload = {
       ...sanitizedValues,
-      // Відділ "лише менеджери" не може виставляти тендер перевізникам/усім.
-      ids_members: isManagersOnlyDepartment ? "MANAGER" : values.ids_members,
+      ids_members: resolvedIdsMembers,
       tender_permission:
         values.tender_permission?.filter((p) => p && p.ids_permission_type) ||
         [],
@@ -2574,15 +2718,24 @@ export default function TenderSaveForm({
                             </span>
                           </div>
                         </div>
-                      ) : (
-                        <InputOption
-                          name="ids_members"
-                          control={control}
-                          label="ХТО ПРИЙМАЄ УЧАСТЬ"
-                          options={tenderMembers}
-                          icon={ShieldCheck}
-                        />
-                      )}
+                      ) : showAutoMembersBadge ? (
+                        <div className="mt-1.5 flex items-center gap-2.5 h-11 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/50 px-3.5">
+                          <ShieldCheck
+                            size={18}
+                            strokeWidth={2.2}
+                            className="text-indigo-600 shrink-0"
+                          />
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                              Хто приймає участь
+                            </span>
+                            <span className="text-[13px] font-medium text-slate-900 dark:text-white">
+                              Визначається автоматично за налаштуваннями
+                              компанії
+                            </span>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -2996,6 +3149,63 @@ export default function TenderSaveForm({
         confirmText={confirmDialog.confirmText}
         variant={confirmDialog.variant}
       />
+
+      <Dialog
+        open={membersChoiceModal.open}
+        onOpenChange={(open: boolean) =>
+          setMembersChoiceModal((p) => ({ ...p, open }))
+        }
+      >
+        <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem]">
+          <div className="p-8">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+                Хто приймає участь
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 dark:text-slate-400 text-[14px] leading-relaxed font-medium">
+                Компанія-замовник дозволяє обрати аудиторію цього тендеру
+                вручну. Оберіть, кому надіслати тендер.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Select
+              value={membersChoiceValue}
+              onValueChange={(v: any) => setMembersChoiceValue(v)}
+            >
+              <SelectTrigger className="h-12 rounded-xl border border-slate-200 shadow-sm text-sm font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {membersChoiceOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <DialogFooter className="flex gap-3 mt-6">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() =>
+                  setMembersChoiceModal({ open: false, values: null })
+                }
+                className="flex-1 h-12 rounded-2xl font-bold uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-white/5 hover:bg-slate-200"
+              >
+                Скасувати
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmMembersChoice}
+                className="flex-1 h-12 rounded-2xl font-bold uppercase tracking-wider text-[11px] text-white shadow-lg bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 transition-all active:scale-95"
+              >
+                Опублікувати
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
