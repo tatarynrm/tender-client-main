@@ -722,20 +722,20 @@ export function TenderCardManagers({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-center xl:justify-end">
-          {cargo.ids_members && (
+          {cargo.ids_members_calc && (
             <span
               className={cn(
                 "text-[10px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider flex items-center gap-1",
-                cargo.ids_members === "ALL"
+                cargo.ids_members_calc === "ALL"
                   ? "bg-emerald-100 text-emerald-600"
-                  : cargo.ids_members === "MANAGER"
+                  : cargo.ids_members_calc === "MANAGER"
                     ? "bg-rose-100 text-rose-600"
                     : "bg-sky-100 text-sky-600",
               )}
             >
-              {cargo.ids_members === "ALL"
+              {cargo.ids_members_calc === "ALL"
                 ? "Всі"
-                : cargo.ids_members === "MANAGER"
+                : cargo.ids_members_calc === "MANAGER"
                   ? "Лише менеджери"
                   : "Лише перевізники"}
             </span>
