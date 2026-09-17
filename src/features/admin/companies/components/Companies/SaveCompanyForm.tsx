@@ -35,7 +35,7 @@ const websiteRegex =
   /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
 
 const tenderMemberSchema = z
-  .union([z.enum(["ALL", "CARRIER", "MANAGER"]), z.literal("")])
+  .union([z.enum(["ALL", "CARRIER", "MANAGER", "CHOICE"]), z.literal("")])
   .nullable()
   .optional();
 
@@ -84,6 +84,7 @@ const tenderMemberOptions = [
   { label: "ALL (Всі)", value: "ALL" },
   { label: "CARRIER (Перевізники)", value: "CARRIER" },
   { label: "MANAGER (Менеджери)", value: "MANAGER" },
+  { label: "CHOICE (На вибір)", value: "CHOICE" },
 ];
 
 export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
@@ -100,7 +101,8 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
       edrpou:
         defaultValues?.edrpou && defaultValues.edrpou !== "null"
           ? defaultValues.edrpou.trim()
-          : defaultValues?.company_edrpou && defaultValues.company_edrpou !== "null"
+          : defaultValues?.company_edrpou &&
+              defaultValues.company_edrpou !== "null"
             ? defaultValues.company_edrpou.trim()
             : "",
       address: defaultValues?.address
@@ -321,9 +323,7 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
                         </div>
                         <div className="flex gap-3 text-[11px] text-slate-500 mt-0.5">
                           <span>ЄДРПОУ: {c.zkpo}</span>
-                          {c.nadr && (
-                            <span className="truncate">{c.nadr}</span>
-                          )}
+                          {c.nadr && <span className="truncate">{c.nadr}</span>}
                         </div>
                       </div>
                     ))
@@ -431,7 +431,8 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
             </div>
 
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
-              Виберіть види учасників для участі у відповідних напрямках тендерів (EXP / IMP / REG). За замовчуванням значення не обрано.
+              Виберіть види учасників для участі у відповідних напрямках
+              тендерів (EXP / IMP / REG). За замовчуванням значення не обрано.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
