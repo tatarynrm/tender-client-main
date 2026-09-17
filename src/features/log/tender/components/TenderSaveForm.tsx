@@ -1963,7 +1963,7 @@ export default function TenderSaveForm({
         open: true,
         title: "Потрібне налаштування аудиторії",
         description:
-          "Зверніться до комерційного відділу для внесення даного тендеру.",
+          "Зверніться до комерційного відділу для внесення додаткової інформації по цьому тендеру.",
         confirmText: "Зрозуміло",
         variant: "primary",
         onConfirm: () => {},
@@ -3163,8 +3163,8 @@ export default function TenderSaveForm({
                 Хто приймає участь
               </DialogTitle>
               <DialogDescription className="text-slate-500 dark:text-slate-400 text-[14px] leading-relaxed font-medium">
-                Компанія-замовник дозволяє обрати аудиторію цього тендеру
-                вручну. Оберіть, кому надіслати тендер.
+                Вам надано можливість обрати учасників цього тендеру.Зробіть
+                свій вибір.
               </DialogDescription>
             </DialogHeader>
 
