@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -1044,6 +1044,9 @@ export default function TenderSaveForm({
     imp: string | null;
     reg: string | null;
   } | null>(null);
+  // Лічильник примусового перечитування налаштувань аудиторії замовника —
+  // потрібен, коли шаблон підставляє ту саму компанію, що вже була обрана.
+  const [membersRefreshKey, setMembersRefreshKey] = useState(0);
   // Модалка вибору аудиторії, коли компанія має ids_members_* = CHOICE.
   const [membersChoiceModal, setMembersChoiceModal] = useState<{
     open: boolean;
@@ -1464,6 +1467,14 @@ export default function TenderSaveForm({
     if (notesText) setValue("notes", notesText);
     if (result.companyName) setCompanyLabel(result.companyName);
     else if (result.id_client) setCompanyLabel(getCompanyName(result));
+    // Шаблон зберігає id замовника (id_client) — повертаємо його у форму,
+    // інакше в полі видно лише назву, а компанія фактично не обрана.
+    if (result.id_client && Number(result.id_client)) {
+      setValue("id_owner_company", Number(result.id_client));
+    }
+    // Налаштування аудиторії замовника могли змінитись після збереження шаблону —
+    // перечитуємо їх навіть якщо id компанії не змінився.
+    setMembersRefreshKey((k) => k + 1);
 
     if (draftId) setActiveDraftId(draftId);
     else setActiveDraftId(null);
@@ -1741,8 +1752,24 @@ export default function TenderSaveForm({
     }
   }, [isManagersOnlyDepartment, setValue]);
 
-  // Підвантажуємо налаштування аудиторії компанії-замовника (ids_members_exp/imp/reg)
-  // щоразу, коли обрано/змінено компанію (ручний вибір, чернетка, редагування тендера).
+  // Налаштування аудиторії компанії-замовника (ids_members_exp/imp/reg).
+  // Їх веде комерційний відділ і може змінити, поки форма відкрита,
+  // тому читаємо завжди свіжими, а не лише один раз при виборі компанії.
+  const fetchCompanyMembers = useCallback(
+    async (companyId: number | null | undefined) => {
+      if (!companyId) return null;
+      const { data } = await api.get(`/company/${companyId}`);
+      return {
+        exp: (data?.ids_members_exp as string) || null,
+        imp: (data?.ids_members_imp as string) || null,
+        reg: (data?.ids_members_reg as string) || null,
+      };
+    },
+    [],
+  );
+
+  // Перечитуємо при зміні компанії (ручний вибір, чернетка, редагування),
+  // при застосуванні шаблону (membersRefreshKey) і при поверненні на вкладку.
   const idOwnerCompanyValue = watchedValues.id_owner_company;
   useEffect(() => {
     if (!idOwnerCompanyValue) {
@@ -1750,27 +1777,27 @@ export default function TenderSaveForm({
       return;
     }
     let cancelled = false;
-    (async () => {
-      try {
-        const { data } = await api.get(`/company/${idOwnerCompanyValue}`);
-        if (cancelled) return;
-        setCompanyMembers({
-          exp: data?.ids_members_exp || null,
-          imp: data?.ids_members_imp || null,
-          reg: data?.ids_members_reg || null,
-        });
-      } catch (err) {
+    fetchCompanyMembers(idOwnerCompanyValue)
+      .then((members) => {
+        if (!cancelled) setCompanyMembers(members);
+      })
+      .catch((err) => {
         console.error(
           "Не вдалося завантажити налаштування аудиторії компанії",
           err,
         );
         if (!cancelled) setCompanyMembers(null);
-      }
-    })();
+      });
     return () => {
       cancelled = true;
     };
-  }, [idOwnerCompanyValue]);
+  }, [idOwnerCompanyValue, membersRefreshKey, fetchCompanyMembers]);
+
+  useEffect(() => {
+    const onFocus = () => setMembersRefreshKey((k) => k + 1);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   const currentRouteKind = resolveRouteKind(watchedValues.tender_route || []);
   const currentMemberSetting = currentRouteKind
@@ -1953,9 +1980,35 @@ export default function TenderSaveForm({
       return;
     }
 
+    if (!values.id_owner_company) {
+      setConfirmDialog({
+        open: true,
+        title: "Не обрано замовника",
+        description:
+          "Оберіть компанію-замовника зі списку — від її налаштувань залежить, хто зможе брати участь у тендері.",
+        confirmText: "Зрозуміло",
+        variant: "primary",
+        onConfirm: () => {},
+      });
+      return;
+    }
+
+    // Перед публікацією завжди беремо свіжі налаштування аудиторії з сервера:
+    // шаблон або давно відкрита форма можуть містити застарілі дані.
+    let membersForSubmit = companyMembers;
+    try {
+      membersForSubmit = await fetchCompanyMembers(values.id_owner_company);
+      setCompanyMembers(membersForSubmit);
+    } catch (err) {
+      console.error(
+        "Не вдалося оновити налаштування аудиторії перед публікацією",
+        err,
+      );
+    }
+
     const routeKindForSubmit = resolveRouteKind(values.tender_route);
     const memberSettingForSubmit = routeKindForSubmit
-      ? companyMembers?.[routeKindForSubmit] || null
+      ? membersForSubmit?.[routeKindForSubmit] || null
       : null;
 
     if (!memberSettingForSubmit) {
