@@ -223,7 +223,10 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
       <div className="grid grid-cols-12 gap-4 flex-1 min-h-0 lg:overflow-hidden">
         {/* LEFT COLUMN (9 cols) - Content that can scroll if needed */}
         <div className="col-span-12 lg:col-span-9 flex flex-col gap-4 lg:overflow-y-auto pr-1 custom-scrollbar pb-4">
-          {/* STATS ROW */}
+          {/* STATS ROW — лише для редукціону та редукціону з викупом.
+              В аукціоні ставки закриті: виграшну ставку, кількість ставок,
+              крок і стартову ціну перевізнику не показуємо. */}
+          {tender.ids_type !== "AUCTION" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="flex items-center h-20 rounded-[1.5rem] border-2 border-indigo-500/20 bg-indigo-50/20 dark:bg-indigo-900/10 p-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-indigo-200 bg-white dark:bg-slate-800 text-indigo-500 shadow-sm shrink-0">
@@ -272,6 +275,7 @@ export default function TenderFullPage({ tenderId }: { tenderId: number }) {
               </div>
             </div>
           </div>
+          )}
 
           {/* INFO & CONTACTS ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
