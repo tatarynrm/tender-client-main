@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { GraduationCap, Plus, User, Video } from "lucide-react";
+import { GraduationCap, Info, Plus, User, Video } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -66,6 +66,18 @@ export default function TrainingPage({ isAdmin, viewerLabel }: Props) {
             <Plus className="h-4 w-4" /> Завантажити відео
           </Button>
         )}
+      </div>
+
+      <div
+        role="note"
+        className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+      >
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+        <p>
+          <span className="font-semibold">Зверніть увагу:</span> усі цифри, назви та інші дані, які ви
+          побачите у відео під час створення заявок і пропозицій, повністю вигадані. Ми використовували їх
+          лише як приклад.
+        </p>
       </div>
 
       {isLoading ? (
