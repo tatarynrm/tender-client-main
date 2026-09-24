@@ -138,7 +138,7 @@ export const GroupedDistributionChart = ({
             />
             <Legend
               verticalAlign="top"
-              align="right"
+              align="left"
               iconType="circle"
               iconSize={6}
               wrapperStyle={{
@@ -147,6 +147,8 @@ export const GroupedDistributionChart = ({
                 textTransform: "uppercase",
                 letterSpacing: "0.1em",
                 paddingBottom: "40px",
+                // Компенсує від'ємний margin.left у BarChart — інакше «В роботі» обрізається
+                paddingLeft: "40px",
               }}
             />
             // У вашому файлі з чартом змініть бари так:

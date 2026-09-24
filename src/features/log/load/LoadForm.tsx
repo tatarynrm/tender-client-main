@@ -1755,7 +1755,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
                     <input
                       type="text"
-                      placeholder="Пошук..."
+                      placeholder="Введіть маршрут"
                       className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl py-2 pl-9 pr-3 text-xs outline-none focus:ring-1 focus:ring-indigo-500"
                       value={draftSearch}
                       onChange={(e) => setDraftSearch(e.target.value)}

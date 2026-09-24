@@ -272,9 +272,7 @@ export const TenderFiltersSheet = <T extends Filters>({
                     label="Хто бачить"
                     value={filters.members}
                     onChange={(v) => updateField("members", v)}
-                    options={dropdowns?.tender_members?.filter(
-                      (m) => m.ids !== "ALL",
-                    )}
+                    options={dropdowns?.tender_members}
                     placeholder="Будь-який"
                   />
                 </div>
