@@ -3,7 +3,6 @@
 import { useRef, useEffect, useState } from "react";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Popup,
   Polyline,
@@ -11,6 +10,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { BaseTileLayer } from "@/shared/components/Map/BaseTileLayer";
 import { LoadApiItem } from "../../types/load.type";
 
 // Іконки
@@ -81,7 +81,7 @@ export function CargoMap({ cargo }: { cargo: LoadApiItem }) {
         className="w-full h-full"
         ref={mapRef}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+        <BaseTileLayer />
 
         <SetBounds points={allWaypoints} />
 

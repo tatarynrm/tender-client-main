@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
+import { BaseTileLayer } from "@/shared/components/Map/BaseTileLayer";
 import { ITenderRoute } from "../../types/tender.type";
 
 // Фікс іконок Leaflet для Next.js
@@ -106,11 +107,7 @@ export const TenderMap = ({ points, captureId, onReady }: TenderMapProps) => {
         className="h-full w-full"
         zoomControl={false}
       >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" // Сучасна світла карта CartoDB
-          crossOrigin="anonymous"
-          attribution='&copy; <a href="https://carto.com/">Carto</a>'
-        />
+        <BaseTileLayer crossOrigin="anonymous" />
         <RoutingMachine points={validPoints} onReady={onReady} />
         {validPoints.map((p) => (
           <Marker key={p.id} position={[p.lat, p.lon]}>

@@ -1,13 +1,13 @@
 "use client";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Popup,
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { BaseTileLayer } from "./BaseTileLayer";
 export interface Location {
   id: string;
   lat: number;
@@ -47,10 +47,7 @@ export default function LogiMap({
       zoomControl={false}
       style={{ height: "100%", width: "100%" }}
     >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" // Світла лаконічна карта
-        attribution="&copy; OpenStreetMap"
-      />
+      <BaseTileLayer />
 
       <ZoomControl position="bottomright" />
 
