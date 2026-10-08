@@ -190,15 +190,19 @@ const tenderFormSchema = z
     ref_temperature_to: z.number().optional().nullable(),
     ref_temperature_from: z.number().optional().nullable(),
     time_start: z.date({ message: "Вкажіть дату початку тендеру" }),
-    time_end: z
-      .date({ message: "Вкажіть дату завершення тендеру" })
-      .optional()
-      .nullable(),
+    time_end: z.date({ message: "Вкажіть дату завершення тендеру" }),
     date_load: z.date({ message: "Вкажіть дату завантаження" }),
     date_load2: z.date().optional().nullable(),
     date_unload: z.date().optional().nullable(),
   })
   .superRefine((data, ctx) => {
+    if (data.time_start && data.time_end && data.time_end <= data.time_start) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Кінець має бути пізніше за початок",
+        path: ["time_end"],
+      });
+    }
     if (
       data.ids_type === "REDUCTION" ||
       data.ids_type === "REDUCTION_WITH_REDEMPTION"
@@ -2813,6 +2817,7 @@ export default function TenderSaveForm({
                         name="time_end"
                         control={control}
                         label="КІНЕЦЬ"
+                        required
                       />
                     </div>
                   </div>
