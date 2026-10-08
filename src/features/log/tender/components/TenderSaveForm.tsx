@@ -158,7 +158,10 @@ const tenderFormSchema = z
       .min(1, "Вантаж обов'язковий")
       .max(25, "Максимум 25 символів"),
     notes: z.string().optional(),
-    id_owner_company: z.number().nullable(),
+    id_owner_company: z
+      .number({ message: "Оберіть компанію-замовника" })
+      .nullable()
+      .refine((v) => !!v, "Оберіть компанію-замовника"),
     car_count: z.number().min(1, "Мінімум 1 авто"),
     price_start: z.number().optional(),
     price_step: z.number({ message: "Вкажіть крок ставки" }).optional(),
@@ -2754,6 +2757,7 @@ export default function TenderSaveForm({
                         name="id_owner_company"
                         control={control}
                         label="КОМПАНІЯ ЗАМОВНИК"
+                        required
                         initialLabel={companyLabel}
                         onEntityChange={(c) => setCompanyLabel(c?.name || "")}
                       />
