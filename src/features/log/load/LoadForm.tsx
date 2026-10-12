@@ -681,6 +681,16 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
   } = form;
   const formValues = watch();
 
+  // Редагування заявки, створеної в попередні дні: к-сть машин змінюється
+  // лише окремими діями «Додати/Зняти машини», а не через форму.
+  const isCarCountLocked = useMemo(() => {
+    const created = defaultValues?.created_at;
+    if (!created) return false;
+    const createdAt = new Date(created);
+    if (isNaN(createdAt.getTime())) return false;
+    return createdAt.toDateString() !== new Date().toDateString();
+  }, [defaultValues]);
+
   const {
     fields: fromFields,
     append: appendFrom,
@@ -2119,6 +2129,7 @@ export default function LoadForm({ defaultValues }: LoadFormProps) {
                       label="К-сть машин"
                       icon={Truck}
                       required
+                      disabled={isCarCountLocked}
                     />
                     <InputFinance
                       name="price"
