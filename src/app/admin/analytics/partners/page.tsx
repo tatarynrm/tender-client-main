@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Звіт про входи компаній-партнерів (зовнішні admin/manager) за період.",
 };
-
+console.log("PartnersActivityPage");
 export default async function PartnersActivityPage() {
   const profile = await getProfile();
 
