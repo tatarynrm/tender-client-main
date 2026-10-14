@@ -43,6 +43,7 @@ export const AnalyzeActions = ({
       {isStatusModalOpen && (
         <StatusPickerModal
           tenderId={tender.id}
+          tender={tender}
           onClose={() => {
             // Спершу закриваємо модалку в стейті цього компонента
             setIsStatusModalOpen(false);

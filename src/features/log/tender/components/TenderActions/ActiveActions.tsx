@@ -67,6 +67,7 @@ export const ActiveActions = ({
       {isStatusModalOpen && (
         <StatusPickerModal
           tenderId={tender.id}
+          tender={tender}
           onClose={() => {
             setIsStatusModalOpen(false);
             setTimeout(() => {

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 interface UpdateStatusPayload {
   id: string;
   ids_status: string;
+  notes?: string;
 }
 
 export const useUpdateTenderStatus = () => {

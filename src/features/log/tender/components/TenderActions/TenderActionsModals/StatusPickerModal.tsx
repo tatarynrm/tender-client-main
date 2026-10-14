@@ -9,14 +9,38 @@ import { useUpdateTenderStatus } from "@/features/log/hooks/useUpdateTenderStatu
 
 export const StatusPickerModal = ({
   tenderId,
+  tender,
   onClose,
 }: {
   tenderId: string;
+  tender?: any;
   onClose: () => void;
 }) => {
   const [mounted, setMounted] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<any>(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  // car_count — скільки авто потрібно; car_count_closed — віддано переможцям;
+  // car_count_actual — вже готовий залишок (car_count - car_count_closed).
+  // Після закриття/архіву залишок БД переносить у car_count_canceled, а actual = 0
+  const carsTotal = Number(tender?.car_count ?? 1);
+  const carsClosed =
+    tender?.car_count_closed != null
+      ? Number(tender.car_count_closed)
+      : (tender?.rate_company ?? []).reduce(
+          (sum: number, rate: any) => sum + (Number(rate.car_count_winner) || 0),
+          0,
+        );
+  const carsLeft =
+    tender?.car_count_actual != null
+      ? Number(tender.car_count_actual) + (Number(tender.car_count_canceled) || 0)
+      : Math.max(0, carsTotal - carsClosed);
+  // Завершення або архів з незакритими авто — примітка обов'язкова
+  const isFinalStatus =
+    selectedStatus?.ids === "CLOSED" || selectedStatus?.ids === "ARCHIVE";
+  const notesRequired = isFinalStatus && carsLeft > 0;
+  const notesMissing = notesRequired && !notes.trim();
 
   const { tenderFilters } = useTenderManagersFormData();
   const { mutateAsync: updateStatus, isPending } = useUpdateTenderStatus();
@@ -32,11 +56,12 @@ export const StatusPickerModal = ({
   if (!mounted) return null;
 
   const handleProcessUpdate = async () => {
-    if (!selectedStatus || isPending) return;
+    if (!selectedStatus || isPending || notesMissing) return;
     try {
       await updateStatus({
         id: tenderId,
         ids_status: selectedStatus.ids,
+        ...(notesRequired ? { notes: notes.trim() } : {}),
       });
       onClose();
     } catch (error) {
@@ -48,8 +73,9 @@ export const StatusPickerModal = ({
     e.stopPropagation();
     e.preventDefault();
     
-    // Якщо вибрано статус "Завершено" (CLOSED) - показуємо додаткове попередження
-    if (selectedStatus?.ids === "CLOSED") {
+    // "Завершено" (CLOSED) - завжди додаткове попередження;
+    // "Архів" - лише коли є незакриті авто і треба вписати примітку
+    if (selectedStatus?.ids === "CLOSED" || notesRequired) {
       setShowCloseConfirm(true);
     } else {
       handleProcessUpdate();
@@ -154,31 +180,54 @@ export const StatusPickerModal = ({
             </div>
 
             <h3 className="text-xl font-black mb-3 text-zinc-900 dark:text-zinc-100 text-center">
-              Завершити тендер?
+              {selectedStatus?.ids === "ARCHIVE" ? "Архівувати тендер?" : "Завершити тендер?"}
             </h3>
-            
+
             <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/20 p-4 rounded-2xl mb-8">
                 <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-400 font-medium text-center">
-                    Якщо ви зараз зробите цю дію, цей тендер буде вважатись закритим і ви вже <span className="font-black underline">не зможете</span> обрати знову переможців по ньому.
+                    {selectedStatus?.ids === "ARCHIVE"
+                      ? "Тендер буде переміщено в архів, а незакриті авто залишаться без переможця."
+                      : <>Якщо ви зараз зробите цю дію, цей тендер буде вважатись закритим і ви вже <span className="font-black underline">не зможете</span> обрати знову переможців по ньому.</>}
                 </p>
             </div>
+
+            {notesRequired && (
+              <div className="mb-6">
+                <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+                  Закрито {carsClosed} з {carsTotal} авто, не закрито: {carsLeft}.
+                  Вкажіть примітку <span className="text-red-500">*</span>
+                </p>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={isPending}
+                  rows={3}
+                  placeholder="Наприклад: 2 авто закрито, 1 не вдалось закрити в цьому тендері"
+                  className="w-full resize-none rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-white/5 p-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+            )}
 
             <div className="space-y-3">
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isPending || notesMissing}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleProcessUpdate();
                 }}
-                className="w-full h-14 rounded-2xl font-black bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full h-14 rounded-2xl font-black bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    <span>Так, завершити остаточно</span>
+                    <span>
+                      {selectedStatus?.ids === "ARCHIVE"
+                        ? "Так, архівувати"
+                        : "Так, завершити остаточно"}
+                    </span>
                   </>
                 )}
               </button>
