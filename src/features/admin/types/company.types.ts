@@ -20,6 +20,10 @@ export interface ICompany {
   rating: number | null;
   ids_carrier_rating: CarrierRating;
 
+  // Зв'язок з Oracle
+  migrate_id?: number | string | null;
+  migrate_company?: string | null;
+
   // Tender members
   ids_members_exp?: TenderMemberType | null;
   ids_members_imp?: TenderMemberType | null;

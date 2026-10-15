@@ -66,6 +66,9 @@ const companySchema = z.object({
   ids_members_exp: tenderMemberSchema,
   ids_members_imp: tenderMemberSchema,
   ids_members_reg: tenderMemberSchema,
+  // Зв'язок з Oracle: kod компанії з реєстру та джерело міграції
+  migrate_id: z.number().nullable().optional(),
+  migrate_company: z.string().nullable().optional(),
 });
 type CompanyFormValues = z.infer<typeof companySchema>;
 
@@ -123,6 +126,11 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
       ids_members_exp: defaultValues?.ids_members_exp ?? null,
       ids_members_imp: defaultValues?.ids_members_imp ?? null,
       ids_members_reg: defaultValues?.ids_members_reg ?? null,
+      migrate_id:
+        defaultValues?.migrate_id != null && defaultValues.migrate_id !== ""
+          ? Number(defaultValues.migrate_id)
+          : null,
+      migrate_company: defaultValues?.migrate_company ?? null,
     }),
     [defaultValues],
   );
@@ -202,10 +210,15 @@ export default function SaveCompanyForm({ defaultValues }: CompanyFormProps) {
   }, [debouncedOracleQuery]);
 
   // Автозаповнення форми з обраної компанії Oracle:
-  // zkpo → ЄДРПОУ, nur → назви, nadr → адреса.
+  // zkpo → ЄДРПОУ, nur → назви, nadr → адреса,
+  // kod → migrate_id (код в Oracle), migrate_company → "ICT".
   const handleSelectOracleCompany = (company: any) => {
     const opts = { shouldValidate: true, shouldDirty: true } as const;
     const name = company.nur || company.fo || "";
+    if (company.kod != null && !Number.isNaN(Number(company.kod))) {
+      setValue("migrate_id", Number(company.kod), opts);
+      setValue("migrate_company", "ICT", opts);
+    }
     if (company.zkpo) setValue("edrpou", String(company.zkpo), opts);
     if (name) {
       setValue("company_name", name, opts);
