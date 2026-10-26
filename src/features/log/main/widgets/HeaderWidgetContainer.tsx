@@ -4,7 +4,7 @@ import React from "react";
 import { DateTimeWidget } from "./DateTimeWidget";
 import { WeatherWidget } from "./WeatherWidget";
 import { CurrencyWidget } from "./CurrencyWidget";
-import { AirAlarmWidget } from "./AirAlarmWidget";
+import { AirAlertWidget } from "@/features/air-alert/components/AirAlertWidget";
 import { FuelWidget } from "./FuelWidget";
 
 export const HeaderWidgetContainer = () => {
@@ -29,7 +29,7 @@ export const HeaderWidgetContainer = () => {
       </div> */}
 
       <div className="w-full lg:w-auto">
-        <AirAlarmWidget />
+        <AirAlertWidget />
       </div>
     </div>
   );
