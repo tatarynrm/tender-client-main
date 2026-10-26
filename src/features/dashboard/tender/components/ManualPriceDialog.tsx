@@ -10,6 +10,7 @@ export function ManualPriceDialog({
   onConfirm,
   currentPrice,
   currentValut,
+  isAuction = false,
 }: any) {
   const [price, setPrice] = useState<string | number>(currentPrice || "");
   const [notes, setNotes] = useState("");
@@ -22,8 +23,13 @@ export function ManualPriceDialog({
     setShowConfirmStep(false);
   }, [currentPrice]);
 
+  // В аукціоні ставка може бути будь-якою (і вищою, і нижчою за попередню),
+  // тому ліміт і перевірка «занадто висока» діють лише в редукціоні.
   const hasLimit =
-    currentPrice !== undefined && currentPrice !== null && currentPrice > 0;
+    !isAuction &&
+    currentPrice !== undefined &&
+    currentPrice !== null &&
+    currentPrice > 0;
 
   const isPriceTooHigh = hasLimit && Number(price) > currentPrice;
   const isPriceInvalid = !price || Number(price) <= 0 || isPriceTooHigh;

@@ -85,6 +85,7 @@ export function TenderCardClients({
         currentPrice={myPrice || cargo.price_proposed || cargo.price_start}
         onConfirm={onManualPrice}
         currentValut={cargo.valut_name}
+        isAuction={cargo.ids_type === "AUCTION"}
       />,
       { size: "md" },
     );
