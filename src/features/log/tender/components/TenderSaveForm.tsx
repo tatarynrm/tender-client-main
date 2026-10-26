@@ -150,7 +150,7 @@ const tenderPermissionSchema = z.object({
   ids_permission_type: z.string().optional(),
 });
 
-const tenderFormSchema = z
+export const tenderFormSchema = z
   .object({
     id: z.number().optional(),
     cargo: z

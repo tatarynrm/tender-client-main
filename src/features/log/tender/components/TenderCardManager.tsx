@@ -27,6 +27,8 @@ import {
   Zap,
   AlertTriangle,
   MousePointerClick,
+  Copy,
+  Loader2,
 } from "lucide-react";
 
 // Тимчасова підказка "клікабельний замовник" — прибрати після 2026-08-13
@@ -57,6 +59,10 @@ import { getCurrencySymbol } from "@/shared/utils/currency.utils";
 import { FaMoneyBill } from "react-icons/fa";
 
 import { MyTooltip } from "@/shared/components/Tooltips/MyTooltip";
+import api from "@/shared/api/instance.api";
+import { toast } from "sonner";
+import { CopyTenderWizard } from "../copy/CopyTenderWizard";
+import { InfoButton, CopyTenderInfoModal } from "@/shared/components/InfoModals";
 
 export function TenderCardManagers({
   cargo,
@@ -192,6 +198,32 @@ export function TenderCardManagers({
       />,
       { size: "md" },
     );
+  };
+
+  const [isCopyLoading, setIsCopyLoading] = React.useState(false);
+  const handleCopyTender = async () => {
+    if (isCopyLoading) return;
+    setIsCopyLoading(true);
+    try {
+      // Підвантажуємо ПОВНИЙ тендер — у картці може не бути всіх полів створення.
+      const { data } = await api.get(`/tender/${cargo.id}`);
+      const content = (data as any)?.content;
+      const source = Array.isArray(content) ? content[0] : content;
+      if (!source) {
+        toast.error("Не вдалося завантажити тендер для копіювання");
+        return;
+      }
+      openModal(<CopyTenderWizard source={source} />, {
+        size: "lg",
+        title: "Повторити тендер",
+        preventCloseOnOutsideClick: true,
+      });
+    } catch (e) {
+      console.error("Помилка завантаження тендера для копії", e);
+      toast.error("Не вдалося завантажити тендер");
+    } finally {
+      setIsCopyLoading(false);
+    }
   };
 
   const handleBuyoutConfirm = () => {
@@ -769,6 +801,33 @@ export function TenderCardManagers({
           <span className="text-zinc-400 font-medium">
             публікація {formatTenderDate(cargo.time_start)}
           </span>
+
+          {isAuthor && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopyTender();
+                }}
+                disabled={isCopyLoading}
+                title="Повторити тендер (створити копію)"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 transition-colors disabled:opacity-60"
+              >
+                {isCopyLoading ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Copy size={13} />
+                )}
+                Копіювати
+              </button>
+              <InfoButton
+                view={<CopyTenderInfoModal />}
+                title="Як працює копіювання тендера"
+                iconSize={15}
+              />
+            </div>
+          )}
         </div>
       </div>
 
