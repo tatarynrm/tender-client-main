@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useController, Control, FieldValues, Path } from "react-hook-form";
 import {
   format,
@@ -56,6 +56,21 @@ export const InputDateWithTime = <T extends FieldValues>({
 
   const [isOpen, setIsOpen] = useState(false);
   const value = field.value as unknown;
+
+  // Якщо інпут усередині модалки (Radix Dialog) — портаємо попап у вузол діалогу,
+  // інакше react-remove-scroll блокує прокрутку списку часу. Поза модалкою — body.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null,
+  );
+  useEffect(() => {
+    if (isOpen) {
+      const dialog = rootRef.current?.closest(
+        '[role="dialog"]',
+      ) as HTMLElement | null;
+      setPortalContainer(dialog);
+    }
+  }, [isOpen]);
 
   const selectedDate =
     value instanceof Date
@@ -124,6 +139,7 @@ export const InputDateWithTime = <T extends FieldValues>({
 
   return (
     <div
+      ref={rootRef}
       className={cn("flex flex-col w-full relative", className)}
     >
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -200,7 +216,8 @@ export const InputDateWithTime = <T extends FieldValues>({
           side="bottom"
           align="start"
           sideOffset={8}
-          className="z-[10001] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
+          container={portalContainer}
+          className="z-[10050] w-fit min-w-[340px] bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-0 overflow-hidden"
         >
           <div className="flex divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800">
             <div className="p-4">
@@ -243,7 +260,7 @@ export const InputDateWithTime = <T extends FieldValues>({
               </div>
 
               <div className="flex h-[240px] overflow-hidden">
-                <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide border-r border-zinc-100 dark:border-zinc-800">
+                <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar overscroll-contain border-r border-zinc-100 dark:border-zinc-800">
                   {Array.from({ length: 24 }).map((_, i) => (
                     <button
                       key={i}
@@ -261,7 +278,7 @@ export const InputDateWithTime = <T extends FieldValues>({
                   ))}
                 </div>
 
-                <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+                <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar overscroll-contain">
                   {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
                     <button
                       key={m}

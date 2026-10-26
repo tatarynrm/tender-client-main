@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -21,9 +21,11 @@ import { CITY_TO_REGION } from "../data/regions";
 import {
   loadSettings,
   saveSettings,
+  getLastAlert,
+  setLastAlert,
   type AirAlertSettings,
 } from "../lib/storage";
-import { playAlarm, playClear } from "../lib/alarmSound";
+import { playAlarm, playClear, armAudio } from "../lib/alarmSound";
 
 const NEPTUN_URL = "https://neptun.in.ua/";
 
@@ -39,8 +41,10 @@ export const AirAlertWidget = () => {
   const regions = data?.regions ?? {};
 
   // підтягнути збережені налаштування після монтування (localStorage)
+  // і розблокувати звук на першому ж жесті користувача.
   useEffect(() => {
     setSettings(loadSettings());
+    armAudio();
   }, []);
 
   const update = (patch: Partial<AirAlertSettings>) => {
@@ -55,25 +59,30 @@ export const AirAlertWidget = () => {
     ? Boolean(regions[settings.region])
     : undefined;
 
-  // --- Детектор зміни стану по обраній області: сповіщення + звук ---
-  const prevRef = useRef<boolean | null>(null);
+  // --- Детектор стану по обраній області: сповіщення + звук ---
+  // Останній "оголошений" стан тримаємо в localStorage (getLastAlert/setLastAlert),
+  // тож тривога озвучується і коли вона ВЖЕ активна на момент заходу/вибору міста,
+  // але не повторюється при переходах між сторінками, доки стан не зміниться.
   useEffect(() => {
     if (!settings.region || !data) return;
     const now = Boolean(regions[settings.region]);
-    const prev = prevRef.current;
-    prevRef.current = now;
-    if (prev === null || prev === now) return; // перший замір або без зміни
+    const last = getLastAlert(settings.region);
+    if (last === now) return; // стан не змінився з минулого разу — тиша
 
     if (now) {
+      // тривога (нова або вже активна, яку ще не озвучували для цього міста)
       if (settings.soundOn) playAlarm();
-      if (settings.notifyOn && typeof Notification !== "undefined") {
-        if (Notification.permission === "granted") {
-          new Notification("🚨 Повітряна тривога", {
-            body: `${settings.city}: оголошено тривогу. Пройдіть в укриття.`,
-          });
-        }
+      if (
+        settings.notifyOn &&
+        typeof Notification !== "undefined" &&
+        Notification.permission === "granted"
+      ) {
+        new Notification("🚨 Повітряна тривога", {
+          body: `${settings.city}: оголошено тривогу. Пройдіть в укриття.`,
+        });
       }
-    } else {
+    } else if (last === true) {
+      // відбій озвучуємо лише якщо раніше справді була тривога
       if (settings.soundOn) playClear();
       if (
         settings.notifyOn &&
@@ -85,6 +94,8 @@ export const AirAlertWidget = () => {
         });
       }
     }
+
+    setLastAlert(settings.region, now);
   }, [data, regions, settings.region, settings.city, settings.soundOn, settings.notifyOn]);
 
   const enableNotifications = () => {
@@ -248,7 +259,6 @@ export const AirAlertWidget = () => {
                             <button
                               key={c.city}
                               onClick={() => {
-                                prevRef.current = null; // скинути детектор при зміні міста
                                 update({ city: c.city, region: c.region });
                                 setPickerOpen(false);
                                 setSearch("");

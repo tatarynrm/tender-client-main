@@ -1,6 +1,27 @@
 // Звук тривоги/відбою через WebAudio — без зовнішнього аудіофайлу.
 
 let ctx: AudioContext | null = null;
+let armed = false;
+
+/**
+ * Розблоковує WebAudio: браузери тримають AudioContext "suspended", доки
+ * користувач не зробить перший жест на сторінці. Викликаємо один раз при
+ * монтуванні віджета — і до моменту тривоги контекст уже буде готовий грати.
+ */
+export function armAudio(): void {
+  if (typeof window === "undefined" || armed) return;
+  armed = true;
+  const unlock = () => {
+    const ac = getCtx();
+    if (ac && ac.state === "suspended") void ac.resume();
+    window.removeEventListener("pointerdown", unlock);
+    window.removeEventListener("keydown", unlock);
+    window.removeEventListener("touchstart", unlock);
+  };
+  window.addEventListener("pointerdown", unlock);
+  window.addEventListener("keydown", unlock);
+  window.addEventListener("touchstart", unlock);
+}
 
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;

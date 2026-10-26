@@ -215,6 +215,7 @@ export function TenderCardManagers({
       }
       openModal(<CopyTenderWizard source={source} />, {
         size: "lg",
+        className: "sm:max-w-2xl",
         title: "Повторити тендер",
         preventCloseOnOutsideClick: true,
       });

@@ -39,3 +39,33 @@ export function saveSettings(s: AirAlertSettings): void {
     /* приватний режим / квота — ігноруємо, віджет працює без збереження */
   }
 }
+
+// --- Останній "оголошений" стан тривоги по області ---
+// Потрібен, щоб: (а) озвучити тривогу, яка вже активна, коли людина щойно
+// задала місто чи відкрила сторінку; (б) не програвати сигнал повторно при
+// кожному переході між сторінками, доки стан не змінився.
+const LAST_KEY = "ict_air_alert_last";
+
+export function getLastAlert(region: string): boolean | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LAST_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, boolean>;
+    return region in map ? Boolean(map[region]) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setLastAlert(region: string, active: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(LAST_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, boolean>) : {};
+    map[region] = active;
+    window.localStorage.setItem(LAST_KEY, JSON.stringify(map));
+  } catch {
+    /* ігноруємо */
+  }
+}

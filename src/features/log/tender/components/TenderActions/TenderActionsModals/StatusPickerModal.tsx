@@ -57,6 +57,8 @@ export const StatusPickerModal = ({
 
   const handleProcessUpdate = async () => {
     if (!selectedStatus || isPending || notesMissing) return;
+    // За розпорядженням керівництва переводити тендер у чернетки заборонено.
+    if (selectedStatus.ids === "DRAFT") return;
     try {
       await updateStatus({
         id: tenderId,
@@ -106,7 +108,9 @@ export const StatusPickerModal = ({
             </p>
 
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300">
-              {tenderFilters?.tender_status_dropdown?.map((status: any) => (
+              {tenderFilters?.tender_status_dropdown
+                ?.filter((status: any) => status.ids !== "DRAFT")
+                .map((status: any) => (
                 <button
                   key={status.ids}
                   type="button"
