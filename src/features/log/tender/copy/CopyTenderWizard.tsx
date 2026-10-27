@@ -61,13 +61,17 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
     return base;
   }, [source?.ids_valut]);
 
+  // Для копії час проведення за замовчуванням: старт — зараз, кінець — +1 доба.
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
   const { control, register, getValues, trigger } = useForm<WizardValues>({
       defaultValues: {
         date_load: toDate(source?.date_load),
         date_load2: toDate(source?.date_load2),
         date_unload: toDate(source?.date_unload),
-        time_start: toDate(source?.time_start),
-        time_end: toDate(source?.time_end),
+        time_start: now,
+        time_end: tomorrow,
         ids_valut: source?.ids_valut || "UAH",
         price_start: source?.price_start ?? undefined,
         price_step: source?.price_step ?? undefined,

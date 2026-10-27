@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { StatusPickerModal } from "./TenderActionsModals/StatusPickerModal";
-import { ProlongationModal } from "./TenderActionsModals/ProlongationModal";
 
 interface ActionsProps {
   tender: any;
@@ -20,24 +19,9 @@ export const AnalyzeActions = ({
   onClose,
 }: ActionsProps) => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [isProlongModalOpen, setIsProlongModalOpen] = useState(false);
 
   return (
     <>
-      {/* Пролонгація доступна лише в розділі «Аналіз». Часових рамок немає. */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsProlongModalOpen(true);
-          // НЕ викликаємо onClose() тут, інакше модалка зникне разом з меню.
-        }}
-        className={cn(itemClass, "text-indigo-600")}
-      >
-        <Clock size={config.icon - 2} />
-        <span className={textClass}>Продовжити</span>
-      </button>
-
       <button
         onClick={(e) => {
           e.preventDefault();
@@ -50,18 +34,6 @@ export const AnalyzeActions = ({
         <CheckCircle2 size={config.icon - 2} />
         <span className={textClass}>Вказати статус</span>
       </button>
-
-      {isProlongModalOpen && (
-        <ProlongationModal
-          tender={tender}
-          onClose={() => {
-            setIsProlongModalOpen(false);
-            setTimeout(() => {
-              onClose();
-            }, 100);
-          }}
-        />
-      )}
 
       {isStatusModalOpen && (
         <StatusPickerModal

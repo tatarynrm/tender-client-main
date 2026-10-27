@@ -29,6 +29,7 @@ import {
   MousePointerClick,
   Copy,
   Loader2,
+  Clock,
 } from "lucide-react";
 
 // Тимчасова підказка "клікабельний замовник" — прибрати після 2026-08-13
@@ -63,6 +64,7 @@ import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
 import { CopyTenderWizard } from "../copy/CopyTenderWizard";
 import { InfoButton, CopyTenderInfoModal } from "@/shared/components/InfoModals";
+import { ProlongationModal } from "./TenderActions/TenderActionsModals/ProlongationModal";
 
 export function TenderCardManagers({
   cargo,
@@ -80,6 +82,7 @@ export function TenderCardManagers({
     useTenderDelWinner();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
+  const [isProlongOpen, setIsProlongOpen] = React.useState(false);
   const [statsCompanyName, setStatsCompanyName] = React.useState<string | null>(null);
   const showCustomerHint = React.useMemo(
     () => new Date() < CUSTOMER_HINT_EXPIRY,
@@ -803,6 +806,22 @@ export function TenderCardManagers({
             публікація {formatTenderDate(cargo.time_start)}
           </span>
 
+          {/* Продовження терміну — лише в розділі «Аналіз», без обмежень по часу */}
+          {cargo.ids_status === "ANALYZE" && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsProlongOpen(true);
+              }}
+              title="Продовжити термін тендера"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-colors"
+            >
+              <Clock size={13} />
+              Продовжити
+            </button>
+          )}
+
           {isAuthor && (
             <div className="flex items-center gap-1.5">
               <button
@@ -853,6 +872,13 @@ export function TenderCardManagers({
         companyName={statsCompanyName}
         onClose={() => setStatsCompanyName(null)}
       />
+
+      {isProlongOpen && (
+        <ProlongationModal
+          tender={cargo}
+          onClose={() => setIsProlongOpen(false)}
+        />
+      )}
     </div>
   );
 }
