@@ -5,12 +5,20 @@ import { createPortal } from "react-dom";
 import { Clock, Loader2 } from "lucide-react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime";
 import api from "@/shared/api/instance.api";
 import { useSaveTender } from "@/features/log/hooks/useSaveTender";
 import { buildProlongTenderDto } from "@/features/log/tender/copy/buildCopyTenderDto";
 import { cn } from "@/shared/utils";
+
+// Початок доби сьогодні — дати раніше заборонені.
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
 export const ProlongationModal = ({
   tender,
@@ -23,6 +31,7 @@ export const ProlongationModal = ({
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const { mutateAsync: saveTender, isPending } = useSaveTender();
+  const queryClient = useQueryClient();
 
   const methods = useForm({
     defaultValues: {
@@ -47,6 +56,10 @@ export const ProlongationModal = ({
 
   const handleProlong = async () => {
     if (!newTime || busy) return;
+    if (newTime < startOfToday()) {
+      toast.error("Дата закінчення не може бути в минулому");
+      return;
+    }
     try {
       setLoading(true);
 
@@ -61,6 +74,22 @@ export const ProlongationModal = ({
 
       const dto = buildProlongTenderDto(full, newTime);
       await saveTender(dto);
+
+      // Після продовження тендер виходить з «Аналізу»: якщо початок у
+      // майбутньому — у «Заплановані», інакше — в «Активні».
+      const startTs = full.time_start ? new Date(full.time_start).getTime() : 0;
+      const targetStatus = startTs > Date.now() ? "PLAN" : "ACTIVE";
+      await api.post("/tender/set-status", {
+        id: String(tender.id),
+        ids_status: targetStatus,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["tenders"] });
+      toast.success(
+        targetStatus === "PLAN"
+          ? "Тендер продовжено — у запланованих"
+          : "Тендер продовжено — в активних",
+      );
       onClose();
     } catch (e: any) {
       // Помилка zod-валідації або мережі.
@@ -106,6 +135,7 @@ export const ProlongationModal = ({
                 control={control}
                 label="Новий час завершення"
                 required
+                minDate={startOfToday()}
               />
             </div>
           </FormProvider>

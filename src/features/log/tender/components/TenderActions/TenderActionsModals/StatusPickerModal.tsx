@@ -110,6 +110,12 @@ export const StatusPickerModal = ({
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-300">
               {tenderFilters?.tender_status_dropdown
                 ?.filter((status: any) => status.ids !== "DRAFT")
+                // З активного тендера статус можна змінити лише на «Аналіз».
+                .filter((status: any) =>
+                  tender?.ids_status === "ACTIVE"
+                    ? status.ids === "ANALYZE"
+                    : true,
+                )
                 .map((status: any) => (
                 <button
                   key={status.ids}

@@ -36,6 +36,14 @@ interface WizardValues {
 const toDate = (v: any): Date | null =>
   v ? (v instanceof Date ? v : new Date(v)) : null;
 
+// Початок доби сьогодні — дати раніше вважаються минулими й заборонені.
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const isBeforeToday = (d: Date) => d < startOfToday();
+
 const STEPS = [
   { title: "Дати завантаження / розвантаження", icon: CalendarClock },
   { title: "Час проведення тендеру", icon: Clock },
@@ -92,6 +100,14 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
         toast.error("Вкажіть початок і кінець проведення тендеру");
         return;
       }
+      if (isBeforeToday(time_start)) {
+        toast.error("Початок тендеру не може бути в минулому");
+        return;
+      }
+      if (isBeforeToday(time_end)) {
+        toast.error("Дата закінчення не може бути в минулому");
+        return;
+      }
       if (time_end <= time_start) {
         toast.error("Кінець має бути пізніше за початок");
         return;
@@ -106,6 +122,11 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
     const v = getValues();
     if (!v.date_load || !v.time_start || !v.time_end) {
       toast.error("Заповніть дати й час проведення");
+      return;
+    }
+    if (isBeforeToday(v.time_start) || isBeforeToday(v.time_end)) {
+      toast.error("Дати проведення тендеру не можуть бути в минулому");
+      setStep(1);
       return;
     }
     if (isReduction && (!v.price_start || !v.price_step)) {
@@ -254,12 +275,14 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
               name="time_start"
               label="Початок проведення"
               required
+              minDate={startOfToday()}
             />
             <InputDateWithTime
               control={control}
               name="time_end"
               label="Кінець проведення"
               required
+              minDate={startOfToday()}
             />
             <p className="sm:col-span-2 text-[11px] text-slate-400">
               Якщо початок у майбутньому — копія потрапить у «Заплановані»,

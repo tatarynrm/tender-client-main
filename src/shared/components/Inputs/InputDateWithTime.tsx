@@ -17,6 +17,7 @@ import {
   setMinutes,
   getHours,
   getMinutes,
+  startOfDay,
 } from "date-fns";
 import { uk } from "date-fns/locale";
 import {
@@ -40,6 +41,8 @@ interface Props<T extends FieldValues> {
   label: string;
   required?: boolean;
   className?: string;
+  // Якщо задано — дні раніше за minDate недоступні для вибору.
+  minDate?: Date;
 }
 
 export const InputDateWithTime = <T extends FieldValues>({
@@ -48,6 +51,7 @@ export const InputDateWithTime = <T extends FieldValues>({
   label,
   required = false,
   className,
+  minDate,
 }: Props<T>) => {
   const {
     field,
@@ -104,23 +108,30 @@ export const InputDateWithTime = <T extends FieldValues>({
       const isSelected = selectedDate && isSameDay(day, selectedDate);
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isToday = isSameDay(day, new Date());
+      const isDisabled = minDate ? day < startOfDay(minDate) : false;
 
       return (
         <div
           key={day.toString()}
           onClick={() => {
+            if (isDisabled) return;
             const hours = selectedDate ? getHours(selectedDate) : 0;
             const mins = selectedDate ? getMinutes(selectedDate) : 0;
             const combinedDate = setMinutes(setHours(day, hours), mins);
             field.onChange(combinedDate);
           }}
           className={cn(
-            "h-8 w-8 flex items-center justify-center text-[12px] rounded-xl cursor-pointer transition-all",
-            !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
-            isCurrentMonth &&
+            "h-8 w-8 flex items-center justify-center text-[12px] rounded-xl transition-all",
+            isDisabled
+              ? "text-zinc-200 dark:text-zinc-800 cursor-not-allowed line-through"
+              : "cursor-pointer",
+            !isDisabled && !isCurrentMonth && "text-zinc-300 dark:text-zinc-700",
+            !isDisabled &&
+              isCurrentMonth &&
               "text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-white/5",
-            isToday && !isSelected && "text-indigo-600 font-bold",
-            isSelected &&
+            !isDisabled && isToday && !isSelected && "text-indigo-600 font-bold",
+            !isDisabled &&
+              isSelected &&
               "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20",
           )}
         >
