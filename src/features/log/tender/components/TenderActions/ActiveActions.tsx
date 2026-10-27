@@ -1,9 +1,8 @@
-import { Eye, Copy, Archive, Edit3, CheckCircle2, Clock } from "lucide-react";
+import { Edit3, CheckCircle2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { StatusPickerModal } from "./TenderActionsModals/StatusPickerModal";
-import { ProlongationModal } from "./TenderActionsModals/ProlongationModal";
 
 interface ActionsProps {
   tender: any;
@@ -21,7 +20,6 @@ export const ActiveActions = ({
   onClose,
 }: ActionsProps) => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const [isProlongModalOpen, setIsProlongModalOpen] = useState(false);
   const router = useRouter();
   return (
     <>
@@ -39,18 +37,6 @@ export const ActiveActions = ({
       </button>
 
       <div className="h-[1px] bg-zinc-100 dark:bg-zinc-800 my-0.5 mx-1" />
-
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsProlongModalOpen(true);
-        }}
-        className={cn(itemClass, "text-amber-600")}
-      >
-        <Clock size={config.icon - 2} />
-        <span className={textClass}>Пролонгація тендеру</span>
-      </button>
 
       <button
         onClick={(e) => {
@@ -77,17 +63,6 @@ export const ActiveActions = ({
         />
       )}
 
-      {isProlongModalOpen && (
-        <ProlongationModal
-          tenderId={tender.id}
-          onClose={() => {
-            setIsProlongModalOpen(false);
-            setTimeout(() => {
-              onClose();
-            }, 100);
-          }}
-        />
-      )}
     </>
   );
 };

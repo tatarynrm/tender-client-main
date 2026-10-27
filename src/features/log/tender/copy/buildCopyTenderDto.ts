@@ -35,16 +35,9 @@ const num = (v: any): number | undefined =>
 const pick = (override: any, fallback: any) =>
   override !== undefined && override !== null ? override : fallback;
 
-/**
- * Збирає DTO для створення копії тендера.
- * Проганяє результат через ТУ САМУ zod-схему, що й справжня форма створення,
- * тож якщо чогось бракує (напр. замовника) — кидає помилку, а не пише биті дані.
- * id (тендера й елементів масивів) навмисно не переноситься → завжди create.
- */
-export function buildCopyTenderDto(source: any, o: CopyOverrides) {
-  const idsType = source?.ids_type;
-
-  const routes = [...(source?.tender_route ?? [])]
+// Маппінг точок маршруту у форму — спільний для копіювання й пролонгації.
+function mapRoutes(source: any) {
+  return [...(source?.tender_route ?? [])]
     .sort((a: any, b: any) => (a.order_num || 0) - (b.order_num || 0))
     .map((r: any) => ({
       address: r.address || undefined,
@@ -61,6 +54,18 @@ export function buildCopyTenderDto(source: any, o: CopyOverrides) {
       street: r.street ?? null,
       house: r.house ?? null,
     }));
+}
+
+/**
+ * Збирає DTO для створення копії тендера.
+ * Проганяє результат через ТУ САМУ zod-схему, що й справжня форма створення,
+ * тож якщо чогось бракує (напр. замовника) — кидає помилку, а не пише биті дані.
+ * id (тендера й елементів масивів) навмисно не переноситься → завжди create.
+ */
+export function buildCopyTenderDto(source: any, o: CopyOverrides) {
+  const idsType = source?.ids_type;
+
+  const routes = mapRoutes(source);
 
   const pStart = pick(o.price_start, num(source?.price_start));
   const pStep = pick(o.price_step, num(source?.price_step));
@@ -141,6 +146,103 @@ export function buildCopyTenderDto(source: any, o: CopyOverrides) {
     current_file_ids: [] as number[],
   };
   delete dto.id;
+
+  return dto;
+}
+
+/**
+ * Збирає DTO для пролонгації тендера: той самий запис, у якому змінюється лише
+ * час завершення (`time_end`). Усе інше (у т.ч. id та наявні файли) переноситься
+ * як є, тож `tender_save` оновлює існуючий тендер, а не затирає його поля.
+ *
+ * `source` має бути ПОВНИМ записом тендера (GET /tender/:id → content[0]),
+ * а не урізаним обʼєктом зі списку, інакше zod-схема впаде на відсутньому полі.
+ */
+export function buildProlongTenderDto(source: any, newTimeEnd: Date) {
+  const idsType = source?.ids_type;
+
+  const candidate = {
+    id: num(source?.id),
+    cargo: source?.cargo,
+    notes: source?.notes ?? undefined,
+    load_info: source?.load_info ?? undefined,
+    company_name: source?.company_name ?? undefined,
+    id_owner_company: num(source?.id_owner_company) ?? null,
+    ids_type: idsType,
+    ids_carrier_rating: source?.ids_carrier_rating,
+    ids_members: pickMembers(source),
+    without_vat: Boolean(source?.without_vat),
+    car_count: num(source?.car_count) ?? 1,
+    weight: num(source?.weight),
+    volume: num(source?.volume),
+    palet_count: num(source?.palet_count) ?? null,
+    ref_temperature_from: num(source?.ref_temperature_from) ?? null,
+    ref_temperature_to: num(source?.ref_temperature_to) ?? null,
+
+    ids_valut: source?.ids_valut,
+    price_start: num(source?.price_start) ?? undefined,
+    price_step:
+      idsType === "AUCTION" ? undefined : (num(source?.price_step) ?? undefined),
+    price_redemption:
+      idsType === "REDUCTION_WITH_REDEMPTION"
+        ? (num(source?.price_redemption) ?? undefined)
+        : undefined,
+    price_client: num(source?.price_client) ?? null,
+    cost_redemption: num(source?.cost_redemption),
+
+    // Пролонгуємо: старт лишаємо, кінець — новий.
+    time_start: source?.time_start ? new Date(source.time_start) : undefined,
+    time_end: newTimeEnd,
+    date_load: source?.date_load ? new Date(source.date_load) : undefined,
+    date_load2: source?.date_load2 ? new Date(source.date_load2) : null,
+    date_unload: source?.date_unload ? new Date(source.date_unload) : null,
+
+    tender_route: mapRoutes(source),
+    tender_trailer: (source?.tender_trailer ?? [])
+      .filter((t: any) => t?.ids_trailer_type)
+      .map((t: any) => ({ ids_trailer_type: String(t.ids_trailer_type) })),
+    tender_load: (source?.tender_load ?? [])
+      .filter((l: any) => l?.ids_load_type)
+      .map((l: any) => ({ ids_load_type: String(l.ids_load_type) })),
+    tender_permission: (source?.tender_permission ?? [])
+      .filter((p: any) => p?.ids_permission_type)
+      .map((p: any) => ({ ids_permission_type: String(p.ids_permission_type) })),
+  };
+
+  // Валідація тією самою схемою, що й створення/редагування тендера.
+  const values = tenderFormSchema.parse(candidate) as TenderFormValues;
+
+  // Ті самі sanitization-кроки, що й у submitTender форми:
+  const dto: any = {
+    ...values,
+    id: values.id, // лишаємо id → update, а не create
+    weight: values.weight
+      ? Number(Number(values.weight).toFixed(2))
+      : values.weight,
+    volume: values.volume
+      ? Number(Number(values.volume).toFixed(2))
+      : values.volume,
+    price_start: values.price_start
+      ? Number(Number(values.price_start).toFixed(2))
+      : values.price_start,
+    price_step: values.price_step
+      ? Number(Number(values.price_step).toFixed(2))
+      : values.price_step,
+    price_redemption: values.price_redemption
+      ? Number(Number(values.price_redemption).toFixed(2))
+      : values.price_redemption,
+    tender_route: values.tender_route.map((r, idx) => ({
+      ...r,
+      order_num: idx + 1,
+      lat: r.lat ? Number(Number(r.lat).toFixed(6)) : r.lat,
+      lon: r.lon ? Number(Number(r.lon).toFixed(6)) : r.lon,
+    })),
+    // Зберігаємо наявні файли, щоб re-save їх не видалив.
+    current_file_ids: (source?.files ?? [])
+      .map((f: any) => f?.id)
+      .filter((id: any) => id != null)
+      .map(Number),
+  };
 
   return dto;
 }
