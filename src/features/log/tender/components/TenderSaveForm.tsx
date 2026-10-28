@@ -2816,12 +2816,14 @@ export default function TenderSaveForm({
                         name="time_start"
                         control={control}
                         label="ПОЧАТОК"
+                        minDate={new Date()}
                       />
                       <InputDateWithTime
                         name="time_end"
                         control={control}
                         label="КІНЕЦЬ"
                         required
+                        minDate={new Date()}
                       />
                     </div>
                   </div>
