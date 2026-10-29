@@ -31,8 +31,8 @@ const SEARCH_KEYS = [
 type SearchKey = (typeof SEARCH_KEYS)[number];
 type SearchForm = Record<SearchKey, string>;
 
-// Днів від сьогодні за замовчуванням — 30. Вводиться руками.
-const DEFAULT_DAYS = "30";
+// Днів від сьогодні за замовчуванням — 180. Вводиться руками.
+const DEFAULT_DAYS = "180";
 
 const makeDefaultForm = (): SearchForm => ({
   s_day: DEFAULT_DAYS,
