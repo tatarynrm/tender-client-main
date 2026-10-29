@@ -81,13 +81,10 @@ export function TenderCardManagers({
   cargo,
   onOpenDetails,
   agree = false,
-  showStatus = false,
 }: {
   cargo: ITender;
   onOpenDetails: () => void;
   agree?: boolean;
-  // Показувати назву статусу під номером (лише на сторінці пошуку).
-  showStatus?: boolean;
 }) {
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
@@ -333,11 +330,9 @@ export function TenderCardManagers({
             >
               {cargo.id}
             </span>
-            {showStatus && (
-              <span className="text-[9px] font-black uppercase tracking-wide text-zinc-500 dark:text-zinc-400 text-center leading-tight">
-                {TENDER_STATUS_LABELS[cargo.ids_status] ?? cargo.ids_status}
-              </span>
-            )}
+            <span className="text-[9px] font-black uppercase tracking-wide text-zinc-500 dark:text-zinc-400 text-center leading-tight">
+              {TENDER_STATUS_LABELS[cargo.ids_status] ?? cargo.ids_status}
+            </span>
           </div>
 
           {/* 2. Завантаження */}
@@ -620,6 +615,16 @@ export function TenderCardManagers({
 
           {/* 10. Залишилось */}
           <div className="w-full xl:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 bg-white dark:bg-slate-900 xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
+            {/* Загальна тривалість тендеру: початок — кінець */}
+            <div className="flex flex-col items-center mb-1.5 leading-tight">
+              <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-wide">
+                Тривалість
+              </span>
+              <span className="text-[9px] font-semibold text-zinc-600 dark:text-zinc-300 text-center">
+                {formatTenderDate(cargo.time_start) || "—"} –{" "}
+                {formatTenderDate(cargo.time_end) || "—"}
+              </span>
+            </div>
             <span className="text-[10px] text-zinc-500 font-medium mb-1 flex items-center gap-1">
               Залишилось
               <MyTooltip text="Час до завершення прийому ставок" size={8} />

@@ -308,7 +308,6 @@ function SearchContent() {
                 key={item.id}
                 cargo={item}
                 onOpenDetails={() => router.push(`/log/tender/${item.id}`)}
-                showStatus
               />
             ))}
           </div>
