@@ -35,6 +35,17 @@ import {
 // Тимчасова підказка "клікабельний замовник" — прибрати після 2026-08-13
 const CUSTOMER_HINT_EXPIRY = new Date("2026-08-13T00:00:00");
 
+// Назви статусів тендера українською (для підпису під номером на пошуку).
+const TENDER_STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Чернетка",
+  PLAN: "Запланований",
+  ACTIVE: "Активний",
+  ANALYZE: "Аналіз",
+  AGREEMENT: "На погодженні",
+  CLOSED: "Завершений",
+  ARCHIVE: "Архів",
+};
+
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 import { IRateCompany, ITender } from "@/features/log/types/tender.type";
@@ -70,10 +81,13 @@ export function TenderCardManagers({
   cargo,
   onOpenDetails,
   agree = false,
+  showStatus = false,
 }: {
   cargo: ITender;
   onOpenDetails: () => void;
   agree?: boolean;
+  // Показувати назву статусу під номером (лише на сторінці пошуку).
+  showStatus?: boolean;
 }) {
   const { config } = useFontSize();
   const { label, main, title, icon } = config;
@@ -303,7 +317,7 @@ export function TenderCardManagers({
         <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full xl:w-[60px] flex-shrink-0 flex items-center justify-center p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number relative"
+            className="w-full xl:w-[60px] flex-shrink-0 flex flex-col items-center justify-center gap-1 p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
             <MyTooltip
@@ -319,6 +333,11 @@ export function TenderCardManagers({
             >
               {cargo.id}
             </span>
+            {showStatus && (
+              <span className="text-[9px] font-black uppercase tracking-wide text-zinc-500 dark:text-zinc-400 text-center leading-tight">
+                {TENDER_STATUS_LABELS[cargo.ids_status] ?? cargo.ids_status}
+              </span>
+            )}
           </div>
 
           {/* 2. Завантаження */}
