@@ -1063,6 +1063,12 @@ export default function TenderSaveForm({
     "ALL" | "CARRIER" | "MANAGER"
   >("ALL");
   const [isNextTender, setIsNextTender] = useState(false);
+  // Модалка вибору при СТВОРЕННІ: у чернетку чи опублікувати одразу.
+  const [publishChoiceModal, setPublishChoiceModal] = useState<{
+    open: boolean;
+    values: TenderFormValues | null;
+    resolvedMembers: "ALL" | "CARRIER" | "MANAGER" | null;
+  }>({ open: false, values: null, resolvedMembers: null });
   const [files, setFiles] = useState<(File | any)[]>([]); // Combines existing and new files
   const STORAGE_KEY = "tender_log_form_draft";
   const [isLoadedDraft, setIsLoadedDraft] = useState(false);
@@ -1983,7 +1989,7 @@ export default function TenderSaveForm({
   // Відділ "лише менеджери" завжди має пріоритет над цими налаштуваннями.
   const onSubmit: SubmitHandler<TenderFormValues> = async (values) => {
     if (isManagersOnlyDepartment) {
-      await submitTender(values, "MANAGER");
+      beginSubmit(values, "MANAGER");
       return;
     }
 
@@ -2038,18 +2044,38 @@ export default function TenderSaveForm({
       return;
     }
 
-    await submitTender(values, null);
+    beginSubmit(values, null);
   };
 
   const handleConfirmMembersChoice = async () => {
     const pendingValues = membersChoiceModal.values;
     setMembersChoiceModal({ open: false, values: null });
-    if (pendingValues) await submitTender(pendingValues, membersChoiceValue);
+    if (pendingValues) beginSubmit(pendingValues, membersChoiceValue);
+  };
+
+  // При створенні пропонуємо вибір «чернетка / опублікувати»; при редагуванні
+  // зберігаємо одразу, як і раніше.
+  const beginSubmit = (
+    values: TenderFormValues,
+    resolvedMembers: "ALL" | "CARRIER" | "MANAGER" | null,
+  ) => {
+    if (isEdit) {
+      submitTender(values, resolvedMembers);
+      return;
+    }
+    setPublishChoiceModal({ open: true, values, resolvedMembers });
+  };
+
+  const confirmPublishChoice = async (publishNow: boolean) => {
+    const { values, resolvedMembers } = publishChoiceModal;
+    setPublishChoiceModal({ open: false, values: null, resolvedMembers: null });
+    if (values) await submitTender(values, resolvedMembers, publishNow);
   };
 
   const submitTender = async (
     values: TenderFormValues,
     resolvedIdsMembers: "ALL" | "CARRIER" | "MANAGER" | null,
+    publishNow: boolean = false,
   ) => {
     // Sanitization: Round all numeric fields to prevent database overflow
     const sanitizedValues = {
@@ -2118,20 +2144,65 @@ export default function TenderSaveForm({
     });
 
     try {
-      await saveTender(formData);
+      const res: any = await saveTender(formData);
       localStorage.removeItem(STORAGE_KEY);
+
       if (isEdit) {
         router.back();
-      } else if (!isNextTender) {
+        return;
+      }
+
+      // Створення: публікуємо одразу чи лишаємо в чернетках.
+      if (publishNow) {
+        const created = Array.isArray(res?.content)
+          ? res.content[0]
+          : res?.content;
+        const newId =
+          typeof created === "number"
+            ? created
+            : (created?.id ?? created?.id_tender ?? created?.tender_id);
+
+        // Старт у майбутньому → Заплановані, інакше → Активні.
+        const startTs = values.time_start
+          ? new Date(values.time_start).getTime()
+          : 0;
+        const targetStatus = startTs > Date.now() ? "PLAN" : "ACTIVE";
+
+        try {
+          if (newId != null) {
+            await api.post("/tender/set-status", {
+              id: String(newId),
+              ids_status: targetStatus,
+            });
+          }
+          if (isNextTender) {
+            toast.success(
+              targetStatus === "PLAN"
+                ? "Тендер опубліковано (у запланованих). Можете створити наступний."
+                : "Тендер опубліковано. Можете створити наступний.",
+            );
+          } else {
+            router.push(
+              targetStatus === "PLAN"
+                ? "/log/tender/plan"
+                : "/log/tender/active",
+            );
+          }
+        } catch (e) {
+          console.error("Не вдалося опублікувати тендер", e);
+          toast.error(
+            "Тендер збережено як чернетку, але опублікувати не вдалося",
+          );
+          if (!isNextTender) router.push("/log/tender/draft");
+        }
+        return;
+      }
+
+      // Чернетка
+      if (!isNextTender) {
         router.push("/log/tender/draft");
       } else {
-        toast.success("Тендер збережено. Ви можете створити наступний.");
-        // We don't reset everything to keep the form filled for the next one
-        // but we might want to reset the id if we were in edit mode
-        if (defaultValues?.id) {
-          // If we were editing, we definitely want to clear ID for the 'next' ones
-          // but TenderSaveForm is usually new.
-        }
+        toast.success("Тендер збережено в чернетки. Можете створити наступний.");
       }
     } catch (error) {
       console.error(error);
@@ -3267,6 +3338,120 @@ export default function TenderSaveForm({
                 Опублікувати
               </Button>
             </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Вибір при створенні: у чернетку чи опублікувати одразу (з інфографікою) */}
+      <Dialog
+        open={publishChoiceModal.open}
+        onOpenChange={(open: boolean) =>
+          setPublishChoiceModal((p) => ({ ...p, open }))
+        }
+      >
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem]">
+          <div className="p-8">
+            <DialogHeader className="mb-5 text-center">
+              <DialogTitle className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+                Тендер готовий. Що далі?
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 dark:text-slate-400 text-[13px] leading-relaxed font-medium">
+                Оберіть, що зробити з тендером зараз — це можна змінити й згодом.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Інфографіка життєвого циклу тендера */}
+            <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+              {["Створення", "Чернетка", "Активний", "Ставки", "Переможець"].map(
+                (s, i, arr) => (
+                  <div key={s} className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-300">
+                      {s}
+                    </span>
+                    {i < arr.length - 1 && (
+                      <ChevronRight size={12} className="text-slate-300" />
+                    )}
+                  </div>
+                ),
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* У чернетку */}
+              <button
+                type="button"
+                onClick={() => confirmPublishChoice(false)}
+                className="group text-left rounded-2xl border-2 border-slate-200 dark:border-white/10 p-5 hover:border-slate-400 dark:hover:border-white/30 hover:shadow-lg transition-all active:scale-[0.98]"
+              >
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                  <Save className="w-6 h-6 text-slate-600 dark:text-slate-300" />
+                </div>
+                <h4 className="text-[15px] font-black text-slate-800 dark:text-white mb-1">
+                  У чернетку
+                </h4>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
+                  Тендер збережеться, але перевізники його ще не побачать.
+                  Доопрацюєте й опублікуєте пізніше.
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                    <Check size={12} className="text-slate-400 shrink-0" /> Без
+                    ставок і сповіщень
+                  </li>
+                  <li className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                    <Check size={12} className="text-slate-400 shrink-0" /> Можна
+                    редагувати будь-коли
+                  </li>
+                </ul>
+              </button>
+
+              {/* Опублікувати зразу */}
+              <button
+                type="button"
+                onClick={() => confirmPublishChoice(true)}
+                className="group text-left rounded-2xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 p-5 hover:shadow-xl hover:shadow-indigo-500/20 transition-all active:scale-[0.98] relative overflow-hidden"
+              >
+                <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-wider text-indigo-600 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full">
+                  Рекомендовано
+                </span>
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/30">
+                  <UploadCloud className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="text-[15px] font-black text-slate-800 dark:text-white mb-1">
+                  Опублікувати зразу
+                </h4>
+                <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed mb-3">
+                  Тендер одразу стане активним (або запланованим, якщо старт у
+                  майбутньому) і відкриється для ставок.
+                </p>
+                <ul className="space-y-1.5">
+                  <li className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    <Zap size={12} className="text-indigo-500 shrink-0" />{" "}
+                    Перевізники отримають сповіщення
+                  </li>
+                  <li className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    <Clock size={12} className="text-indigo-500 shrink-0" />{" "}
+                    Починається прийом ставок
+                  </li>
+                </ul>
+              </button>
+            </div>
+
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={() =>
+                  setPublishChoiceModal({
+                    open: false,
+                    values: null,
+                    resolvedMembers: null,
+                  })
+                }
+                className="text-[11px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                Скасувати
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

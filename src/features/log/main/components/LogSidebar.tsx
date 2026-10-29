@@ -242,7 +242,7 @@ export default function LogSidebar({
           className={cn(
             "ml-6 mt-1 flex flex-col gap-0.5 transition-all duration-300 ease-in-out scrollbar-hide",
             openMenus[name]
-              ? "max-h-80 opacity-100 overflow-y-auto"
+              ? "max-h-[32rem] opacity-100 overflow-y-auto"
               : "max-h-0 opacity-0 pointer-events-none overflow-hidden",
           )}
         >

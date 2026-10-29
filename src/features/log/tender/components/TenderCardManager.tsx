@@ -46,6 +46,37 @@ const TENDER_STATUS_LABELS: Record<string, string> = {
   ARCHIVE: "Архів",
 };
 
+// Відмінювання «день» для української.
+const pluralDays = (n: number) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return "днів";
+  if (mod10 === 1) return "день";
+  if (mod10 >= 2 && mod10 <= 4) return "дні";
+  return "днів";
+};
+
+// Загальна тривалість тендеру (кінець − початок) у вигляді «1 день 5 год 5 хв».
+const formatTenderDuration = (
+  start?: string | Date | null,
+  end?: string | Date | null,
+): string => {
+  if (!start || !end) return "—";
+  const ms = new Date(end).getTime() - new Date(start).getTime();
+  if (isNaN(ms) || ms <= 0) return "—";
+
+  const totalMin = Math.floor(ms / 60000);
+  const days = Math.floor(totalMin / (60 * 24));
+  const hours = Math.floor((totalMin % (60 * 24)) / 60);
+  const mins = totalMin % 60;
+
+  const parts: string[] = [];
+  if (days) parts.push(`${days} ${pluralDays(days)}`);
+  if (hours) parts.push(`${hours} год`);
+  if (mins) parts.push(`${mins} хв`);
+  return parts.length ? parts.join(" ") : "0 хв";
+};
+
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/shared/utils";
 import { IRateCompany, ITender } from "@/features/log/types/tender.type";
@@ -330,7 +361,7 @@ export function TenderCardManagers({
             >
               {cargo.id}
             </span>
-            <span className="text-[9px] font-black uppercase tracking-wide text-zinc-500 dark:text-zinc-400 text-center leading-tight">
+            <span className="text-[8px] font-black uppercase text-zinc-500 dark:text-zinc-400 text-center leading-tight break-words w-full">
               {TENDER_STATUS_LABELS[cargo.ids_status] ?? cargo.ids_status}
             </span>
           </div>
@@ -615,14 +646,13 @@ export function TenderCardManagers({
 
           {/* 10. Залишилось */}
           <div className="w-full xl:w-[110px] flex-shrink-0 flex flex-col items-center justify-center p-3 xl:p-2 bg-white dark:bg-slate-900 xl:border-b-0 border-b border-zinc-100 dark:border-white/5 xl:h-full">
-            {/* Загальна тривалість тендеру: початок — кінець */}
+            {/* Загальна тривалість тендеру */}
             <div className="flex flex-col items-center mb-1.5 leading-tight">
               <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-wide">
                 Тривалість
               </span>
-              <span className="text-[9px] font-semibold text-zinc-600 dark:text-zinc-300 text-center">
-                {formatTenderDate(cargo.time_start) || "—"} –{" "}
-                {formatTenderDate(cargo.time_end) || "—"}
+              <span className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 text-center">
+                {formatTenderDuration(cargo.time_start, cargo.time_end)}
               </span>
             </div>
             <span className="text-[10px] text-zinc-500 font-medium mb-1 flex items-center gap-1">
