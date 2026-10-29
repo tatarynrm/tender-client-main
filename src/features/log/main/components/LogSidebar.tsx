@@ -21,6 +21,9 @@ import {
   Sparkles,
   Bot,
   GraduationCap,
+  Search,
+  Microscope,
+  Stamp,
 } from "lucide-react";
 
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
@@ -55,10 +58,11 @@ const links: MenuItem[] = [
       { name: "Чернетки", icon: ShieldCheck, href: "/log/tender/draft" },
       { name: "Заплановані", icon: Archive, href: "/log/tender/plan" },
       { name: "Активні", icon: ActivitySquare, href: "/log/tender/active" },
-      { name: "Аналіз", icon: BarChart, href: "/log/tender/analyze" },
-      { name: "На погодженні", icon: BarChart, href: "/log/tender/agreement" },
+      { name: "Аналіз", icon: Microscope, href: "/log/tender/analyze" },
+      { name: "На погодженні", icon: Stamp, href: "/log/tender/agreement" },
       { name: "Завершені", icon: Gavel, href: "/log/tender/closed" },
       { name: "Архів", icon: ArchiveIcon, href: "/log/tender/archive" },
+      { name: "Пошук", icon: Search, href: "/log/tender/search" },
     ],
   },
   {
