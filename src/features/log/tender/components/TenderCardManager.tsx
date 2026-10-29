@@ -345,7 +345,7 @@ export function TenderCardManagers({
         <div className="flex flex-col xl:flex-row w-full xl:h-[115px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-200/80 dark:divide-white/10 overflow-hidden">
           {/* 1. № */}
           <div
-            className="w-full xl:w-[60px] flex-shrink-0 flex flex-col items-center justify-center gap-1 p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number relative"
+            className="w-full xl:w-[84px] flex-shrink-0 flex flex-col items-center justify-center gap-1 p-3 xl:p-2 cursor-pointer bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all border-r border-zinc-100 dark:border-white/5 group/number relative"
             onClick={onOpenDetails}
           >
             <MyTooltip
@@ -361,7 +361,7 @@ export function TenderCardManagers({
             >
               {cargo.id}
             </span>
-            <span className="text-[8px] font-black uppercase text-zinc-500 dark:text-zinc-400 text-center leading-tight break-words w-full">
+            <span className="text-[9px] font-black uppercase text-zinc-500 dark:text-zinc-400 text-center leading-tight break-words w-full">
               {TENDER_STATUS_LABELS[cargo.ids_status] ?? cargo.ids_status}
             </span>
           </div>
