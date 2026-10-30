@@ -3390,8 +3390,9 @@ export default function TenderSaveForm({
                   У чернетку
                 </h4>
                 <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
-                  Тендер збережеться, але перевізники його ще не побачать.
-                  Доопрацюєте й опублікуєте пізніше.
+                  Тендерна пропозиція буде збережена у розділі «Чернетки». Ви
+                  можете перевірити внесені дані та за потреби виправити їх. Щоб
+                  опублікувати тендер, вкажіть йому статус «Активний».
                 </p>
                 <ul className="space-y-1.5">
                   <li className="flex items-center gap-1.5 text-[11px] text-slate-500">
