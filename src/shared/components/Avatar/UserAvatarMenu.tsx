@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, User, Settings, LayoutDashboard, X } from "lucide-react";
+import { LogOut, User, Settings, LayoutDashboard, X, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { useProfileLogoutMutation } from "@/features/dashboard/profile/main/hooks";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
@@ -94,11 +95,13 @@ export function UserAvatarMenu() {
             <nav className="p-1.5 flex flex-col gap-0.5" onClick={() => detailsRef.current?.removeAttribute("open")}>
               {/* <MenuLink href="/profile" icon={User} label="Мій профіль" /> */}
               
-              <MenuLink 
-                href={pathname.startsWith("/log") ? "/log/settings" : "/dashboard/personal/profile"} 
-                icon={Settings} 
-                label="Налаштування" 
+              <MenuLink
+                href={pathname.startsWith("/log") ? "/log/settings" : "/dashboard/personal/profile"}
+                icon={Settings}
+                label="Налаштування"
               />
+
+              <ThemeMenuButton />
 
               <div className="my-1.5 h-[1px] bg-zinc-100 dark:bg-white/5" />
               <LogoutButton />
@@ -165,6 +168,49 @@ export function UserAvatarMenu() {
         }
       `}</style>
     </>
+  );
+}
+
+// Перемикач теми як пункт меню (перенесено з хедера).
+function ThemeMenuButton() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isDark = mounted && theme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setTheme(isDark ? "light" : "dark");
+      }}
+      className="flex items-center justify-between gap-3 px-3 py-2 rounded-md text-zinc-600 dark:text-zinc-300 hover:bg-teal-50 dark:hover:bg-teal-500/10 hover:text-teal-600 dark:hover:text-teal-500 transition-all group"
+    >
+      <span className="flex items-center gap-3">
+        {isDark ? (
+          <Moon
+            size={16}
+            strokeWidth={2.2}
+            className="text-teal-400 group-hover:text-teal-500 transition-colors"
+          />
+        ) : (
+          <Sun
+            size={16}
+            strokeWidth={2.2}
+            className="text-amber-500 group-hover:text-amber-600 transition-colors"
+          />
+        )}
+        <span className="text-[11px] uppercase tracking-[0.15em] font-bold">
+          Тема
+        </span>
+      </span>
+      <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-400">
+        {isDark ? "Темна" : "Світла"}
+      </span>
+    </button>
   );
 }
 

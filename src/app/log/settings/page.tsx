@@ -32,7 +32,7 @@ export default function LogSettingsPage() {
       <div className="mt-6">
         {activeTab === "notifications" && (
           <TabContentWrapper>
-            <NotificationsTab />
+            <NotificationsTab showRates />
           </TabContentWrapper>
         )}
         {activeTab === "profile" && (

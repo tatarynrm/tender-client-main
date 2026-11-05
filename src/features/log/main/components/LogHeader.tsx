@@ -6,20 +6,17 @@ import {
   Menu,
   PanelRight,
   LayoutGrid, // 👈 Додали іконку для віджетів
-  Settings,
 } from "lucide-react";
-import Link from "next/link";
-import { ToggleTheme } from "@/shared/components/ui";
 import { IUserProfile } from "@/shared/types/user.types";
 import { motion, AnimatePresence } from "framer-motion"; // 👈 Додали AnimatePresence для плавного меню
 import DynamicHeaderMenu from "@/shared/components/Group/Header/DynamicHeaderMenu";
-import { GlobalSettings } from "@/shared/components/GlobalSettings/GlobalSettings";
 import { cn } from "@/shared/utils";
 import { UserAvatarMenu } from "@/shared/components/Avatar/UserAvatarMenu";
 import { useAuth } from "@/shared/providers/AuthCheckProvider";
 import { HeaderWidgetContainer } from "../widgets/HeaderWidgetContainer";
 import { DateTimeWidget } from "../widgets/DateTimeWidget";
 import { FeedbackButton } from "@/shared/components/Modals/FeedbackButton/FeedbackGoogleFormModal";
+import LogNotificationBell from "@/features/log/notifications/LogNotificationBell";
 import { FuelWidget } from "../widgets/FuelWidget";
 import { WeatherWidget } from "../widgets/WeatherWidget";
 import { AirAlarmWidget } from "../widgets/AirAlarmWidget";
@@ -154,18 +151,8 @@ export default function LogHeader({
           <FeedbackButton />
         </div>
 
-        {/* Налаштування (можна було б сховати на дуже малих екранах, але поки залишимо) */}
-        <div className="hidden sm:flex items-center gap-1.5 focus-within:ring-0">
-          <Link 
-            href="/log/settings"
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-500 transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/10"
-            title="Налаштування сповіщень"
-          >
-            <Settings className="w-5 h-5" />
-          </Link>
-          <GlobalSettings />
-          <ToggleTheme />
-        </div>
+        {/* Сповіщення менеджера */}
+        <LogNotificationBell />
 
         {/* Головні дії: Додати та Профіль */}
         <div className="flex items-center gap-2 pl-2 sm:pl-4 border-l border-slate-200 dark:border-white/10">

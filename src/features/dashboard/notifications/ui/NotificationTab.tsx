@@ -19,11 +19,13 @@ import {
   MailWarning,
   Move,
   CheckCircle2,
+  Gavel,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/shared/utils";
 import { toast } from "sonner";
 import { NotificationChannelsTable } from "../components/NotificationChannelsTable";
+import { RateNotificationsTab } from "./RateNotificationsTab";
 
 interface NotifyDestination {
   value: string;
@@ -130,13 +132,22 @@ const DEFAULT_EVENTS: NotifyDestination[] = [
 
 const SETTINGS_CATEGORIES = [
   { id: "tenders", label: "Тендери", icon: Truck },
+  { id: "rates", label: "Ставки", icon: Gavel },
   // { id: "orders", label: "Заявки", icon: FileText },
   // { id: "analytics", label: "Аналітика", icon: BarChart },
   // { id: "system", label: "Системні повідомлення", icon: MailWarning },
 ];
 
-export function NotificationsTab() {
+export function NotificationsTab({
+  showRates = false,
+}: {
+  // Вкладка «Ставки» лише для менеджерів ICT (/log). На dashboard — тільки тендери.
+  showRates?: boolean;
+} = {}) {
   const [activeCategory, setActiveCategory] = useState("tenders");
+  const categories = SETTINGS_CATEGORIES.filter(
+    (c) => c.id !== "rates" || showRates,
+  );
   const {
     data: settingsData,
     isLoading,
@@ -391,7 +402,7 @@ export function NotificationsTab() {
     <div className="space-y-2 pb-24">
       {/* Категорії налаштувань */}
       <div className="flex flex-wrap items-center  bg-zinc-100/50 dark:bg-white/5  rounded-[1.5rem] border border-zinc-200/50 dark:border-white/5 w-fit">
-        {SETTINGS_CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = activeCategory === cat.id;
           return (
             <button
@@ -435,7 +446,9 @@ export function NotificationsTab() {
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeCategory === "tenders" ? (
+            {activeCategory === "rates" && showRates ? (
+              <RateNotificationsTab />
+            ) : activeCategory === "tenders" ? (
               <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="space-y-6 animate-in fade-in duration-500 overflow-visible"
