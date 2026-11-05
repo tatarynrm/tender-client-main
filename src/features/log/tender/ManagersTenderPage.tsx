@@ -2,7 +2,6 @@
 
 import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ChevronUp, Settings2 } from "lucide-react";
 
 import { useFilters } from "@/shared/hooks/useFilters";
 import { useVisibilityControl } from "@/shared/hooks/useVisibilityControl";
@@ -124,7 +123,7 @@ export default function ManagersTenderPage({ status, agree }: Props) {
 
   // 4. Ефект для синхронізації фільтрів у SessionStorage (Кешування)
   useEffect(() => {
-    const effectiveStatus = agree ? "agreement" : (status || "all");
+    const effectiveStatus = agree ? "agreement" : status || "all";
     const persistKey = PERSIST_BASE_KEY + effectiveStatus;
     if (searchParams.toString()) {
       sessionStorage.setItem(persistKey, searchParams.toString());
@@ -200,7 +199,7 @@ export default function ManagersTenderPage({ status, agree }: Props) {
   );
 
   const handleReset = useCallback(() => {
-    const effectiveStatus = agree ? "agreement" : (status || "all");
+    const effectiveStatus = agree ? "agreement" : status || "all";
     const persistKey = PERSIST_BASE_KEY + effectiveStatus;
     reset();
     resetFilters();
@@ -322,7 +321,7 @@ export default function ManagersTenderPage({ status, agree }: Props) {
                   updateUrl({ ...currentParams, sortBy, sortOrder, page: 1 });
                 }}
               />
-              
+
               <div className="flex items-center gap-1.5 bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm">
                 <ItemsPerPage
                   options={[10, 20, 50, 100]}

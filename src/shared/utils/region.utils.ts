@@ -31,3 +31,23 @@ export const getRegionName = (code: string | number | null | undefined): string 
   const codeStr = String(code);
   return UA_REGION_CODES[codeStr] || "";
 };
+
+// Повна назва країни українською за ISO-кодом (UA → Україна, DE → Німеччина).
+// Якщо з бекенда вже прийшла готова назва (country_name) — використовуємо її.
+let countryNames: Intl.DisplayNames | null = null;
+export const getCountryName = (
+  code: string | null | undefined,
+  fallbackName?: string | null,
+): string => {
+  if (fallbackName?.trim()) return fallbackName.trim();
+  if (!code) return "";
+  const iso = String(code).trim().toUpperCase();
+  try {
+    if (!countryNames) {
+      countryNames = new Intl.DisplayNames(["uk"], { type: "region" });
+    }
+    return countryNames.of(iso) || iso;
+  } catch {
+    return iso;
+  }
+};

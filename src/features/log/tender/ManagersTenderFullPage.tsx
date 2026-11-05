@@ -16,7 +16,6 @@ import {
   CircleCheck,
   ArrowLeft,
   Trophy,
-  Phone,
   Mail,
   FileStack,
   Paperclip,
@@ -26,6 +25,7 @@ import {
 import { motion } from "framer-motion";
 
 import { ITender, ITenderRoute } from "../types/tender.type";
+import { TenderContactPhones } from "@/shared/components/Tender/TenderContactPhones";
 import { cn } from "@/shared/utils";
 import Flag from "react-flagkit";
 import { tenderManagerService } from "@/features/log/services/tender.manager.service";
@@ -61,6 +61,25 @@ const formatDateTime = (dateString?: string | Date | null) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+// Лише дата (без часу) — для дат завантаження/розвантаження.
+const formatDateOnly = (dateString?: string | Date | null) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("uk-UA", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
+// Період проведення тендера: «дата HH:mm – дата HH:mm».
+const formatTenderPeriod = (
+  start?: string | Date | null,
+  end?: string | Date | null,
+) => {
+  if (!start && !end) return "—";
+  return `${formatDateTime(start)} – ${formatDateTime(end)}`;
 };
 
 const InfoField = ({ label, value, icon: Icon, className }: any) => (
@@ -195,6 +214,17 @@ export default function ManagersTenderFullPage({
       (a, b) => (a.order_num || 0) - (b.order_num || 0),
     ) || [];
 
+  // Дати завантаження/розвантаження лежать на рівні тендера, а не точок.
+  // Показуємо дату завантаження на першій точці LOAD_FROM, розвантаження — на
+  // першій LOAD_TO.
+  const firstLoadId = sortedRoute.find((p) => p.ids_point === "LOAD_FROM")?.id;
+  const firstUnloadId = sortedRoute.find((p) => p.ids_point === "LOAD_TO")?.id;
+  const loadDate =
+    tender?.date_load2 && tender.date_load2 !== tender.date_load
+      ? `${formatDateOnly(tender.date_load)} – ${formatDateOnly(tender.date_load2)}`
+      : formatDateOnly(tender?.date_load);
+  const unloadDate = formatDateOnly(tender?.date_unload);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
@@ -298,6 +328,11 @@ export default function ManagersTenderFullPage({
                   icon={Layers}
                   value={tender.tender_type || "Редукціон з викупом"}
                 />
+                <InfoField
+                  label="Період проведення"
+                  icon={Clock}
+                  value={formatTenderPeriod(tender.time_start, tender.time_end)}
+                />
               </div>
             </div>
 
@@ -320,12 +355,7 @@ export default function ManagersTenderFullPage({
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
-                  <Phone size={16} className="text-slate-400" />
-                  <span className="text-[13px] font-bold text-slate-900 dark:text-white">
-                    {tender.usr_phone?.[0]?.phone || "Немає телефону"}
-                  </span>
-                </div>
+                <TenderContactPhones phones={tender.person_phone} />
                 <div className="flex items-center gap-4 h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-white/5 px-4">
                   <Mail size={16} className="text-slate-400" />
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white">
@@ -438,14 +468,25 @@ export default function ManagersTenderFullPage({
                           {point.city}, {point.locality || "УКРАЇНА"}
                         </p>
                       </div>
-                      {point.date_point && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-100 bg-white dark:bg-slate-800/30 dark:border-white/5 shadow-sm">
-                          <Clock size={12} className="text-slate-400" />
-                          <span className="text-[11px] font-black text-slate-600 dark:text-slate-300">
-                            {formatDateTime(point.date_point)}
-                          </span>
-                        </div>
-                      )}
+                      {(() => {
+                        const d =
+                          point.id === firstLoadId
+                            ? loadDate
+                            : point.id === firstUnloadId
+                              ? unloadDate
+                              : point.date_point
+                                ? formatDateTime(point.date_point)
+                                : "";
+                        if (!d) return null;
+                        return (
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-100 bg-white dark:bg-slate-800/30 dark:border-white/5 shadow-sm">
+                            <Clock size={12} className="text-slate-400" />
+                            <span className="text-[11px] font-black text-slate-600 dark:text-slate-300">
+                              {d}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}

@@ -3360,22 +3360,6 @@ export default function TenderSaveForm({
               </DialogDescription>
             </DialogHeader>
 
-            {/* Інфографіка життєвого циклу тендера */}
-            <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
-              {["Створення", "Чернетка", "Активний", "Ставки", "Переможець"].map(
-                (s, i, arr) => (
-                  <div key={s} className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-300">
-                      {s}
-                    </span>
-                    {i < arr.length - 1 && (
-                      <ChevronRight size={12} className="text-slate-300" />
-                    )}
-                  </div>
-                ),
-              )}
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* У чернетку */}
               <button

@@ -91,7 +91,7 @@ import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { CustomerStatsDialog } from "./CustomerStatsDialog";
-import { getRegionName } from "@/shared/utils/region.utils";
+import { getRegionName, getCountryName } from "@/shared/utils/region.utils";
 import { useProfile } from "@/shared/hooks";
 import {
   formatTenderDate,
@@ -380,7 +380,7 @@ export function TenderCardManagers({
                     key={i}
                     className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
                   >
-                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[14px] w-full min-w-0">
                       {pt.ids_country && (
                         <Flag
                           country={pt.ids_country}
@@ -398,6 +398,11 @@ export function TenderCardManagers({
                         {pt.city}
                       </span>
                     </div>
+                    {getCountryName(pt.ids_country, ptAny.country_name) && (
+                      <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 truncate w-full">
+                        {getCountryName(pt.ids_country, ptAny.country_name)}
+                      </span>
+                    )}
                     {ptAny.ids_region && (
                       <span className="text-[10px] text-zinc-500 font-medium mt-0.5 truncate w-full">
                         {getRegionName(ptAny.ids_region)}
@@ -428,7 +433,7 @@ export function TenderCardManagers({
                     key={i}
                     className="flex flex-col items-center justify-center text-center leading-tight mb-1 last:mb-0 w-full min-w-0 px-2"
                   >
-                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[12px] w-full min-w-0">
+                    <div className="flex items-center justify-center gap-2 font-bold text-zinc-800 dark:text-white text-[14px] w-full min-w-0">
                       {pt.ids_country && (
                         <Flag
                           country={pt.ids_country}
@@ -446,6 +451,11 @@ export function TenderCardManagers({
                         {pt.city}
                       </span>
                     </div>
+                    {getCountryName(pt.ids_country, ptAny.country_name) && (
+                      <span className="text-[11px] text-zinc-500 font-semibold mt-0.5 truncate w-full">
+                        {getCountryName(pt.ids_country, ptAny.country_name)}
+                      </span>
+                    )}
                     {ptAny.ids_region && (
                       <span className="text-[12px] text-zinc-500 font-medium mt-0.5 truncate w-full">
                         {getRegionName(ptAny.ids_region)}
