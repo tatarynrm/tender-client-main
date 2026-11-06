@@ -55,6 +55,8 @@ export function TenderRatesList({
 
         const isWinner = rate.car_count_winner > 0;
         const isEditing = editingRateId === rate.id;
+        // Ставка перевізника (не співробітника ICT) — виділяємо бірюзовим.
+        const isCarrier = rate.is_ict_author === false;
 
         return (
           <div
@@ -69,7 +71,11 @@ export function TenderRatesList({
                     ? "bg-amber-50/60 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/40 shadow-sm"
                     : isTop3
                       ? "bg-rose-50/60 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/40 shadow-sm"
-                      : "bg-white dark:bg-slate-900/40 border-slate-100 dark:border-slate-800 hover:border-slate-200",
+                      : isCarrier
+                        ? "bg-teal-50/70 border-teal-200 dark:bg-teal-500/10 dark:border-teal-500/40"
+                        : "bg-white dark:bg-slate-900/40 border-slate-100 dark:border-slate-800 hover:border-slate-200",
+              // Бірюзова смужка зліва — видна й на ТОП-3 та переможці.
+              isCarrier && "border-l-4 border-l-teal-500 dark:border-l-teal-400",
             )}
           >
             {/* Візуальні бейджі */}
@@ -113,6 +119,11 @@ export function TenderRatesList({
                   )}>
                     {rate.company_name || "Компанія не вказана"}
                   </span>
+                  {isCarrier && (
+                    <span className="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-teal-500 text-white">
+                      Перевізник
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

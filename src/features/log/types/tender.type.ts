@@ -136,6 +136,11 @@ export interface IRateCompany {
   id_author?: number;
   id_company: number;
   company_name: string;
+  /**
+   * true — ставку зробив співробітник ICT, false — перевізник.
+   * Поле має віддавати tender_list_ict; поки процедура його не повертає — undefined.
+   */
+  is_ict_author?: boolean;
 
   // Бажано замінити any на конкретний інтерфейс, якщо він у вас вже є
   person_phone: any[];

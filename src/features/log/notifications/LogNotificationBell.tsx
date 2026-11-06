@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { Bell, Check, CheckCheck, Gavel, MapPin, Package } from "lucide-react";
 import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { cn } from "@/shared/utils";
@@ -55,8 +54,8 @@ const NotificationItem = ({
       className={cn(
         "relative flex gap-3 p-3 rounded-2xl transition-colors",
         isUnread
-          ? "bg-indigo-50/70 dark:bg-indigo-500/10 hover:bg-indigo-50 dark:hover:bg-indigo-500/15"
-          : "hover:bg-slate-50 dark:hover:bg-white/5",
+          ? "bg-indigo-50/70 dark:bg-indigo-500/10"
+          : "",
       )}
     >
       {isUnread && (
@@ -131,18 +130,7 @@ const NotificationItem = ({
     </div>
   );
 
-  // Якщо є тендер — робимо рядок клікабельним на його деталі.
-  if (c.id_tender) {
-    return (
-      <Link
-        href={`/log/tender/${c.id_tender}`}
-        onClick={() => isUnread && onSeen(n.id)}
-        className="block"
-      >
-        {inner}
-      </Link>
-    );
-  }
+  // Перехід на тендер прибрано — з сповіщення можна лише позначити прочитаним.
   return inner;
 };
 
