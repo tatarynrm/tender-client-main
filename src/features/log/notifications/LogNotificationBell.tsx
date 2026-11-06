@@ -84,7 +84,10 @@ const NotificationItem = ({
         <div className="mt-1 space-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
           {(c.docnum ?? c.id_tender) && (
             <div className="font-semibold text-slate-600 dark:text-slate-300">
-              Тендер №{c.docnum ?? c.id_tender}
+              Тендер{" "}
+              <span className="text-[13px] font-black text-blue-600 dark:text-blue-400">
+                №{c.docnum ?? c.id_tender}
+              </span>
             </div>
           )}
           {c.route && (
