@@ -89,6 +89,7 @@ import { ManualPriceDialog } from "@/features/dashboard/tender/components/Manual
 import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
+import { useTenderRateDelete } from "../../hooks/useTenderRateDelete";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { CustomerStatsDialog } from "./CustomerStatsDialog";
 import { getRegionName, getCountryName } from "@/shared/utils/region.utils";
@@ -122,6 +123,7 @@ export function TenderCardManagers({
   const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
   const { mutateAsync: delWinner, isPending: isDelWinner } =
     useTenderDelWinner();
+  const { mutateAsync: deleteRate } = useTenderRateDelete();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const [isProlongOpen, setIsProlongOpen] = React.useState(false);
@@ -308,6 +310,21 @@ export function TenderCardManagers({
     try {
       await delWinner({ id_tender_rate: rate.id, car_count: 0 });
     } catch (e) {}
+  };
+
+  const handleDeleteRate = (rate: IRateCompany) => {
+    if (!rate.id) return;
+    confirm({
+      title: "Видалення ставки",
+      description: `Видалити вашу ставку ${rate.price_proposed?.toLocaleString() ?? ""} ${currencySymbol}?`,
+      confirmText: "Видалити",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          await deleteRate({ id: rate.id });
+        } catch (e) {}
+      },
+    });
   };
 
   const trailers =
@@ -922,6 +939,8 @@ export function TenderCardManagers({
             cargo={cargo}
             onSetWinner={handleSetWinner}
             onRemoveWinner={handleRemoveWinner}
+            currentPersonId={profile?.person?.id}
+            onDeleteRate={handleDeleteRate}
           />
         </div>
       )}

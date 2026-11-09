@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { formatFullDateTime } from "@/shared/utils/date.utils";
@@ -17,11 +18,16 @@ export function TenderRatesList({
   cargo,
   onSetWinner,
   onRemoveWinner,
+  currentPersonId,
+  onDeleteRate,
 }: {
   cargo: ITender;
   // Змінюємо тип onSetWinner, щоб він приймав обрану кількість машин
   onSetWinner?: (rate: IRateCompany, carCount: number) => void;
   onRemoveWinner?: (rate: IRateCompany) => void;
+  // person.id поточного користувача — видаляти можна лише власну ICT-ставку
+  currentPersonId?: number;
+  onDeleteRate?: (rate: IRateCompany) => void;
 }) {
   // Локальний стан для відображення інпуту кількості авто
   // Зберігаємо ID ставки, для якої зараз вводимо машини
@@ -56,7 +62,14 @@ export function TenderRatesList({
         const isWinner = rate.car_count_winner > 0;
         const isEditing = editingRateId === rate.id;
         // Ставка перевізника (не співробітника ICT) — виділяємо бірюзовим.
-        const isCarrier = rate.is_ict_author === false;
+        const isCarrier = rate.is_ict === false;
+        // Власну ставку (ICT) її автор може видалити, поки вона не переможна.
+        const canDelete =
+          !!onDeleteRate &&
+          rate.is_ict === true &&
+          currentPersonId != null &&
+          rate.id_author === currentPersonId &&
+          !isWinner;
 
         return (
           <div
@@ -234,6 +247,18 @@ export function TenderRatesList({
                   </div>
                 )}
               </div>
+
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() => onDeleteRate?.(rate)}
+                  title="Видалити ставку"
+                  aria-label="Видалити ставку"
+                  className="mt-0 sm:mt-2 flex items-center justify-center w-6 h-6 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-md transition-colors border border-red-200 dark:border-red-800/50"
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
 
               {/* Кнопки вибору переможця (тільки в режимі ANALYZE) */}
               {isAnalyze && (
