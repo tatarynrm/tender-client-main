@@ -5,7 +5,7 @@ import api from "@/shared/api/instance.api";
 
 export interface RateCancelPayload {
   // id ставки (rate_company[].id)
-  id: number;
+  id_tender_rate: number;
 }
 
 // Скасування власної ставки менеджера ICT (процедура tender_rate_cancel).

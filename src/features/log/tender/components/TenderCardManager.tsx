@@ -323,12 +323,12 @@ export function TenderCardManagers({
     if (!rate.id) return;
     confirm({
       title: "Скасування ставки",
-      description: `Скасувати вашу ставку ${rate.price_proposed?.toLocaleString() ?? ""} ${currencySymbol}? Вона лишиться в списку з відміткою «Скасовано».`,
-      confirmText: "Скасувати ставку",
+      description: `Ставку ${rate.price_proposed?.toLocaleString() ?? ""} ${currencySymbol} буде скасовано. Вона лишиться в списку з відміткою «Скасовано». Ви впевнені?`,
+      confirmText: "Так, скасувати",
       variant: "danger",
       onConfirm: async () => {
         try {
-          await cancelRate({ id: rate.id });
+          await cancelRate({ id_tender_rate: rate.id });
         } catch (e) {}
       },
     });

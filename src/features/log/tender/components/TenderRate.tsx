@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Trash2,
+  Ban,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { formatFullDateTime } from "@/shared/utils/date.utils";
@@ -273,9 +273,10 @@ export function TenderRatesList({
                   onClick={() => onCancelRate?.(rate)}
                   title="Скасувати ставку"
                   aria-label="Скасувати ставку"
-                  className="mt-0 sm:mt-2 flex items-center justify-center w-6 h-6 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-md transition-colors border border-red-200 dark:border-red-800/50"
+                  className="mt-0 sm:mt-2 flex items-center gap-1 px-1.5 py-0.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-md text-[9px] font-bold uppercase tracking-wide transition-colors border border-red-200 dark:border-red-800/50"
                 >
-                  <Trash2 size={13} />
+                  <Ban size={11} />
+                  Скасувати
                 </button>
               )}
 
