@@ -19,15 +19,15 @@ export function TenderRatesList({
   onSetWinner,
   onRemoveWinner,
   currentPersonId,
-  onDeleteRate,
+  onCancelRate,
 }: {
   cargo: ITender;
   // Змінюємо тип onSetWinner, щоб він приймав обрану кількість машин
   onSetWinner?: (rate: IRateCompany, carCount: number) => void;
   onRemoveWinner?: (rate: IRateCompany) => void;
-  // person.id поточного користувача — видаляти можна лише власну ICT-ставку
+  // person.id поточного користувача — скасувати можна лише власну ICT-ставку
   currentPersonId?: number;
-  onDeleteRate?: (rate: IRateCompany) => void;
+  onCancelRate?: (rate: IRateCompany) => void;
 }) {
   // Локальний стан для відображення інпуту кількості авто
   // Зберігаємо ID ставки, для якої зараз вводимо машини
@@ -41,6 +41,9 @@ export function TenderRatesList({
   if (!rates || rates.length === 0) return null;
 
   const sortedRates = [...rates].sort((a, b) => {
+    // Скасовані ставки — в кінець списку (вони не беруть участі в рейтингу).
+    const canceledDiff = (a.time_canceled ? 1 : 0) - (b.time_canceled ? 1 : 0);
+    if (canceledDiff !== 0) return canceledDiff;
     // Якщо price_proposed є null або undefined, беремо Infinity
     const priceA = a?.price_proposed ?? Infinity;
     const priceB = b?.price_proposed ?? Infinity;
@@ -54,18 +57,20 @@ export function TenderRatesList({
   return (
     <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar pb-2">
       {sortedRates.map((rate, idx) => {
-        const isTop1 = idx === 0;
-        const isTop2 = idx === 1;
-        const isTop3 = idx === 2;
-        const isTopThree = idx < 3;
+        const isCanceled = !!rate.time_canceled;
+        const isTop1 = !isCanceled && idx === 0;
+        const isTop2 = !isCanceled && idx === 1;
+        const isTop3 = !isCanceled && idx === 2;
+        const isTopThree = isTop1 || isTop2 || isTop3;
 
-        const isWinner = rate.car_count_winner > 0;
+        const isWinner = !isCanceled && rate.car_count_winner > 0;
         const isEditing = editingRateId === rate.id;
         // Ставка перевізника (не співробітника ICT) — виділяємо бірюзовим.
-        const isCarrier = rate.is_ict === false;
-        // Власну ставку (ICT) її автор може видалити, поки вона не переможна.
-        const canDelete =
-          !!onDeleteRate &&
+        const isCarrier = rate.is_ict === false && !isCanceled;
+        // Власну ставку (ICT) її автор може скасувати, поки вона не переможна.
+        const canCancel =
+          !!onCancelRate &&
+          !isCanceled &&
           rate.is_ict === true &&
           currentPersonId != null &&
           rate.id_author === currentPersonId &&
@@ -76,7 +81,9 @@ export function TenderRatesList({
             key={`${rate.id || rate.author}-${idx}`}
             className={cn(
               "relative flex flex-col sm:flex-row items-start justify-between p-3.5 rounded-xl border transition-all duration-300 gap-4",
-              isWinner
+              isCanceled
+                ? "bg-slate-50 border-slate-200 border-dashed opacity-60 dark:bg-slate-900/30 dark:border-slate-700"
+                : isWinner
                 ? "bg-blue-50/80 border-blue-300 dark:bg-blue-900/20 dark:border-blue-700/50 shadow-md ring-1 ring-blue-500/30"
                 : isTop1
                   ? "bg-emerald-50/60 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/40 shadow-sm"
@@ -92,6 +99,11 @@ export function TenderRatesList({
             )}
           >
             {/* Візуальні бейджі */}
+            {isCanceled && (
+              <div className="absolute -left-1 top-2 text-[8px] font-black px-2 py-0.5 rounded-r-full shadow-sm text-white bg-slate-500">
+                СКАСОВАНО
+              </div>
+            )}
             {(isTopThree || isWinner) && (
               <div
                 className={cn(
@@ -132,6 +144,11 @@ export function TenderRatesList({
                   )}>
                     {rate.company_name || "Компанія не вказана"}
                   </span>
+                  {isCanceled && rate.time_canceled && (
+                    <span className="shrink-0 text-[9px] font-semibold text-slate-500 dark:text-slate-400">
+                      скасовано {formatFullDateTime(rate.time_canceled)}
+                    </span>
+                  )}
                   {isCarrier && (
                     <span className="shrink-0 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-teal-500 text-white">
                       Перевізник
@@ -221,7 +238,9 @@ export function TenderRatesList({
                 <div
                   className={cn(
                     "text-base font-black tracking-tight leading-none transition-colors",
-                    isWinner
+                    isCanceled
+                      ? "text-slate-400 dark:text-slate-500 line-through"
+                      : isWinner
                       ? "text-blue-600 dark:text-blue-400 text-lg"
                       : isTop1
                         ? "text-emerald-600 dark:text-emerald-400 text-lg"
@@ -248,12 +267,12 @@ export function TenderRatesList({
                 )}
               </div>
 
-              {canDelete && (
+              {canCancel && (
                 <button
                   type="button"
-                  onClick={() => onDeleteRate?.(rate)}
-                  title="Видалити ставку"
-                  aria-label="Видалити ставку"
+                  onClick={() => onCancelRate?.(rate)}
+                  title="Скасувати ставку"
+                  aria-label="Скасувати ставку"
                   className="mt-0 sm:mt-2 flex items-center justify-center w-6 h-6 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 rounded-md transition-colors border border-red-200 dark:border-red-800/50"
                 >
                   <Trash2 size={13} />
@@ -261,7 +280,7 @@ export function TenderRatesList({
               )}
 
               {/* Кнопки вибору переможця (тільки в режимі ANALYZE) */}
-              {isAnalyze && (
+              {isAnalyze && !isCanceled && (
                 <div className="mt-0 sm:mt-3 flex items-center justify-end">
                   {isWinner ? (
                     // Кнопка СКАСУВАТИ

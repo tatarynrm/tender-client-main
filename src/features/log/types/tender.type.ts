@@ -138,6 +138,8 @@ export interface IRateCompany {
   company_name: string;
   /** true — ставку зробив співробітник ICT, false — перевізник (tender_list_ict). */
   is_ict?: boolean;
+  /** Час скасування ставки (tender_rate_cancel); null — ставка діюча. */
+  time_canceled?: string | null;
 
   // Бажано замінити any на конкретний інтерфейс, якщо він у вас вже є
   person_phone: any[];

@@ -200,14 +200,16 @@ export default function ManagersTenderFullPage({
   }
 
   const currencySymbol = getCurrencySymbol(tender?.valut_name);
+  // Скасовані ставки в розрахунок лідера не беруться.
+  const activeRates = (tender?.rate_company ?? []).filter(
+    (r) => !r.time_canceled,
+  );
   const leaderBid =
-    !tender?.rate_company || tender.rate_company.length === 0
+    activeRates.length === 0
       ? tender?.price_start || 0
       : tender.ids_type === "AUCTION"
-        ? Math.max(...tender.rate_company.map((r) => r.price_proposed || 0))
-        : Math.min(
-            ...tender.rate_company.map((r) => r.price_proposed || Infinity),
-          );
+        ? Math.max(...activeRates.map((r) => r.price_proposed || 0))
+        : Math.min(...activeRates.map((r) => r.price_proposed || Infinity));
 
   const sortedRoute =
     tender?.tender_route?.sort(

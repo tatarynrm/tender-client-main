@@ -89,7 +89,7 @@ import { ManualPriceDialog } from "@/features/dashboard/tender/components/Manual
 import TenderActions from "./TenderActions/TenderActions";
 import { useTenderSetWinner } from "../../hooks/useTenderSetWinner";
 import { useTenderDelWinner } from "../../hooks/useTenderDelWinner";
-import { useTenderRateDelete } from "../../hooks/useTenderRateDelete";
+import { useTenderRateCancel } from "../../hooks/useTenderRateCancel";
 import { FilesPreviewModal } from "@/shared/ict_components/FilesPreviewModal/FilesPreviewModal";
 import { CustomerStatsDialog } from "./CustomerStatsDialog";
 import { getRegionName, getCountryName } from "@/shared/utils/region.utils";
@@ -123,7 +123,7 @@ export function TenderCardManagers({
   const { mutateAsync: setWinner, isPending } = useTenderSetWinner();
   const { mutateAsync: delWinner, isPending: isDelWinner } =
     useTenderDelWinner();
-  const { mutateAsync: deleteRate } = useTenderRateDelete();
+  const { mutateAsync: cancelRate } = useTenderRateCancel();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const [isProlongOpen, setIsProlongOpen] = React.useState(false);
@@ -181,7 +181,9 @@ export function TenderCardManagers({
     // 2. Фоллбек на ручний пошук
     if (profile && cargo.rate_company) {
       const personId = profile.person?.id || profile.id;
-      const myBids = cargo.rate_company.filter((r) => r.id_author == personId);
+      const myBids = cargo.rate_company.filter(
+        (r) => r.id_author == personId && !r.time_canceled,
+      );
 
       if (myBids.length > 0) {
         const latest = [...myBids].sort((a, b) => (b.id || 0) - (a.id || 0))[0];
@@ -199,16 +201,21 @@ export function TenderCardManagers({
   const topBids = React.useMemo(() => {
     if (!cargo.rate_company || cargo.rate_company.length === 0) return [];
     return [...cargo.rate_company].sort((a, b) => {
+      // Скасовані ставки — в кінець списку.
+      const canceledDiff = (a.time_canceled ? 1 : 0) - (b.time_canceled ? 1 : 0);
+      if (canceledDiff !== 0) return canceledDiff;
       const priceA = a?.price_proposed ?? Infinity;
       const priceB = b?.price_proposed ?? Infinity;
       return priceA - priceB;
     });
   }, [cargo.rate_company]);
 
-  const bestBid = topBids[0] || null;
+  // Найкраща ціна — лише серед діючих (нескасованих) ставок.
+  const bestBid = topBids.find((r) => !r.time_canceled) || null;
   const bestBidValue = React.useMemo(() => {
-    if (!cargo.rate_company || cargo.rate_company.length === 0) return null;
-    return Math.min(...cargo.rate_company.map((r) => r.price_proposed));
+    const active = (cargo.rate_company ?? []).filter((r) => !r.time_canceled);
+    if (active.length === 0) return null;
+    return Math.min(...active.map((r) => r.price_proposed));
   }, [cargo.rate_company]);
 
   const nextBidValue =
@@ -312,16 +319,16 @@ export function TenderCardManagers({
     } catch (e) {}
   };
 
-  const handleDeleteRate = (rate: IRateCompany) => {
+  const handleCancelRate = (rate: IRateCompany) => {
     if (!rate.id) return;
     confirm({
-      title: "Видалення ставки",
-      description: `Видалити вашу ставку ${rate.price_proposed?.toLocaleString() ?? ""} ${currencySymbol}?`,
-      confirmText: "Видалити",
+      title: "Скасування ставки",
+      description: `Скасувати вашу ставку ${rate.price_proposed?.toLocaleString() ?? ""} ${currencySymbol}? Вона лишиться в списку з відміткою «Скасовано».`,
+      confirmText: "Скасувати ставку",
       variant: "danger",
       onConfirm: async () => {
         try {
-          await deleteRate({ id: rate.id });
+          await cancelRate({ id: rate.id });
         } catch (e) {}
       },
     });
@@ -940,7 +947,7 @@ export function TenderCardManagers({
             onSetWinner={handleSetWinner}
             onRemoveWinner={handleRemoveWinner}
             currentPersonId={profile?.person?.id}
-            onDeleteRate={handleDeleteRate}
+            onCancelRate={handleCancelRate}
           />
         </div>
       )}
