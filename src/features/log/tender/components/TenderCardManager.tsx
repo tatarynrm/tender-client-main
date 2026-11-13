@@ -108,6 +108,7 @@ import { toast } from "sonner";
 import { CopyTenderWizard } from "../copy/CopyTenderWizard";
 import { InfoButton, CopyTenderInfoModal } from "@/shared/components/InfoModals";
 import { ProlongationModal } from "./TenderActions/TenderActionsModals/ProlongationModal";
+import { ActiveProlongModal } from "./TenderActions/TenderActionsModals/ActiveProlongModal";
 
 export function TenderCardManagers({
   cargo,
@@ -127,6 +128,7 @@ export function TenderCardManagers({
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
   const [isProlongOpen, setIsProlongOpen] = React.useState(false);
+  const [isActiveProlongOpen, setIsActiveProlongOpen] = React.useState(false);
   const [statsCompanyName, setStatsCompanyName] = React.useState<string | null>(null);
   const showCustomerHint = React.useMemo(
     () => new Date() < CUSTOMER_HINT_EXPIRY,
@@ -912,6 +914,21 @@ export function TenderCardManagers({
 
           {isAuthor && (
             <div className="flex items-center gap-1.5">
+              {/* Пролонгація — лише в активних тендерах, макс. +24 год */}
+              {cargo.ids_status === "ACTIVE" && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsActiveProlongOpen(true);
+                  }}
+                  title="Пролонгувати тендер (до 24 годин від завершення)"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-colors"
+                >
+                  <Clock size={13} />
+                  Пролонгація
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -962,6 +979,13 @@ export function TenderCardManagers({
         companyName={statsCompanyName}
         onClose={() => setStatsCompanyName(null)}
       />
+
+      {isActiveProlongOpen && (
+        <ActiveProlongModal
+          tender={cargo}
+          onClose={() => setIsActiveProlongOpen(false)}
+        />
+      )}
 
       {isProlongOpen && (
         <ProlongationModal

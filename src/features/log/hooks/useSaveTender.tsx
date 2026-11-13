@@ -37,9 +37,14 @@ export const useSaveTender = () => {
       queryClient.invalidateQueries({ queryKey: ["tenders"] });
     },
     // Виконується при помилці
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Помилка при збереженні тендеру:", error);
-      toast.error("Помилка при збереженні тендеру");
+      // Бекенд (callProcedure) віддає текст помилки з процедури в message,
+      // напр. "Не можна змінювати тендер, якщо він створений вчора чи
+      // раніше, лише пролонгацію" — показуємо його менеджеру як є.
+      const message =
+        error?.response?.data?.message || "Помилка при збереженні тендеру";
+      toast.error(message);
     },
   });
 };

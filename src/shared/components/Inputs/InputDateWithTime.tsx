@@ -43,6 +43,9 @@ interface Props<T extends FieldValues> {
   className?: string;
   // Якщо задано — дні раніше за minDate недоступні для вибору.
   minDate?: Date;
+  // Якщо задано — дні пізніше за maxDate недоступні для вибору
+  // (точний час у межах останнього дня перевіряє викликач).
+  maxDate?: Date;
 }
 
 export const InputDateWithTime = <T extends FieldValues>({
@@ -52,6 +55,7 @@ export const InputDateWithTime = <T extends FieldValues>({
   required = false,
   className,
   minDate,
+  maxDate,
 }: Props<T>) => {
   const {
     field,
@@ -78,6 +82,36 @@ export const InputDateWithTime = <T extends FieldValues>({
 
   const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
 
+  // День, відносно якого рахуємо, які години/хвилини ще актуальні —
+  // обраний день, або сьогодні, поки день не обрано.
+  const activeDay = selectedDate || new Date();
+
+  // Чи вся година (i:00–i:59 обраного дня) лежить поза [minDate, maxDate].
+  const isHourDisabled = (hour: number) => {
+    const hourStart = setMinutes(setHours(activeDay, hour), 0);
+    const hourEnd = setMinutes(setHours(activeDay, hour), 59);
+    if (minDate && hourEnd < minDate) return true;
+    if (maxDate && hourStart > maxDate) return true;
+    return false;
+  };
+
+  // Чи конкретна хвилина в обраній (або нульовій) годині поза межами.
+  const isMinuteDisabled = (minute: number) => {
+    const hour = selectedDate ? getHours(selectedDate) : 0;
+    const candidate = setMinutes(setHours(activeDay, hour), minute);
+    if (minDate && candidate < minDate) return true;
+    if (maxDate && candidate > maxDate) return true;
+    return false;
+  };
+
+  // Затискаємо дату в межі [minDate, maxDate], якщо вона з них випала
+  // (наприклад, після перемикання дня зі старими годиною/хвилинами).
+  const clampToRange = (d: Date) => {
+    if (minDate && d < minDate) return minDate;
+    if (maxDate && d > maxDate) return maxDate;
+    return d;
+  };
+
   const handleTimeChange = (type: "hours" | "minutes", val: number) => {
     const baseDate = selectedDate || new Date();
 
@@ -87,6 +121,12 @@ export const InputDateWithTime = <T extends FieldValues>({
         ? getHours(baseDate) === val
         : getMinutes(baseDate) === val;
 
+    if (!isCurrentlySelected) {
+      const stillDisabled =
+        type === "hours" ? isHourDisabled(val) : isMinuteDisabled(val);
+      if (stillDisabled) return;
+    }
+
     const newValue = isCurrentlySelected ? 0 : val;
 
     const newDate =
@@ -94,7 +134,7 @@ export const InputDateWithTime = <T extends FieldValues>({
         ? setHours(baseDate, newValue)
         : setMinutes(baseDate, newValue);
 
-    field.onChange(newDate);
+    field.onChange(clampToRange(newDate));
   };
 
   const renderDays = () => {
@@ -108,7 +148,9 @@ export const InputDateWithTime = <T extends FieldValues>({
       const isSelected = selectedDate && isSameDay(day, selectedDate);
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isToday = isSameDay(day, new Date());
-      const isDisabled = minDate ? day < startOfDay(minDate) : false;
+      const isDisabled =
+        (minDate ? day < startOfDay(minDate) : false) ||
+        (maxDate ? day > maxDate : false);
 
       return (
         <div
@@ -118,7 +160,7 @@ export const InputDateWithTime = <T extends FieldValues>({
             const hours = selectedDate ? getHours(selectedDate) : 0;
             const mins = selectedDate ? getMinutes(selectedDate) : 0;
             const combinedDate = setMinutes(setHours(day, hours), mins);
-            field.onChange(combinedDate);
+            field.onChange(clampToRange(combinedDate));
           }}
           className={cn(
             "h-8 w-8 flex items-center justify-center text-[12px] rounded-xl transition-all",
@@ -266,42 +308,56 @@ export const InputDateWithTime = <T extends FieldValues>({
                   onWheel={onColumnWheel}
                   className="flex-1 flex flex-col overflow-y-auto custom-scrollbar overscroll-contain border-r border-zinc-100 dark:border-zinc-800"
                 >
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => handleTimeChange("hours", i)}
-                      className={cn(
-                        "text-[12px] py-2 transition-all",
-                        selectedDate && getHours(selectedDate) === i
-                          ? "bg-indigo-600 text-white font-bold"
-                          : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
-                      )}
-                    >
-                      {i.toString().padStart(2, "0")}
-                    </button>
-                  ))}
+                  {Array.from({ length: 24 }).map((_, i) => {
+                    const disabled = isHourDisabled(i);
+                    const active = selectedDate && getHours(selectedDate) === i;
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => handleTimeChange("hours", i)}
+                        className={cn(
+                          "text-[12px] py-2 transition-all",
+                          disabled
+                            ? "text-zinc-200 dark:text-zinc-800 cursor-not-allowed line-through"
+                            : active
+                              ? "bg-indigo-600 text-white font-bold"
+                              : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
+                        )}
+                      >
+                        {i.toString().padStart(2, "0")}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div
                   onWheel={onColumnWheel}
                   className="flex-1 flex flex-col overflow-y-auto custom-scrollbar overscroll-contain"
                 >
-                  {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => handleTimeChange("minutes", m)}
-                      className={cn(
-                        "text-[12px] py-2 transition-all",
-                        selectedDate && getMinutes(selectedDate) === m
-                          ? "bg-indigo-600 text-white font-bold"
-                          : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
-                      )}
-                    >
-                      {m.toString().padStart(2, "0")}
-                    </button>
-                  ))}
+                  {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((m) => {
+                    const disabled = isMinuteDisabled(m);
+                    const active = selectedDate && getMinutes(selectedDate) === m;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => handleTimeChange("minutes", m)}
+                        className={cn(
+                          "text-[12px] py-2 transition-all",
+                          disabled
+                            ? "text-zinc-200 dark:text-zinc-800 cursor-not-allowed line-through"
+                            : active
+                              ? "bg-indigo-600 text-white font-bold"
+                              : "text-slate-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10",
+                        )}
+                      >
+                        {m.toString().padStart(2, "0")}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
