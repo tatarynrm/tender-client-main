@@ -299,11 +299,19 @@ export const InputDateWithTime = <T extends FieldValues>({
             </div>
 
             <div className="bg-slate-50/50 dark:bg-white/5 flex flex-col w-[140px]">
-              <div className="flex items-center justify-center h-10 border-b border-zinc-100 dark:border-zinc-800">
-                <Clock size={14} className="text-indigo-600" />
+              <div className="flex flex-col border-b border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-center pt-2 pb-1">
+                  <Clock size={14} className="text-indigo-600" />
+                </div>
+                <div className="grid grid-cols-2 text-center text-[10px] font-bold text-slate-400 dark:text-zinc-400 uppercase tracking-wider pb-1.5 select-none">
+                  <span className="border-r border-zinc-100 dark:border-zinc-800">
+                    год
+                  </span>
+                  <span>хв</span>
+                </div>
               </div>
 
-              <div className="flex h-[240px] overflow-hidden">
+              <div className="flex h-[235px] overflow-hidden">
                 <div
                   onWheel={onColumnWheel}
                   className="flex-1 flex flex-col overflow-y-auto custom-scrollbar overscroll-contain border-r border-zinc-100 dark:border-zinc-800"
