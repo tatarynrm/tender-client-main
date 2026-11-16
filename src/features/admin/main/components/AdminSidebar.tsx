@@ -24,6 +24,7 @@ import {
   Video,
   ClipboardList,
   Globe,
+  Database,
 } from "lucide-react";
 import { LogoutButton } from "@/shared/components/Buttons/LogoutButton";
 import { IUserProfile } from "@/shared/types/user.types";
@@ -62,6 +63,7 @@ const links: MenuItem[] = [
     children: [
       { name: "Усі компанії", href: "/admin/companies", icon: Building2 },
       { name: "Створити", href: "/admin/companies/save", icon: Pickaxe },
+      { name: "NORIS (Oracle)", href: "/admin/noris", icon: Database },
     ],
   },
   {
