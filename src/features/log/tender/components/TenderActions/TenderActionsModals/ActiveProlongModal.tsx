@@ -14,9 +14,11 @@ const MAX_PROLONG_HOURS = 24;
 
 const fmt = (d: Date) => format(d, "dd.MM.yyyy HH:mm");
 
-// Пролонгація АКТИВНОГО тендера: новий час завершення — після поточного
-// і не пізніше ніж +24 години від ЗАРАЗ (від моменту пролонгації), а не
-// від поточного завершення тендера.
+// Кнопка «Продовжити» — для активних тендерів і тендерів в «Аналізі».
+// Новий час завершення — після поточного і не пізніше ніж +24 години від
+// ЗАРАЗ (від моменту відкриття модалки), а не від поточного завершення тендера.
+// Викликає лише tenderProlongation (tender_prolongation) — жодних
+// tender_save/tender_notify_prolongation.
 export const ActiveProlongModal = ({
   tender,
   onClose,
@@ -90,7 +92,7 @@ export const ActiveProlongModal = ({
             <AlarmClockPlus className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
           </div>
           <h3 className="text-2xl font-black text-zinc-900 dark:text-zinc-100">
-            Пролонгація тендера
+            Продовжити тендер
           </h3>
           <p className="text-xs font-bold text-zinc-400 mt-1 uppercase tracking-widest">
             Тендер #{tender?.id}
@@ -153,7 +155,7 @@ export const ActiveProlongModal = ({
               {isPending ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
-                "Пролонгувати"
+                "Продовжити"
               )}
             </button>
 

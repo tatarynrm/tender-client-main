@@ -107,7 +107,6 @@ import api from "@/shared/api/instance.api";
 import { toast } from "sonner";
 import { CopyTenderWizard } from "../copy/CopyTenderWizard";
 import { InfoButton, CopyTenderInfoModal } from "@/shared/components/InfoModals";
-import { ProlongationModal } from "./TenderActions/TenderActionsModals/ProlongationModal";
 import { ActiveProlongModal } from "./TenderActions/TenderActionsModals/ActiveProlongModal";
 
 export function TenderCardManagers({
@@ -127,7 +126,6 @@ export function TenderCardManagers({
   const { mutateAsync: cancelRate } = useTenderRateCancel();
   const [isRatesOpen, setIsRatesOpen] = React.useState(false);
   const [isFilesModalOpen, setIsFilesModalOpen] = React.useState(false);
-  const [isProlongOpen, setIsProlongOpen] = React.useState(false);
   const [isActiveProlongOpen, setIsActiveProlongOpen] = React.useState(false);
   const [statsCompanyName, setStatsCompanyName] = React.useState<string | null>(null);
   const showCustomerHint = React.useMemo(
@@ -896,15 +894,15 @@ export function TenderCardManagers({
             публікація {formatTenderDate(cargo.time_start)}
           </span>
 
-          {/* Продовження терміну — лише в розділі «Аналіз», без обмежень по часу */}
+          {/* Продовжити термін — в «Аналізі», як і в активних, максимум +24 год від зараз (tender_prolongation) */}
           {cargo.ids_status === "ANALYZE" && (
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setIsProlongOpen(true);
+                setIsActiveProlongOpen(true);
               }}
-              title="Продовжити термін тендера"
+              title="Продовжити термін тендера (до 24 годин від зараз)"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-colors"
             >
               <Clock size={13} />
@@ -914,7 +912,7 @@ export function TenderCardManagers({
 
           {isAuthor && (
             <div className="flex items-center gap-1.5">
-              {/* Пролонгація — лише в активних тендерах, макс. +24 год */}
+              {/* Продовжити термін — лише в активних тендерах, макс. +24 год від зараз (tender_prolongation) */}
               {cargo.ids_status === "ACTIVE" && (
                 <button
                   onClick={(e) => {
@@ -922,11 +920,11 @@ export function TenderCardManagers({
                     e.stopPropagation();
                     setIsActiveProlongOpen(true);
                   }}
-                  title="Пролонгувати тендер (до 24 годин від завершення)"
+                  title="Продовжити термін тендера (до 24 годин від зараз)"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 transition-colors"
                 >
                   <Clock size={13} />
-                  Пролонгація
+                  Продовжити
                 </button>
               )}
               <button
@@ -984,13 +982,6 @@ export function TenderCardManagers({
         <ActiveProlongModal
           tender={cargo}
           onClose={() => setIsActiveProlongOpen(false)}
-        />
-      )}
-
-      {isProlongOpen && (
-        <ProlongationModal
-          tender={cargo}
-          onClose={() => setIsProlongOpen(false)}
         />
       )}
     </div>

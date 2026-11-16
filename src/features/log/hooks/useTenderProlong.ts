@@ -9,7 +9,8 @@ export interface ProlongPayload {
   time: string;
 }
 
-// Пролонгація активного тендера (процедура tender_prolongation).
+// Продовження терміну тендера (процедура tender_prolongation) — для
+// активних тендерів і тендерів в «Аналізі».
 export const useTenderProlong = () => {
   const queryClient = useQueryClient();
 
@@ -19,12 +20,12 @@ export const useTenderProlong = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Тендер пролонговано");
+      toast.success("Тендер продовжено");
       queryClient.invalidateQueries({ queryKey: ["tenders"] });
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || "Не вдалося пролонгувати тендер.",
+        error?.response?.data?.message || "Не вдалося продовжити тендер.",
       );
     },
   });
