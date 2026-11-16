@@ -63,7 +63,7 @@ const links: MenuItem[] = [
     children: [
       { name: "Усі компанії", href: "/admin/companies", icon: Building2 },
       { name: "Створити", href: "/admin/companies/save", icon: Pickaxe },
-      { name: "NORIS (Oracle)", href: "/admin/noris", icon: Database },
+      // { name: "NORIS (Oracle)", href: "/admin/noris", icon: Database },
     ],
   },
   {
