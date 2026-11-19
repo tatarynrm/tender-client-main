@@ -664,7 +664,13 @@ export function TenderCardClients({
                   />
                 </span>
                 <span className="text-[12px] font-black text-[#e03131] dark:text-red-400 leading-none">
-                  {bestBidPrice ? bestBidPrice : "—"}
+                  {/* У завершених / на аналізі (сторінка «closed») показуємо
+                      price_proposed з тендера, а не мінімум з rate_company. */}
+                  {cargo.ids_status === "CLOSED" || cargo.ids_status === "ANALYZE"
+                    ? cargo.price_proposed || "—"
+                    : bestBidPrice
+                      ? bestBidPrice
+                      : "—"}
                 </span>
               </div>
             )}
