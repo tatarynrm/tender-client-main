@@ -18,6 +18,7 @@ import { InputDateWithTime } from "@/shared/components/Inputs/InputDateWithTime"
 import { useModalStore } from "@/shared/stores/useModalStore";
 import api from "@/shared/api/instance.api";
 import { buildCopyTenderDto } from "./buildCopyTenderDto";
+import { MAX_TENDER_MS } from "../components/TenderSaveForm";
 import { cn } from "@/shared/utils";
 
 interface WizardValues {
@@ -123,6 +124,10 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
         toast.error("Кінець має бути пізніше за початок");
         return;
       }
+      if (time_end.getTime() - time_start.getTime() > MAX_TENDER_MS) {
+        toast.error("Тендер може тривати не більше 24 годин від початку");
+        return;
+      }
       if (loadBeforePublication(getValues())) {
         toast.error(
           "Дати завантаження/розвантаження не можуть бути раніше дати публікації тендеру",
@@ -145,6 +150,13 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
     return d;
   }, [timeStartWatch]);
 
+  // Кінець тендеру — не пізніше ніж через 24 години від початку.
+  const maxTenderEnd = useMemo(() => {
+    if (!timeStartWatch) return undefined;
+    const t = new Date(timeStartWatch).getTime();
+    return isNaN(t) ? undefined : new Date(t + MAX_TENDER_MS);
+  }, [timeStartWatch]);
+
   const submit = async () => {
     const v = getValues();
     if (!v.date_load || !v.time_start || !v.time_end) {
@@ -153,6 +165,11 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
     }
     if (isBeforeToday(v.time_start) || isBeforeToday(v.time_end)) {
       toast.error("Дати проведення тендеру не можуть бути в минулому");
+      setStep(1);
+      return;
+    }
+    if (v.time_end.getTime() - v.time_start.getTime() > MAX_TENDER_MS) {
+      toast.error("Тендер може тривати не більше 24 годин від початку");
       setStep(1);
       return;
     }
@@ -319,7 +336,8 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
               name="time_end"
               label="Кінець проведення"
               required
-              minDate={startOfToday()}
+              minDate={timeStartWatch ? new Date(timeStartWatch) : startOfToday()}
+              maxDate={maxTenderEnd}
             />
             <p className="sm:col-span-2 text-[11px] text-slate-400">
               Якщо початок у майбутньому — копія потрапить у «Заплановані»,

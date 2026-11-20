@@ -150,6 +150,9 @@ const tenderPermissionSchema = z.object({
   ids_permission_type: z.string().optional(),
 });
 
+// Максимальна тривалість тендеру — доба.
+export const MAX_TENDER_MS = 24 * 60 * 60 * 1000;
+
 export const tenderFormSchema = z
   .object({
     id: z.number().optional(),
@@ -203,6 +206,18 @@ export const tenderFormSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Кінець має бути пізніше за початок",
+        path: ["time_end"],
+      });
+    }
+    // Тендер проводиться максимум добу (24 години) від початку.
+    if (
+      data.time_start &&
+      data.time_end &&
+      data.time_end.getTime() - data.time_start.getTime() > MAX_TENDER_MS
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Тендер може тривати не більше 24 годин від початку",
         path: ["time_end"],
       });
     }
@@ -2255,6 +2270,13 @@ export default function TenderSaveForm({
     base.setHours(0, 0, 0, 0);
     return base;
   }, [timeStartWatch]);
+
+  // Кінець тендеру — не пізніше ніж через 24 години від початку.
+  const maxTenderEnd = useMemo(() => {
+    if (!timeStartWatch) return undefined;
+    const t = new Date(timeStartWatch).getTime();
+    return isNaN(t) ? undefined : new Date(t + MAX_TENDER_MS);
+  }, [timeStartWatch]);
   const currencySign = currencyStringTransform(currencyWatch ?? "UAH");
 
   // scroll to first error on invalid submit
@@ -2923,7 +2945,8 @@ export default function TenderSaveForm({
                         control={control}
                         label="КІНЕЦЬ"
                         required
-                        minDate={new Date()}
+                        minDate={timeStartWatch ? new Date(timeStartWatch) : new Date()}
+                        maxDate={maxTenderEnd}
                       />
                     </div>
                   </div>
