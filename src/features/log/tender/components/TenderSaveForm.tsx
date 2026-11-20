@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -205,6 +205,26 @@ export const tenderFormSchema = z
         message: "Кінець має бути пізніше за початок",
         path: ["time_end"],
       });
+    }
+    // Дати завантаження/розвантаження не раніші за день публікації тендеру
+    // (порівнюємо за календарним днем: у дат завантаження часто немає часу).
+    if (data.time_start) {
+      const pubDay = new Date(data.time_start);
+      pubDay.setHours(0, 0, 0, 0);
+      const checks: [keyof typeof data, Date | null | undefined, string][] = [
+        ["date_load", data.date_load, "Дата завантаження"],
+        ["date_load2", data.date_load2, "Дата завантаження (до)"],
+        ["date_unload", data.date_unload, "Дата розвантаження"],
+      ];
+      for (const [path, value, label] of checks) {
+        if (value && new Date(value) < pubDay) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${label} не може бути раніше дати публікації тендеру`,
+            path: [path as string],
+          });
+        }
+      }
     }
     if (
       data.ids_type === "REDUCTION" ||
@@ -2226,6 +2246,15 @@ export default function TenderSaveForm({
   };
 
   const currencyWatch = watch("ids_valut");
+
+  // Мінімальна дата для завантаження/розвантаження — день публікації тендеру.
+  const timeStartWatch = watch("time_start");
+  const minLoadDate = useMemo(() => {
+    const base = timeStartWatch ? new Date(timeStartWatch) : new Date();
+    if (isNaN(base.getTime())) return undefined;
+    base.setHours(0, 0, 0, 0);
+    return base;
+  }, [timeStartWatch]);
   const currencySign = currencyStringTransform(currencyWatch ?? "UAH");
 
   // scroll to first error on invalid submit
@@ -2912,16 +2941,19 @@ export default function TenderSaveForm({
                         name="date_load"
                         control={control}
                         label="ЗАВАНТАЖЕННЯ ВІД"
+                        minDate={minLoadDate}
                       />
                       <InputDateWithTime
                         name="date_load2"
                         control={control}
                         label="ЗАВАНТАЖЕННЯ ДО"
+                        minDate={minLoadDate}
                       />
                       <InputDateWithTime
                         name="date_unload"
                         control={control}
                         label="РОЗВАНТАЖЕННЯ"
+                        minDate={minLoadDate}
                       />
                     </div>
                   </div>

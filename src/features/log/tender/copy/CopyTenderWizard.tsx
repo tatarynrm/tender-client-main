@@ -44,6 +44,17 @@ const startOfToday = () => {
 };
 const isBeforeToday = (d: Date) => d < startOfToday();
 
+// Чи є дата завантаження/розвантаження раніше дня публікації тендеру
+// (порівнюємо за календарним днем).
+const loadBeforePublication = (v: WizardValues) => {
+  if (!v.time_start) return false;
+  const pubDay = new Date(v.time_start);
+  pubDay.setHours(0, 0, 0, 0);
+  return [v.date_load, v.date_load2, v.date_unload].some(
+    (d) => d && new Date(d) < pubDay,
+  );
+};
+
 const STEPS = [
   { title: "Дати завантаження / розвантаження", icon: CalendarClock },
   { title: "Час проведення тендеру", icon: Clock },
@@ -73,7 +84,7 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const { control, register, getValues, trigger } = useForm<WizardValues>({
+  const { control, register, getValues, trigger, watch } = useForm<WizardValues>({
       defaultValues: {
         date_load: toDate(source?.date_load),
         date_load2: toDate(source?.date_load2),
@@ -112,11 +123,27 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
         toast.error("Кінець має бути пізніше за початок");
         return;
       }
+      if (loadBeforePublication(getValues())) {
+        toast.error(
+          "Дати завантаження/розвантаження не можуть бути раніше дати публікації тендеру",
+        );
+        setStep(0);
+        return;
+      }
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
 
   const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  // Дати завантаження/розвантаження — не раніше дня публікації тендеру.
+  const timeStartWatch = watch("time_start");
+  const minLoadDate = useMemo(() => {
+    const d = timeStartWatch ? new Date(timeStartWatch) : startOfToday();
+    if (isNaN(d.getTime())) return startOfToday();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [timeStartWatch]);
 
   const submit = async () => {
     const v = getValues();
@@ -127,6 +154,13 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
     if (isBeforeToday(v.time_start) || isBeforeToday(v.time_end)) {
       toast.error("Дати проведення тендеру не можуть бути в минулому");
       setStep(1);
+      return;
+    }
+    if (loadBeforePublication(v)) {
+      toast.error(
+        "Дати завантаження/розвантаження не можуть бути раніше дати публікації тендеру",
+      );
+      setStep(0);
       return;
     }
     if (isReduction && (!v.price_start || !v.price_step)) {
@@ -254,16 +288,19 @@ export const CopyTenderWizard = ({ source }: { source: any }) => {
               name="date_load"
               label="Завантаження від"
               required
+              minDate={minLoadDate}
             />
             <InputDateWithTime
               control={control}
               name="date_load2"
               label="Завантаження до"
+              minDate={minLoadDate}
             />
             <InputDateWithTime
               control={control}
               name="date_unload"
               label="Розвантаження"
+              minDate={minLoadDate}
             />
           </div>
         )}
