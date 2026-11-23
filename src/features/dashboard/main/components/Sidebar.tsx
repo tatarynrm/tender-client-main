@@ -64,6 +64,7 @@ const links: MenuItem[] = [
       // { name: "Документи", href: "/dashboard/cabinet/documents", icon: FileText },
     ],
   },
+  { name: "Екран заявок", href: "/dashboard/loads", icon: Package },
   {
     name: "Тендери",
     icon: LayoutList,
