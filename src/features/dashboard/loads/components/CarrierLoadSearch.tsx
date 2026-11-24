@@ -92,11 +92,11 @@ export function CarrierLoadSearch({ value, onSearch, onReset, loading }: Props) 
         {/* Кількість днів */}
         <div className="flex flex-col gap-0.5">
           <label className={labelCls}>
-            Період, днів
+            Створені за останні, днів
             <FilterHint
               title="Період пошуку"
               examples={["1", "3", "7", "30"]}
-              note="Кількість днів від сьогодні."
+              note="Заявки, розміщені за вказану кількість днів до сьогодні."
             />
           </label>
           <input
