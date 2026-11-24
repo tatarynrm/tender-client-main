@@ -8,10 +8,13 @@ import {
   CheckCircle2,
   CircleDollarSign,
   History,
+  Mail,
+  Phone,
   Truck,
   UserRound,
   XCircle,
 } from "lucide-react";
+import { FaTelegram, FaViber, FaWhatsapp } from "react-icons/fa";
 
 import { cn } from "@/shared/utils";
 import { StatusIndicator } from "@/features/log/active/ui/CargoCardUpdateColor";
@@ -74,7 +77,8 @@ const RoutePoint = ({
 /**
  * Картка заявки для перевізника — за зразком менеджерської картки
  * (features/log/active/ui), але без чату переписки, без назви замовника
- * і без дій менеджера. Виводить лише поля, які віддає crm_load_list_per.
+ * і без дій менеджера. Виводить лише поля, які віддає crm_load_list_per
+ * (контакти менеджера — email і manager_phone).
  */
 export function CarrierLoadCard({ load }: Props) {
   const dateLoad = fmtDate(load.date_load);
@@ -93,6 +97,9 @@ export function CarrierLoadCard({ load }: Props) {
   const trailers = (load.crm_load_trailer ?? [])
     .map((t) => t.trailer_type_name || t.ids_trailer_type)
     .filter(Boolean);
+
+  const phones = (load.manager_phone ?? []).filter((p) => p?.phone?.trim());
+  const email = load.email?.trim() || null;
 
   const carStats = [
     {
@@ -237,9 +244,9 @@ export function CarrierLoadCard({ load }: Props) {
           )}
         </div>
 
-        {/* 4. Менеджер, який розмістив заявку.
+        {/* 4. Менеджер, який розмістив заявку: ім'я, телефони, email.
             load_info (внутрішня інформація по заявці) бекенд перевізникам не віддає. */}
-        <div className="flex flex-col gap-2 p-3">
+        <div className="flex flex-col gap-2 p-3 min-w-0">
           <ColLabel>Менеджер ICT</ColLabel>
           <div className="flex items-center gap-2 min-w-0">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10">
@@ -249,6 +256,74 @@ export function CarrierLoadCard({ load }: Props) {
               {load.author || "—"}
             </span>
           </div>
+
+          {phones.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {phones.map((p) => {
+                const phone = p.phone!.trim();
+                const digits = phone.replace(/\D/g, "");
+                return (
+                  <div
+                    key={p.id}
+                    className="flex flex-wrap items-center gap-2 min-w-0"
+                  >
+                    <a
+                      href={`tel:${phone}`}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-zinc-700 tabular-nums hover:text-blue-600 dark:text-zinc-200 dark:hover:text-blue-400"
+                    >
+                      <Phone size={12} className="shrink-0 text-blue-500" />
+                      {phone}
+                    </a>
+                    {(p.is_viber || p.is_telegram || p.is_whatsapp) && (
+                      <span className="flex items-center gap-1.5 border-l border-zinc-200 pl-2 dark:border-zinc-700">
+                        {p.is_viber && (
+                          <a
+                            href={`viber://chat?number=%2B${digits}`}
+                            title="Viber"
+                            className="text-[#7360f2] transition-transform hover:scale-125"
+                          >
+                            <FaViber size={14} />
+                          </a>
+                        )}
+                        {p.is_telegram && (
+                          <a
+                            href={`https://t.me/+${digits}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="Telegram"
+                            className="text-[#229ED9] transition-transform hover:scale-125"
+                          >
+                            <FaTelegram size={14} />
+                          </a>
+                        )}
+                        {p.is_whatsapp && (
+                          <a
+                            href={`https://wa.me/${digits}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            title="WhatsApp"
+                            className="text-[#25D366] transition-transform hover:scale-125"
+                          >
+                            <FaWhatsapp size={14} />
+                          </a>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {email && (
+            <a
+              href={`mailto:${email}`}
+              className="flex items-center gap-1.5 min-w-0 text-xs font-semibold text-zinc-700 hover:text-blue-600 dark:text-zinc-200 dark:hover:text-blue-400"
+            >
+              <Mail size={12} className="shrink-0 text-blue-500" />
+              <span className="truncate">{email}</span>
+            </a>
+          )}
         </div>
       </div>
     </div>

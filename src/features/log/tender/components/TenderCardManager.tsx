@@ -689,26 +689,30 @@ export function TenderCardManagers({
                 {formatTenderDuration(cargo.time_start, cargo.time_end)}
               </span>
             </div>
-            <span className="text-[10px] text-zinc-500 font-medium mb-1 flex items-center gap-1">
-              Залишилось
-              <MyTooltip text="Час до завершення прийому ставок" size={8} />
-            </span>
-            <span
-              className={cn(
-                "font-bold text-[16px] tracking-tight leading-none text-center flex items-center justify-center",
-                cargo.time_end ? "text-[#e03131]" : "text-emerald-500",
-              )}
-            >
-              {cargo.time_end ? (
-                <TenderTimer
-                  label={isPlan ? "до старту тендеру" : ""}
-                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
-                  variant={isPlan ? "blue" : "orange"}
-                />
-              ) : (
-                "—"
-              )}
-            </span>
+            {cargo.ids_status !== "CLOSED" && (
+              <>
+                <span className="text-[10px] text-zinc-500 font-medium mb-1 flex items-center gap-1">
+                  Залишилось
+                  <MyTooltip text="Час до завершення прийому ставок" size={8} />
+                </span>
+                <span
+                  className={cn(
+                    "font-bold text-[16px] tracking-tight leading-none text-center flex items-center justify-center",
+                    cargo.time_end ? "text-[#e03131]" : "text-emerald-500",
+                  )}
+                >
+                  {cargo.time_end ? (
+                    <TenderTimer
+                      label={isPlan ? "до старту тендеру" : ""}
+                      targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                      variant={isPlan ? "blue" : "orange"}
+                    />
+                  ) : (
+                    "—"
+                  )}
+                </span>
+              </>
+            )}
 
             {cargo.ids_type !== "AUCTION" && cargo.price_redemption ? (
               <button

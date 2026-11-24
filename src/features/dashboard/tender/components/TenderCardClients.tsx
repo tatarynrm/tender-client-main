@@ -580,17 +580,21 @@ export function TenderCardClients({
           {/* 10. Залишилось / Викуп */}
           <div className="w-full xl:w-[110px] flex-shrink-0 flex flex-col bg-white dark:bg-slate-900 overflow-hidden divide-y divide-zinc-100 dark:divide-white/5 xl:h-full">
             <div className="flex-1 flex flex-col items-center justify-center p-1 min-h-[43px]">
-              <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5 flex items-center gap-1">
-                Залишилось
-                <MyTooltip text="Час до завершення прийому ставок" size={8} />
-              </span>
-              <span className="font-bold text-[#e03131] dark:text-red-400 text-[15px] tracking-tight leading-none">
-                <TenderTimer
-                  label={isPlan ? "до старту тендеру" : ""}
-                  targetDate={isPlan ? cargo.time_start : cargo.time_end}
-                  variant={isPlan ? "blue" : "orange"}
-                />
-              </span>
+              {cargo.ids_status !== "CLOSED" && (
+                <>
+                  <span className="text-[9px] text-zinc-500 dark:text-slate-400 font-bold uppercase mb-0.5 flex items-center gap-1">
+                    Залишилось
+                    <MyTooltip text="Час до завершення прийому ставок" size={8} />
+                  </span>
+                  <span className="font-bold text-[#e03131] dark:text-red-400 text-[15px] tracking-tight leading-none">
+                    <TenderTimer
+                      label={isPlan ? "до старту тендеру" : ""}
+                      targetDate={isPlan ? cargo.time_start : cargo.time_end}
+                      variant={isPlan ? "blue" : "orange"}
+                    />
+                  </span>
+                </>
+              )}
             </div>
             {!isAuction && isRedemption && cargo.price_redemption && (
               <button

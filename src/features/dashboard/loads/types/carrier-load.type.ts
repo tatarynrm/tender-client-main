@@ -1,6 +1,16 @@
 // Рядок content процедури crm_load_list_per (екран заявок перевізника).
-// Набір полів звірений із процедурою: назви замовника, ціни, вантажу,
-// ваги/об'єму й контактів менеджера вона НЕ віддає.
+// Набір полів звірений із процедурою: назви замовника, ціни, вантажу
+// й ваги/об'єму вона НЕ віддає.
+
+/** Телефон менеджера (person_phone автора заявки) з прапорцями месенджерів. */
+export interface CarrierLoadManagerPhone {
+  id: number;
+  id_person?: number;
+  phone: string | null; // "+380..."
+  is_viber?: boolean;
+  is_telegram?: boolean;
+  is_whatsapp?: boolean;
+}
 
 export interface CarrierLoadTrailer {
   id: number;
@@ -22,6 +32,10 @@ export interface CarrierLoadItem {
   id_author: number | null;
   /** Ім'я та прізвище менеджера ICT, який розмістив заявку */
   author: string | null;
+  /** Email менеджера ICT (person.email автора) */
+  email: string | null;
+  /** Телефони менеджера ICT; порожній масив, якщо немає */
+  manager_phone: CarrierLoadManagerPhone[] | null;
   car_count_add: number | null;
   car_count_actual: number | null;
   car_count_closed: number | null;
