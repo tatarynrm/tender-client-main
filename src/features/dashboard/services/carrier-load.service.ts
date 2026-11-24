@@ -6,7 +6,7 @@ import {
 } from "../loads/types/carrier-load.type";
 
 export const carrierLoadService = {
-  /** Екран заявок перевізника — crm_load_per_list, ціла обгортка з props.pagination */
+  /** Екран заявок перевізника — crm_load_list_per, ціла обгортка з props.pagination */
   getList: async (
     params: CarrierLoadListParams = {},
   ): Promise<IApiResponse<CarrierLoadItem[]>> => {

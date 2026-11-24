@@ -74,7 +74,7 @@ const RoutePoint = ({
 /**
  * Картка заявки для перевізника — за зразком менеджерської картки
  * (features/log/active/ui), але без чату переписки, без назви замовника
- * і без дій менеджера. Виводить лише поля, які віддає crm_load_per_list.
+ * і без дій менеджера. Виводить лише поля, які віддає crm_load_list_per.
  */
 export function CarrierLoadCard({ load }: Props) {
   const dateLoad = fmtDate(load.date_load);

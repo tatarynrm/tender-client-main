@@ -1,4 +1,4 @@
-// Рядок content процедури crm_load_per_list (екран заявок перевізника).
+// Рядок content процедури crm_load_list_per (екран заявок перевізника).
 // Набір полів звірений із процедурою: назви замовника, ціни, вантажу,
 // ваги/об'єму й контактів менеджера вона НЕ віддає.
 
@@ -38,7 +38,21 @@ export interface CarrierLoadItem {
   crm_load_trailer: CarrierLoadTrailer[];
 }
 
-export interface CarrierLoadListParams {
+/** Швидкі фільтри процедури (s_*), значення як рядки з форми/URL. */
+export const CARRIER_LOAD_SEARCH_KEYS = [
+  "s_crm_load_number",
+  "s_day",
+  "s_manager",
+  "s_from",
+  "s_to",
+] as const;
+
+export type CarrierLoadSearch = Record<
+  (typeof CARRIER_LOAD_SEARCH_KEYS)[number],
+  string
+>;
+
+export interface CarrierLoadListParams extends Partial<CarrierLoadSearch> {
   page?: number;
   limit?: number;
   transit?: string;

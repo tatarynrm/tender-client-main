@@ -13,7 +13,15 @@ import { QuickFilterBtn } from "@/features/log/load/QuickFilterBtn";
 
 import { useCarrierLoads } from "./hooks/useCarrierLoads";
 import { CarrierLoadCard } from "./components/CarrierLoadCard";
-import { CarrierLoadListParams } from "./types/carrier-load.type";
+import {
+  CarrierLoadSearch as CarrierLoadSearchPanel,
+  EMPTY_CARRIER_LOAD_SEARCH,
+} from "./components/CarrierLoadSearch";
+import {
+  CARRIER_LOAD_SEARCH_KEYS,
+  CarrierLoadListParams,
+  CarrierLoadSearch as CarrierLoadSearchValues,
+} from "./types/carrier-load.type";
 
 const TRANSIT_TABS = [
   { id: "M", label: "Міжнародні" },
@@ -27,22 +35,44 @@ export default function CarrierLoadsPage() {
   const searchParams = useSearchParams();
   const { updateUrl } = useUrlFilters();
 
+  // Застосовані значення швидкого пошуку — живуть в URL, як і решта фільтрів.
+  const search = useMemo<CarrierLoadSearchValues>(() => {
+    const values = { ...EMPTY_CARRIER_LOAD_SEARCH };
+    CARRIER_LOAD_SEARCH_KEYS.forEach((k) => {
+      values[k] = searchParams.get(k) || "";
+    });
+    return values;
+  }, [searchParams]);
+
   const params = useMemo<CarrierLoadListParams>(
     () => ({
       page: Number(searchParams.get("page") || 1),
       limit: Number(searchParams.get("limit") || 10),
       transit: searchParams.get("transit") || undefined,
+      ...search,
     }),
-    [searchParams],
+    [searchParams, search],
   );
 
   const { data, isLoading, isFetching, error } = useCarrierLoads(params);
 
   const loads = data?.content ?? [];
   const pagination = data?.props?.pagination;
+  const hasSearch = CARRIER_LOAD_SEARCH_KEYS.some((k) => search[k] !== "");
 
   const setTransit = useCallback(
     (transit?: string) => updateUrl({ ...params, transit, page: 1 }),
+    [params, updateUrl],
+  );
+
+  const applySearch = useCallback(
+    (values: CarrierLoadSearchValues) =>
+      updateUrl({ ...params, ...values, page: 1 }),
+    [params, updateUrl],
+  );
+
+  const resetSearch = useCallback(
+    () => updateUrl({ ...params, ...EMPTY_CARRIER_LOAD_SEARCH, page: 1 }),
     [params, updateUrl],
   );
 
@@ -95,6 +125,14 @@ export default function CarrierLoadsPage() {
         </div>
       </div>
 
+      {/* ── Швидкий пошук ───────────────────────────────────────────────── */}
+      <CarrierLoadSearchPanel
+        value={search}
+        onSearch={applySearch}
+        onReset={resetSearch}
+        loading={isFetching}
+      />
+
       {/* ── Список ──────────────────────────────────────────────────────── */}
       {loads.length > 0 ? (
         <>
@@ -118,10 +156,15 @@ export default function CarrierLoadsPage() {
           <span className="font-medium text-zinc-500 dark:text-zinc-400">
             Актуальних заявок не знайдено
           </span>
-          {params.transit && (
+          {(params.transit || hasSearch) && (
             <button
               type="button"
-              onClick={() => setTransit(undefined)}
+              onClick={() =>
+                updateUrl({
+                  page: 1,
+                  limit: params.limit,
+                })
+              }
               className="text-sm font-semibold text-blue-600 hover:underline"
             >
               Показати всі заявки
